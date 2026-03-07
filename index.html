@@ -11,7 +11,27 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="BABSPHARM"/>
 <meta name="application-name" content="BABSPHARM Cloud"/>
-<meta name="description" content="BABSPHARM Cloud — Your pharmaceutical education platform"/>
+<meta name="description" content="BABSPHARM Cloud — Nigeria's #1 student learning platform. AI tutoring, past questions, study files & more. Join free with referral code AYOD841."/>
+<!-- Open Graph (WhatsApp, Facebook, Telegram) -->
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://babspharm1-lgtm.github.io/BABSPHARM./"/>
+<meta property="og:title" content="BABSPHARM Cloud — Learn Smarter, Score Higher"/>
+<meta property="og:description" content="Nigeria's #1 student cloud platform. AI tutoring, past questions, timetable, forum & more. Join free today! Use referral code AYOD841."/>
+<meta property="og:image" content="https://babspharm1-lgtm.github.io/BABSPHARM./og-image.png"/>
+<meta property="og:image:width" content="1200"/>
+<meta property="og:image:height" content="630"/>
+<meta property="og:site_name" content="BABSPHARM Cloud"/>
+<meta property="og:locale" content="en_NG"/>
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="BABSPHARM Cloud — Learn Smarter, Score Higher"/>
+<meta name="twitter:description" content="Nigeria's #1 student cloud platform. AI tutoring, past questions, timetable, forum & more. Join free!"/>
+<meta name="twitter:image" content="https://babspharm1-lgtm.github.io/BABSPHARM./og-image.png"/>
+<!-- Extra SEO -->
+<meta name="keywords" content="BABSPHARM, Nigeria university, student platform, AI tutor, past questions, study materials, CHM101, PHY101, BIO101"/>
+<meta name="robots" content="index, follow"/>
+<meta name="author" content="BABSPHARM Cloud"/>
+<link rel="canonical" href="https://babspharm1-lgtm.github.io/BABSPHARM./"/>
 <link rel="manifest" id="pwa-manifest-link"/>
 <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230f0c29'/><text y='.9em' font-size='70' x='15'>⚗️</text></svg>"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -101,6 +121,147 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 [data-theme="light"] .tt::after{transform:translateX(17px);}
 #app{padding-top:65px;min-height:100vh;position:relative;z-index:1;}
 .aw{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 65px);padding:16px;}
+
+/* ── LANDING PAGE ── */
+#landing{display:block;}
+#landing.hidden{display:none;}
+
+/* Hero */
+.hero{text-align:center;padding:54px 20px 36px;max-width:680px;margin:0 auto;}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;
+  background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.35);
+  font-size:.74rem;font-weight:700;color:var(--accent);margin-bottom:18px;animation:fadeUp .6s ease;}
+.hero h1{font-family:var(--fh);font-size:2.4rem;font-weight:800;line-height:1.15;margin-bottom:14px;
+  background:linear-gradient(135deg,#fff 30%,var(--accent),var(--a2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:fadeUp .65s ease;}
+@media(max-width:500px){.hero h1{font-size:1.8rem;}}
+.hero p{font-size:1rem;color:var(--text2);line-height:1.6;max-width:480px;margin:0 auto 24px;animation:fadeUp .7s ease;}
+.hero-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;animation:fadeUp .75s ease;}
+
+/* Live activity ticker */
+.live-ticker{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);
+  border-radius:30px;padding:6px 16px;display:inline-flex;align-items:center;gap:7px;
+  font-size:.75rem;color:var(--green);font-weight:600;margin-bottom:28px;animation:fadeUp .68s ease;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);
+  animation:pulse 1.4s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.8);}}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  max-width:680px;margin:0 auto 36px;padding:0 16px;}
+@media(max-width:580px){.stats-row{grid-template-columns:repeat(2,1fr);}}
+.stat-card{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);
+  padding:14px 10px;text-align:center;backdrop-filter:blur(14px);box-shadow:var(--sh);
+  animation:fadeUp .8s ease;}
+.stat-num{font-family:var(--fh);font-size:1.4rem;font-weight:800;
+  background:linear-gradient(135deg,var(--accent),var(--a2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.stat-lbl{font-size:.68rem;color:var(--text2);margin-top:3px;}
+
+/* Referral banner */
+.ref-banner{max-width:680px;margin:0 auto 32px;padding:0 16px;}
+.ref-banner-inner{background:linear-gradient(135deg,rgba(167,139,250,.2),rgba(56,189,248,.12));
+  border:1px solid rgba(167,139,250,.35);border-radius:var(--r);padding:18px 20px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+  backdrop-filter:blur(14px);animation:fadeUp .85s ease;}
+.ref-banner-left{flex:1;min-width:180px;}
+.ref-banner-title{font-family:var(--fh);font-size:.95rem;font-weight:800;margin-bottom:3px;}
+.ref-banner-sub{font-size:.76rem;color:var(--text2);}
+.ref-code-box{display:flex;align-items:center;gap:8px;}
+.ref-code{font-family:var(--fh);font-size:1.3rem;font-weight:800;letter-spacing:3px;
+  background:linear-gradient(90deg,var(--accent),var(--a2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.ref-copy-btn{background:rgba(167,139,250,.2);border:1px solid rgba(167,139,250,.4);
+  border-radius:8px;padding:5px 12px;font-size:.74rem;font-weight:700;color:var(--accent);
+  cursor:pointer;transition:all .2s ease;}
+.ref-copy-btn:hover{background:rgba(167,139,250,.35);}
+
+/* Features */
+.features{max-width:680px;margin:0 auto 36px;padding:0 16px;}
+.features-title{font-family:var(--fh);font-size:1.1rem;font-weight:800;text-align:center;
+  margin-bottom:16px;animation:fadeUp .9s ease;}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+@media(max-width:500px){.features-grid{grid-template-columns:1fr 1fr;}}
+.feat-card{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);
+  padding:16px 12px;text-align:center;backdrop-filter:blur(12px);
+  transition:all .25s ease;animation:fadeUp 1s ease;}
+.feat-card:hover{transform:translateY(-3px);border-color:var(--accent);
+  box-shadow:0 8px 24px rgba(167,139,250,.15);}
+.feat-icon{font-size:1.7rem;margin-bottom:7px;}
+.feat-name{font-family:var(--fh);font-size:.8rem;font-weight:800;margin-bottom:3px;}
+.feat-desc{font-size:.7rem;color:var(--text2);line-height:1.4;}
+
+/* How it works */
+.hiw{max-width:680px;margin:0 auto 36px;padding:0 16px;}
+.hiw-title{font-family:var(--fh);font-size:1.1rem;font-weight:800;text-align:center;margin-bottom:16px;}
+.hiw-steps{display:flex;gap:0;position:relative;}
+.hiw-steps::before{content:'';position:absolute;top:22px;left:calc(16.6% + 1px);right:calc(16.6% + 1px);
+  height:2px;background:linear-gradient(90deg,var(--accent),var(--a2),var(--a3));z-index:0;}
+.hiw-step{flex:1;text-align:center;position:relative;z-index:1;}
+.hiw-num{width:44px;height:44px;border-radius:50%;margin:0 auto 9px;
+  background:linear-gradient(135deg,var(--accent),var(--a2));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--fh);font-size:1rem;font-weight:800;color:#fff;
+  box-shadow:0 4px 14px rgba(167,139,250,.4);}
+.hiw-label{font-size:.73rem;font-weight:600;margin-bottom:3px;}
+.hiw-sub{font-size:.66rem;color:var(--text2);}
+
+/* Testimonials */
+.testimonials{max-width:680px;margin:0 auto 36px;padding:0 16px;}
+.testi-title{font-family:var(--fh);font-size:1.1rem;font-weight:800;text-align:center;margin-bottom:16px;}
+.testi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:440px){.testi-grid{grid-template-columns:1fr;}}
+.testi-card{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);
+  padding:14px;backdrop-filter:blur(12px);}
+.testi-stars{color:var(--yellow);font-size:.8rem;margin-bottom:5px;}
+.testi-text{font-size:.77rem;color:var(--text2);line-height:1.5;margin-bottom:8px;font-style:italic;}
+.testi-author{font-size:.72rem;font-weight:700;}
+.testi-role{font-size:.66rem;color:var(--text2);}
+
+/* FAQ */
+.faq{max-width:680px;margin:0 auto 36px;padding:0 16px;}
+.faq-title{font-family:var(--fh);font-size:1.1rem;font-weight:800;text-align:center;margin-bottom:14px;}
+.faq-item{background:var(--card);border:1px solid var(--cb);border-radius:12px;
+  margin-bottom:8px;overflow:hidden;}
+.faq-q{padding:13px 15px;font-size:.83rem;font-weight:700;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;transition:all .2s ease;}
+.faq-q:hover{background:rgba(255,255,255,.05);}
+.faq-arrow{font-size:.7rem;transition:transform .2s ease;color:var(--text2);}
+.faq-item.open .faq-arrow{transform:rotate(180deg);}
+.faq-a{font-size:.78rem;color:var(--text2);line-height:1.55;padding:0 15px 13px;display:none;}
+.faq-item.open .faq-a{display:block;}
+
+/* Social links */
+.socials{max-width:680px;margin:0 auto 48px;padding:0 16px;text-align:center;}
+.soc-title{font-size:.8rem;color:var(--text2);margin-bottom:12px;font-weight:600;}
+.soc-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.soc-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:12px;
+  font-size:.78rem;font-weight:700;text-decoration:none;transition:all .2s ease;border:1px solid var(--cb);}
+.soc-btn:hover{transform:translateY(-2px);}
+.soc-wa{background:rgba(37,211,102,.15);color:#25d366;border-color:rgba(37,211,102,.3);}
+.soc-wa:hover{background:rgba(37,211,102,.25);}
+.soc-tg{background:rgba(0,136,204,.15);color:#0088cc;border-color:rgba(0,136,204,.3);}
+.soc-tg:hover{background:rgba(0,136,204,.25);}
+.soc-ig{background:rgba(225,48,108,.15);color:#e1306c;border-color:rgba(225,48,108,.3);}
+.soc-ig:hover{background:rgba(225,48,108,.25);}
+
+/* Floating join button (mobile) */
+.float-join{position:fixed;bottom:24px;right:18px;z-index:300;display:none;}
+.float-join.show{display:flex;}
+.float-join-btn{background:linear-gradient(135deg,#a78bfa,#6d28d9);color:#fff;
+  border:none;border-radius:50px;padding:13px 22px;font-family:var(--fh);
+  font-size:.88rem;font-weight:800;cursor:pointer;box-shadow:0 6px 24px rgba(109,40,217,.5);
+  display:flex;align-items:center;gap:7px;transition:all .2s ease;}
+.float-join-btn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(109,40,217,.6);}
+
+/* Urgency banner */
+.urgency-bar{background:linear-gradient(90deg,rgba(251,191,36,.15),rgba(251,146,60,.1));
+  border-top:1px solid rgba(251,191,36,.25);border-bottom:1px solid rgba(251,191,36,.25);
+  padding:9px 16px;text-align:center;font-size:.78rem;font-weight:600;color:var(--yellow);
+  display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
+#countdown-timer{font-family:var(--fh);font-weight:800;letter-spacing:1px;}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
 .ac{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);
   padding:32px 26px;width:100%;max-width:400px;box-shadow:var(--sh);backdrop-filter:blur(20px);animation:su .5s ease;}
 .ac h2{font-family:var(--fh);font-size:1.5rem;font-weight:800;margin-bottom:3px;
@@ -867,6 +1028,43 @@ body.has-bottom-nav #app{padding-bottom:0;}
 .annot-del:hover{opacity:1;color:var(--red);}
 .annot-file-label{font-size:.68rem;color:var(--text2);font-style:italic;margin-top:1px;}
 
+/* ── SPLASH SCREEN ── */
+#splash{position:fixed;inset:0;z-index:99999;
+  background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity .5s ease,visibility .5s ease;}
+#splash.hide{opacity:0;visibility:hidden;pointer-events:none;}
+.splash-logo{font-size:3.2rem;margin-bottom:10px;animation:splashBounce .8s ease;}
+.splash-name{font-family:var(--fh);font-size:1.6rem;font-weight:800;
+  background:linear-gradient(90deg,var(--accent),var(--a2),var(--a3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:6px;animation:splashFade .9s ease;}
+.splash-tagline{font-size:.82rem;color:var(--text2);margin-bottom:32px;animation:splashFade 1s ease;}
+.splash-bar-wrap{width:180px;height:4px;background:rgba(255,255,255,.12);border-radius:4px;overflow:hidden;}
+.splash-bar{height:100%;width:0%;border-radius:4px;
+  background:linear-gradient(90deg,var(--accent),var(--a2));
+  animation:splashLoad 1.6s ease forwards;}
+@keyframes splashBounce{0%{transform:scale(0) rotate(-15deg);opacity:0;}70%{transform:scale(1.2) rotate(5deg);}100%{transform:scale(1) rotate(0);opacity:1;}}
+@keyframes splashFade{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+@keyframes splashLoad{0%{width:0%;}60%{width:75%;}100%{width:100%;}}
+
+/* ── SCROLL REVEAL ANIMATIONS ── */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .6s ease,transform .6s ease;}
+.reveal.visible{opacity:1;transform:translateY(0);}
+.reveal-left{opacity:0;transform:translateX(-28px);transition:opacity .6s ease,transform .6s ease;}
+.reveal-left.visible{opacity:1;transform:translateX(0);}
+.reveal-right{opacity:0;transform:translateX(28px);transition:opacity .6s ease,transform .6s ease;}
+.reveal-right.visible{opacity:1;transform:translateX(0);}
+.reveal-scale{opacity:0;transform:scale(.93);transition:opacity .55s ease,transform .55s ease;}
+.reveal-scale.visible{opacity:1;transform:scale(1);}
+/* Stagger delays for grid children */
+.reveal-stagger > *:nth-child(1){transition-delay:.05s;}
+.reveal-stagger > *:nth-child(2){transition-delay:.12s;}
+.reveal-stagger > *:nth-child(3){transition-delay:.19s;}
+.reveal-stagger > *:nth-child(4){transition-delay:.26s;}
+.reveal-stagger > *:nth-child(5){transition-delay:.33s;}
+.reveal-stagger > *:nth-child(6){transition-delay:.4s;}
+
 /* ── SESSION TIMEOUT MODAL ── */
 #session-timeout-modal{position:fixed;inset:0;z-index:99000;background:rgba(0,0,0,.75);
   backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:16px;}
@@ -889,6 +1087,14 @@ body.has-bottom-nav #app{padding-bottom:0;}
 </style>
 </head>
 <body data-theme="dark">
+
+<!-- SPLASH SCREEN -->
+<div id="splash">
+  <div class="splash-logo">⚗️</div>
+  <div class="splash-name">BABSPHARM Cloud</div>
+  <div class="splash-tagline">Learn Smarter · Score Higher</div>
+  <div class="splash-bar-wrap"><div class="splash-bar"></div></div>
+</div>
 
 <!-- LANDING PAGE -->
 <div id="landing">
@@ -936,11 +1142,165 @@ body.has-bottom-nav #app{padding-bottom:0;}
 </div>
 
 <div id="app">
+
+<!-- LANDING PAGE -->
+<div id="landing">
+
+  <!-- Urgency bar -->
+  <div class="urgency-bar">
+    🎉 New semester — join now & get early access! &nbsp;|&nbsp; Offer ends in <span id="countdown-timer">--:--:--</span>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-badge">🚀 Nigeria's #1 Student Cloud Platform</div>
+    <h1>Learn Smarter,<br>Score Higher</h1>
+    <p>BABSPHARM Cloud gives you study materials, AI tutoring, past questions, and a thriving student community — all in one place.</p>
+    <div class="live-ticker">
+      <span class="live-dot"></span>
+      <span id="live-count">247 students</span> active right now
+    </div>
+    <div class="hero-btns">
+      <button class="btn bp" onclick="showAuthFromLanding('register')" style="font-size:.92rem;padding:12px 26px;">📝 Join Free</button>
+      <button class="btn bs" onclick="showAuthFromLanding('login')" style="font-size:.92rem;padding:12px 26px;">🔑 Log In</button>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row reveal reveal-stagger">
+    <div class="stat-card"><div class="stat-num">500+</div><div class="stat-lbl">Students Enrolled</div></div>
+    <div class="stat-card"><div class="stat-num">12</div><div class="stat-lbl">Courses Available</div></div>
+    <div class="stat-card"><div class="stat-num">1,200+</div><div class="stat-lbl">Study Files</div></div>
+    <div class="stat-card"><div class="stat-num">4.9★</div><div class="stat-lbl">Student Rating</div></div>
+  </div>
+
+  <!-- Referral Banner -->
+  <div class="ref-banner reveal">
+    <div class="ref-banner-inner">
+      <div class="ref-banner-left">
+        <div class="ref-banner-title">🎁 Use Referral Code at Sign-Up</div>
+        <div class="ref-banner-sub">Get instant access when a friend invites you</div>
+      </div>
+      <div class="ref-code-box">
+        <span class="ref-code">AYOD841</span>
+        <button class="ref-copy-btn" onclick="copyRefCode()">📋 Copy</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features -->
+  <div class="features reveal">
+    <div class="features-title">✨ Everything You Need to Excel</div>
+    <div class="features-grid reveal-stagger">
+      <div class="feat-card"><div class="feat-icon">🤖</div><div class="feat-name">AI Tutor</div><div class="feat-desc">24/7 PhD-level AI to answer your questions instantly</div></div>
+      <div class="feat-card"><div class="feat-icon">📚</div><div class="feat-name">Study Files</div><div class="feat-desc">Hundreds of past questions, notes & textbooks</div></div>
+      <div class="feat-card"><div class="feat-icon">📅</div><div class="feat-name">Timetable</div><div class="feat-desc">Never miss a class with smart schedule tracking</div></div>
+      <div class="feat-card"><div class="feat-icon">💬</div><div class="feat-name">Forum</div><div class="feat-desc">Ask questions and collaborate with fellow students</div></div>
+      <div class="feat-card"><div class="feat-icon">📢</div><div class="feat-name">Announcements</div><div class="feat-desc">Stay updated with real-time news from your school</div></div>
+      <div class="feat-card"><div class="feat-icon">📲</div><div class="feat-name">Works Offline</div><div class="feat-desc">Install as an app — study even without internet</div></div>
+    </div>
+  </div>
+
+  <!-- How It Works -->
+  <div class="hiw reveal">
+    <div class="hiw-title">🛤️ How It Works</div>
+    <div class="hiw-steps">
+      <div class="hiw-step">
+        <div class="hiw-num">1</div>
+        <div class="hiw-label">Sign Up</div>
+        <div class="hiw-sub">Create your free account in seconds</div>
+      </div>
+      <div class="hiw-step">
+        <div class="hiw-num">2</div>
+        <div class="hiw-label">Get Approved</div>
+        <div class="hiw-sub">Admin verifies your account quickly</div>
+      </div>
+      <div class="hiw-step">
+        <div class="hiw-num">3</div>
+        <div class="hiw-label">Start Learning</div>
+        <div class="hiw-sub">Access all courses & features instantly</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Testimonials -->
+  <div class="testimonials reveal">
+    <div class="testi-title">💬 What Students Say</div>
+    <div class="testi-grid reveal-stagger">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"The AI tutor explained CHM101 better than any lecture I've attended. I went from 40 to 72 in my CA!"</div>
+        <div class="testi-author">Amaka O.</div>
+        <div class="testi-role">100 Level · Sciences</div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"Finding past questions used to stress me out. Now everything is in one place. This platform is a lifesaver."</div>
+        <div class="testi-author">Chukwuemeka B.</div>
+        <div class="testi-role">200 Level · Sciences</div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★☆</div>
+        <div class="testi-text">"The forum is great — seniors actually reply and help you understand tough topics fast."</div>
+        <div class="testi-author">Fatimah A.</div>
+        <div class="testi-role">100 Level · Sciences</div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <div class="testi-text">"Works offline on my phone! I study during power cuts now. Best decision joining this platform."</div>
+        <div class="testi-author">Tunde M.</div>
+        <div class="testi-role">300 Level · Sciences</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="faq reveal">
+    <div class="faq-title">❓ Frequently Asked Questions</div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Is BABSPHARM Cloud free to join? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Yes! Signing up is completely free. Just register with your details and wait for admin approval.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How long does account approval take? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Most accounts are approved within a few hours. The admin is available Mon–Sat, 8 AM–8 PM.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">What courses are available? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">We cover PHY101/103, CHM101, BIO101, MTH101, GST101, SOC101, PHL101/105, EGL101, LIB101, COS101, and more.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Do I need a referral code? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">No, a referral code is optional. But using one (like AYOD841) can help speed up your approval!</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Can I use it on my phone without internet? <span class="faq-arrow">▼</span></div>
+      <div class="faq-a">Yes! Install BABSPHARM Cloud as a PWA (Progressive Web App) and access cached content offline.</div>
+    </div>
+  </div>
+
+  <!-- Socials -->
+  <div class="socials">
+    <div class="soc-title">Connect with us</div>
+    <div class="soc-links">
+      <a class="soc-btn soc-wa" href="https://wa.me/2348000000000" target="_blank" rel="noopener">💬 WhatsApp</a>
+      <a class="soc-btn soc-tg" href="https://t.me/babspharm" target="_blank" rel="noopener">✈️ Telegram</a>
+      <a class="soc-btn soc-ig" href="https://instagram.com/babspharm" target="_blank" rel="noopener">📸 Instagram</a>
+    </div>
+  </div>
+
+</div><!-- end #landing -->
+
+<!-- Floating Join Button -->
+<div class="float-join" id="float-join">
+  <button class="float-join-btn" onclick="showAuthFromLanding('register')">📝 Join Free →</button>
+</div>
+
 <!-- AUTH -->
-<div id="as" class="aw">
+<div id="as" class="aw" style="display:none;">
   <div class="ac">
     <h2>BABSPHARM Cloud</h2>
-    <div class="sub">Your pharmaceutical education platform</div>
+    <div class="sub">Your cloud learning platform</div>
     <div class="atabs">
       <button class="atab on" id="tbl" onclick="sat('login')">🔑 Login</button>
       <button class="atab" id="tbr" onclick="sat('register')">📝 Register</button>
@@ -5793,7 +6153,7 @@ document.addEventListener('keydown',function(e){
 // AI ASSISTANT
 // ══════════════════════════════════
 var aiOpen=false,aiHistory=[];
-var AI_SYSTEM=`You are BABSPHARM AI, a PhD-level academic tutor for BABSPHARM Cloud (Nigerian pharmacy university platform). You master: PHY101/103 (mechanics, electricity, waves, optics, modern physics), CHM101 (atomic structure, bonding, stoichiometry, thermochemistry, equilibrium, organic, electrochemistry), BIO101 (cell biology, genetics, physiology, enzymes), MTH101 (algebra, trig, calculus, matrices), GST101, SOC101, PHL101/105, EGL101, LIB101, COS101.
+var AI_SYSTEM=`You are BABSPHARM AI, a PhD-level academic tutor for BABSPHARM Cloud (Nigerian university platform). You master: PHY101/103 (mechanics, electricity, waves, optics, modern physics), CHM101 (atomic structure, bonding, stoichiometry, thermochemistry, equilibrium, organic, electrochemistry), BIO101 (cell biology, genetics, physiology, enzymes), MTH101 (algebra, trig, calculus, matrices), GST101, SOC101, PHL101/105, EGL101, LIB101, COS101.
 
 Always use correct scientific symbols: ×÷²³√πΩΔ⇌→≈≠≤≥θλμρ∑∫ and chemical formulas like H₂O CO₂ H₂SO₄ NaOH NH₃ with proper subscripts.
 
@@ -5932,7 +6292,7 @@ console.log('✅ BABSPHARM Cloud v4 — Full Education Platform');
   // Inject manifest as blob
   var manifest={
     name:'BABSPHARM Cloud',short_name:'BABSPHARM',
-    description:'Pharmaceutical education platform',
+    description:'Cloud learning platform',
     start_url:window.location.pathname,
     display:'standalone',
     orientation:'portrait',
@@ -7010,7 +7370,7 @@ function _appendCommentsToPreview(fileId){
     {q:"Your only limit is your mind.",a:"Unknown",e:"🧠"},
     {q:"The harder you work for something, the greater you'll feel when you achieve it.",a:"Unknown",e:"🏆"},
     {q:"Don't stop when you're tired. Stop when you're done.",a:"Unknown",e:"💊"},
-    {q:"Pharmacy is the art and science of healing — embrace both.",a:"Unknown",e:"⚗️"},
+    {q:"Learning is the art and science of growth — embrace both.",a:"Unknown",e:"⚗️"},
     {q:"Every expert was once a beginner. Keep going.",a:"Unknown",e:"📚"},
     {q:"Dream big. Study hard. Stay humble.",a:"Unknown",e:"🌙"},
     {q:"Today's preparation determines tomorrow's achievement.",a:"Unknown",e:"🗓️"},
@@ -7738,7 +8098,7 @@ loadSavedTheme();
   var chatBusy = false;
 
   var SYSTEM_PROMPT = [
-    "You are the friendly and knowledgeable admin of BABSPHARM Cloud, a pharmaceutical education platform for pharmacy students.",
+    "You are the friendly and knowledgeable admin of BABSPHARM Cloud, a cloud learning platform for students.",
     "You help prospective students on the registration page with questions about:",
     "- How to create an account and what information is needed (Full Name, Username, Password, Level)",
     "- Account approval process (accounts require admin approval after registration)",
@@ -7901,6 +8261,136 @@ loadSavedTheme();
     if(rf && rf.classList.contains('on')){ updateFabVisibility('register'); }
   });
 
+})();
+</script>
+<script>
+// ── SPLASH SCREEN ──
+(function(){
+  var splash = document.getElementById('splash');
+  if(!splash) return;
+  // Hide splash after 1.8s (bar animation completes)
+  setTimeout(function(){
+    splash.classList.add('hide');
+    setTimeout(function(){ splash.style.display='none'; }, 550);
+  }, 1800);
+})();
+
+// ── SCROLL REVEAL ──
+(function(){
+  var els = document.querySelectorAll('.reveal,.reveal-left,.reveal-right,.reveal-scale');
+  if(!els.length) return;
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){
+        e.target.classList.add('visible');
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:0.12});
+  els.forEach(function(el){ io.observe(el); });
+  // Also reveal stagger children
+  document.querySelectorAll('.reveal-stagger').forEach(function(parent){
+    Array.from(parent.children).forEach(function(child){
+      child.style.opacity='0';
+      child.style.transform='translateY(22px)';
+      child.style.transition='opacity .5s ease, transform .5s ease';
+      io.observe(child);
+      child.addEventListener('intersect',function(){
+        child.style.opacity='1';
+        child.style.transform='translateY(0)';
+      });
+    });
+  });
+  // Smooth scroll for anchor links
+  document.querySelectorAll('a[href^="#"]').forEach(function(a){
+    a.addEventListener('click',function(e){
+      var t=document.querySelector(a.getAttribute('href'));
+      if(t){e.preventDefault();t.scrollIntoView({behavior:'smooth',block:'start'});}
+    });
+  });
+})();
+
+
+function showAuthFromLanding(tab) {
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('float-join').classList.remove('show');
+  var as = document.getElementById('as');
+  as.style.display = '';
+  // Switch to correct tab
+  if(typeof sat === 'function') sat(tab);
+}
+
+function copyRefCode() {
+  navigator.clipboard.writeText('AYOD841').then(function(){
+    var btn = document.querySelector('.ref-copy-btn');
+    var orig = btn.textContent;
+    btn.textContent = '✅ Copied!';
+    btn.style.color = 'var(--green)';
+    setTimeout(function(){ btn.textContent = orig; btn.style.color = ''; }, 2000);
+  }).catch(function(){
+    // Fallback
+    var ta = document.createElement('textarea');
+    ta.value = 'AYOD841';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+}
+
+function toggleFaq(item) {
+  var isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(function(el){ el.classList.remove('open'); });
+  if(!isOpen) item.classList.add('open');
+}
+
+// Countdown timer (resets every 24h from page load)
+(function(){
+  var end = Date.now() + 23*3600*1000 + 47*60*1000;
+  function tick(){
+    var diff = Math.max(0, end - Date.now());
+    var h = Math.floor(diff/3600000);
+    var m = Math.floor((diff%3600000)/60000);
+    var s = Math.floor((diff%60000)/1000);
+    var el = document.getElementById('countdown-timer');
+    if(el) el.textContent = pad(h)+':'+pad(m)+':'+pad(s);
+    if(diff > 0) setTimeout(tick, 1000);
+  }
+  function pad(n){ return n < 10 ? '0'+n : n; }
+  tick();
+})();
+
+// Live student count animation
+(function(){
+  var base = 240, el = document.getElementById('live-count');
+  function wiggle(){
+    if(!el) return;
+    base += Math.floor(Math.random()*3) - 1;
+    if(base < 220) base = 220;
+    if(base > 280) base = 280;
+    el.textContent = base + ' students';
+    setTimeout(wiggle, 4000 + Math.random()*3000);
+  }
+  wiggle();
+})();
+
+// Floating join button — show after scrolling past hero
+window.addEventListener('scroll', function(){
+  var fj = document.getElementById('float-join');
+  var landing = document.getElementById('landing');
+  if(!fj || !landing || landing.classList.contains('hidden')) return;
+  fj.classList.toggle('show', window.scrollY > 280);
+}, {passive:true});
+
+// If user is already logged in, hide landing immediately
+(function(){
+  var stored = localStorage.getItem('babs_session') || sessionStorage.getItem('babs_session');
+  if(stored){
+    var landing = document.getElementById('landing');
+    var as = document.getElementById('as');
+    if(landing) landing.classList.add('hidden');
+    if(as) as.style.display = '';
+  }
 })();
 </script>
 </body>
