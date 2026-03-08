@@ -5655,9 +5655,15 @@ function openPreview(data,name,type){
   var ext2=nameParts.length>2?nameParts[nameParts.length-2].toLowerCase():'';
   var t=(type||'').toLowerCase();
 
+  // ── Sniff MIME from the data URI itself if type is missing/unknown ──
+  if((!t||t==='application/octet-stream')&&data&&data.startsWith('data:')){
+    var sniffed=(data.split(';')[0]||'').replace('data:','').toLowerCase();
+    if(sniffed) t=sniffed;
+  }
+
   var isImg=['image/png','image/jpeg','image/jpg','image/gif','image/webp','image/svg+xml','image/bmp','image/tiff'].indexOf(t)>-1
     ||['png','jpg','jpeg','gif','webp','svg','bmp','tiff','ico'].indexOf(ext)>-1;
-  var isPdf=t==='application/pdf'||ext==='pdf';
+  var isPdf=t==='application/pdf'||ext==='pdf'||t.indexOf('pdf')>-1;
   var isVideo=['video/mp4','video/webm','video/ogg','video/quicktime','video/x-msvideo'].indexOf(t)>-1
     ||['mp4','webm','ogg','ogv','mov','avi','mkv'].indexOf(ext)>-1;
   var isAudio=['audio/mpeg','audio/ogg','audio/wav','audio/aac','audio/flac','audio/x-m4a'].indexOf(t)>-1
@@ -5666,7 +5672,18 @@ function openPreview(data,name,type){
   var isCode=!isHtml&&(['js','ts','jsx','tsx','py','java','c','cpp','h','css','xml','json','sh','sql','yaml','yml','ini'].indexOf(ext)>-1
     ||['js','ts','jsx','tsx','py','java','c','cpp','h','css','xml','json','sh','sql','yaml','yml','ini'].indexOf(ext2)>-1);
   var isText=!isCode&&!isHtml&&(t.startsWith('text/')||['txt','csv','md','log','rtf'].indexOf(ext)>-1);
-  var isOffice=['doc','docx','xls','xlsx','ppt','pptx'].indexOf(ext)>-1;
+  var isOffice=['doc','docx','xls','xlsx','ppt','pptx'].indexOf(ext)>-1
+    ||['application/msword','application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+       'application/vnd.ms-excel','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+       'application/vnd.ms-powerpoint','application/vnd.openxmlformats-officedocument.presentationml.presentation'].indexOf(t)>-1;
+
+  // ── Final safety: if nothing matched but data URI has a known MIME, force PDF path ──
+  // Most study files uploaded are PDFs — if truly unknown, try PDF viewer last resort
+  var isUnknownBinary=!isImg&&!isPdf&&!isVideo&&!isAudio&&!isHtml&&!isCode&&!isText&&!isOffice;
+  if(isUnknownBinary&&data&&data.startsWith('data:')){
+    // Try PDF viewer as best-effort for any binary file
+    isPdf=true;
+  }
 
   body.innerHTML='<div class="prev-nosupp"><span>⏳</span>Loading preview...</div>';
 
@@ -9832,14 +9849,31 @@ function openPreviewWithComments(fileId,data,name,type){
 function _appendCommentsToPreview(fileId){
   // Wait for preview to open, then append comments
   setTimeout(function(){
+    // Try generic preview body first, then PDF viewer overlay
     var prevBody=document.getElementById('prev-body');
+    var pdfOverlay=document.getElementById('pdf-viewer-overlay');
+    var isPdfOpen=pdfOverlay&&pdfOverlay.classList.contains('open');
+    if(isPdfOpen){
+      // Append comments below the PDF canvas wrap inside the PDF viewer
+      var pdfWrap=document.getElementById('pdf-canvas-wrap');
+      if(pdfWrap){
+        var existing=document.getElementById('prev-comments-'+fileId);
+        if(existing)existing.parentNode.removeChild(existing);
+        var wrapper=document.createElement('div');
+        wrapper.id='prev-comments-'+fileId;
+        wrapper.style.cssText='padding:14px;background:rgba(0,0,0,.3);border-top:1px solid rgba(255,255,255,.08);';
+        pdfWrap.parentNode.insertBefore(wrapper,pdfWrap.nextSibling);
+        renderFileComments(fileId,wrapper);
+      }
+      return;
+    }
     if(!prevBody)return;
     var wrapper=document.createElement('div');
     wrapper.id='prev-comments-'+fileId;
     wrapper.style.cssText='margin-top:12px;padding:0 4px;';
     prevBody.appendChild(wrapper);
     renderFileComments(fileId,wrapper);
-  },200);
+  },400);
 }
 
 // ══════════════════════════════════════════════
