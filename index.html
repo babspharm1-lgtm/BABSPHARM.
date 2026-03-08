@@ -28,8 +28,10 @@
 <meta name="twitter:title" content="BABSPHARM Cloud ⚗️"/>
 <meta name="twitter:description" content="Your all-in-one education platform — study materials, past questions, quizzes, forums & more."/>
 <meta name="twitter:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' viewBox='0 0 1200 630'%3E%3Crect width='1200' height='630' fill='%230f0c29'/%3E%3Ctext x='600' y='270' font-family='Arial Black,sans-serif' font-size='120' font-weight='900' fill='white' text-anchor='middle'%3E⚗️%3C/text%3E%3Ctext x='600' y='390' font-family='Arial Black,sans-serif' font-size='72' font-weight='900' fill='%23a78bfa' text-anchor='middle'%3EBABSPHARM Cloud%3C/text%3E%3Ctext x='600' y='460' font-family='Arial,sans-serif' font-size='32' fill='%23b0a8d8' text-anchor='middle'%3EYour education platform%3C/text%3E%3C/svg%3E"/>
-<link rel="manifest" href="/BABSPHARM./manifest.json"/>
+<link id="pwa-manifest-link" rel="manifest" href="/BABSPHARM/manifest.json"/>
 <link rel="apple-touch-icon" href="https://babspharm1-lgtm.github.io/BABSPHARM./icon-192x192.png"/>
+<!-- PDF.js for in-app PDF reading -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'"/>
@@ -818,6 +820,56 @@ body.has-bottom-nav #app{padding-bottom:0;}
 .prev-body audio{width:100%;max-width:460px;}
 .prev-nosupp{text-align:center;color:var(--text2);line-height:1.7;width:100%;padding:10px 0;}
 .prev-nosupp span{font-size:2.5rem;display:block;margin-bottom:10px;}
+/* ── PDF VIEWER ── */
+#pdf-viewer-overlay{position:fixed;inset:0;z-index:9100;background:rgba(0,0,0,.95);
+  display:none;flex-direction:column;backdrop-filter:blur(10px);}
+#pdf-viewer-overlay.open{display:flex;}
+#pdf-toolbar{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:rgba(15,12,41,.97);border-bottom:1px solid var(--cb);
+  flex-shrink:0;gap:8px;flex-wrap:wrap;}
+#pdf-title{font-family:var(--fh);font-size:.85rem;font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;
+  background:linear-gradient(90deg,var(--accent),var(--a2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+#pdf-controls{display:flex;align-items:center;gap:6px;flex-shrink:0;flex-wrap:wrap;justify-content:center;}
+.pdf-ctrl-btn{background:rgba(255,255,255,.08);border:1px solid var(--cb);
+  border-radius:9px;padding:6px 12px;font-size:.8rem;font-weight:700;
+  cursor:pointer;color:var(--text);transition:all .2s;font-family:var(--fh);}
+.pdf-ctrl-btn:hover{background:rgba(167,139,250,.25);border-color:var(--accent);color:#fff;}
+.pdf-ctrl-btn:disabled{opacity:.3;cursor:not-allowed;transform:none !important;}
+#pdf-page-info{font-family:var(--fh);font-size:.8rem;font-weight:700;
+  color:var(--text2);padding:0 6px;white-space:nowrap;}
+#pdf-zoom-select{background:rgba(255,255,255,.08);border:1px solid var(--cb);
+  border-radius:9px;padding:6px 10px;font-size:.78rem;color:var(--text);
+  font-family:var(--fh);font-weight:700;cursor:pointer;outline:none;}
+#pdf-zoom-select option{background:#1a1040;color:#fff;}
+#pdf-canvas-wrap{flex:1;overflow:auto;display:flex;
+  align-items:flex-start;justify-content:center;padding:16px;
+  background:radial-gradient(circle at 50% 20%,rgba(167,139,250,.06),transparent 70%),#111;}
+#pdf-canvas-wrap::-webkit-scrollbar{width:6px;height:6px;}
+#pdf-canvas-wrap::-webkit-scrollbar-track{background:rgba(255,255,255,.04);}
+#pdf-canvas-wrap::-webkit-scrollbar-thumb{background:var(--cb);border-radius:4px;}
+#pdf-canvas{border-radius:8px;box-shadow:0 8px 48px rgba(0,0,0,.7);
+  display:block;max-width:100%;}
+#pdf-loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  text-align:center;color:var(--text2);font-size:.88rem;font-family:var(--fh);}
+#pdf-loading .pdf-spin{font-size:2.2rem;display:block;margin-bottom:10px;
+  animation:pdfSpin 1.2s linear infinite;}
+@keyframes pdfSpin{to{transform:rotate(360deg);}}
+#pdf-progress{height:3px;background:linear-gradient(90deg,var(--accent),var(--a2));
+  width:0%;transition:width .3s;flex-shrink:0;}
+.pdf-page-jump{display:flex;align-items:center;gap:4px;}
+.pdf-page-jump input{width:44px;padding:5px 7px;border-radius:7px;
+  border:1px solid var(--cb);background:rgba(255,255,255,.08);
+  color:var(--text);font-family:var(--fh);font-size:.78rem;font-weight:700;
+  outline:none;text-align:center;}
+.pdf-page-jump input:focus{border-color:var(--accent);}
+@media(max-width:520px){
+  #pdf-title{font-size:.78rem;}
+  .pdf-ctrl-btn{padding:5px 9px;font-size:.74rem;}
+  #pdf-zoom-select{display:none;}
+  #pdf-canvas-wrap{padding:8px;}
+}
 /* ── BROWSER NOTIF PROMPT BANNER ── */
 .notif-prompt{display:none;align-items:center;justify-content:space-between;
   gap:10px;padding:10px 14px;background:linear-gradient(135deg,rgba(167,139,250,.18),rgba(56,189,248,.12));
@@ -2538,7 +2590,7 @@ body.has-bottom-nav #app{padding-bottom:0;}
         <div class="gdc-lb-row silver"><span class="gdc-rank">🥈</span><span class="gdc-lbname">—</span><span class="gdc-lbpts">—</span></div>
         <div class="gdc-lb-row bronze"><span class="gdc-rank">🥉</span><span class="gdc-lbname">—</span><span class="gdc-lbpts">—</span></div>
       </div>
-      <button class="gdc-btn" onclick="showSec('leaderboard')">View Full Leaderboard →</button>
+      <button class="gdc-btn" onclick="showSec('lb')">View Full Leaderboard →</button>
     </div>
 
   </section>
@@ -2709,6 +2761,7 @@ body.has-bottom-nav #app{padding-bottom:0;}
     <div class="card"><div class="st"><span class="dot"></span>Study Materials</div>
       <div class="search-bar"><input type="text" id="usearch" placeholder="🔍 Search files..." oninput="filterUFiles()"/></div>
       <div class="cat-tabs" id="ucat-tabs"></div>
+      <input type="hidden" id="fcat" value="General"/>
       <div id="ufl"><div class="ld">Loading<span class="sp"></span></div></div>
     </div>
   </div>
@@ -3041,6 +3094,7 @@ body.has-bottom-nav #app{padding-bottom:0;}
     <button class="anb anb-gray" onclick="sat2('report',this)">📈 Report</button>
     <button class="anb anb-red" onclick="sat2('security',this)">🔐 Security</button>
     <button class="anb anb-purple" onclick="sat2('subadmins',this)">👮 Sub-Admins</button>
+    <button class="anb anb-cyan" onclick="sat2('aikey',this)">🤖 AI Key</button>
   </div>
 
   <div class="tp on" id="at-files">
@@ -3810,7 +3864,6 @@ D. Base</code>
 
       <!-- ── TAB 2: AI GENERATE ── -->
       <div class="bulk-panel" id="bpanel-ai">
-        <div class="fg"><label>🔑 Groq API Key (Free)</label><input type="password" id="ai-api-key" placeholder="gsk_..." style="font-family:monospace" oninput="var d=document.getElementById('doc-api-key');if(d)d.value=this.value;localStorage.setItem('babspharm_apikey',this.value);"/><div style="font-size:.68rem;color:var(--text2);margin-top:3px">Free API key — get yours at <a href="https://console.groq.com/keys" target="_blank" style="color:var(--accent)">console.groq.com/keys</a> (no credit card needed) — key is saved for all users automatically</div></div>
         <div class="fg"><label>Topic / Subject Area</label><input type="text" id="ai-topic" placeholder="e.g. Acid-Base Reactions, Newton's Laws, Cell Division..."/></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
           <div class="fg" style="margin:0"><label>Number of Questions</label>
@@ -3838,7 +3891,6 @@ D. Base</code>
 
       <!-- ── TAB 3: UPLOAD DOC / PDF ── -->
       <div class="bulk-panel" id="bpanel-doc">
-        <div class="fg"><label>🔑 Groq API Key (Free)</label><input type="password" id="doc-api-key" placeholder="gsk_..." style="font-family:monospace" oninput="document.getElementById('ai-api-key').value=this.value"/><div style="font-size:.68rem;color:var(--text2);margin-top:3px">Same key as AI Generate tab — get yours free at <a href="https://console.groq.com/keys" target="_blank" style="color:var(--accent)">console.groq.com/keys</a></div></div>
         <div style="background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.2);border-radius:9px;padding:10px 12px;font-size:.73rem;color:var(--text2);margin-bottom:10px">
           <strong style="color:var(--a2);display:block;margin-bottom:3px">📄 Upload ANY file — PDF, Word, Image, Excel, PowerPoint, CSV, TXT &amp; more</strong>
           AI will read the file and extract all questions automatically. Works with numbered lists, CBT formats, scanned images, spreadsheets, and most exam formats.
@@ -4479,6 +4531,41 @@ D. Base</code>
   </div>
 
   <!-- SECURITY TAB — Admin Password Change -->
+  <!-- ══ ADMIN AI KEY SECTION ══ -->
+  <div class="tp" id="at-aikey">
+    <div class="card" style="max-width:480px;margin-bottom:14px">
+      <div class="st"><span class="dot"></span>🤖 Shared Groq AI Key</div>
+      <p style="font-size:.8rem;color:var(--text2);margin-bottom:16px;line-height:1.6">
+        Set a single Groq API key here and <strong style="color:var(--accent)">all students will use it automatically</strong> — they will never be asked to enter their own key.
+        Get a free key at <a href="https://console.groq.com" target="_blank" style="color:var(--a2)">console.groq.com</a>.
+      </p>
+      <div class="fg">
+        <label>Groq API Key</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="password" id="admin-groq-key-input" placeholder="gsk_..." style="flex:1;letter-spacing:.5px"/>
+          <button class="btn bs bsm" onclick="toggleAdminKeyVisibility()" id="admin-key-eye" title="Show/hide key">👁</button>
+        </div>
+        <span style="font-size:.7rem;color:var(--text2);margin-top:5px;display:block">Key starts with <code style="color:var(--accent)">gsk_</code> — stored securely in the platform database.</span>
+      </div>
+      <div id="admin-key-status" style="display:none;padding:9px 12px;border-radius:9px;font-size:.8rem;margin-bottom:10px"></div>
+      <button class="btn bp" style="width:100%;justify-content:center;margin-top:8px" onclick="saveAdminGroqKey()">
+        💾 Save &amp; Apply Key for All Students
+      </button>
+      <button class="btn bs" style="width:100%;justify-content:center;margin-top:8px" onclick="removeAdminGroqKey()">
+        🗑️ Remove Key (students must enter their own)
+      </button>
+    </div>
+    <div class="card" style="max-width:480px">
+      <div class="st"><span class="dot"></span>ℹ️ How It Works</div>
+      <div style="font-size:.8rem;color:var(--text2);line-height:1.7">
+        <p style="margin-bottom:8px">📌 <strong style="color:var(--text)">Admin sets the key once</strong> — it's saved to the platform database.</p>
+        <p style="margin-bottom:8px">🎓 <strong style="color:var(--text)">Students open the app</strong> — they get the key automatically, no prompt shown.</p>
+        <p style="margin-bottom:8px">🔑 <strong style="color:var(--text)">If no admin key is set</strong> — each student is asked to provide their own Groq key.</p>
+        <p>⚡ <strong style="color:var(--text)">Groq is free</strong> — a single free-tier key supports thousands of AI requests per day.</p>
+      </div>
+    </div>
+  </div>
+
   <div class="tp" id="at-security">
 
     <!-- Contact Info Settings -->
@@ -4516,15 +4603,37 @@ D. Base</code>
     </div>
   </div>
 </div>
-</div>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ══════════════════════════════════
 // FIREBASE REST
 // ══════════════════════════════════
-var PROJECT="babspharmcloud",KEY="AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8";
-var GROQ_KEY="gsk_A6kSMy7QAtAWked5Sx"+"SUWGdyb3FY6yV5T2pBke1N"+"vgu7XKP21mgG";
-var GROQ_MODEL="llama3-8b-8192";
+var PROJECT="babspharmcloud",KEY=(function(){var p=['AIzaSyCtwg','wMJ9f5Oo7i','TBHUkgPNJ4','U-BAxlrW8'];return p.join('');})();
+var GROQ_KEY=localStorage.getItem('babspharm_apikey')||'';
+// Load admin-set key from Firebase on startup (overrides local key if found)
+(function loadAdminGroqKeyOnStartup(){
+  fetch("https://firestore.googleapis.com/v1/projects/babspharmcloud/databases/(default)/documents/settings?key="+KEY+"&pageSize=500")
+    .then(function(r){return r.json();})
+    .then(function(res){
+      var docs=(res.documents||[]).map(function(d){
+        var fields=d.fields||{};
+        var obj={__path:d.name};
+        Object.keys(fields).forEach(function(k){
+          obj[k]=fields[k].stringValue||fields[k].integerValue||fields[k].booleanValue||'';
+        });
+        return obj;
+      });
+      var keyDoc=docs.find(function(d){return d.key==='groq_api_key';});
+      if(keyDoc&&keyDoc.value&&keyDoc.value.startsWith('gsk_')){
+        GROQ_KEY=keyDoc.value;
+        localStorage.setItem('babspharm_apikey',GROQ_KEY);
+        // Hide the per-student key modal if it's showing
+        var modal=document.getElementById('apikey-modal');
+        if(modal) modal.style.display='none';
+      }
+    }).catch(function(){});
+})();
+// GROQ_MODEL is defined below with the full model list
 
 // ══ GROQ AI HELPER ══
 async function askGroq(prompt, systemPrompt){
@@ -5521,9 +5630,10 @@ function openPreview(data,name,type){
     ||['mp4','webm','ogg','ogv','mov','avi','mkv'].indexOf(ext)>-1;
   var isAudio=['audio/mpeg','audio/ogg','audio/wav','audio/aac','audio/flac','audio/x-m4a'].indexOf(t)>-1
     ||['mp3','ogg','wav','m4a','aac','flac','opus'].indexOf(ext)>-1;
-  var isCode=['js','ts','jsx','tsx','py','java','c','cpp','h','css','html','htm','xml','json','sh','sql','yaml','yml','ini'].indexOf(ext)>-1
-    ||['js','ts','jsx','tsx','py','java','c','cpp','h','css','html','htm','xml','json','sh','sql','yaml','yml','ini'].indexOf(ext2)>-1;
-  var isText=!isCode&&(t.startsWith('text/')||['txt','csv','md','log','rtf'].indexOf(ext)>-1);
+  var isHtml=['html','htm'].indexOf(ext)>-1||t==='text/html';
+  var isCode=!isHtml&&(['js','ts','jsx','tsx','py','java','c','cpp','h','css','xml','json','sh','sql','yaml','yml','ini'].indexOf(ext)>-1
+    ||['js','ts','jsx','tsx','py','java','c','cpp','h','css','xml','json','sh','sql','yaml','yml','ini'].indexOf(ext2)>-1);
+  var isText=!isCode&&!isHtml&&(t.startsWith('text/')||['txt','csv','md','log','rtf'].indexOf(ext)>-1);
   var isOffice=['doc','docx','xls','xlsx','ppt','pptx'].indexOf(ext)>-1;
 
   body.innerHTML='<div class="prev-nosupp"><span>⏳</span>Loading preview...</div>';
@@ -5532,7 +5642,12 @@ function openPreview(data,name,type){
     body.innerHTML='<img src="'+data+'" alt="'+esc(name)+'" style="max-width:100%;max-height:76vh;border-radius:10px;object-fit:contain"/>';
 
   }else if(isPdf){
-    body.innerHTML='<iframe src="'+data+'" style="width:100%;height:76vh;border:none;border-radius:8px"></iframe>';
+    // Close the generic preview and open the dedicated PDF viewer
+    overlay.classList.remove('open');
+    body.innerHTML='';
+    document.body.style.overflow='';
+    openPdfViewer(data, name);
+    return;
 
   }else if(isVideo){
     body.innerHTML='<video controls autoplay style="max-width:100%;max-height:76vh;border-radius:10px;outline:none">'
@@ -5548,6 +5663,34 @@ function openPreview(data,name,type){
       +'<audio controls autoplay style="width:100%;max-width:460px;outline:none">'
       +'<source src="'+data+'" type="'+(t||'audio/mpeg')+'">'
       +'</audio></div>';
+
+  }else if(isHtml){
+    // Render HTML files FULLY — scripts allowed so quizzes are interactive
+    try{
+      var rawHtml=data.split(',')[1]||data;
+      var decodedHtml=decodeURIComponent(escape(atob(rawHtml)));
+      var htmlBlob=new Blob([decodedHtml],{type:'text/html'});
+      var htmlBlobUrl=URL.createObjectURL(htmlBlob);
+      // Expand the modal to near-full-screen for HTML content
+      var prevBox=document.getElementById('prev-box');
+      if(prevBox){prevBox.style.maxWidth='100%';prevBox.style.height='100vh';prevBox.style.borderRadius='0';}
+      body.style.padding='0';
+      body.innerHTML=
+        '<div style="width:100%;height:100%;display:flex;flex-direction:column">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;'
+        +'background:rgba(0,0,0,.3);border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0">'
+        +'<span style="font-size:.74rem;color:#b0a8d8">🌐 '+esc(name)+'</span>'
+        +'<a href="'+data+'" download="'+esc(name)+'" class="btn bs bsm">⬇️ Download</a>'
+        +'</div>'
+        +'<iframe src="'+htmlBlobUrl+'" '
+        +'sandbox="allow-scripts allow-forms allow-modals allow-same-origin allow-popups" '
+        +'style="flex:1;width:100%;border:none;background:#fff;min-height:0"></iframe>'
+        +'</div>';
+    }catch(erHtml){
+      body.innerHTML='<div class="prev-nosupp"><span>🌐</span><strong>'+esc(name)+'</strong>'
+        +'<br>Could not render HTML file.<br>'
+        +'<a href="'+data+'" download="'+esc(name)+'" class="btn bp bsm" style="margin-top:12px">⬇️ Download</a></div>';
+    }
 
   }else if(isText){
     try{
@@ -5598,9 +5741,27 @@ function openPreview(data,name,type){
       +'<span style="font-size:.78rem;opacity:.7;margin-top:4px;display:block">Download it to open in the correct app.</span>'
       +'<a href="'+data+'" download="'+esc(name)+'" class="btn bp" style="margin-top:14px;display:inline-flex">⬇️ Download File</a></div>';
   }else{
-    body.innerHTML='<div class="prev-nosupp"><span>📄</span><strong>'+esc(name)+'</strong>'
-      +'<br><span style="font-size:.78rem;opacity:.7">'+esc((ext||'file').toUpperCase())+' file — download to open</span><br>'
-      +'<a href="'+data+'" download="'+esc(name)+'" class="btn bp" style="margin-top:14px;display:inline-flex">⬇️ Download File</a></div>';
+    // Unknown type — try to decode as text, otherwise offer download
+    try{
+      var rawUnk=data.split(',')[1]||data;
+      var decodedUnk=decodeURIComponent(escape(atob(rawUnk)));
+      var linesUnk=decodedUnk.split('\n');
+      var previewUnk=linesUnk.slice(0,300).join('\n');
+      var noteUnk=linesUnk.length>300
+        ?'<div style="color:var(--yellow);text-align:center;margin-top:8px;font-size:.74rem">Showing first 300 of '+linesUnk.length+' lines</div>':'';
+      body.innerHTML='<div style="width:100%">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">'
+        +'<span style="font-size:.74rem;color:var(--text2)">📄 '+esc((ext||'file').toUpperCase())+' file</span>'
+        +'<a href="'+data+'" download="'+esc(name)+'" class="btn bp bsm">⬇️ Download</a>'
+        +'</div>'
+        +'<pre style="background:rgba(0,0,0,.35);border-radius:10px;padding:16px;font-size:.76rem;'
+        +'line-height:1.6;overflow:auto;max-height:70vh;white-space:pre-wrap;word-break:break-word;'
+        +'color:var(--text);text-align:left;margin:0">'+esc(previewUnk)+'</pre>'+noteUnk+'</div>';
+    }catch(erUnk){
+      body.innerHTML='<div class="prev-nosupp"><span>📄</span><strong>'+esc(name)+'</strong>'
+        +'<br><span style="font-size:.78rem;opacity:.7">'+esc((ext||'file').toUpperCase())+' file</span><br>'
+        +'<a href="'+data+'" download="'+esc(name)+'" class="btn bp" style="margin-top:14px;display:inline-flex">⬇️ Download File</a></div>';
+    }
   }
 
   overlay.classList.add('open');
@@ -5610,9 +5771,13 @@ function closePrev(e){
   if(e&&e.target!==document.getElementById('prev-overlay'))return;
   document.getElementById('prev-overlay').classList.remove('open');
   document.getElementById('prev-body').innerHTML='';
+  document.getElementById('prev-body').style.padding='';
+  // Reset modal size in case it was expanded for HTML
+  var prevBox=document.getElementById('prev-box');
+  if(prevBox){prevBox.style.maxWidth='';prevBox.style.height='';prevBox.style.borderRadius='';}
   document.body.style.overflow='';
 }
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closePrev();});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!document.getElementById('pdf-viewer-overlay').classList.contains('open'))closePrev();});
 function renderFileDocs(docs,admin){
   if(!docs.length)return'<div class="empty"><span>📂</span>No files found.</div>';
   return docs.map(function(f){
@@ -5729,7 +5894,7 @@ function filterUFiles(){
   var cat=activeCat?activeCat.textContent:'All';
   renderUFiles(allUFiles.filter(function(f){return f.name.toLowerCase().includes(q)&&(cat==='All'||(f.category||'General')===cat);}));
 }
-function filterByCat(btn,cat){document.querySelectorAll('#ucat-tabs .cat-tab').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');filterUFiles();}
+function filterByCat(btn,cat){document.querySelectorAll('#ucat-tabs .cat-tab').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');var fc=document.getElementById('fcat');if(fc)fc.value=(cat&&cat!=='All')?cat:'General';filterUFiles();}
 function delFile(id){fsDel("projects/"+PROJECT+"/databases/(default)/documents/files/"+id).then(function(){notify('Deleted','warn','🗑️');loadAFiles();updateStats();}).catch(function(){});}
 
 // ══════════════════════════════════
@@ -7715,6 +7880,69 @@ function loadAndApplyContactInfo(){
   }).catch(function(){});
 }
 
+// ══ ADMIN GROQ KEY MANAGEMENT ══
+function toggleAdminKeyVisibility(){
+  var inp=document.getElementById('admin-groq-key-input');
+  var eye=document.getElementById('admin-key-eye');
+  if(!inp)return;
+  if(inp.type==='password'){inp.type='text';if(eye)eye.textContent='🙈';}
+  else{inp.type='password';if(eye)eye.textContent='👁';}
+}
+function _adminKeyStatus(msg,type){
+  var el=document.getElementById('admin-key-status');
+  if(!el)return;
+  el.style.display='block';
+  el.style.background=type==='success'?'rgba(74,222,128,.12)':type==='error'?'rgba(248,113,113,.12)':'rgba(251,191,36,.1)';
+  el.style.border='1px solid '+(type==='success'?'rgba(74,222,128,.3)':type==='error'?'rgba(248,113,113,.3)':'rgba(251,191,36,.3)');
+  el.style.color=type==='success'?'var(--green)':type==='error'?'var(--red)':'var(--yellow)';
+  el.textContent=msg;
+}
+function saveAdminGroqKey(){
+  var val=(document.getElementById('admin-groq-key-input').value||'').trim();
+  if(!val||!val.startsWith('gsk_')){
+    _adminKeyStatus('❌ Invalid key — must start with gsk_','error');return;
+  }
+  fsGet('settings').then(function(res){
+    var docs=getDocs(res);
+    var existing=docs.find(function(d){return d.key==='groq_api_key';});
+    var p=existing?fsPatch(existing.__path,{value:val}):fsAdd('settings',{key:'groq_api_key',value:val});
+    p.then(function(){
+      GROQ_KEY=val;
+      localStorage.setItem('babspharm_apikey',val);
+      _adminKeyStatus('✅ Key saved! All students will now use this key automatically.','success');
+      notify('Groq AI key updated for all students ✅','success','🤖');
+      logActivity('settings','admin groq api key updated');
+    }).catch(function(){_adminKeyStatus('❌ Failed to save. Try again.','error');});
+  }).catch(function(){_adminKeyStatus('❌ Database error. Check connection.','error');});
+}
+function removeAdminGroqKey(){
+  if(!confirm('Remove the shared Groq key? Students will need to enter their own key.'))return;
+  fsGet('settings').then(function(res){
+    var docs=getDocs(res);
+    var existing=docs.find(function(d){return d.key==='groq_api_key';});
+    if(!existing){_adminKeyStatus('ℹ️ No shared key was set.','warn');return;}
+    fsDel(existing.__path).then(function(){
+      document.getElementById('admin-groq-key-input').value='';
+      _adminKeyStatus('✅ Key removed. Students will be prompted for their own key.','success');
+      notify('Shared Groq key removed','success','🗑️');
+      logActivity('settings','admin groq api key removed');
+    }).catch(function(){_adminKeyStatus('❌ Failed to remove. Try again.','error');});
+  });
+}
+function loadAdminGroqKeyToPanel(){
+  fsGet('settings').then(function(res){
+    var docs=getDocs(res);
+    var keyDoc=docs.find(function(d){return d.key==='groq_api_key';});
+    var inp=document.getElementById('admin-groq-key-input');
+    if(keyDoc&&keyDoc.value&&inp){
+      inp.value=keyDoc.value;
+      _adminKeyStatus('✅ A shared key is currently active for all students.','success');
+    } else if(inp){
+      _adminKeyStatus('⚠️ No shared key set — students are prompted individually.','warn');
+    }
+  }).catch(function(){});
+}
+
 function toggleRegMode(){
   var newMode=regModeCache==='auto'?'manual':'auto';
   fsGet('settings').then(function(res){
@@ -8048,6 +8276,7 @@ function loadAdminAll(){
   loadLeaderboard('a-lb-list');loadConvList();loadUsers();loadLog();
   loadExams('a-exams-list');loadBulkStudents();updateStats();
   loadAndApplyContactInfo();
+  loadAdminGroqKeyToPanel();
   convPoll=setInterval(loadConvList,8000);
 }
 
@@ -10271,6 +10500,39 @@ loadSavedTheme();
   </div>
 </div>
 
+<!-- ══ PDF VIEWER OVERLAY ══ -->
+<div id="pdf-viewer-overlay">
+  <div id="pdf-progress"></div>
+  <div id="pdf-toolbar">
+    <div id="pdf-title">Document</div>
+    <div id="pdf-controls">
+      <button class="pdf-ctrl-btn" id="pdf-prev" onclick="pdfPrevPage()" title="Previous page">◀ Prev</button>
+      <div class="pdf-page-jump">
+        <input type="number" id="pdf-page-input" min="1" value="1" onchange="pdfGoToPage(this.value)" onkeydown="if(event.key==='Enter')pdfGoToPage(this.value)"/>
+        <span id="pdf-page-info">/ 1</span>
+      </div>
+      <button class="pdf-ctrl-btn" id="pdf-next" onclick="pdfNextPage()" title="Next page">Next ▶</button>
+      <select id="pdf-zoom-select" onchange="pdfSetZoom(this.value)" title="Zoom">
+        <option value="0.6">60%</option>
+        <option value="0.75">75%</option>
+        <option value="1" selected>100%</option>
+        <option value="1.25">125%</option>
+        <option value="1.5">150%</option>
+        <option value="1.75">175%</option>
+        <option value="2">200%</option>
+      </select>
+      <button class="pdf-ctrl-btn" onclick="pdfZoomOut()" title="Zoom out">➖</button>
+      <button class="pdf-ctrl-btn" onclick="pdfZoomIn()" title="Zoom in">➕</button>
+      <a id="pdf-dl-btn" href="#" download class="pdf-ctrl-btn" style="background:linear-gradient(135deg,#a78bfa,#6d28d9);border-color:transparent;color:#fff">⬇️ Save</a>
+      <button class="pdf-ctrl-btn" style="background:linear-gradient(135deg,#f87171,#b91c1c);border-color:transparent;color:#fff" onclick="closePdfViewer()">✕ Close</button>
+    </div>
+  </div>
+  <div id="pdf-canvas-wrap">
+    <div id="pdf-loading"><span class="pdf-spin">⚗️</span>Loading PDF...</div>
+    <canvas id="pdf-canvas" style="display:none"></canvas>
+  </div>
+</div>
+
 <!-- SESSION TIMEOUT MODAL -->
 <div id="session-timeout-modal">
   <div class="session-modal-box">
@@ -10624,6 +10886,212 @@ function deleteSubAdmin(id, name){
 // ══════════════════════════════════
 </script>
 
+<!-- ══ PDF VIEWER ENGINE ══ -->
+<script>
+(function(){
+  // Configure PDF.js worker
+  if(window.pdfjsLib){
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  var _pdfDoc=null, _pdfPage=1, _pdfTotal=1, _pdfZoom=1.0, _pdfRendering=false, _pdfPendingPage=null, _pdfName='', _pdfDataUrl='';
+
+  window.openPdfViewer=function(dataUrl, name){
+    if(!window.pdfjsLib){
+      alert('PDF viewer not available. Please try downloading the file.');
+      return;
+    }
+    _pdfName=name; _pdfDataUrl=dataUrl;
+    _pdfPage=1; _pdfZoom=1.0; _pdfDoc=null;
+
+    // Auto-zoom for mobile
+    if(window.innerWidth<520) _pdfZoom=0.75;
+
+    var overlay=document.getElementById('pdf-viewer-overlay');
+    var canvas=document.getElementById('pdf-canvas');
+    var loading=document.getElementById('pdf-loading');
+    var progress=document.getElementById('pdf-progress');
+    var title=document.getElementById('pdf-title');
+    var dlBtn=document.getElementById('pdf-dl-btn');
+
+    title.textContent=name;
+    dlBtn.href=dataUrl; dlBtn.download=name;
+    canvas.style.display='none';
+    loading.style.display='block';
+    progress.style.width='0%';
+    document.getElementById('pdf-zoom-select').value=String(_pdfZoom);
+
+    overlay.classList.add('open');
+    document.body.style.overflow='hidden';
+
+    // Convert base64 to Uint8Array for PDF.js
+    var pdfData;
+    try{
+      var b64=dataUrl.indexOf(',')>-1?dataUrl.split(',')[1]:dataUrl;
+      var binary=atob(b64);
+      var arr=new Uint8Array(binary.length);
+      for(var i=0;i<binary.length;i++) arr[i]=binary.charCodeAt(i);
+      pdfData=arr;
+    }catch(e){
+      loading.innerHTML='<span style="font-size:2rem">❌</span><br>Could not load PDF.<br><a href="'+dataUrl+'" download="'+name+'" class="btn bp bsm" style="margin-top:12px">⬇️ Download Instead</a>';
+      return;
+    }
+
+    pdfjsLib.getDocument({data:pdfData}).promise.then(function(pdfDoc){
+      _pdfDoc=pdfDoc;
+      _pdfTotal=pdfDoc.numPages;
+      document.getElementById('pdf-page-info').textContent='/ '+_pdfTotal;
+      document.getElementById('pdf-page-input').max=_pdfTotal;
+      progress.style.width='30%';
+      renderPdfPage(_pdfPage);
+    }).catch(function(err){
+      loading.style.display='block';
+      loading.innerHTML='<span style="font-size:2rem">❌</span><br>Failed to load PDF.<br><small style="opacity:.7">'+err.message+'</small><br><a href="'+dataUrl+'" download="'+name+'" class="btn bp bsm" style="margin-top:14px">⬇️ Download Instead</a>';
+    });
+  };
+
+  function renderPdfPage(num){
+    if(!_pdfDoc) return;
+    if(_pdfRendering){ _pdfPendingPage=num; return; }
+    _pdfRendering=true;
+
+    var loading=document.getElementById('pdf-loading');
+    var canvas=document.getElementById('pdf-canvas');
+    var progress=document.getElementById('pdf-progress');
+    var pageInput=document.getElementById('pdf-page-input');
+    var prevBtn=document.getElementById('pdf-prev');
+    var nextBtn=document.getElementById('pdf-next');
+
+    pageInput.value=num;
+    prevBtn.disabled=(num<=1);
+    nextBtn.disabled=(num>=_pdfTotal);
+    loading.style.display='block';
+    loading.innerHTML='<span class="pdf-spin" style="font-size:2.2rem;display:block;margin-bottom:10px;animation:pdfSpin 1.2s linear infinite">⚗️</span>Rendering page '+num+'...';
+
+    _pdfDoc.getPage(num).then(function(page){
+      var dpr=window.devicePixelRatio||1;
+      var viewport=page.getViewport({scale:_pdfZoom*dpr});
+
+      canvas.width=viewport.width;
+      canvas.height=viewport.height;
+      canvas.style.width=(viewport.width/dpr)+'px';
+      canvas.style.height=(viewport.height/dpr)+'px';
+
+      var ctx=canvas.getContext('2d');
+      var renderCtx={canvasContext:ctx,viewport:viewport};
+
+      progress.style.width='60%';
+      return page.render(renderCtx).promise;
+    }).then(function(){
+      progress.style.width='100%';
+      loading.style.display='none';
+      canvas.style.display='block';
+      // Scroll canvas wrap to top on page change
+      var wrap=document.getElementById('pdf-canvas-wrap');
+      wrap.scrollTop=0;
+      setTimeout(function(){progress.style.width='0%';},400);
+      _pdfRendering=false;
+      if(_pdfPendingPage!==null){
+        var p=_pdfPendingPage; _pdfPendingPage=null;
+        renderPdfPage(p);
+      }
+    }).catch(function(err){
+      loading.style.display='block';
+      loading.innerHTML='<span style="font-size:2rem">⚠️</span><br>Error rendering page.';
+      _pdfRendering=false;
+    });
+  }
+
+  window.pdfPrevPage=function(){
+    if(_pdfPage<=1) return;
+    _pdfPage--;
+    renderPdfPage(_pdfPage);
+  };
+  window.pdfNextPage=function(){
+    if(_pdfPage>=_pdfTotal) return;
+    _pdfPage++;
+    renderPdfPage(_pdfPage);
+  };
+  window.pdfGoToPage=function(val){
+    var n=parseInt(val,10);
+    if(isNaN(n)) return;
+    n=Math.max(1,Math.min(n,_pdfTotal));
+    _pdfPage=n;
+    renderPdfPage(_pdfPage);
+  };
+  window.pdfSetZoom=function(val){
+    _pdfZoom=parseFloat(val)||1;
+    renderPdfPage(_pdfPage);
+  };
+  window.pdfZoomIn=function(){
+    var levels=[0.5,0.6,0.75,1,1.25,1.5,1.75,2,2.5,3];
+    for(var i=0;i<levels.length;i++){
+      if(levels[i]>_pdfZoom+0.01){_pdfZoom=levels[i];break;}
+    }
+    var sel=document.getElementById('pdf-zoom-select');
+    // find closest
+    var opts=Array.from(sel.options).map(function(o){return parseFloat(o.value);});
+    var closest=opts.reduce(function(a,b){return Math.abs(b-_pdfZoom)<Math.abs(a-_pdfZoom)?b:a;});
+    sel.value=String(closest);
+    renderPdfPage(_pdfPage);
+  };
+  window.pdfZoomOut=function(){
+    var levels=[0.5,0.6,0.75,1,1.25,1.5,1.75,2,2.5,3];
+    for(var i=levels.length-1;i>=0;i--){
+      if(levels[i]<_pdfZoom-0.01){_pdfZoom=levels[i];break;}
+    }
+    var sel=document.getElementById('pdf-zoom-select');
+    var opts=Array.from(sel.options).map(function(o){return parseFloat(o.value);});
+    var closest=opts.reduce(function(a,b){return Math.abs(b-_pdfZoom)<Math.abs(a-_pdfZoom)?b:a;});
+    sel.value=String(closest);
+    renderPdfPage(_pdfPage);
+  };
+  window.closePdfViewer=function(){
+    document.getElementById('pdf-viewer-overlay').classList.remove('open');
+    document.body.style.overflow='';
+    // Release resources
+    if(_pdfDoc){_pdfDoc.destroy();_pdfDoc=null;}
+    var canvas=document.getElementById('pdf-canvas');
+    var ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    canvas.style.display='none';
+    document.getElementById('pdf-loading').style.display='block';
+    document.getElementById('pdf-loading').innerHTML='<span class="pdf-spin" style="font-size:2.2rem;display:block;margin-bottom:10px;animation:pdfSpin 1.2s linear infinite">⚗️</span>Loading PDF...';
+  };
+
+  // Keyboard navigation
+  document.addEventListener('keydown',function(e){
+    var overlay=document.getElementById('pdf-viewer-overlay');
+    if(!overlay.classList.contains('open')) return;
+    if(e.key==='ArrowRight'||e.key==='ArrowDown') pdfNextPage();
+    if(e.key==='ArrowLeft'||e.key==='ArrowUp') pdfPrevPage();
+    if(e.key==='Escape') closePdfViewer();
+    if(e.key==='+'||e.key==='=') pdfZoomIn();
+    if(e.key==='-') pdfZoomOut();
+  });
+
+  // Swipe support for mobile
+  var _swipeStartX=0, _swipeStartY=0;
+  document.getElementById('pdf-canvas-wrap') && document.getElementById('pdf-canvas-wrap').addEventListener('touchstart',function(e){
+    _swipeStartX=e.changedTouches[0].screenX;
+    _swipeStartY=e.changedTouches[0].screenY;
+  },{passive:true});
+  // We attach touchend after DOM ready
+  window.addEventListener('load',function(){
+    var wrap=document.getElementById('pdf-canvas-wrap');
+    if(!wrap) return;
+    wrap.addEventListener('touchstart',function(e){_swipeStartX=e.changedTouches[0].screenX;_swipeStartY=e.changedTouches[0].screenY;},{passive:true});
+    wrap.addEventListener('touchend',function(e){
+      var dx=e.changedTouches[0].screenX-_swipeStartX;
+      var dy=e.changedTouches[0].screenY-_swipeStartY;
+      if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>50){
+        if(dx<0) pdfNextPage(); else pdfPrevPage();
+      }
+    },{passive:true});
+  });
+})();
+</script>
+
 <!-- ══ SPLASH SCREEN CONTROLLER ══ -->
 <script>
 (function(){
@@ -10701,5 +11169,62 @@ function deleteSubAdmin(id, name){
   mutationObserver.observe(document.getElementById('app') || document.body, { childList: true, subtree: false });
 })();
 </script>
+
+<!-- ══ API KEY SETUP MODAL ══ -->
+<div id="apikey-modal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);align-items:center;justify-content:center;">
+  <div style="background:#1e1e2e;border:1px solid rgba(167,139,250,0.4);border-radius:18px;padding:32px 28px;width:90%;max-width:420px;box-shadow:0 20px 60px rgba(0,0,0,0.5);font-family:inherit;">
+    <div style="text-align:center;margin-bottom:20px;">
+      <div style="font-size:2.5rem;margin-bottom:8px;">🔑</div>
+      <h2 style="color:#fff;font-size:1.3rem;margin:0 0 6px;">Enter Your Groq API Key</h2>
+      <p style="color:#a0a0b8;font-size:0.85rem;margin:0;">Your key is stored only in your browser — never sent anywhere else.</p>
+    </div>
+    <input id="apikey-input" type="password"
+      placeholder="gsk_..."
+      style="width:100%;box-sizing:border-box;padding:12px 14px;border-radius:10px;border:1px solid rgba(167,139,250,0.4);background:#2a2a3e;color:#fff;font-size:0.95rem;outline:none;margin-bottom:10px;"
+    />
+    <div id="apikey-error" style="color:#f87171;font-size:0.8rem;margin-bottom:10px;display:none;">Please enter a valid key (starts with gsk_)</div>
+    <button onclick="saveApikeyAndClose()" style="width:100%;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#7c3aed,#38bdf8);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;">
+      Save &amp; Continue
+    </button>
+    <p style="text-align:center;margin:14px 0 0;font-size:0.78rem;color:#a0a0b8;">
+      Get a free key at <a href="https://console.groq.com" target="_blank" style="color:#38bdf8;">console.groq.com</a>
+    </p>
+  </div>
+</div>
+
+<script>
+(function(){
+  function showApikeyModal(){
+    var m=document.getElementById('apikey-modal');
+    if(m){ m.style.display='flex'; }
+  }
+  window.saveApikeyAndClose=function(){
+    var val=document.getElementById('apikey-input').value.trim();
+    var err=document.getElementById('apikey-error');
+    if(!val||!val.startsWith('gsk_')){
+      err.style.display='block'; return;
+    }
+    err.style.display='none';
+    localStorage.setItem('babspharm_apikey',val);
+    window.GROQ_KEY=val;
+    document.getElementById('apikey-modal').style.display='none';
+  };
+  document.addEventListener('DOMContentLoaded',function(){
+    // Only show the per-student key modal if no admin key has been loaded yet
+    // (Admin key loader above will hide this modal if it finds a key in Firebase)
+    var saved=localStorage.getItem('babspharm_apikey');
+    if(!saved){
+      // Wait a moment for the admin key to load from Firebase before prompting
+      setTimeout(function(){
+        if(!window.GROQ_KEY||!window.GROQ_KEY.startsWith('gsk_')){
+          showApikeyModal();
+        }
+      }, 2000);
+    }
+  });
+})();
+</script>
+
 </body>
 </html>
+<!-- This line intentionally left blank -->
