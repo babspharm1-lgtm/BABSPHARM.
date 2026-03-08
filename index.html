@@ -28,7 +28,7 @@
 <meta name="twitter:title" content="BABSPHARM Cloud ⚗️"/>
 <meta name="twitter:description" content="Your all-in-one education platform — study materials, past questions, quizzes, forums & more."/>
 <meta name="twitter:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' viewBox='0 0 1200 630'%3E%3Crect width='1200' height='630' fill='%230f0c29'/%3E%3Ctext x='600' y='270' font-family='Arial Black,sans-serif' font-size='120' font-weight='900' fill='white' text-anchor='middle'%3E⚗️%3C/text%3E%3Ctext x='600' y='390' font-family='Arial Black,sans-serif' font-size='72' font-weight='900' fill='%23a78bfa' text-anchor='middle'%3EBABSPHARM Cloud%3C/text%3E%3Ctext x='600' y='460' font-family='Arial,sans-serif' font-size='32' fill='%23b0a8d8' text-anchor='middle'%3EYour education platform%3C/text%3E%3C/svg%3E"/>
-<link rel="manifest" id="pwa-manifest-link"/>
+<link rel="manifest" href="/BABSPHARM./manifest.json"/>
 <link rel="apple-touch-icon" href="https://babspharm1-lgtm.github.io/BABSPHARM./icon-192x192.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -3045,6 +3045,7 @@ body.has-bottom-nav #app{padding-bottom:0;}
     <button class="anb anb-amber" onclick="sat2('points',this)">🏅 Points</button>
     <button class="anb anb-gray" onclick="sat2('report',this)">📈 Report</button>
     <button class="anb anb-red" onclick="sat2('security',this)">🔐 Security</button>
+    <button class="anb anb-purple" onclick="sat2('subadmins',this)">👮 Sub-Admins</button>
   </div>
 
   <div class="tp on" id="at-files">
@@ -4388,8 +4389,102 @@ D. Base</code>
       </div>
     </div>
   </div>
+  <!-- SUB-ADMINS TAB -->
+  <div class="tp" id="at-subadmins">
+
+    <!-- Add Sub-Admin -->
+    <div class="card" style="margin-bottom:14px;max-width:480px">
+      <div class="st"><span class="dot"></span>👮 Add Sub-Admin</div>
+      <p style="font-size:.78rem;color:var(--text2);margin-bottom:14px">Create a sub-admin account with a unique password and control which sections they can access.</p>
+      <div class="fg">
+        <label>Full Name</label>
+        <input type="text" id="sa-name" placeholder="e.g. John Doe"/>
+      </div>
+      <div class="fg" style="margin-top:10px">
+        <label>Username</label>
+        <input type="text" id="sa-username" placeholder="e.g. johndoe (no spaces)"/>
+      </div>
+      <div class="fg" style="margin-top:10px">
+        <label>Password</label>
+        <input type="password" id="sa-password" placeholder="Min 6 characters"/>
+      </div>
+      <div style="margin-top:14px">
+        <div style="font-size:.78rem;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px">🎛️ Allowed Sections</div>
+        <div id="sa-perms-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="files" style="accent-color:var(--accent)"/> 📁 Files</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="ann" style="accent-color:var(--accent)"/> 📢 News</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="motivation" style="accent-color:var(--accent)"/> ✨ Motivation</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="flyers" style="accent-color:var(--accent)"/> 🖼️ Flyers</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="quiz" style="accent-color:var(--accent)"/> 📝 Quizzes</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="analytics" style="accent-color:var(--accent)"/> 📊 Analytics</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="exams" style="accent-color:var(--accent)"/> 📅 Exams</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="lb" style="accent-color:var(--accent)"/> 🏆 Leaderboard</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="chat" style="accent-color:var(--accent)"/> 💌 Messages</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="bulk" style="accent-color:var(--accent)"/> 📣 Bulk Msg</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="users" style="accent-color:var(--accent)"/> 👥 Students</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="badges" style="accent-color:var(--accent)"/> 🎖️ Badges</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="log" style="accent-color:var(--accent)"/> 📋 Log</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="banner" style="accent-color:var(--accent)"/> 🎨 Banner</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="points" style="accent-color:var(--accent)"/> 🏅 Points</label>
+          <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="report" style="accent-color:var(--accent)"/> 📈 Report</label>
+        </div>
+      </div>
+      <button class="btn bp" style="width:100%;justify-content:center;margin-top:14px" onclick="addSubAdmin()">➕ Create Sub-Admin</button>
+    </div>
+
+    <!-- Sub-Admin List -->
+    <div class="card" style="max-width:480px">
+      <div class="st"><span class="dot"></span>👥 Existing Sub-Admins</div>
+      <div id="sa-list"><div class="ld">Loading<span class="sp"></span></div></div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="sa-edit-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);overflow-y:auto;padding:20px">
+      <div style="background:var(--bg2);border:1px solid var(--cb);border-radius:var(--r-xl);max-width:480px;margin:0 auto;padding:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div style="font-family:var(--fh);font-weight:800;font-size:1.1rem">✏️ Edit Sub-Admin</div>
+          <button onclick="document.getElementById('sa-edit-modal').style.display='none'" style="background:none;border:none;color:var(--text);font-size:1.3rem;cursor:pointer">✕</button>
+        </div>
+        <input type="hidden" id="sa-edit-id"/>
+        <div class="fg">
+          <label>Full Name</label>
+          <input type="text" id="sa-edit-name" placeholder="Full name"/>
+        </div>
+        <div class="fg" style="margin-top:10px">
+          <label>New Password <span style="font-size:.72rem;color:var(--text2)">(leave blank to keep current)</span></label>
+          <input type="password" id="sa-edit-password" placeholder="New password (optional)"/>
+        </div>
+        <div style="margin-top:14px">
+          <div style="font-size:.78rem;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.4px">🎛️ Allowed Sections</div>
+          <div id="sa-edit-perms-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="files" style="accent-color:var(--accent)"/> 📁 Files</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="ann" style="accent-color:var(--accent)"/> 📢 News</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="motivation" style="accent-color:var(--accent)"/> ✨ Motivation</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="flyers" style="accent-color:var(--accent)"/> 🖼️ Flyers</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="quiz" style="accent-color:var(--accent)"/> 📝 Quizzes</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="analytics" style="accent-color:var(--accent)"/> 📊 Analytics</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="exams" style="accent-color:var(--accent)"/> 📅 Exams</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="lb" style="accent-color:var(--accent)"/> 🏆 Leaderboard</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="chat" style="accent-color:var(--accent)"/> 💌 Messages</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="bulk" style="accent-color:var(--accent)"/> 📣 Bulk Msg</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="users" style="accent-color:var(--accent)"/> 👥 Students</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="badges" style="accent-color:var(--accent)"/> 🎖️ Badges</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="log" style="accent-color:var(--accent)"/> 📋 Log</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="banner" style="accent-color:var(--accent)"/> 🎨 Banner</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="points" style="accent-color:var(--accent)"/> 🏅 Points</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.82rem;cursor:pointer;padding:8px 10px;border-radius:10px;border:1px solid var(--cb);background:var(--card)"><input type="checkbox" value="report" style="accent-color:var(--accent)"/> 📈 Report</label>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn bp" style="flex:1;justify-content:center" onclick="saveSubAdmin()">💾 Save Changes</button>
+          <button class="btn bd" style="justify-content:center" onclick="document.getElementById('sa-edit-modal').style.display='none'">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- SECURITY TAB — Admin Password Change -->
-  <div class="tp" id="at-security" style="display:none">
+  <div class="tp" id="at-security">
 
     <!-- Contact Info Settings -->
     <div class="card" style="max-width:440px;margin-bottom:14px">
@@ -5047,9 +5142,29 @@ function doLogin(){
   });
 }
 function doAdminLogin(){
-  var storedPw=localStorage.getItem('bp_admin_pw')||'BABSPHARM12';
-  if(document.getElementById('apw').value!==storedPw){notify('Wrong password','error','🔒');return;}
-  CU={name:'Admin',username:'admin',role:'admin'};showDash('admin');
+  var pw = document.getElementById('apw').value.trim();
+  if(!pw){notify('Enter password','error','🔒');return;}
+  // Check main admin password first
+  var storedPw = localStorage.getItem('bp_admin_pw')||'BABSPHARM12';
+  if(pw === storedPw){
+    CU={name:'Admin',username:'admin',role:'admin',permissions:'all'};
+    showDash('admin');
+    return;
+  }
+  // Check sub-admin accounts in Firestore
+  fsGet('subadmins').then(function(res){
+    var admins = getDocs(res);
+    var found = admins.find(function(a){ return a.password === pw; });
+    if(found){
+      var perms = found.permissions ? found.permissions.split(',') : [];
+      CU={name:found.name,username:found.username,role:'subadmin',permissions:perms,id:found.__id};
+      showDash('subadmin');
+    } else {
+      notify('Wrong password','error','🔒');
+    }
+  }).catch(function(){
+    notify('Wrong password','error','🔒');
+  });
 }
 function changeAdminPassword(){
   var cur=document.getElementById('sec-cur-pw').value;
@@ -5108,6 +5223,27 @@ function showDash(role){
   } else {
     document.getElementById('ad').style.display='';
     document.getElementById('surl').textContent=window.location.href;
+    // If sub-admin, hide nav buttons they don't have access to
+    if(CU.role==='subadmin' && Array.isArray(CU.permissions)){
+      var allNavBtns = document.querySelectorAll('.admin-nav-grid .anb');
+      allNavBtns.forEach(function(btn){
+        var onclick = btn.getAttribute('onclick')||'';
+        var match = onclick.match(/sat2\('([^']+)'/);
+        if(match){
+          var section = match[1];
+          if(section==='subadmins' || section==='security'){
+            btn.style.display='none'; // sub-admins can't manage other admins or security
+          } else if(CU.permissions.indexOf(section)===-1){
+            btn.style.display='none';
+          } else {
+            btn.style.display='';
+          }
+        }
+      });
+      // Auto-click first allowed section
+      var firstAllowed = document.querySelector('.admin-nav-grid .anb:not([style*="none"])');
+      if(firstAllowed) firstAllowed.click();
+    }
     loadAdminAll();
   }
 }
@@ -7971,8 +8107,6 @@ function sat2(name,btn){
     referrals:loadAdminReferrals,
     report:function(){if(typeof loadPerformanceReport==='function')loadPerformanceReport();},
     security:function(){
-      var secPanel=document.getElementById('at-security');
-      if(secPanel)secPanel.style.display='';
       loadContactInfo();
     },
     banner:function(){},
@@ -7980,7 +8114,8 @@ function sat2(name,btn){
       document.getElementById('conv-view').style.display='';
       document.getElementById('chat-view').style.display='none';
       activeConv=null;loadConvList();convPoll=setInterval(loadConvList,8000);
-    }
+    },
+    subadmins:function(){ loadSubAdmins(); }
   };
   if(loaders[name])loaders[name]();
 }
@@ -10366,6 +10501,132 @@ loadSavedTheme();
   });
 
 })();
+</script>
+
+<!-- ══ SUB-ADMIN MANAGER ══ -->
+<script>
+// ══════════════════════════════════
+// SUB-ADMIN FUNCTIONS
+// ══════════════════════════════════
+function loadSubAdmins(){
+  var list = document.getElementById('sa-list');
+  if(!list) return;
+  list.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
+  fsGet('subadmins').then(function(res){
+    var admins = getDocs(res);
+    if(!admins.length){
+      list.innerHTML = '<p style="font-size:.82rem;color:var(--text2);text-align:center;padding:20px">No sub-admins yet. Add one above!</p>';
+      return;
+    }
+    list.innerHTML = admins.map(function(a){
+      var perms = a.permissions ? a.permissions.split(',') : [];
+      var permLabels = {
+        files:'📁 Files', ann:'📢 News', motivation:'✨ Motivation',
+        flyers:'🖼️ Flyers', quiz:'📝 Quizzes', analytics:'📊 Analytics',
+        exams:'📅 Exams', lb:'🏆 Leaderboard', chat:'💌 Messages',
+        bulk:'📣 Bulk Msg', users:'👥 Students', badges:'🎖️ Badges',
+        log:'📋 Log', banner:'🎨 Banner', points:'🏅 Points', report:'📈 Report'
+      };
+      var permTags = perms.map(function(p){
+        return '<span style="font-size:.68rem;padding:2px 7px;border-radius:6px;background:rgba(167,139,250,.18);color:var(--accent);border:1px solid rgba(167,139,250,.25)">'+(permLabels[p]||p)+'</span>';
+      }).join('');
+      return '<div style="padding:14px;border-radius:12px;border:1px solid var(--cb);background:var(--card);margin-bottom:10px">'+
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'+
+          '<div>'+
+            '<div style="font-family:var(--fh);font-weight:800;font-size:.95rem">'+a.name+'</div>'+
+            '<div style="font-size:.72rem;color:var(--text2);margin-top:2px">@'+a.username+'</div>'+
+          '</div>'+
+          '<div style="display:flex;gap:6px">'+
+            '<button class="btn bs bsm" onclick="openEditSubAdmin(\''+a.__id+'\','+JSON.stringify(a).replace(/'/g,"&#39;")+')" style="font-size:.72rem;padding:5px 10px">✏️ Edit</button>'+
+            '<button class="btn bd bsm" onclick="deleteSubAdmin(\''+a.__id+'\',\''+a.name+'\')" style="font-size:.72rem;padding:5px 10px">🗑️ Delete</button>'+
+          '</div>'+
+        '</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:5px">'+(permTags||'<span style="font-size:.72rem;color:var(--red)">No sections assigned</span>')+'</div>'+
+      '</div>';
+    }).join('');
+  }).catch(function(){
+    list.innerHTML = '<p style="font-size:.82rem;color:var(--red)">Failed to load sub-admins.</p>';
+  });
+}
+
+function addSubAdmin(){
+  var name = document.getElementById('sa-name').value.trim();
+  var username = document.getElementById('sa-username').value.trim().toLowerCase().replace(/\s/g,'');
+  var password = document.getElementById('sa-password').value.trim();
+  var checks = document.querySelectorAll('#sa-perms-grid input[type=checkbox]:checked');
+  var perms = Array.from(checks).map(function(c){return c.value;});
+
+  if(!name||!username||!password){notify('Please fill in all fields','error','⚠️');return;}
+  if(password.length<6){notify('Password must be at least 6 characters','error','⚠️');return;}
+  if(!perms.length){notify('Please select at least one section','error','⚠️');return;}
+
+  // Check username not taken
+  fsGet('subadmins').then(function(res){
+    var existing = getDocs(res);
+    if(existing.find(function(a){return a.username===username;})){
+      notify('Username already taken','error','⚠️');return;
+    }
+    fsAdd('subadmins',{
+      name:name, username:username, password:password,
+      permissions:perms.join(','), createdAt:new Date().toISOString()
+    }).then(function(){
+      notify('✅ Sub-admin created!','success','👮');
+      document.getElementById('sa-name').value='';
+      document.getElementById('sa-username').value='';
+      document.getElementById('sa-password').value='';
+      document.querySelectorAll('#sa-perms-grid input[type=checkbox]').forEach(function(c){c.checked=false;});
+      loadSubAdmins();
+    }).catch(function(){notify('Failed to create sub-admin','error','⚠️');});
+  });
+}
+
+function openEditSubAdmin(id, data){
+  document.getElementById('sa-edit-id').value = id;
+  document.getElementById('sa-edit-name').value = data.name||'';
+  document.getElementById('sa-edit-password').value = '';
+  var perms = data.permissions ? data.permissions.split(',') : [];
+  document.querySelectorAll('#sa-edit-perms-grid input[type=checkbox]').forEach(function(c){
+    c.checked = perms.indexOf(c.value) !== -1;
+  });
+  document.getElementById('sa-edit-modal').style.display = '';
+}
+
+function saveSubAdmin(){
+  var id = document.getElementById('sa-edit-id').value;
+  var name = document.getElementById('sa-edit-name').value.trim();
+  var password = document.getElementById('sa-edit-password').value.trim();
+  var checks = document.querySelectorAll('#sa-edit-perms-grid input[type=checkbox]:checked');
+  var perms = Array.from(checks).map(function(c){return c.value;});
+
+  if(!name){notify('Name cannot be empty','error','⚠️');return;}
+  if(!perms.length){notify('Select at least one section','error','⚠️');return;}
+
+  var fields = {name:name, permissions:perms.join(',')};
+  if(password){
+    if(password.length<6){notify('Password must be at least 6 characters','error','⚠️');return;}
+    fields.password = password;
+  }
+
+  var path = 'projects/'+PROJECT+'/databases/(default)/documents/subadmins/'+id;
+  fsPatch(path, fields).then(function(){
+    notify('✅ Sub-admin updated!','success','💾');
+    document.getElementById('sa-edit-modal').style.display='none';
+    loadSubAdmins();
+  }).catch(function(){notify('Failed to update','error','⚠️');});
+}
+
+function deleteSubAdmin(id, name){
+  if(!confirm('Delete sub-admin "'+name+'"? This cannot be undone.')){return;}
+  fsDel('projects/'+PROJECT+'/databases/(default)/documents/subadmins/'+id)
+    .then(function(){
+      notify('Sub-admin deleted','success','🗑️');
+      loadSubAdmins();
+    }).catch(function(){notify('Failed to delete','error','⚠️');});
+}
+
+// ══════════════════════════════════
+// SUB-ADMIN MANAGER
+// ══════════════════════════════════
 </script>
 
 <!-- ══ SPLASH SCREEN CONTROLLER ══ -->
