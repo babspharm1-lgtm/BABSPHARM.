@@ -993,12 +993,7 @@ body.has-bottom-nav #app{padding-bottom:0;}
   box-shadow:0 15px 30px -5px rgba(124,58,237,0.6);
   filter:brightness(1.1);
 }
-/* Upgraded reveal animation */
-.reveal{
-  opacity:0;transform:translateY(30px);
-  transition:all 0.8s cubic-bezier(0.2,1,0.3,1);
-}
-.reveal.visible{opacity:1;transform:translateY(0);}
+/* Duplicate reveal removed — defined above */
 /* Upgraded section titles */
 .st{
   font-family:var(--fh);font-size:1rem;
@@ -10654,17 +10649,23 @@ function deleteSubAdmin(id, name){
 (function(){
   // Automatically tag key dashboard elements for reveal animation
   function tagRevealElements(){
+    // Only tag elements that haven't been tagged yet (avoid re-triggering flash)
+    function safeAdd(el, cls){
+      if(!el.classList.contains(cls) && !el.classList.contains('visible')){
+        el.classList.add(cls);
+      }
+    }
     // Stat cards get stagger effect
     var statGrids = document.querySelectorAll('.g3, .g4');
-    statGrids.forEach(function(g){ g.classList.add('reveal-stagger'); });
+    statGrids.forEach(function(g){ safeAdd(g, 'reveal-stagger'); });
     // Section titles
-    document.querySelectorAll('.st').forEach(function(el){ el.classList.add('reveal'); });
+    document.querySelectorAll('.st').forEach(function(el){ safeAdd(el, 'reveal'); });
     // Individual cards (but not inside grids already staggered)
     document.querySelectorAll('.card, .quiz-card, .forum-post, .group-card, .note-card, .fi, .pq-file-item, .lb-item, .ani').forEach(function(el){
-      if(!el.closest('.reveal-stagger')) el.classList.add('reveal');
+      if(!el.closest('.reveal-stagger')) safeAdd(el, 'reveal');
     });
     // Profile cards
-    document.querySelectorAll('.profile-card').forEach(function(el){ el.classList.add('reveal-scale'); });
+    document.querySelectorAll('.profile-card').forEach(function(el){ safeAdd(el, 'reveal-scale'); });
   }
 
   var revealObserver = new IntersectionObserver(function(entries){
@@ -10689,11 +10690,15 @@ function deleteSubAdmin(id, name){
   });
 
   // Re-run whenever new sections render (tabs switching, dynamic content)
-  var mutationObserver = new MutationObserver(function(){
+  // Only observe direct childList changes, not subtree, to avoid infinite loops
+  var mutationObserver = new MutationObserver(function(mutations){
+    var hasNewNodes = mutations.some(function(m){ return m.addedNodes.length > 0; });
+    if(!hasNewNodes) return;
+    // Only tag/observe elements that are genuinely new (not already tagged)
     tagRevealElements();
     observeReveal();
   });
-  mutationObserver.observe(document.body, { childList: true, subtree: true });
+  mutationObserver.observe(document.getElementById('app') || document.body, { childList: true, subtree: false });
 })();
 </script>
 </body>
