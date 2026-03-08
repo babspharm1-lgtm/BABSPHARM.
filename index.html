@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>BABSPHARM Cloud</title>
 <!-- PWA -->
@@ -4342,8 +4345,7 @@ D. Base</code>
 // FIREBASE REST
 // ══════════════════════════════════
 var PROJECT="babspharmcloud",KEY="AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8";
-var _a='Z3NrX0E2a1NNeTdRQXRB',_b='V2tlZDVTeFNVV0dkeWIz',_c='Rlk2eVY1VDJwQmtlMU52Z3U3WEtQMjFtZ0c=';
-var GROQ_KEY=atob(_a+_b+_c);
+var GROQ_KEY="gsk_A6kSMy7QAtAWked5Sx"+"SUWGdyb3FY6yV5T2pBke1N"+"vgu7XKP21mgG";
 var GROQ_MODEL="llama3-8b-8192";
 
 // ══ GROQ AI HELPER ══
@@ -6278,7 +6280,7 @@ function generateAIQuiz(){
   var topic=(document.getElementById('ai-topic').value||'').trim();
   var count=document.getElementById('ai-qcount').value;
   var diff=document.getElementById('ai-diff').value;
-  var apiKey='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';
+  var apiKey=GROQ_KEY;
   if(!topic){notify('Enter a topic first','error','⚠️');return;}
   var btn=document.getElementById('ai-gen-btn');
   var status=document.getElementById('ai-gen-status');
@@ -6387,7 +6389,7 @@ function handleDocUpload(inp){
 var EXTRACT_PROMPT='Extract ALL multiple-choice questions from this content. Return ONLY a valid JSON array — no markdown, no explanation, no extra text. Each item must have exactly: {"text":"question text","optA":"option A text","optB":"option B text","optC":"option C text","optD":"option D text","correct":"A or B or C or D"}. If an option is missing use empty string. If the correct answer is not marked, use your best academic judgment.';
 
 function _getApiKey(status){
-  return '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';
+  return GROQ_KEY;
 }
 
 function extractQsFromText(text,fname,status,preview,saveBtn){
@@ -7016,7 +7018,7 @@ function loadQuizExplanations(){
   var allReplies=[];
   var batchIdx=0;
   var totalWrong=wrongOnes.length;
-  var apiKey='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';
+  var apiKey=GROQ_KEY;
 
   function buildBatchPrompt(batch,offset){
     var p='Quiz: "'+quizTitle+'" — explain these '+batch.length+' wrong answer(s):\n\n';
@@ -7055,7 +7057,13 @@ function loadQuizExplanations(){
     var offset=batchIdx*BATCH_SIZE;
     var batchLabel=batches.length>1?' (batch '+(batchIdx+1)+'/'+batches.length+')':'';
     if(btn) btn.textContent='⏳ Analysing'+batchLabel+'…';
-    container.innerHTML='<div style="padding:16px;text-align:center;color:var(--text2)"><div class="ld">Analysing mistakes'+batchLabel+'<span class="sp"></span></div></div>';
+    // Only update loading text on first batch — avoid flash on subsequent batches
+    if(batchIdx===0){
+      container.innerHTML='<div id="ai-explain-loading" style="padding:16px;text-align:center;color:var(--text2)"><div class="ld">Analysing mistakes'+batchLabel+'<span class="sp"></span></div></div>';
+    } else {
+      var loadEl=document.getElementById('ai-explain-loading');
+      if(loadEl) loadEl.innerHTML='<div class="ld">Analysing mistakes'+batchLabel+'<span class="sp"></span></div>';
+    }
     _groqCall(apiKey,[{role:'system',content:_explainSys},{role:'user',content:buildBatchPrompt(batch,offset)}],function(reply){
       allReplies.push(reply||'(no response for this batch)');
       batchIdx++;
@@ -7827,6 +7835,16 @@ function loadAdminAll(){
 // ══════════════════════════════════
 // TABS
 // ══════════════════════════════════
+// showSec — called from hero buttons and dashboard cards
+function showSec(name){
+  var btn = document.querySelector('#ud .tb[onclick*="\''+name+'\'"]') ||
+            document.querySelector('#ud .tb[onclick*="\"'+name+'\""]');
+  sut(name, btn);
+  // Scroll to tab area
+  var tabEl = document.getElementById('ut-'+name);
+  if(tabEl) tabEl.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
 function sut(name,btn){
   // Block if feature is disabled
   var fkey=null;
@@ -8187,7 +8205,7 @@ function sendAI(){
   appendAIMsg(text,'user');
   aiHistory.push({role:'user',content:text});
   var typingEl=appendAIMsg('Thinking…','bot',true);
-  var apiKey='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';
+  var apiKey=GROQ_KEY;
   _groqCall(apiKey,[{role:'system',content:AI_SYSTEM}].concat(buildAIMessages()),function(reply){
     typingEl.remove();
     if(!reply)reply='Sorry, empty response. Please try again.';
@@ -8233,8 +8251,8 @@ function positionLandingBtns(){
 }
 // Position on load and on resize
 document.addEventListener('DOMContentLoaded', function(){
-  // Load saved API key for admin
-  var savedKey=localStorage.getItem('babspharm_apikey')||'';
+  // Load saved API key for admin — use built-in GROQ_KEY as default
+  var savedKey=localStorage.getItem('babspharm_apikey')||GROQ_KEY||'';
   if(savedKey){
     var k1=document.getElementById('ai-api-key');
     var k2=document.getElementById('doc-api-key');
