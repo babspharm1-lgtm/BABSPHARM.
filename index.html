@@ -311,6 +311,38 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   border:1px solid var(--cb);}
 .progress-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--accent),var(--a2));
   transition:width .7s cubic-bezier(.4,0,.2,1);}
+/* ── QUIZ FILE ATTEMPT MODAL ── */
+#qf-attempt-overlay{position:fixed;inset:0;z-index:9200;background:rgba(0,0,0,.95);
+  display:none;flex-direction:column;backdrop-filter:blur(10px);}
+#qf-attempt-overlay.open{display:flex;}
+#qf-attempt-toolbar{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:rgba(15,12,41,.97);border-bottom:1px solid var(--cb);
+  flex-shrink:0;gap:8px;flex-wrap:wrap;}
+#qf-attempt-title{font-family:var(--fh);font-size:.88rem;font-weight:700;flex:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+  background:linear-gradient(90deg,var(--accent),var(--a2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+#qf-attempt-body{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:0;}
+#qf-pdf-half{flex-shrink:0;height:42vh;background:#111;display:flex;align-items:center;
+  justify-content:center;border-bottom:2px solid var(--cb);position:relative;}
+#qf-pdf-half iframe{width:100%;height:100%;border:none;}
+#qf-pdf-half canvas{max-width:100%;max-height:100%;border-radius:0;}
+#qf-quiz-half{flex:1;padding:14px;overflow-y:auto;min-height:0;}
+#qf-gen-area{text-align:center;padding:24px 16px;}
+.qf-gen-btn{background:linear-gradient(135deg,#a78bfa,#6d28d9);color:#fff;border:none;
+  border-radius:14px;padding:13px 28px;font-family:var(--fh);font-size:.95rem;font-weight:800;
+  cursor:pointer;box-shadow:0 4px 18px rgba(109,40,217,.45);transition:all .2s;}
+.qf-gen-btn:hover{transform:translateY(-2px);box-shadow:0 7px 24px rgba(109,40,217,.6);}
+.qf-gen-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+#qf-qcount-sel{background:rgba(255,255,255,.08);border:1px solid var(--cb);border-radius:9px;
+  padding:7px 12px;color:var(--text);font-family:var(--fh);font-size:.82rem;font-weight:700;
+  cursor:pointer;outline:none;margin:0 6px;}
+#qf-qcount-sel option{background:#1a1040;color:#fff;}
+#qf-questions-wrap{display:none;}
+#qf-result-wrap{display:none;text-align:center;padding:20px;}
+.qf-result-score{font-family:var(--fh);font-size:2.4rem;font-weight:800;
+  background:linear-gradient(90deg,var(--accent),var(--a2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 /* Past Questions File Items */
 .pq-file-item{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;
   border-radius:11px;margin-bottom:8px;background:linear-gradient(135deg,rgba(167,139,250,.07),rgba(56,189,248,.04));
@@ -7066,13 +7098,19 @@ function renderUQuizFiles(){
   if(!list.length){el.innerHTML='';return;}
   el.innerHTML='<div class="st" style="margin-bottom:8px"><span class="dot"></span>📄 Quiz Files</div>'+
     list.map(function(f){
-      return'<div class="fi" style="margin-bottom:6px"><div class="fin"><span class="fico">'+ficon(f.type)+'</span>'+
+      return'<div class="fi" style="margin-bottom:6px"><div class="fin" style="cursor:pointer" onclick="openPreview(\''+f.data+'\',\''+esc(f.name)+'\',\''+esc(f.type||'')+'\')">'+
+        '<span class="fico">'+ficon(f.type)+'</span>'+
         '<div>'+
         (f.topic&&f.topic!==f.name?'<div style="font-size:.72rem;font-weight:700;color:var(--accent);margin-bottom:1px">'+esc(f.topic)+'</div>':'')+
         '<div class="fn" title="'+esc(f.name)+'">'+esc(f.name)+'</div>'+
         '<div class="fm">'+fsz(f.size||0)+' <span class="badge '+catBadge(f.category)+'">'+esc(f.category||'General')+'</span></div></div></div>'+
         '<div class="fa">'+
-        '<a href="'+f.data+'" download="'+esc(f.name)+'" class="btn bp bsm" onclick="event.stopPropagation()">⬇️</a></div></div>';
+        '<button class="btn bs bsm" onclick="event.stopPropagation();openPreview(\''+f.data+'\',\''+esc(f.name)+'\',\''+esc(f.type||'')+'\')">👁 View</button>'+
+        '<button class="btn bp bsm" style="background:linear-gradient(135deg,#a78bfa,#6d28d9)" onclick="event.stopPropagation();openQfAttempt(\''+f.data+'\',\''+esc(f.name)+'\')">✏️ Attempt</button>'+
+        '<a href="'+f.data+'" download="'+esc(f.name)+'" class="btn bp bsm" onclick="event.stopPropagation()">⬇️</a>'+
+        '<button class="bm-btn '+(isFileBookmarked(f.__id)?'bm-saved':'')+'" title="Bookmark" onclick="event.stopPropagation();toggleFileBookmark(\''+f.__id+'\',\''+esc(f.name)+'\',\''+esc(f.category||'General')+'\',\''+esc(f.type||'')+'\',this)">'+(isFileBookmarked(f.__id)?'🔖':'🔖')+'</button>'+
+        '<button class="bm-btn" title="Notes &amp; Highlights" onclick="event.stopPropagation();openAnnotModal(\''+f.__id+'\',\''+esc(f.name)+'\')">📝</button>'+
+        '</div></div>';
     }).join('');
 }
 function filterQuizByCat(btn,cat){
@@ -11222,6 +11260,263 @@ function deleteSubAdmin(id, name){
       }, 2000);
     }
   });
+})();
+</script>
+
+<!-- ══ QUIZ FILE ATTEMPT MODAL ══ -->
+<div id="qf-attempt-overlay">
+  <div id="qf-attempt-toolbar">
+    <span id="qf-attempt-title">Quiz</span>
+    <div style="display:flex;gap:7px;align-items:center;flex-shrink:0;">
+      <div id="qf-attempt-timer" style="font-family:var(--fh);font-size:.85rem;font-weight:800;color:var(--yellow);display:none;">⏱ <span id="qf-timer-val">00:00</span></div>
+      <button class="pdf-ctrl-btn" onclick="closeQfAttempt()">✕ Close</button>
+    </div>
+  </div>
+  <!-- PDF Preview half -->
+  <div id="qf-pdf-half">
+    <canvas id="qf-pdf-canvas"></canvas>
+    <div id="qf-pdf-nav" style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);display:flex;gap:6px;align-items:center;background:rgba(0,0,0,.7);border-radius:20px;padding:4px 12px;backdrop-filter:blur(8px);">
+      <button class="pdf-ctrl-btn" id="qf-prev-pg" onclick="qfChangePage(-1)">◀</button>
+      <span id="qf-pg-info" style="font-size:.75rem;font-weight:700;color:var(--text2);padding:0 4px;"></span>
+      <button class="pdf-ctrl-btn" id="qf-next-pg" onclick="qfChangePage(1)">▶</button>
+    </div>
+  </div>
+  <!-- Quiz half -->
+  <div id="qf-quiz-half">
+    <div id="qf-gen-area">
+      <div style="font-size:1.8rem;margin-bottom:8px;">🤖</div>
+      <div style="font-family:var(--fh);font-size:.95rem;font-weight:800;margin-bottom:4px;">AI Quiz Generator</div>
+      <div style="font-size:.8rem;color:var(--text2);margin-bottom:14px;line-height:1.5;">Generate interactive MCQs from this file using AI, then attempt them right here.</div>
+      <div style="margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;">
+        <label style="font-size:.78rem;color:var(--text2);">Questions:</label>
+        <select id="qf-qcount-sel">
+          <option value="5">5</option>
+          <option value="10" selected>10</option>
+          <option value="15">15</option>
+          <option value="20">20</option>
+        </select>
+      </div>
+      <button class="qf-gen-btn" id="qf-gen-btn" onclick="qfGenerateQuiz()">⚡ Generate Quiz</button>
+      <div id="qf-gen-status" style="margin-top:12px;font-size:.8rem;color:var(--text2);display:none;"></div>
+    </div>
+    <div id="qf-questions-wrap">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-family:var(--fh);font-size:.88rem;font-weight:800;" id="qf-q-header">Questions</div>
+        <button class="btn bd bsm" onclick="qfResetQuiz()">↩ Reset</button>
+      </div>
+      <div id="qf-progress-bar" class="progress-bar" style="margin-bottom:14px;"><div id="qf-progress-fill" class="progress-fill" style="width:0%"></div></div>
+      <div id="qf-q-list"></div>
+      <button class="btn bp" style="width:100%;justify-content:center;margin-top:10px;" id="qf-submit-btn" onclick="qfSubmitQuiz()">✅ Submit Quiz</button>
+    </div>
+    <div id="qf-result-wrap">
+      <div style="font-size:2.4rem;margin-bottom:6px;" id="qf-result-emoji">🎉</div>
+      <div class="qf-result-score" id="qf-result-score">0/0</div>
+      <div style="font-size:.82rem;color:var(--text2);margin:4px 0 14px;" id="qf-result-sub"></div>
+      <div id="qf-review-list" style="text-align:left;margin-bottom:14px;"></div>
+      <button class="btn bp" style="margin-right:8px;" onclick="qfResetQuiz()">🔄 Try Again</button>
+      <button class="btn bs" onclick="closeQfAttempt()">✕ Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var _qfPdf=null, _qfPage=1, _qfTotal=1;
+  var _qfQuestions=[], _qfAnswers={}, _qfFileData=null, _qfFileName='';
+  var _qfTimer=null, _qfSeconds=0;
+
+  window.openQfAttempt=function(fileData, fileName){
+    _qfFileData=fileData; _qfFileName=fileName;
+    _qfQuestions=[]; _qfAnswers={}; _qfPage=1;
+    document.getElementById('qf-attempt-title').textContent=fileName;
+    document.getElementById('qf-gen-area').style.display='block';
+    document.getElementById('qf-questions-wrap').style.display='none';
+    document.getElementById('qf-result-wrap').style.display='none';
+    document.getElementById('qf-gen-btn').disabled=false;
+    document.getElementById('qf-gen-status').style.display='none';
+    document.getElementById('qf-attempt-timer').style.display='none';
+    document.getElementById('qf-attempt-overlay').classList.add('open');
+    document.body.style.overflow='hidden';
+    // Render PDF
+    qfRenderPdf(fileData);
+  };
+
+  window.closeQfAttempt=function(){
+    document.getElementById('qf-attempt-overlay').classList.remove('open');
+    document.body.style.overflow='';
+    if(_qfTimer){clearInterval(_qfTimer);_qfTimer=null;}
+    if(_qfPdf){_qfPdf.destroy().catch(function(){});_qfPdf=null;}
+  };
+
+  function qfRenderPdf(data){
+    if(!window.pdfjsLib){return;}
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    var canvas=document.getElementById('qf-pdf-canvas');
+    var half=document.getElementById('qf-pdf-half');
+    // Check if it's a PDF
+    if(data && (data.startsWith('data:application/pdf') || data.includes('base64'))){
+      pdfjsLib.getDocument({data:atob(data.split(',')[1]||'')}).promise.then(function(pdf){
+        _qfPdf=pdf; _qfTotal=pdf.numPages; _qfPage=1;
+        qfDrawPage();
+        document.getElementById('qf-pdf-nav').style.display=_qfTotal>1?'flex':'none';
+      }).catch(function(){
+        // Not a valid PDF — show file icon instead
+        half.innerHTML='<div style="text-align:center;color:var(--text2);padding:20px"><div style="font-size:3rem">📄</div><div style="font-size:.82rem;margin-top:8px">'+esc((_qfFileName||'').slice(0,40))+'</div></div>';
+      });
+    } else {
+      // image or unsupported — render inline
+      half.innerHTML='<img src="'+data+'" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:0;" onerror="this.parentNode.innerHTML=\'<div style=&quot;color:var(--text2);padding:20px;text-align:center&quot;><div style=&quot;font-size:3rem&quot;>📄</div><div>'+esc((_qfFileName||''))+'</div></div>\'"/>';
+    }
+  }
+
+  function qfDrawPage(){
+    if(!_qfPdf)return;
+    _qfPdf.getPage(_qfPage).then(function(page){
+      var half=document.getElementById('qf-pdf-half');
+      var scale=half.clientWidth/page.getViewport({scale:1}).width;
+      var vp=page.getViewport({scale:scale});
+      var canvas=document.getElementById('qf-pdf-canvas');
+      canvas.width=vp.width; canvas.height=vp.height;
+      page.render({canvasContext:canvas.getContext('2d'),viewport:vp});
+      document.getElementById('qf-pg-info').textContent=_qfPage+'/'+_qfTotal;
+      document.getElementById('qf-prev-pg').disabled=_qfPage<=1;
+      document.getElementById('qf-next-pg').disabled=_qfPage>=_qfTotal;
+    });
+  }
+
+  window.qfChangePage=function(d){
+    _qfPage=Math.max(1,Math.min(_qfTotal,_qfPage+d));
+    qfDrawPage();
+  };
+
+  window.qfGenerateQuiz=async function(){
+    var btn=document.getElementById('qf-gen-btn');
+    var status=document.getElementById('qf-gen-status');
+    var count=document.getElementById('qf-qcount-sel').value||'10';
+    if(!window.GROQ_KEY||!window.GROQ_KEY.startsWith('gsk_')){
+      notify('Please set your Groq API key first.','error','🔑'); return;
+    }
+    btn.disabled=true;
+    status.style.display='block';
+    status.innerHTML='<span class="sp"></span> Generating '+count+' questions from <em>'+esc(_qfFileName)+'</em>…';
+    try{
+      // Extract text hint from filename + ask AI to generate questions
+      var context='The quiz file is titled: "'+_qfFileName+'". ';
+      var prompt=context+
+        'Generate exactly '+count+' multiple-choice questions based on the likely content of this pharmacy/science study file. '+
+        'Return ONLY a JSON array. Each element: {"q":"question text","a":"A","b":"B","c":"C","d":"D","ans":"A"} '+
+        'where "ans" is the correct option letter. No extra text, no markdown.';
+      var raw=await askGroq(prompt,'You are an expert pharmacy/science MCQ generator. Output ONLY valid JSON, no markdown fences.');
+      // Parse JSON
+      var cleaned=raw.replace(/```json|```/g,'').trim();
+      var qs=JSON.parse(cleaned);
+      if(!Array.isArray(qs)||!qs.length) throw new Error('Empty');
+      _qfQuestions=qs; _qfAnswers={};
+      status.style.display='none';
+      document.getElementById('qf-gen-area').style.display='none';
+      qfRenderQuestions();
+    }catch(err){
+      btn.disabled=false;
+      status.innerHTML='<span style="color:var(--red)">⚠️ Failed to generate. Check your Groq key or try again.</span>';
+    }
+  };
+
+  function qfRenderQuestions(){
+    _qfAnswers={};
+    var wrap=document.getElementById('qf-questions-wrap');
+    var list=document.getElementById('qf-q-list');
+    wrap.style.display='block';
+    document.getElementById('qf-result-wrap').style.display='none';
+    document.getElementById('qf-q-header').textContent=_qfQuestions.length+' Questions';
+    list.innerHTML=_qfQuestions.map(function(q,i){
+      return'<div class="q-item" id="qfi-'+i+'">'+
+        '<div class="q-text"><span class="q-num">'+(i+1)+'</span>'+esc(q.q||q.question||q.text||'')+'</div>'+
+        ['a','b','c','d'].map(function(opt){
+          var txt=q[opt]||''; if(!txt)return'';
+          return'<div class="q-opt" onclick="qfPick('+i+',\''+opt.toUpperCase()+'\')" id="qfi-'+i+'-'+opt+'">'+
+            '<div class="opt-circle">'+opt.toUpperCase()+'</div>'+esc(txt)+'</div>';
+        }).join('')+
+      '</div>';
+    }).join('');
+    qfUpdateProgress();
+    // Start timer
+    _qfSeconds=0;
+    document.getElementById('qf-attempt-timer').style.display='';
+    if(_qfTimer)clearInterval(_qfTimer);
+    _qfTimer=setInterval(function(){
+      _qfSeconds++;
+      var m=String(Math.floor(_qfSeconds/60)).padStart(2,'0');
+      var s=String(_qfSeconds%60).padStart(2,'0');
+      document.getElementById('qf-timer-val').textContent=m+':'+s;
+    },1000);
+  }
+
+  window.qfPick=function(qi,opt){
+    _qfAnswers[qi]=opt;
+    var item=document.getElementById('qfi-'+qi);
+    if(item){
+      item.querySelectorAll('.q-opt').forEach(function(el,i){
+        var o=['A','B','C','D'][i];
+        el.classList.toggle('selected',o===opt);
+        var circle=el.querySelector('.opt-circle');
+        if(circle)circle.style.cssText=o===opt?'background:var(--accent);border-color:var(--accent);color:#fff':'';
+      });
+    }
+    qfUpdateProgress();
+  };
+
+  function qfUpdateProgress(){
+    var answered=Object.keys(_qfAnswers).length;
+    var total=_qfQuestions.length;
+    var pct=total?Math.round(answered/total*100):0;
+    document.getElementById('qf-progress-fill').style.width=pct+'%';
+  }
+
+  window.qfSubmitQuiz=function(){
+    if(_qfTimer){clearInterval(_qfTimer);_qfTimer=null;}
+    var score=0;
+    var reviewHtml=_qfQuestions.map(function(q,i){
+      var chosen=_qfAnswers[i]||null;
+      var correct=(q.ans||q.answer||'').toUpperCase();
+      var isRight=chosen===correct;
+      if(isRight)score++;
+      return'<div class="q-item" style="margin-bottom:8px;'+(isRight?'border-color:var(--green)':'border-color:var(--red)')+'">'+
+        '<div class="q-text" style="font-size:.82rem"><span class="q-num" style="'+(isRight?'background:var(--green)':'background:var(--red)')+'">'+(i+1)+'</span>'+esc(q.q||q.question||q.text||'')+'</div>'+
+        ['a','b','c','d'].map(function(opt){
+          var txt=q[opt]||''; if(!txt)return'';
+          var O=opt.toUpperCase();
+          var cls=O===correct?'correct':(chosen===O?'wrong':'');
+          return'<div class="q-opt '+cls+'" style="pointer-events:none">'+
+            '<div class="opt-circle '+(cls?cls:'')+'" style="'+(O===correct?'background:rgba(74,222,128,.3);border-color:var(--green)':chosen===O?'background:rgba(248,113,113,.3);border-color:var(--red)':'')+'">'+O+'</div>'+esc(txt)+(O===correct?' ✓':'')+'</div>';
+        }).join('')+
+        (!chosen?'<div style="font-size:.73rem;color:var(--yellow);margin-top:4px">⚠️ Not answered — correct: '+correct+'</div>':'')+
+      '</div>';
+    }).join('');
+
+    var total=_qfQuestions.length;
+    var pct=total?Math.round(score/total*100):0;
+    var emoji=pct>=80?'🏆':pct>=60?'🎉':pct>=40?'😊':'💪';
+    document.getElementById('qf-questions-wrap').style.display='none';
+    var rw=document.getElementById('qf-result-wrap');
+    rw.style.display='block';
+    document.getElementById('qf-result-emoji').textContent=emoji;
+    document.getElementById('qf-result-score').textContent=score+'/'+total+' ('+pct+'%)';
+    document.getElementById('qf-result-sub').textContent=
+      pct>=80?'Excellent work! 🌟':pct>=60?'Good job! Keep it up 💪':pct>=40?'Not bad — review the wrong ones below':'Keep studying — you got this! 📚';
+    document.getElementById('qf-review-list').innerHTML=reviewHtml;
+    rw.scrollIntoView({behavior:'smooth'});
+  };
+
+  window.qfResetQuiz=function(){
+    document.getElementById('qf-result-wrap').style.display='none';
+    document.getElementById('qf-gen-area').style.display='block';
+    document.getElementById('qf-questions-wrap').style.display='none';
+    document.getElementById('qf-gen-btn').disabled=false;
+    document.getElementById('qf-gen-status').style.display='none';
+    document.getElementById('qf-attempt-timer').style.display='none';
+    _qfQuestions=[]; _qfAnswers={};
+    if(_qfTimer){clearInterval(_qfTimer);_qfTimer=null;}
+  };
 })();
 </script>
 
