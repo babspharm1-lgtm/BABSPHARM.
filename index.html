@@ -793,8 +793,37 @@ body.has-bottom-nav #app{padding-bottom:0;}
 .cc-phl1{background:linear-gradient(135deg,#a3e635,#4d7c0f);}
 .cc-phl5{background:linear-gradient(135deg,#86efac,#15803d);}
 .cc-egl{background:linear-gradient(135deg,#fcd34d,#b45309);}
+.cc-lib{background:linear-gradient(135deg,#f97316,#7c2d12);}
+.cc-cos{background:linear-gradient(135deg,#06b6d4,#1e3a5f);}
 .cc-gen{background:linear-gradient(135deg,#fbbf24,#b45309);}
 .cc-all{background:linear-gradient(135deg,#a78bfa,#38bdf8);}
+
+/* ══ SEMESTER TABS ══ */
+.sem-tabs{display:flex;gap:10px;margin-bottom:18px;padding:4px;
+  background:rgba(255,255,255,.05);border-radius:14px;border:1px solid var(--cb);}
+.sem-tab{flex:1;padding:10px 8px;border-radius:11px;border:none;cursor:pointer;
+  font-family:var(--fh);font-size:.78rem;font-weight:800;letter-spacing:.2px;
+  transition:all .25s cubic-bezier(.4,0,.2,1);color:var(--text2);
+  background:transparent;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.sem-tab .sem-ico{font-size:1.3rem;line-height:1;}
+.sem-tab:hover{background:rgba(255,255,255,.08);color:var(--text);}
+.sem-tab.active{color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.3);}
+.sem-tab.active.harmattan{background:linear-gradient(135deg,#f97316,#b45309);
+  box-shadow:0 4px 18px rgba(249,115,22,.4);}
+.sem-tab.active.raining{background:linear-gradient(135deg,#38bdf8,#0369a1);
+  box-shadow:0 4px 18px rgba(56,189,248,.4);}
+.sem-badge{font-size:.6rem;padding:2px 7px;border-radius:20px;font-weight:700;
+  background:rgba(255,255,255,.18);letter-spacing:.3px;}
+.sem-panel{display:none;}
+.sem-panel.active{display:block;}
+.sem-empty{text-align:center;padding:40px 20px;color:var(--text2);}
+.sem-empty .sem-empty-ico{font-size:3rem;margin-bottom:10px;opacity:.4;}
+.sem-empty p{font-size:.84rem;opacity:.6;line-height:1.6;}
+.sem-section-label{font-family:var(--fh);font-size:.7rem;font-weight:800;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--text2);
+  margin-bottom:10px;margin-top:4px;padding-left:2px;
+  display:flex;align-items:center;gap:6px;}
+.sem-section-label::after{content:'';flex:1;height:1px;background:var(--cb);}
 
 /* ── LANDING PAGE ── */
 #landing{position:fixed;inset:0;z-index:10000;background:#0b0826;overflow:hidden;}
@@ -1262,6 +1291,21 @@ body.has-bottom-nav #app{padding-bottom:0;}
 }
 .admin-hero-text p{font-size:.8rem;color:var(--text2);margin-top:4px;}
 .admin-hero-icon{font-size:3rem;animation:heroFloat 3s ease-in-out infinite;flex-shrink:0;}
+/* Admin ↔ Student view switcher */
+.view-switcher{display:flex;align-items:center;gap:8px;margin:10px 12px 0;
+  background:rgba(255,255,255,.05);border:1px solid var(--cb);border-radius:14px;
+  padding:5px;position:relative;z-index:10;}
+.vs-btn{flex:1;padding:9px 10px;border-radius:10px;border:none;cursor:pointer;
+  font-family:var(--fh);font-size:.75rem;font-weight:800;letter-spacing:.2px;
+  transition:all .25s cubic-bezier(.4,0,.2,1);color:var(--text2);background:transparent;
+  display:flex;align-items:center;justify-content:center;gap:6px;}
+.vs-btn:hover{background:rgba(255,255,255,.08);color:#fff;}
+.vs-btn.vs-active{color:#fff;box-shadow:0 3px 12px rgba(0,0,0,.3);}
+.vs-btn.vs-admin.vs-active{background:linear-gradient(135deg,#7c3aed,#a78bfa);
+  box-shadow:0 3px 14px rgba(124,58,237,.45);}
+.vs-btn.vs-student.vs-active{background:linear-gradient(135deg,#0369a1,#38bdf8);
+  box-shadow:0 3px 14px rgba(56,189,248,.35);}
+.vs-divider{width:1px;height:20px;background:var(--cb);flex-shrink:0;}
 /* Admin stats grid */
 .admin-stats-grid{
   display:grid;grid-template-columns:repeat(2,1fr);
@@ -2128,6 +2172,92 @@ body.has-bottom-nav #app{padding-bottom:0;}
 }
 .apk-footer-link:hover{text-decoration:underline;}
 
+/* ══ MIND MAPS MODULE ══ */
+.mm-input-panel{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:18px;box-shadow:var(--sh);backdrop-filter:blur(14px);margin-bottom:14px;}
+.mm-input-panel h3{font-family:var(--fh);font-size:.92rem;font-weight:700;margin-bottom:11px;display:flex;align-items:center;gap:7px;}
+.mm-ai-tag{font-size:.63rem;padding:2px 7px;border-radius:20px;background:linear-gradient(135deg,var(--accent),#6d28d9);color:#fff;font-weight:800;letter-spacing:.3px;}
+textarea.mm-notes{width:100%;min-height:120px;padding:11px 13px;border-radius:11px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:var(--fb);font-size:.83rem;outline:none;resize:vertical;line-height:1.6;transition:border-color var(--tr);box-sizing:border-box;}
+textarea.mm-notes:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(167,139,250,.12);}
+textarea.mm-notes::placeholder{color:rgba(176,168,216,.35);}
+.mm-gen-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;}
+.mm-status-bar{padding:10px 13px;border-radius:10px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.18);font-size:.8rem;color:var(--text2);display:none;align-items:center;gap:8px;margin-top:10px;}
+.mm-status-bar.show{display:flex;}
+.mm-canvas-wrap{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);box-shadow:var(--sh);backdrop-filter:blur(14px);overflow:hidden;margin-bottom:14px;}
+.mm-toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 13px;border-bottom:1px solid var(--cb);flex-wrap:wrap;gap:7px;}
+.mm-toolbar-l{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.mm-toolbar-r{display:flex;align-items:center;gap:5px;}
+.mm-map-title{font-family:var(--fh);font-size:.88rem;font-weight:700;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mm-zoom-wrap{display:flex;align-items:center;gap:4px;}
+.mm-zoom-btn{background:rgba(255,255,255,.07);border:1px solid var(--cb);border-radius:7px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;color:var(--text);transition:all var(--tr);}
+.mm-zoom-btn:hover{background:rgba(255,255,255,.16);}
+.mm-zoom-val{font-size:.7rem;color:var(--text2);min-width:34px;text-align:center;}
+#mm-canvas{width:100%;height:480px;position:relative;overflow:hidden;cursor:grab;user-select:none;background:rgba(0,0,0,.15);}
+#mm-canvas.panning{cursor:grabbing;}
+#mm-svg-el{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;}
+#mm-nodes-el{position:absolute;top:0;left:0;width:100%;height:100%;z-index:2;}
+.mm-empty-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text2);pointer-events:none;}
+.mm-empty-state .mme-ico{font-size:3rem;opacity:.25;}
+.mm-empty-state p{font-size:.82rem;opacity:.5;text-align:center;max-width:240px;line-height:1.5;}
+.mm-node{position:absolute;transform:translate(-50%,-50%);cursor:pointer;z-index:3;transition:filter .15s;}
+.mm-node:hover{filter:brightness(1.18);}
+.mm-node.mm-selected .mm-nb{box-shadow:0 0 0 3px var(--accent),var(--sh)!important;}
+.mm-nb{border-radius:13px;padding:9px 15px;font-family:var(--fb);font-weight:600;font-size:.78rem;text-align:center;line-height:1.35;box-shadow:var(--sh);border:1px solid rgba(255,255,255,.14);min-width:75px;max-width:155px;word-break:break-word;position:relative;overflow:hidden;transition:all var(--tr);}
+.mm-nb::before{content:'';position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.11),transparent);pointer-events:none;}
+.mm-nb.mm-root{font-family:var(--fh);font-weight:800;font-size:.88rem;min-width:110px;border-radius:17px;padding:13px 18px;}
+.mm-nb.mm-branch{font-size:.76rem;border-radius:11px;}
+.mm-nb.mm-leaf{font-size:.71rem;border-radius:9px;padding:6px 11px;}
+.mm-c0{background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;}
+.mm-c1{background:linear-gradient(135deg,#0369a1,#38bdf8);color:#fff;}
+.mm-c2{background:linear-gradient(135deg,#be185d,#f472b6);color:#fff;}
+.mm-c3{background:linear-gradient(135deg,#15803d,#4ade80);color:#fff;}
+.mm-c4{background:linear-gradient(135deg,#b45309,#fbbf24);color:#fff;}
+.mm-c5{background:linear-gradient(135deg,#0f766e,#2dd4bf);color:#fff;}
+.mm-c6{background:linear-gradient(135deg,#7e22ce,#c084fc);color:#fff;}
+.mm-c7{background:linear-gradient(135deg,#c2410c,#fb923c);color:#fff;}
+.mm-node-popup{position:absolute;background:rgba(15,12,41,.97);border:1px solid var(--cb);border-radius:13px;padding:13px;box-shadow:0 8px 40px rgba(0,0,0,.7);backdrop-filter:blur(20px);z-index:100;min-width:190px;max-width:250px;display:none;}
+.mm-node-popup.show{display:block;}
+.mm-popup-title{font-family:var(--fh);font-size:.85rem;font-weight:700;margin-bottom:7px;padding-right:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mm-popup-close{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--text2);cursor:pointer;font-size:.85rem;padding:2px 5px;border-radius:5px;}
+.mm-popup-close:hover{background:rgba(255,255,255,.1);}
+.mm-popup-actions{display:flex;flex-direction:column;gap:5px;}
+.mm-pa{padding:7px 11px;border-radius:8px;border:none;cursor:pointer;font-family:var(--fb);font-size:.76rem;font-weight:600;text-align:left;transition:all var(--tr);display:flex;align-items:center;gap:6px;}
+.mm-pa:hover{transform:translateX(3px);}
+.mm-pa-edit{background:rgba(167,139,250,.14);color:var(--accent);}
+.mm-pa-add{background:rgba(74,222,128,.11);color:var(--green);}
+.mm-pa-color{background:rgba(56,189,248,.11);color:var(--a2);}
+.mm-pa-del{background:rgba(248,113,113,.11);color:var(--red);}
+.mm-edit-bar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(15,12,41,.96);border:1px solid var(--cb);border-radius:13px;padding:9px 12px;box-shadow:0 8px 40px rgba(0,0,0,.6);backdrop-filter:blur(20px);display:none;align-items:center;gap:8px;z-index:90;width:max-content;max-width:90vw;}
+.mm-edit-bar.show{display:flex;}
+.mm-edit-inp{padding:7px 10px;border-radius:9px;border:1px solid var(--cb);background:rgba(255,255,255,.06);color:var(--text);font-family:var(--fb);font-size:.8rem;outline:none;min-width:150px;transition:border-color var(--tr);}
+.mm-edit-inp:focus{border-color:var(--accent);}
+.mm-share-banner{background:linear-gradient(135deg,rgba(56,189,248,.1),rgba(167,139,250,.08));border:1px solid rgba(56,189,248,.22);border-radius:var(--r);padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.mm-share-banner .mm-sb-ico{font-size:1.3rem;}
+.mm-share-banner-text h4{font-family:var(--fh);font-size:.82rem;font-weight:700;}
+.mm-share-banner-text p{font-size:.73rem;color:var(--text2);margin-top:2px;}
+.mm-share-banner-btns{margin-left:auto;display:flex;gap:6px;}
+.mm-saved-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:11px;}
+.mm-card{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:14px;box-shadow:var(--sh);backdrop-filter:blur(14px);transition:all var(--tr);cursor:pointer;position:relative;overflow:hidden;}
+.mm-card:hover{transform:translateY(-3px);border-color:var(--accent);}
+.mm-card-thumb{width:100%;height:88px;border-radius:9px;background:rgba(0,0,0,.3);margin-bottom:9px;overflow:hidden;position:relative;}
+.mm-card-title{font-family:var(--fh);font-size:.85rem;font-weight:700;margin-bottom:3px;}
+.mm-card-meta{font-size:.7rem;color:var(--text2);display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+.mm-card-actions{display:flex;gap:5px;margin-top:9px;}
+.mm-share-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);z-index:1500;display:none;align-items:center;justify-content:center;}
+.mm-share-modal.open{display:flex;}
+.mm-share-box{background:var(--bg3);border:1px solid var(--cb);border-radius:20px;padding:22px;width:90%;max-width:390px;box-shadow:0 24px 80px rgba(0,0,0,.7);}
+.mm-share-box h3{font-family:var(--fh);font-size:1rem;font-weight:800;margin-bottom:3px;}
+.mm-share-box p{font-size:.8rem;color:var(--text2);margin-bottom:14px;}
+.mm-share-opts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:13px;}
+.mm-so{padding:12px 10px;border-radius:11px;border:1px solid var(--cb);cursor:pointer;font-family:var(--fb);font-size:.78rem;font-weight:600;transition:all .2s ease;display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--card);color:var(--text);}
+.mm-so:hover{transform:translateY(-3px);border-color:var(--accent);}
+.mm-so .mm-so-ico{font-size:1.5rem;}
+.mm-modal-close{width:100%;padding:9px;border-radius:11px;border:none;cursor:pointer;font-family:var(--fh);font-size:.8rem;font-weight:800;background:rgba(255,255,255,.08);color:var(--text);transition:all var(--tr);}
+.mm-modal-close:hover{background:rgba(255,255,255,.15);}
+.mm-tabs-row{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;}
+.mm-tr-tab{padding:8px 16px;border-radius:20px;border:1px solid var(--cb);font-family:var(--fh);font-size:.76rem;font-weight:800;cursor:pointer;transition:all .2s ease;background:rgba(255,255,255,.07);color:var(--text2);}
+.mm-tr-tab:hover{background:rgba(255,255,255,.13);color:#fff;}
+.mm-tr-tab.on{background:linear-gradient(135deg,var(--accent),#6d28d9);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(109,40,217,.4);}
+
 </style>
 </head>
 <body data-theme="dark">
@@ -2491,6 +2621,12 @@ body.has-bottom-nav #app{padding-bottom:0;}
           <option value="500 Level">500 Level</option>
         </select>
       </div>
+      <div class="fg"><label>Email Address <span style="font-size:.68rem;color:var(--text2)">(for notifications)</span></label>
+        <input type="email" id="remail" placeholder="e.g. yourname@gmail.com" style="text-transform:lowercase"/>
+        <div style="font-size:.68rem;color:var(--text2);margin-top:4px;display:flex;align-items:center;gap:4px;">
+          📧 You'll receive notifications when new files, quizzes or announcements are posted.
+        </div>
+      </div>
       <div class="fg"><label>Referral Code <span style="font-size:.68rem;color:var(--text2)">(optional)</span></label>
         <div class="ref-input-wrap">
           <input type="text" id="rref" placeholder="Enter referral code if you have one" oninput="checkRefCode()" style="text-transform:uppercase"/>
@@ -2661,6 +2797,7 @@ body.has-bottom-nav #app{padding-bottom:0;}
     <button class="tb" onclick="sut('chat',this)">💌 Chat</button>
     <button class="tb" onclick="sut('bookmarks',this)">🔖 Saved</button>
     <button class="tb" onclick="sut('ai',this)">🤖 AI</button>
+    <button class="tb" onclick="sut('mindmap',this)">🗺️ Mind Maps</button>
   </div>
   <div class="tp on" id="ut-profile"><div id="user-profile-card"><div class="ld">Loading<span class="sp"></span></div></div>
 
@@ -2688,6 +2825,10 @@ body.has-bottom-nav #app{padding-bottom:0;}
     <div class="card"><div class="st"><span class="dot"></span>Edit Profile</div>
       <div class="fg"><label>Bio</label><textarea id="u-bio" placeholder="Tell us about yourself..."></textarea></div>
       <div class="fg"><label>Phone</label><input type="text" id="u-phone" placeholder="Phone number"/></div>
+      <div class="fg"><label>Email Address <span style="font-size:.68rem;color:var(--text2)">(for notifications)</span></label>
+        <input type="email" id="u-email" placeholder="yourname@gmail.com"/>
+        <div style="font-size:.68rem;color:var(--text2);margin-top:3px;">📧 Used to notify you when new files, quizzes or announcements are posted.</div>
+      </div>
       <button class="btn bp" onclick="saveProfile()">💾 Save</button>
     </div>
     <!-- Referral Card -->
@@ -2722,72 +2863,98 @@ body.has-bottom-nav #app{padding-bottom:0;}
         <button class="btn bs bsm" onclick="dismissNotifPrompt()">Not now</button>
       </div>
     </div>
-    <!-- Course cover cards -->
-    <div class="course-grid" id="course-grid">
-      <div class="course-card cc-all" onclick="jumpToFileCat('All')">
-        <span class="cc-icon">📚</span>
-        <div class="cc-name">All Files</div>
-        <div class="cc-sub" id="cc-count-all">Loading...</div>
+    <!-- ══ SEMESTER TABS ══ -->
+    <div class="sem-tabs">
+      <button class="sem-tab harmattan active" id="sem-btn-harmattan" onclick="switchSemester('harmattan')">
+        <span class="sem-ico">☀️</span>
+        Harmattan
+        <span class="sem-badge">1st Sem</span>
+      </button>
+      <button class="sem-tab raining" id="sem-btn-raining" onclick="switchSemester('raining')">
+        <span class="sem-ico">🌧️</span>
+        Raining
+        <span class="sem-badge">2nd Sem</span>
+      </button>
+    </div>
+
+    <!-- ══ HARMATTAN SEMESTER PANEL ══ -->
+    <div class="sem-panel active" id="sem-panel-harmattan">
+      <div class="sem-section-label">☀️ Harmattan Semester — All Courses</div>
+      <div class="course-grid" id="course-grid">
+        <div class="course-card cc-all" onclick="jumpToFileCat('All')">
+          <span class="cc-icon">📚</span>
+          <div class="cc-name">All Files</div>
+          <div class="cc-sub" id="cc-count-all">Loading...</div>
+        </div>
+        <div class="course-card cc-phy1" onclick="jumpToFileCat('PHY 101')">
+          <span class="cc-icon">⚡</span>
+          <div class="cc-name">PHY 101</div>
+          <div class="cc-sub" id="cc-count-phy1">Physics I</div>
+        </div>
+        <div class="course-card cc-phy3" onclick="jumpToFileCat('PHY 103')">
+          <span class="cc-icon">🔭</span>
+          <div class="cc-name">PHY 103</div>
+          <div class="cc-sub" id="cc-count-phy3">Physics II</div>
+        </div>
+        <div class="course-card cc-bio" onclick="jumpToFileCat('BIO 101')">
+          <span class="cc-icon">🧬</span>
+          <div class="cc-name">BIO 101</div>
+          <div class="cc-sub" id="cc-count-bio">Biology I</div>
+        </div>
+        <div class="course-card cc-mth" onclick="jumpToFileCat('MTH 101')">
+          <span class="cc-icon">📐</span>
+          <div class="cc-name">MTH 101</div>
+          <div class="cc-sub" id="cc-count-mth">Mathematics I</div>
+        </div>
+        <div class="course-card cc-chm" onclick="jumpToFileCat('CHM 101')">
+          <span class="cc-icon">⚗️</span>
+          <div class="cc-name">CHM 101</div>
+          <div class="cc-sub" id="cc-count-chm">Chemistry I</div>
+        </div>
+        <div class="course-card cc-gst" onclick="jumpToFileCat('GST 101')">
+          <span class="cc-icon">📖</span>
+          <div class="cc-name">GST 101</div>
+          <div class="cc-sub" id="cc-count-gst">Use of English</div>
+        </div>
+        <div class="course-card cc-soc" onclick="jumpToFileCat('SOC 101')">
+          <span class="cc-icon">🧑‍🤝‍🧑</span>
+          <div class="cc-name">SOC 101</div>
+          <div class="cc-sub" id="cc-count-soc">Sociology</div>
+        </div>
+        <div class="course-card cc-phl1" onclick="jumpToFileCat('PHL 101')">
+          <span class="cc-icon">🏛️</span>
+          <div class="cc-name">PHL 101</div>
+          <div class="cc-sub" id="cc-count-phl1">Philosophy I</div>
+        </div>
+        <div class="course-card cc-phl5" onclick="jumpToFileCat('PHL 105')">
+          <span class="cc-icon">📜</span>
+          <div class="cc-name">PHL 105</div>
+          <div class="cc-sub" id="cc-count-phl5">Philosophy II</div>
+        </div>
+        <div class="course-card cc-egl" onclick="jumpToFileCat('EGL 101')">
+          <span class="cc-icon">✍️</span>
+          <div class="cc-name">EGL 101</div>
+          <div class="cc-sub" id="cc-count-egl">English Lang.</div>
+        </div>
+        <div class="course-card cc-lib" onclick="jumpToFileCat('LIB 101')">
+          <span class="cc-icon">📚</span>
+          <div class="cc-name">LIB 101</div>
+          <div class="cc-sub" id="cc-count-lib">Library Studies</div>
+        </div>
+        <div class="course-card cc-cos" onclick="jumpToFileCat('COS 101')">
+          <span class="cc-icon">💻</span>
+          <div class="cc-name">COS 101</div>
+          <div class="cc-sub" id="cc-count-cos">Intro to Computing</div>
+        </div>
       </div>
-      <div class="course-card cc-phy1" onclick="jumpToFileCat('PHY 101')">
-        <span class="cc-icon">⚡</span>
-        <div class="cc-name">PHY 101</div>
-        <div class="cc-sub" id="cc-count-phy1">Physics I</div>
-      </div>
-      <div class="course-card cc-phy3" onclick="jumpToFileCat('PHY 103')">
-        <span class="cc-icon">🔭</span>
-        <div class="cc-name">PHY 103</div>
-        <div class="cc-sub" id="cc-count-phy3">Physics II</div>
-      </div>
-      <div class="course-card cc-bio" onclick="jumpToFileCat('BIO 101')">
-        <span class="cc-icon">🧬</span>
-        <div class="cc-name">BIO 101</div>
-        <div class="cc-sub" id="cc-count-bio">Biology I</div>
-      </div>
-      <div class="course-card cc-mth" onclick="jumpToFileCat('MTH 101')">
-        <span class="cc-icon">📐</span>
-        <div class="cc-name">MTH 101</div>
-        <div class="cc-sub" id="cc-count-mth">Mathematics I</div>
-      </div>
-      <div class="course-card cc-chm" onclick="jumpToFileCat('CHM 101')">
-        <span class="cc-icon">⚗️</span>
-        <div class="cc-name">CHM 101</div>
-        <div class="cc-sub" id="cc-count-chm">Chemistry I</div>
-      </div>
-      <div class="course-card cc-gst" onclick="jumpToFileCat('GST 101')">
-        <span class="cc-icon">📖</span>
-        <div class="cc-name">GST 101</div>
-        <div class="cc-sub" id="cc-count-gst">Use of English</div>
-      </div>
-      <div class="course-card cc-soc" onclick="jumpToFileCat('SOC 101')">
-        <span class="cc-icon">🧑‍🤝‍🧑</span>
-        <div class="cc-name">SOC 101</div>
-        <div class="cc-sub" id="cc-count-soc">Sociology</div>
-      </div>
-      <div class="course-card cc-phl1" onclick="jumpToFileCat('PHL 101')">
-        <span class="cc-icon">🏛️</span>
-        <div class="cc-name">PHL 101</div>
-        <div class="cc-sub" id="cc-count-phl1">Philosophy I</div>
-      </div>
-      <div class="course-card cc-phl5" onclick="jumpToFileCat('PHL 105')">
-        <span class="cc-icon">📜</span>
-        <div class="cc-name">PHL 105</div>
-        <div class="cc-sub" id="cc-count-phl5">Philosophy II</div>
-      </div>
-      <div class="course-card cc-egl" onclick="jumpToFileCat('EGL 101')">
-        <span class="cc-icon">✍️</span>
-        <div class="cc-name">EGL 101</div>
-        <div class="cc-sub" id="cc-count-egl">English Lang.</div>
-      </div>
-      <div class="course-card cc-lib" onclick="jumpToFileCat('LIB 101')">
-        <span class="cc-icon">📚</span>
-        <div class="cc-name">LIB 101</div>
-        <div class="cc-sub" id="cc-count-lib">Library Studies</div>
-      </div>
-      <div class="course-card cc-cos" onclick="jumpToFileCat('COS 101')">
-        <span class="cc-icon">💻</span>
-        <div class="cc-name">COS 101</div>
-        <div class="cc-sub" id="cc-count-cos">Intro to Computing</div>
+    </div>
+
+    <!-- ══ RAINING SEMESTER PANEL ══ -->
+    <div class="sem-panel" id="sem-panel-raining">
+      <div class="sem-section-label">🌧️ Raining Semester — Courses</div>
+      <div class="sem-empty">
+        <div class="sem-empty-ico">🌧️</div>
+        <p>Raining Semester courses will appear here.<br/>Ask admin to add courses for this semester.</p>
       </div>
     </div>
     <div class="card"><div class="st"><span class="dot"></span>Study Materials</div>
@@ -3065,6 +3232,84 @@ body.has-bottom-nav #app{padding-bottom:0;}
 
   </div>
 
+  <!-- ══ MIND MAPS TAB ══ -->
+  <div class="tp" id="ut-mindmap">
+    <div class="mm-share-banner">
+      <div class="mm-sb-ico">📤</div>
+      <div class="mm-share-banner-text">
+        <h4>Share maps with your study group!</h4>
+        <p>Send any mind map directly to your WhatsApp group.</p>
+      </div>
+      <div class="mm-share-banner-btns">
+        <button class="btn bs bsm" onclick="mmOpenShare()">📲 Share</button>
+      </div>
+    </div>
+    <div class="mm-tabs-row">
+      <button class="mm-tr-tab on" id="mmtab-create" onclick="mmSwitchTab('create',this)">✨ Create</button>
+      <button class="mm-tr-tab" id="mmtab-saved" onclick="mmSwitchTab('saved',this)">📚 Saved Maps</button>
+    </div>
+    <!-- CREATE PANEL -->
+    <div id="mm-panel-create">
+      <div class="mm-input-panel">
+        <h3>📝 Paste lecture notes <span class="mm-ai-tag">AI</span></h3>
+        <textarea class="mm-notes" id="mm-notes-ta" placeholder="Paste your lecture notes or topic here…&#10;&#10;e.g. Pharmacokinetics describes how the body handles a drug. The four main processes are Absorption, Distribution, Metabolism, and Excretion (ADME)…"></textarea>
+        <div class="mm-gen-row">
+          <button class="btn bp" id="mm-gen-btn" onclick="mmGenerate()">🧠 Generate Map</button>
+          <button class="btn bs bsm" onclick="mmLoadDemo()">🎯 Try Demo</button>
+        </div>
+        <div class="mm-status-bar" id="mm-gen-status">
+          <div class="sp"></div>
+          <span id="mm-gen-status-text">Building your mind map…</span>
+        </div>
+      </div>
+      <div class="mm-canvas-wrap">
+        <div class="mm-toolbar">
+          <div class="mm-toolbar-l">
+            <span class="mm-map-title" id="mm-map-title">—</span>
+            <button class="btn bs bsm" id="mm-edit-toggle-btn" onclick="mmToggleEdit()" style="display:none">✏️ Edit</button>
+          </div>
+          <div class="mm-toolbar-r">
+            <div class="mm-zoom-wrap">
+              <div class="mm-zoom-btn" onclick="mmZoom(-0.15)">−</div>
+              <div class="mm-zoom-val" id="mm-zoom-val">100%</div>
+              <div class="mm-zoom-btn" onclick="mmZoom(0.15)">+</div>
+            </div>
+            <div class="mm-zoom-btn" onclick="mmResetView()" title="Reset view" style="font-size:.75rem">⌖</div>
+          </div>
+        </div>
+        <div id="mm-canvas">
+          <svg id="mm-svg-el" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div id="mm-nodes-el"></div>
+          <div class="mm-empty-state" id="mm-empty-state">
+            <div class="mme-ico">🗺️</div>
+            <p>Paste lecture notes above and tap <strong>Generate Map</strong> to create your visual mind map.</p>
+          </div>
+          <div class="mm-node-popup" id="mm-node-popup">
+            <button class="mm-popup-close" onclick="mmClosePopup()">✕</button>
+            <div class="mm-popup-title" id="mm-popup-title">Node</div>
+            <div class="mm-popup-actions">
+              <button class="mm-pa mm-pa-edit" onclick="mmStartEdit()">✏️ Edit Label</button>
+              <button class="mm-pa mm-pa-add" onclick="mmAddChild()">➕ Add Child</button>
+              <button class="mm-pa mm-pa-color" onclick="mmCycleColor()">🎨 Change Color</button>
+              <button class="mm-pa mm-pa-del" id="mm-pa-del" onclick="mmDeleteNode()">🗑️ Delete</button>
+            </div>
+          </div>
+          <div class="mm-edit-bar" id="mm-edit-bar">
+            <input class="mm-edit-inp" id="mm-edit-inp" placeholder="Node label…" onkeydown="mmEditKey(event)"/>
+            <button class="btn bp bsm" onclick="mmSaveEdit()">Save</button>
+            <button class="btn bs bsm" onclick="mmCancelEdit()">✕</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- SAVED PANEL -->
+    <div id="mm-panel-saved" style="display:none">
+      <div class="mm-saved-grid" id="mm-saved-grid">
+        <div class="ld">Loading<span class="sp"></span></div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ADMIN DASHBOARD -->
@@ -3078,6 +3323,17 @@ body.has-bottom-nav #app{padding-bottom:0;}
       <p>Full control over your education platform</p>
     </div>
     <div class="admin-hero-icon">⚗️</div>
+  </div>
+
+  <!-- ══ VIEW SWITCHER ══ -->
+  <div class="view-switcher" id="view-switcher">
+    <button class="vs-btn vs-admin vs-active" id="vs-admin-btn" onclick="vsSwitchView('admin')">
+      🛡️ Admin View
+    </button>
+    <div class="vs-divider"></div>
+    <button class="vs-btn vs-student" id="vs-student-btn" onclick="vsSwitchView('student')">
+      🎓 Student View
+    </button>
   </div>
 
   <!-- ══ ADMIN STATS CARDS ══ -->
@@ -3127,6 +3383,7 @@ body.has-bottom-nav #app{padding-bottom:0;}
     <button class="anb anb-red" onclick="sat2('security',this)">🔐 Security</button>
     <button class="anb anb-purple" onclick="sat2('subadmins',this)">👮 Sub-Admins</button>
     <button class="anb anb-cyan" onclick="sat2('aikey',this)">🤖 AI Key</button>
+    <button class="anb anb-blue" onclick="sat2('raining',this)" style="background:linear-gradient(135deg,#0369a1,#38bdf8)">🌧️ Raining Sem</button>
   </div>
 
   <div class="tp on" id="at-files">
@@ -4634,6 +4891,68 @@ D. Base</code>
       <button class="btn bp" style="width:100%;justify-content:center;margin-top:4px" onclick="changeAdminPassword()">🔐 Update Password</button>
     </div>
   </div>
+
+  <!-- ══ RAINING SEMESTER PANEL ══ -->
+  <div class="tp" id="at-raining">
+    <div class="card" style="margin-bottom:14px">
+      <div class="st"><span class="dot"></span>🌧️ Raining Semester Courses</div>
+      <p style="font-size:.78rem;color:var(--text2);margin-bottom:16px;">
+        Add the courses for the Raining Semester here. They will automatically appear on the student <strong>Files</strong> page under the 🌧️ Raining tab once you save them.
+      </p>
+      <!-- Course list -->
+      <div id="rain-courses-list" style="margin-bottom:14px;">
+        <div class="ld">Loading<span class="sp"></span></div>
+      </div>
+      <!-- Add new course form -->
+      <div style="background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.2);border-radius:13px;padding:14px;margin-bottom:12px;">
+        <div style="font-family:var(--fh);font-size:.82rem;font-weight:800;margin-bottom:10px;color:var(--a2);">➕ Add New Course</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div class="fg" style="margin:0">
+            <label style="font-size:.72rem;">Course Code</label>
+            <input type="text" id="rain-code" placeholder="e.g. CHM 102" style="text-transform:uppercase"/>
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:.72rem;">Course Name</label>
+            <input type="text" id="rain-name" placeholder="e.g. Chemistry II"/>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div class="fg" style="margin:0">
+            <label style="font-size:.72rem;">Icon (emoji)</label>
+            <input type="text" id="rain-icon" placeholder="e.g. ⚗️" maxlength="4"/>
+          </div>
+          <div class="fg" style="margin:0">
+            <label style="font-size:.72rem;">Color Theme</label>
+            <select id="rain-color">
+              <option value="purple">💜 Purple</option>
+              <option value="blue">💙 Blue</option>
+              <option value="green">💚 Green</option>
+              <option value="orange">🧡 Orange</option>
+              <option value="pink">🩷 Pink</option>
+              <option value="teal">🩵 Teal</option>
+              <option value="red">❤️ Red</option>
+              <option value="yellow">💛 Yellow</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn bp" style="width:100%;justify-content:center;" onclick="rainAddCourse()">➕ Add Course</button>
+      </div>
+      <button class="btn bs" style="width:100%;justify-content:center;" onclick="loadRainCourses()">🔄 Refresh List</button>
+    </div>
+    <div class="card" style="background:rgba(56,189,248,.06);border-color:rgba(56,189,248,.2);">
+      <div class="st"><span class="dot"></span>ℹ️ How it works</div>
+      <div style="font-size:.79rem;color:var(--text2);line-height:1.8;">
+        <div>1️⃣ Add each course using the form above</div>
+        <div>2️⃣ Courses appear instantly on the student Files page under 🌧️ Raining tab</div>
+        <div>3️⃣ Students click any course card to filter files for that course</div>
+        <div>4️⃣ Delete any course anytime by tapping 🗑️ Delete</div>
+        <div style="margin-top:8px;padding:8px 10px;background:rgba(56,189,248,.1);border-radius:8px;">
+          💡 <strong>Tip:</strong> Add courses now even before uploading files — students will see the course card but 0 files until you upload.
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
@@ -4935,7 +5254,11 @@ function sat(tab){
 function doRegister(){
   var name=document.getElementById('rname').value.trim(),un=document.getElementById('run').value.trim().toLowerCase();
   var pw=document.getElementById('rpw').value.trim(),level=document.getElementById('rlevel').value;
+  var email=document.getElementById('remail').value.trim().toLowerCase();
   if(!name||!un||!pw){notify('Fill all fields','error','⚠️');return;}
+  if(!email){notify('Please enter your email address for notifications','error','📧');return;}
+  // Basic email validation
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){notify('Please enter a valid email address','error','📧');return;}
   // Check reg mode first, then register
   fsGet('settings').then(function(sRes){
     var settings=getDocs(sRes);
@@ -4944,7 +5267,7 @@ function doRegister(){
     var initialStatus=mode==='auto'?'approved':'pending';
     fsGet('users').then(function(res){
       if(getDocs(res).some(function(u){return u.username===un;})){notify('Username taken','error','⚠️');return;}
-      fsAdd('users',{name:name,username:un,password:pw,level:level,status:initialStatus,
+      fsAdd('users',{name:name,username:un,password:pw,level:level,email:email,status:initialStatus,
         joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',totalScore:'0',quizzesTaken:'0'})
         .then(function(){
           if(mode==='auto'){
@@ -4960,7 +5283,7 @@ function doRegister(){
     // fallback: manual mode if settings fetch fails
     fsGet('users').then(function(res){
       if(getDocs(res).some(function(u){return u.username===un;})){notify('Username taken','error','⚠️');return;}
-      fsAdd('users',{name:name,username:un,password:pw,level:level,status:'pending',
+      fsAdd('users',{name:name,username:un,password:pw,level:level,email:email,status:'pending',
         joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',totalScore:'0',quizzesTaken:'0'})
         .then(function(){notify('Registered! Awaiting admin approval ⏳','success','✅');sat('login');})
         .catch(function(){notify('Failed','error','❌');});
@@ -5317,6 +5640,50 @@ function changeAdminPassword(){
   document.getElementById('sec-conf-pw').value='';
   notify('✅ Admin password updated successfully!','success','🔐');
 }
+// ══ ADMIN ↔ STUDENT VIEW SWITCHER ══
+function vsSwitchView(view){
+  var ud=document.getElementById('ud');
+  var ad=document.getElementById('ad');
+  var adminBtn=document.getElementById('vs-admin-btn');
+  var studentBtn=document.getElementById('vs-student-btn');
+  var switcher=document.getElementById('view-switcher');
+
+  if(view==='student'){
+    // Show student dashboard, hide admin dashboard body but keep switcher accessible
+    ad.style.display='none';
+    ud.style.display='';
+    // Inject a "Back to Admin" bar at top of student view
+    var existing=document.getElementById('admin-back-bar');
+    if(!existing){
+      var bar=document.createElement('div');
+      bar.id='admin-back-bar';
+      bar.style.cssText='position:sticky;top:0;z-index:999;background:linear-gradient(135deg,rgba(124,58,237,.95),rgba(109,40,217,.95));padding:9px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(167,139,250,.3);backdrop-filter:blur(10px);';
+      bar.innerHTML='<span style="font-family:var(--fh);font-size:.78rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:6px">👁️ Viewing as Student</span>'+
+        '<button onclick="vsSwitchView(\'admin\')" style="background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:8px;padding:5px 12px;color:#fff;font-family:var(--fh);font-size:.72rem;font-weight:800;cursor:pointer;">⬅️ Back to Admin</button>';
+      ud.insertBefore(bar, ud.firstChild);
+    } else {
+      existing.style.display='';
+    }
+    // Load student data if not already loaded
+    loadFeaturesForUser();
+    try{loadUFiles();}catch(e){}
+    try{loadUAnn();}catch(e){}
+    // Update buttons
+    if(adminBtn){adminBtn.classList.remove('vs-active');}
+    if(studentBtn){studentBtn.classList.add('vs-active');}
+    notify('👁️ Now viewing as Student','success','🎓');
+  } else {
+    // Back to admin
+    ud.style.display='none';
+    ad.style.display='';
+    var bar=document.getElementById('admin-back-bar');
+    if(bar)bar.style.display='none';
+    if(adminBtn){adminBtn.classList.add('vs-active');}
+    if(studentBtn){studentBtn.classList.remove('vs-active');}
+    notify('🛡️ Back to Admin Panel','success','🛡️');
+  }
+}
+
 function doLogout(){
   if(CU&&CU.role!=='admin')logActivity('logout','');
   CU=null;stopPolls();activeConv=null;
@@ -5414,6 +5781,7 @@ function loadUserProfile(){
   var el=document.getElementById('user-profile-card');
   document.getElementById('u-bio').value=CU.bio||'';
   document.getElementById('u-phone').value=CU.phone||'';
+  document.getElementById('u-email').value=CU.email||'';
   setTimeout(loadMyPointHistory, 100);
   // Wire up event listeners (ChatGPT style — only attaches once)
   setTimeout(initProfilePicListeners, 100);
@@ -5437,6 +5805,7 @@ function loadUserProfile(){
     '<div style="font-size:.8rem;color:var(--text2)">@'+esc(CU.username)+' · '+esc(CU.level||'')+'</div>'+
     (CU.bio?'<div style="font-size:.79rem;color:var(--text2);margin-top:3px">'+esc(CU.bio)+'</div>':'')+
     (CU.phone?'<div style="font-size:.77rem;color:var(--text2);margin-top:2px">📱 '+esc(CU.phone)+'</div>':'')+
+    (CU.email?'<div style="font-size:.77rem;color:var(--text2);margin-top:2px">📧 '+esc(CU.email)+'</div>':'')+
     '</div></div>'+
     '<div class="profile-stats">'+
       '<div class="pstat"><div class="pstat-val">'+CU.totalScore+'</div><div class="pstat-label">Points</div></div>'+
@@ -5584,10 +5953,15 @@ function initProfilePicListeners(){
 }
 
 function saveProfile(){
-  var bio=document.getElementById('u-bio').value.trim(),phone=document.getElementById('u-phone').value.trim();
-  fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+CU.id,{bio:bio,phone:phone})
-    .then(function(){CU.bio=bio;CU.phone=phone;notify('Saved!','success','✅');loadUserProfile();})
-    .catch(function(){notify('Failed','error','❌');});
+  var bio=document.getElementById('u-bio').value.trim();
+  var phone=document.getElementById('u-phone').value.trim();
+  var email=document.getElementById('u-email').value.trim().toLowerCase();
+  if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    notify('Please enter a valid email address','error','📧');return;
+  }
+  fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+CU.id,{bio:bio,phone:phone,email:email})
+    .then(function(){CU.bio=bio;CU.phone=phone;CU.email=email;notify('Profile saved! ✅','success','✅');loadUserProfile();})
+    .catch(function(){notify('Failed to save','error','❌');});
 }
 
 // ══════════════════════════════════
@@ -5904,6 +6278,7 @@ function filterAByCat(btn,cat){document.querySelectorAll('#acat-tabs .cat-tab').
 function loadUFiles(){
   var el=document.getElementById('ufl');el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
   checkNotifPrompt();
+  loadRainCoursesForStudent();
   fsGet('files').then(function(res){
     allUFiles=getDocs(res).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
     var tabsEl=document.getElementById('ucat-tabs');
@@ -5929,6 +6304,124 @@ function updateCourseCovers(files){
    ['cc-count-egl',counts['EGL 101']+' file'+(counts['EGL 101']!==1?'s':'')]
   ].forEach(function(p){var el=document.getElementById(p[0]);if(el)el.textContent=p[1];});
 }
+// ══ SEMESTER SWITCHER ══
+// ══════════════════════════════════════════════
+//  RAINING SEMESTER MANAGEMENT
+// ══════════════════════════════════════════════
+var RAIN_COLOR_MAP={
+  purple:'linear-gradient(135deg,#7c3aed,#a78bfa)',
+  blue:'linear-gradient(135deg,#0369a1,#38bdf8)',
+  green:'linear-gradient(135deg,#15803d,#4ade80)',
+  orange:'linear-gradient(135deg,#c2410c,#fb923c)',
+  pink:'linear-gradient(135deg,#be185d,#f472b6)',
+  teal:'linear-gradient(135deg,#0f766e,#2dd4bf)',
+  red:'linear-gradient(135deg,#b91c1c,#f87171)',
+  yellow:'linear-gradient(135deg,#b45309,#fbbf24)'
+};
+
+function loadRainCourses(){
+  var el=document.getElementById('rain-courses-list');
+  if(!el)return;
+  el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
+  fsGet('rain_courses').then(function(res){
+    var courses=getDocs(res);
+    if(!courses.length){
+      el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);font-size:.82rem;">'+
+        '<div style="font-size:2rem;margin-bottom:8px;opacity:.4">🌧️</div>'+
+        'No courses added yet. Use the form below to add your first Raining Semester course.</div>';
+      return;
+    }
+    el.innerHTML=courses.map(function(c){
+      var bg=RAIN_COLOR_MAP[c.color]||RAIN_COLOR_MAP.blue;
+      return'<div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:11px;border:1px solid var(--cb);background:var(--card);margin-bottom:8px;">'+
+        '<div style="width:38px;height:38px;border-radius:9px;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">'+esc(c.icon||'📚')+'</div>'+
+        '<div style="flex:1;min-width:0;">'+
+          '<div style="font-family:var(--fh);font-weight:800;font-size:.88rem;">'+esc(c.code)+'</div>'+
+          '<div style="font-size:.72rem;color:var(--text2);">'+esc(c.name)+'</div>'+
+        '</div>'+
+        '<button class="btn bd bsm" onclick="rainDeleteCourse(\''+c.__id+'\',\''+esc(c.code)+'\')">🗑️ Delete</button>'+
+      '</div>';
+    }).join('');
+    // Also refresh the student-side raining panel
+    renderRainStudentCourses(courses);
+  }).catch(function(){
+    el.innerHTML='<div style="color:var(--red);font-size:.8rem;padding:10px;">Failed to load courses. Check your connection.</div>';
+  });
+}
+
+function rainAddCourse(){
+  var code=document.getElementById('rain-code').value.trim().toUpperCase();
+  var name=document.getElementById('rain-name').value.trim();
+  var icon=document.getElementById('rain-icon').value.trim()||'📚';
+  var color=document.getElementById('rain-color').value;
+  if(!code||!name){notify('Please fill in Course Code and Course Name','error','⚠️');return;}
+  fsAdd('rain_courses',{code:code,name:name,icon:icon,color:color,createdAt:new Date().toISOString()})
+    .then(function(){
+      notify('✅ '+code+' added to Raining Semester!','success','🌧️');
+      document.getElementById('rain-code').value='';
+      document.getElementById('rain-name').value='';
+      document.getElementById('rain-icon').value='';
+      loadRainCourses();
+    }).catch(function(){notify('Failed to add course','error','❌');});
+}
+
+function rainDeleteCourse(id, code){
+  if(!confirm('Delete "'+code+'" from Raining Semester? This only removes it from the course list, not the files.'))return;
+  fsDel('projects/'+PROJECT+'/databases/(default)/documents/rain_courses/'+id)
+    .then(function(){notify('🗑️ '+code+' removed','success','✅');loadRainCourses();})
+    .catch(function(){notify('Failed to delete','error','❌');});
+}
+
+function renderRainStudentCourses(courses){
+  var panel=document.getElementById('sem-panel-raining');
+  if(!panel)return;
+  if(!courses||!courses.length){
+    panel.innerHTML='<div class="sem-section-label">🌧️ Raining Semester — Courses</div>'+
+      '<div class="sem-empty"><div class="sem-empty-ico">🌧️</div>'+
+      '<p>Raining Semester courses will appear here.<br/>Admin is preparing courses for this semester.</p></div>';
+    return;
+  }
+  var grid='<div class="sem-section-label">🌧️ Raining Semester — All Courses</div><div class="course-grid">';
+  grid+='<div class="course-card" style="background:linear-gradient(135deg,#a78bfa,#38bdf8)" onclick="jumpToFileCat(\'All\')">'+
+    '<span class="cc-icon">📚</span><div class="cc-name">All Files</div><div class="cc-sub">All courses</div></div>';
+  courses.forEach(function(c){
+    var bg=RAIN_COLOR_MAP[c.color]||RAIN_COLOR_MAP.blue;
+    grid+='<div class="course-card" style="background:'+bg+'" onclick="jumpToFileCat(\''+esc(c.code)+'\')">'+
+      '<span class="cc-icon">'+esc(c.icon||'📚')+'</span>'+
+      '<div class="cc-name">'+esc(c.code)+'</div>'+
+      '<div class="cc-sub">'+esc(c.name)+'</div></div>';
+  });
+  grid+='</div>';
+  panel.innerHTML=grid;
+}
+
+// Load raining courses for student side on files tab load
+function loadRainCoursesForStudent(){
+  fsGet('rain_courses').then(function(res){
+    renderRainStudentCourses(getDocs(res));
+  }).catch(function(){});
+}
+
+function switchSemester(sem){
+  // Update tab buttons
+  document.querySelectorAll('.sem-tab').forEach(function(b){b.classList.remove('active');});
+  var activeBtn = document.getElementById('sem-btn-'+sem);
+  if(activeBtn) activeBtn.classList.add('active');
+  // Update panels
+  document.querySelectorAll('.sem-panel').forEach(function(p){p.classList.remove('active');});
+  var activePanel = document.getElementById('sem-panel-'+sem);
+  if(activePanel) activePanel.classList.add('active');
+  // Save preference
+  try{localStorage.setItem('bp_semester', sem);}catch(e){}
+}
+// Restore last selected semester on load
+(function(){
+  try{
+    var saved = localStorage.getItem('bp_semester');
+    if(saved === 'raining') switchSemester('raining');
+  }catch(e){}
+})();
+
 function jumpToFileCat(cat){
   document.querySelectorAll('#ucat-tabs .cat-tab').forEach(function(b){
     if(b.textContent.trim()===cat){b.classList.add('on');filterByCat(b,cat);}
@@ -8364,7 +8857,8 @@ function sut(name,btn){
     lb:function(){loadLeaderboard('u-lb-list');},chat:startUserChatPoll,profile:loadUserProfile,
     ai:initAiAssistant,
     calc:function(){},
-    bookmarks:function(){renderBookmarks('files');}
+    bookmarks:function(){renderBookmarks('files');},
+    mindmap:function(){mmInitTab();}
   };
   if(loaders[name])loaders[name]();
 }
@@ -8394,7 +8888,8 @@ function sat2(name,btn){
       document.getElementById('chat-view').style.display='none';
       activeConv=null;loadConvList();convPoll=setInterval(loadConvList,8000);
     },
-    subadmins:function(){ loadSubAdmins(); }
+    subadmins:function(){ loadSubAdmins(); },
+    raining:function(){ loadRainCourses(); }
   };
   if(loaders[name])loaders[name]();
 }
@@ -8416,7 +8911,9 @@ var FEATURES=[
   {key:'feat_notes',   icon:'📓', name:'Shared Notes',      desc:'Students can share and read notes'},
   {key:'feat_exams',   icon:'📅', name:'Exam Calendar',     desc:'Upcoming exam dates and countdowns'},
   {key:'feat_chat',    icon:'💌', name:'Private Chat',      desc:'Students can message admin privately'},
-  {key:'feat_reg',     icon:'📝', name:'Registration',      desc:'Allow new students to register accounts'}
+  {key:'feat_reg',     icon:'📝', name:'Registration',      desc:'Allow new students to register accounts'},
+  {key:'feat_mindmap', icon:'🗺️', name:'Mind Maps',         desc:'AI-powered mind map generator from lecture notes'},
+  {key:'feat_mindmap_premium', icon:'🔒', name:'Mind Maps — Free Access', desc:'ON = all students can edit maps. OFF = view-only for free students'}
 ];
 var featureStates={};
 
@@ -8486,7 +8983,8 @@ function toggleFeature(key,currentlyOn){
 var FEAT_TAB_MAP={
   feat_files:'files', feat_quiz:'quiz', feat_ann:'ann',
   feat_calc:'calc', feat_forum:'forum', feat_groups:'groups',
-  feat_notes:'notes', feat_exams:'exams', feat_chat:'chat'
+  feat_notes:'notes', feat_exams:'exams', feat_chat:'chat',
+  feat_mindmap:'mindmap'
 };
 
 function applyFeatureStates(){
@@ -11550,6 +12048,343 @@ function deleteSubAdmin(id, name){
     document.getElementById('qf-attempt-timer').style.display='none';
     _qfQuestions=[]; _qfAnswers={};
     if(_qfTimer){clearInterval(_qfTimer);_qfTimer=null;}
+  };
+})();
+</script>
+
+<!-- ══ MIND MAPS SHARE MODAL ══ -->
+<div class="mm-share-modal" id="mm-share-modal">
+  <div class="mm-share-box">
+    <h3>📤 Share Mind Map</h3>
+    <p>Send this map to your study group</p>
+    <div class="mm-share-opts">
+      <button class="mm-so" onclick="mmShareWA()"><span class="mm-so-ico">💬</span>WhatsApp</button>
+      <button class="mm-so" onclick="mmCopyLink()"><span class="mm-so-ico">🔗</span>Copy Link</button>
+    </div>
+    <button class="mm-modal-close" onclick="mmCloseShare()">Close</button>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  MIND MAPS MODULE  v1.0
+// ══════════════════════════════════════════════
+(function(){
+  var mmData=null,mmScale=1,mmPanX=0,mmPanY=0;
+  var mmPanning=false,mmPX=0,mmPY=0,mmPanStartX=0,mmPanStartY=0;
+  var mmSelectedId=null,mmEditingId=null,mmTc={};
+
+  // Demo data — Pharmacokinetics ADME
+  var MM_DEMO={
+    title:'Pharmacokinetics (ADME)',
+    nodes:[
+      {id:'root',label:'Pharmacokinetics\n(ADME)',level:0,color:0,x:.5,y:.5,parent:null},
+      {id:'n1',label:'Absorption',level:1,color:1,x:.22,y:.27,parent:'root'},
+      {id:'n2',label:'Distribution',level:1,color:2,x:.78,y:.27,parent:'root'},
+      {id:'n3',label:'Metabolism',level:1,color:3,x:.22,y:.73,parent:'root'},
+      {id:'n4',label:'Excretion',level:1,color:4,x:.78,y:.73,parent:'root'},
+      {id:'n1a',label:'Bioavailability',level:2,color:1,x:.07,y:.14,parent:'n1'},
+      {id:'n1b',label:'First-pass\nEffect',level:2,color:1,x:.22,y:.11,parent:'n1'},
+      {id:'n1c',label:'Routes of\nAdmin.',level:2,color:1,x:.09,y:.32,parent:'n1'},
+      {id:'n2a',label:'Volume of\nDistribution',level:2,color:2,x:.73,y:.13,parent:'n2'},
+      {id:'n2b',label:'Plasma Protein\nBinding',level:2,color:2,x:.9,y:.15,parent:'n2'},
+      {id:'n2c',label:'Blood-Brain\nBarrier',level:2,color:2,x:.91,y:.32,parent:'n2'},
+      {id:'n3a',label:'CYP450\nEnzymes',level:2,color:3,x:.07,y:.72,parent:'n3'},
+      {id:'n3b',label:'Phase I & II',level:2,color:3,x:.18,y:.88,parent:'n3'},
+      {id:'n3c',label:'Hepatic\nMetabolism',level:2,color:3,x:.09,y:.57,parent:'n3'},
+      {id:'n4a',label:'Renal\nClearance',level:2,color:4,x:.73,y:.76,parent:'n4'},
+      {id:'n4b',label:'Half-life (t½)',level:2,color:4,x:.88,y:.64,parent:'n4'},
+      {id:'n4c',label:'Biliary\nExcretion',level:2,color:4,x:.91,y:.82,parent:'n4'}
+    ]
+  };
+
+  var MM_SAVED=[
+    {id:'mm_s1',title:'Pharmacokinetics (ADME)',subject:'Pharmacy',nodes:17,date:'Mar 07'},
+    {id:'mm_s2',title:'Cell Signaling Pathways',subject:'Biochemistry',nodes:14,date:'Mar 05'},
+    {id:'mm_s3',title:'Autonomic Nervous System',subject:'Pharmacology',nodes:20,date:'Mar 02'}
+  ];
+
+  // Public init called by sut() loader
+  window.mmInitTab=function(){if(mmData)mmDraw();};
+
+  window.mmSwitchTab=function(name,el){
+    document.getElementById('mm-panel-create').style.display=name==='create'?'':'none';
+    document.getElementById('mm-panel-saved').style.display=name==='saved'?'':'none';
+    document.querySelectorAll('.mm-tr-tab').forEach(function(b){b.classList.remove('on');});
+    if(el)el.classList.add('on');
+    if(name==='saved')mmRenderSaved();
+  };
+
+  window.mmLoadDemo=function(){
+    mmData=JSON.parse(JSON.stringify(MM_DEMO));
+    mmRenderMap();
+    notify('🎯 Demo map loaded! Tap nodes to interact.','success','🗺️');
+  };
+
+  window.mmGenerate=async function(){
+    var notes=(document.getElementById('mm-notes-ta').value||'').trim();
+    if(!notes){notify('Please paste some lecture notes first.','warn','⚠️');return;}
+    if(!window.GROQ_KEY||!window.GROQ_KEY.startsWith('gsk_')){
+      notify('No Groq API key set. Ask admin to add one in the AI Key section.','warn','🔑');return;
+    }
+    var btn=document.getElementById('mm-gen-btn');
+    var status=document.getElementById('mm-gen-status');
+    btn.disabled=true;status.classList.add('show');
+    document.getElementById('mm-gen-status-text').textContent='Analysing notes and building mind map…';
+    try{
+      var prompt='Convert these lecture notes into a mind map JSON.\nNotes: """'+notes.slice(0,2000)+'"""\n\n'+
+        'Return ONLY a valid JSON object (no markdown, no extra text):\n'+
+        '{"title":"Short title","nodes":[{"id":"root","label":"Topic","level":0,"color":0,"x":0.5,"y":0.5,"parent":null},...more nodes]}\n\n'+
+        'Rules:\n- root node at level 0, x=0.5, y=0.5\n- 4-6 branch nodes at level 1 spread around root (x/y 0.15-0.85)\n'+
+        '- 2-3 leaf nodes per branch at level 2\n- x and y are 0-1 fractions\n'+
+        '- Labels max 3 words, use \\n for line break\n- color is 0-7\n- spread nodes evenly to avoid overlap';
+      var raw=await askGroq(prompt,'You are a mind map generator. Output ONLY valid JSON, no markdown backticks, no explanation.');
+      var cleaned=raw.replace(/```json|```/g,'').trim();
+      var parsed=JSON.parse(cleaned);
+      if(!parsed.nodes||!parsed.nodes.length)throw new Error('No nodes returned');
+      mmData=parsed;
+      mmRenderMap();
+      notify('🎉 Mind map generated successfully!','success','🗺️');
+    }catch(err){
+      notify('⚠️ Generation failed: '+err.message,'error','⚠️');
+    }finally{
+      btn.disabled=false;status.classList.remove('show');
+    }
+  };
+
+  function mmRenderMap(){
+    if(!mmData)return;
+    mmScale=1;mmPanX=0;mmPanY=0;
+    document.getElementById('mm-empty-state').style.display='none';
+    document.getElementById('mm-map-title').textContent=mmData.title||'Mind Map';
+    document.getElementById('mm-edit-toggle-btn').style.display='';
+    mmDraw();
+  }
+
+  function mmDraw(){
+    if(!mmData)return;
+    var canvas=document.getElementById('mm-canvas');
+    if(!canvas)return;
+    var W=canvas.offsetWidth||360,H=canvas.offsetHeight||480;
+    var lookup={};
+    mmData.nodes.forEach(function(n){lookup[n.id]=n;});
+    var svg=document.getElementById('mm-svg-el');
+    svg.setAttribute('viewBox','0 0 '+W+' '+H);
+    var cols=['#a78bfa','#38bdf8','#f472b6','#4ade80','#fbbf24','#2dd4bf','#c084fc','#fb923c'];
+    var lines='';
+    mmData.nodes.forEach(function(n){
+      if(!n.parent)return;
+      var p=lookup[n.parent];if(!p)return;
+      var ox=W*(1-mmScale)/2,oy=H*(1-mmScale)/2;
+      var x1=p.x*W*mmScale+mmPanX+ox,y1=p.y*H*mmScale+mmPanY+oy;
+      var x2=n.x*W*mmScale+mmPanX+ox,y2=n.y*H*mmScale+mmPanY+oy;
+      var mx=(x1+x2)/2;
+      var col=cols[n.color%8],sw=n.level===1?2:1.5,op=n.level===1?.55:.35;
+      lines+='<path d="M'+x1+','+y1+' Q'+mx+','+y1+' '+x2+','+y2+'" fill="none" stroke="'+col+'" stroke-width="'+sw+'" '+(n.level>1?'stroke-dasharray="4,4"':'')+' opacity="'+op+'"/>';
+    });
+    svg.innerHTML=lines;
+    var nodesEl=document.getElementById('mm-nodes-el');
+    nodesEl.innerHTML='';
+    mmData.nodes.forEach(function(n){
+      var ox=W*(1-mmScale)/2,oy=H*(1-mmScale)/2;
+      var x=n.x*W*mmScale+mmPanX+ox,y=n.y*H*mmScale+mmPanY+oy;
+      var div=document.createElement('div');
+      div.className='mm-node'+(mmSelectedId===n.id?' mm-selected':'');
+      div.id='mmnode-'+n.id;
+      div.style.cssText='left:'+x+'px;top:'+y+'px;';
+      var lvlCls=n.level===0?'mm-root':n.level===1?'mm-branch':'mm-leaf';
+      var sc=n.level===0?mmScale:n.level===1?mmScale*.95:mmScale*.88;
+      var lbl=(n.label||'').replace(/\\n/g,'<br>').replace(/\n/g,'<br>');
+      div.innerHTML='<div class="mm-nb '+lvlCls+' mm-c'+(n.color%8)+'" style="transform:scale('+sc.toFixed(2)+')">'+lbl+'</div>';
+      div.onclick=(function(nid){return function(e){e.stopPropagation();mmSelectNode(nid);};})(n.id);
+      nodesEl.appendChild(div);
+    });
+    document.getElementById('mm-zoom-val').textContent=Math.round(mmScale*100)+'%';
+  }
+
+  function mmSelectNode(id){
+    mmSelectedId=id;mmDraw();
+    var node=mmData&&mmData.nodes.find(function(n){return n.id===id;});
+    if(!node)return;
+    var editFree=featureStates['feat_mindmap_premium']!=='off';
+    var canvas=document.getElementById('mm-canvas');
+    var W=canvas.offsetWidth||360,H=canvas.offsetHeight||480;
+    var ox=W*(1-mmScale)/2,oy=H*(1-mmScale)/2;
+    var x=node.x*W*mmScale+mmPanX+ox,y=node.y*H*mmScale+mmPanY+oy;
+    var popup=document.getElementById('mm-node-popup');
+    document.getElementById('mm-popup-title').textContent=(node.label||'').replace(/\\n|\n/g,' ');
+    document.getElementById('mm-pa-del').style.display=id==='root'?'none':'';
+    var btns=popup.querySelectorAll('.mm-pa');
+    btns[0].textContent=editFree?'✏️ Edit Label':'🔒 Edit Label (Premium)';
+    btns[1].textContent=editFree?'➕ Add Child':'🔒 Add Child (Premium)';
+    btns[2].textContent=editFree?'🎨 Change Color':'🔒 Change Color (Premium)';
+    var px=x+20,py=y-80;
+    if(px+255>W)px=x-265;
+    if(py<4)py=y+20;
+    popup.style.left=Math.max(4,Math.min(W-260,px))+'px';
+    popup.style.top=Math.max(4,py)+'px';
+    popup.classList.add('show');
+  }
+
+  window.mmClosePopup=function(){
+    document.getElementById('mm-node-popup').classList.remove('show');
+    mmSelectedId=null;mmDraw();
+  };
+
+  document.addEventListener('click',function(e){
+    if(!e.target.closest('#mm-node-popup')&&!e.target.closest('.mm-node')&&!e.target.closest('#mm-edit-bar'))
+      mmClosePopup();
+  });
+
+  window.mmStartEdit=function(){
+    if(featureStates['feat_mindmap_premium']==='off'){notify('🔒 Editing is Premium. Admin can enable free access in Feature Controls.','warn','🔒');return;}
+    var node=mmData&&mmData.nodes.find(function(n){return n.id===mmSelectedId;});
+    if(!node)return;
+    mmEditingId=mmSelectedId;
+    document.getElementById('mm-edit-inp').value=(node.label||'').replace(/\\n/g,'\n');
+    document.getElementById('mm-edit-bar').classList.add('show');
+    setTimeout(function(){document.getElementById('mm-edit-inp').focus();},50);
+    mmClosePopup();
+  };
+
+  window.mmSaveEdit=function(){
+    var node=mmData&&mmData.nodes.find(function(n){return n.id===mmEditingId;});
+    if(node){node.label=document.getElementById('mm-edit-inp').value.trim().replace(/\n/g,'\\n');mmDraw();}
+    mmCancelEdit();
+    notify('✅ Node updated!','success','✅');
+  };
+
+  window.mmCancelEdit=function(){
+    mmEditingId=null;
+    document.getElementById('mm-edit-bar').classList.remove('show');
+  };
+
+  window.mmEditKey=function(e){
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();mmSaveEdit();}
+    if(e.key==='Escape')mmCancelEdit();
+  };
+
+  window.mmAddChild=function(){
+    if(featureStates['feat_mindmap_premium']==='off'){notify('🔒 Adding nodes is Premium.','warn','🔒');return;}
+    if(!mmData||!mmSelectedId)return;
+    var parent=mmData.nodes.find(function(n){return n.id===mmSelectedId;});
+    if(!parent)return;
+    var id='mn'+Date.now();
+    var jx=(Math.random()-.5)*.2,jy=(Math.random()-.5)*.2;
+    mmData.nodes.push({id:id,label:'New Node',level:parent.level+1,color:parent.color,parent:parent.id,
+      x:Math.min(.92,Math.max(.08,parent.x+jx)),y:Math.min(.92,Math.max(.08,parent.y+jy))});
+    mmClosePopup();mmDraw();
+    setTimeout(function(){mmSelectedId=id;mmDraw();mmStartEdit();},80);
+  };
+
+  window.mmDeleteNode=function(){
+    if(featureStates['feat_mindmap_premium']==='off'){notify('🔒 Deleting nodes is Premium.','warn','🔒');return;}
+    if(!mmData||!mmSelectedId||mmSelectedId==='root')return;
+    var toRm=new Set([mmSelectedId]),changed=true;
+    while(changed){changed=false;
+      mmData.nodes.forEach(function(n){if(n.parent&&toRm.has(n.parent)&&!toRm.has(n.id)){toRm.add(n.id);changed=true;}});
+    }
+    mmData.nodes=mmData.nodes.filter(function(n){return!toRm.has(n.id);});
+    mmClosePopup();mmDraw();
+    notify('🗑️ Node deleted.','success','✅');
+  };
+
+  window.mmCycleColor=function(){
+    if(featureStates['feat_mindmap_premium']==='off'){notify('🔒 Color changes are Premium.','warn','🔒');return;}
+    if(!mmData)return;
+    var node=mmData.nodes.find(function(n){return n.id===mmSelectedId;});
+    if(node){node.color=(node.color+1)%8;mmClosePopup();mmDraw();
+      setTimeout(function(){mmSelectNode(node.id);},60);}
+  };
+
+  window.mmToggleEdit=function(){
+    var btn=document.getElementById('mm-edit-toggle-btn');
+    if(btn)btn.textContent=btn.textContent.includes('✏️')?'✅ Editing On':'✏️ Edit';
+    notify('✏️ Tap any node to edit it.','success','✅');
+  };
+
+  window.mmZoom=function(d){mmScale=Math.min(2.5,Math.max(.3,mmScale+d));mmDraw();};
+  window.mmResetView=function(){mmScale=1;mmPanX=0;mmPanY=0;mmDraw();};
+
+  // Pan — mouse
+  var mmCvs=document.getElementById('mm-canvas');
+  if(mmCvs){
+    mmCvs.addEventListener('mousedown',function(e){
+      if(e.target.closest('.mm-node')||e.target.closest('#mm-node-popup')||e.target.closest('#mm-edit-bar'))return;
+      mmPanning=true;mmCvs.classList.add('panning');
+      mmPX=e.clientX;mmPY=e.clientY;mmPanStartX=mmPanX;mmPanStartY=mmPanY;
+    });
+    window.addEventListener('mousemove',function(e){
+      if(!mmPanning)return;
+      mmPanX=mmPanStartX+(e.clientX-mmPX);
+      mmPanY=mmPanStartY+(e.clientY-mmPY);
+      mmDraw();
+    });
+    window.addEventListener('mouseup',function(){mmPanning=false;if(mmCvs)mmCvs.classList.remove('panning');});
+    mmCvs.addEventListener('wheel',function(e){e.preventDefault();mmZoom(e.deltaY<0?.12:-.12);},{passive:false});
+    // Pan — touch
+    mmCvs.addEventListener('touchstart',function(e){
+      if(e.touches.length===1){
+        mmPanning=true;
+        mmTc.x=e.touches[0].clientX;mmTc.y=e.touches[0].clientY;
+        mmTc.px=mmPanX;mmTc.py=mmPanY;
+      }
+    },{passive:true});
+    mmCvs.addEventListener('touchmove',function(e){
+      if(!mmPanning||e.touches.length!==1)return;
+      mmPanX=mmTc.px+(e.touches[0].clientX-mmTc.x);
+      mmPanY=mmTc.py+(e.touches[0].clientY-mmTc.y);
+      mmDraw();
+    },{passive:true});
+    mmCvs.addEventListener('touchend',function(){mmPanning=false;});
+  }
+
+  window.addEventListener('resize',function(){if(mmData)mmDraw();});
+
+  function mmRenderSaved(){
+    var grid=document.getElementById('mm-saved-grid');
+    if(!grid)return;
+    var cs=['#a78bfa','#38bdf8','#f472b6','#4ade80','#fbbf24'];
+    var pts=[[50,52],[22,30],[78,30],[22,72],[78,72]];
+    var thumb='<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">'+
+      pts.slice(1).map(function(p){return'<line x1="50%" y1="52%" x2="'+p[0]+'%" y2="'+p[1]+'%" stroke="#a78bfa" stroke-width="1.5" opacity="0.35"/>';}).join('')+
+      pts.map(function(p,i){return'<circle cx="'+p[0]+'%" cy="'+p[1]+'%" r="'+(i===0?5:3.5)+'" fill="'+cs[i%5]+'" opacity="'+(i===0?1:.75)+'"/>';}).join('')+
+      '</svg>';
+    grid.innerHTML=MM_SAVED.map(function(m){
+      return'<div class="mm-card" onclick="mmLoadSaved(\''+m.id+'\')">'+
+        '<div class="mm-card-thumb">'+thumb+'</div>'+
+        '<div class="mm-card-title">'+esc(m.title)+'</div>'+
+        '<div class="mm-card-meta"><span>'+esc(m.subject)+'</span><span>• '+m.nodes+' nodes</span><span>• '+m.date+'</span></div>'+
+        '<div class="mm-card-actions">'+
+          '<button class="btn bs bsm" onclick="event.stopPropagation();mmLoadSaved(\''+m.id+'\')">🗺️ Open</button>'+
+          '<button class="btn bs bsm" onclick="event.stopPropagation();mmOpenShare()">📤 Share</button>'+
+        '</div></div>';
+    }).join('');
+  }
+
+  window.mmLoadSaved=function(id){
+    var m=MM_SAVED.find(function(x){return x.id===id;});
+    if(!m)return;
+    mmData=JSON.parse(JSON.stringify(MM_DEMO));
+    mmData.title=m.title;
+    mmSwitchTab('create',document.getElementById('mmtab-create'));
+    mmRenderMap();
+    notify('📂 Loaded: '+m.title,'success','🗺️');
+  };
+
+  window.mmOpenShare=function(){document.getElementById('mm-share-modal').classList.add('open');};
+  window.mmCloseShare=function(){document.getElementById('mm-share-modal').classList.remove('open');};
+  window.mmShareWA=function(){
+    var title=mmData?mmData.title:'Mind Map';
+    window.open('https://wa.me/?text='+encodeURIComponent('🗺️ Check out this mind map: '+title+'\n\nShared via BABSPHARM Cloud ⚗️'),'_blank');
+    mmCloseShare();
+    notify('📲 Opening WhatsApp!','success','✅');
+  };
+  window.mmCopyLink=function(){
+    navigator.clipboard.writeText(window.location.href)
+      .then(function(){notify('🔗 Link copied!','success','✅');})
+      .catch(function(){notify('🔗 Share this page link!','info','🔗');});
+    mmCloseShare();
   };
 })();
 </script>
