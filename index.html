@@ -28,7 +28,7 @@
 <meta name="twitter:title" content="BABSPHARM Cloud ⚗️"/>
 <meta name="twitter:description" content="Your all-in-one education platform — study materials, past questions, quizzes, forums & more."/>
 <meta name="twitter:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' viewBox='0 0 1200 630'%3E%3Crect width='1200' height='630' fill='%230f0c29'/%3E%3Ctext x='600' y='270' font-family='Arial Black,sans-serif' font-size='120' font-weight='900' fill='white' text-anchor='middle'%3E⚗️%3C/text%3E%3Ctext x='600' y='390' font-family='Arial Black,sans-serif' font-size='72' font-weight='900' fill='%23a78bfa' text-anchor='middle'%3EBABSPHARM Cloud%3C/text%3E%3Ctext x='600' y='460' font-family='Arial,sans-serif' font-size='32' fill='%23b0a8d8' text-anchor='middle'%3EYour education platform%3C/text%3E%3C/svg%3E"/>
-<link id="pwa-manifest-link" rel="manifest" href="/BABSPHARM/manifest.json"/>
+<link id="pwa-manifest-link" rel="manifest" href="manifest.json"/>
 <link rel="apple-touch-icon" href="https://babspharm1-lgtm.github.io/BABSPHARM./icon-192x192.png"/>
 <!-- PDF.js for in-app PDF reading -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -10499,11 +10499,8 @@ console.log('✅ BABSPHARM Cloud v4 — Full Education Platform');
     ],
     prefer_related_applications:false
   };
-  try{
-    var blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
-    var url=URL.createObjectURL(blob);
-    document.getElementById('pwa-manifest-link').href=url;
-  }catch(e){}
+  // manifest.json is served as a static file — no blob needed
+  // (keeping manifest var for reference only)
 
   // Register service worker
   if('serviceWorker' in navigator){
