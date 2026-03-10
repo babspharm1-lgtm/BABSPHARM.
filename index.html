@@ -799,6 +799,83 @@ body.has-bottom-nav #app{padding-bottom:0;}
 .cc-all{background:linear-gradient(135deg,#a78bfa,#38bdf8);}
 
 /* ══ SEMESTER TABS ══ */
+/* ══ SEMESTER HOME SCREEN ══ */
+.sem-home{padding:4px 0 16px;}
+.sem-home-title{font-family:var(--fh);font-size:1rem;font-weight:800;margin-bottom:4px;
+  background:linear-gradient(90deg,var(--accent),var(--a2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.sem-home-sub{font-size:.75rem;color:var(--text2);margin-bottom:18px;}
+.sem-big-card.sem-card-active{box-shadow:0 0 0 3px #fff,0 8px 32px rgba(0,0,0,.4);transform:scale(1.03);}
+.sem-big-cards{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:20px;}
+.sem-big-card{border-radius:20px;padding:22px 16px 18px;cursor:pointer;position:relative;
+  overflow:hidden;border:1px solid rgba(255,255,255,.12);
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  transition:all .28s cubic-bezier(.4,0,.2,1);min-height:160px;justify-content:center;}
+.sem-big-card::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(rgba(255,255,255,.1),transparent);pointer-events:none;}
+.sem-big-card::after{content:'';position:absolute;top:-40%;right:-20%;
+  width:130px;height:130px;border-radius:50%;
+  background:rgba(255,255,255,.07);pointer-events:none;}
+.sem-big-card:hover{transform:translateY(-5px) scale(1.02);
+  box-shadow:0 18px 48px rgba(0,0,0,.5);}
+.sem-big-card:active{transform:translateY(-2px) scale(1.01);}
+.sem-big-card.harmattan-card{
+  background:linear-gradient(145deg,#c2410c,#f97316,#fbbf24);}
+.sem-big-card.raining-card{
+  background:linear-gradient(145deg,#0369a1,#0ea5e9,#38bdf8);}
+.sem-big-card .sbc-ico{font-size:2.8rem;line-height:1;filter:drop-shadow(0 3px 8px rgba(0,0,0,.3));}
+.sem-big-card .sbc-title{font-family:var(--fh);font-size:1rem;font-weight:900;
+  color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);}
+.sem-big-card .sbc-sub{font-size:.68rem;color:rgba(255,255,255,.8);
+  text-align:center;line-height:1.4;}
+.sem-big-card .sbc-badge{position:absolute;top:10px;right:10px;
+  background:rgba(255,255,255,.25);border-radius:20px;
+  padding:2px 8px;font-size:.6rem;font-weight:800;color:#fff;letter-spacing:.3px;}
+.sem-quick-links{margin-bottom:4px;}
+.sem-quick-title{font-family:var(--fh);font-size:.72rem;font-weight:800;
+  letter-spacing:1.2px;text-transform:uppercase;color:var(--text2);
+  margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.sem-quick-title::after{content:'';flex:1;height:1px;background:var(--cb);}
+.sem-quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.sem-qb{display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:12px 6px;border-radius:14px;border:1px solid var(--cb);
+  background:var(--card);cursor:pointer;transition:all .2s ease;
+  font-size:.65rem;font-weight:700;color:var(--text2);font-family:var(--fh);}
+.sem-qb:hover{background:rgba(167,139,250,.12);border-color:var(--accent);color:var(--accent);
+  transform:translateY(-2px);}
+.sem-qb .sqb-ico{font-size:1.4rem;}
+
+/* ══ SEMESTER HUB (inside a semester) ══ */
+.sem-hub{display:none;}
+.sem-hub.active{display:block;}
+.sem-hub-header{display:flex;align-items:center;gap:10px;margin-bottom:16px;
+  padding:13px 15px;border-radius:16px;border:1px solid rgba(255,255,255,.1);}
+.sem-hub-header.harmattan-hdr{background:linear-gradient(135deg,rgba(194,65,12,.35),rgba(251,191,36,.15));}
+.sem-hub-header.raining-hdr{background:linear-gradient(135deg,rgba(3,105,161,.35),rgba(56,189,248,.15));}
+.sem-hub-back{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);
+  border-radius:9px;padding:6px 10px;cursor:pointer;font-size:.75rem;
+  color:#fff;font-family:var(--fh);font-weight:800;transition:all .2s ease;flex-shrink:0;}
+.sem-hub-back:hover{background:rgba(255,255,255,.2);}
+.sem-hub-info{flex:1;}
+.sem-hub-info h3{font-family:var(--fh);font-size:.92rem;font-weight:900;color:#fff;margin-bottom:1px;}
+.sem-hub-info p{font-size:.7rem;color:rgba(255,255,255,.7);}
+.sem-hub-ico{font-size:2rem;}
+.sem-feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px;}
+.sem-feat{border-radius:15px;padding:16px 10px 14px;cursor:pointer;
+  border:1px solid var(--cb);background:var(--card);
+  display:flex;flex-direction:column;align-items:center;gap:7px;
+  transition:all .22s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;}
+.sem-feat:hover{transform:translateY(-3px);border-color:var(--accent);
+  box-shadow:0 8px 24px rgba(0,0,0,.35);}
+.sem-feat::before{content:'';position:absolute;inset:0;opacity:0;
+  transition:opacity .2s ease;background:linear-gradient(135deg,rgba(167,139,250,.08),transparent);}
+.sem-feat:hover::before{opacity:1;}
+.sem-feat-ico{font-size:1.6rem;filter:drop-shadow(0 2px 6px rgba(0,0,0,.2));}
+.sem-feat-label{font-family:var(--fh);font-size:.68rem;font-weight:800;
+  color:var(--text);text-align:center;line-height:1.3;}
+.sem-feat-count{font-size:.6rem;color:var(--text2);background:rgba(255,255,255,.07);
+  padding:1px 6px;border-radius:10px;margin-top:1px;}
+
 .sem-tabs{display:flex;gap:10px;margin-bottom:18px;padding:4px;
   background:rgba(255,255,255,.05);border-radius:14px;border:1px solid var(--cb);}
 .sem-tab{flex:1;padding:10px 8px;border-radius:11px;border:none;cursor:pointer;
@@ -2730,37 +2807,6 @@ textarea.mm-notes::placeholder{color:rgba(176,168,216,.35);}
       <button class="gdc-btn" onclick="showSec('profile')">View Progress →</button>
     </div>
 
-    <div class="glass-dash-card">
-      <div class="gdc-icon">📚</div>
-      <h3>Course Library</h3>
-      <ul class="gdc-list" id="gdc-courses">
-        <li onclick="showSec('files')"><span class="gdc-course-icon">⚡</span> PHY 101 — Physics I <span class="gdc-arrow">›</span></li>
-        <li onclick="showSec('files')"><span class="gdc-course-icon">⚡</span> PHY 103 — Physics II <span class="gdc-arrow">›</span></li>
-        <li onclick="showSec('files')"><span class="gdc-course-icon">🧬</span> BIO 101 — Biology I <span class="gdc-arrow">›</span></li>
-        <li onclick="showSec('files')"><span class="gdc-course-icon">➗</span> MTH 101 — Mathematics I <span class="gdc-arrow">›</span></li>
-        <li onclick="showSec('files')"><span class="gdc-course-icon">🧪</span> CHM 101 — Chemistry I <span class="gdc-arrow">›</span></li>
-        <li onclick="showSec('files')"><span class="gdc-course-icon">📖</span> GST 101 — Use of English <span class="gdc-arrow">›</span></li>
-        <li onclick="showSec('files')"><span class="gdc-course-icon">🏛️</span> SOC 101 — Sociology <span class="gdc-arrow">›</span></li>
-        <li onclick="showSec('files')"><span class="gdc-course-icon">💭</span> PHL 101 — Philosophy I <span class="gdc-arrow">›</span></li>
-        <li onclick="showSec('files')"><span class="gdc-course-icon">💭</span> PHL 105 — Philosophy II <span class="gdc-arrow">›</span></li>
-        <li onclick="showSec('files')"><span class="gdc-course-icon">✍️</span> EGL 101 — English Lang. <span class="gdc-arrow">›</span></li>
-        <li onclick="showSec('files')"><span class="gdc-course-icon">📚</span> LIB 101 — Library Studies <span class="gdc-arrow">›</span></li>
-        <li onclick="showSec('files')"><span class="gdc-course-icon">💻</span> COS 101 — Intro to Computing <span class="gdc-arrow">›</span></li>
-      </ul>
-      <button class="gdc-btn" onclick="showSec('files')">View All Courses →</button>
-    </div>
-
-    <div class="glass-dash-card">
-      <div class="gdc-icon">🏆</div>
-      <h3>Leaderboard</h3>
-      <div class="gdc-lb" id="gdc-lb">
-        <div class="gdc-lb-row gold"><span class="gdc-rank">🥇</span><span class="gdc-lbname">Loading…</span><span class="gdc-lbpts">—</span></div>
-        <div class="gdc-lb-row silver"><span class="gdc-rank">🥈</span><span class="gdc-lbname">—</span><span class="gdc-lbpts">—</span></div>
-        <div class="gdc-lb-row bronze"><span class="gdc-rank">🥉</span><span class="gdc-lbname">—</span><span class="gdc-lbpts">—</span></div>
-      </div>
-      <button class="gdc-btn" onclick="showSec('lb')">View Full Leaderboard →</button>
-    </div>
-
   </section>
 
   <!-- DAILY MOTIVATION CARD -->
@@ -2784,9 +2830,171 @@ textarea.mm-notes::placeholder{color:rgba(176,168,216,.35);}
     <div class="flyer-grid" id="flyers-user-grid"></div>
   </div>
 
-  <div class="tnav">
+  <!-- ══ NOTIFICATION PROMPT ══ -->
+  <div class="notif-prompt" id="notif-prompt">
+    <div class="notif-prompt-text">🔔 <strong>Stay updated!</strong> Enable browser notifications to get alerts when new files or quizzes are posted — even when the app is closed.</div>
+    <div style="display:flex;gap:6px">
+      <button class="btn bp bsm" onclick="requestBrowserNotif()">Enable</button>
+      <button class="btn bs bsm" onclick="dismissNotifPrompt()">Not now</button>
+    </div>
+  </div>
+
+  <!-- ══ SEMESTER SELECTOR — always visible ══ -->
+  <div id="sem-selector-bar" style="margin-bottom:14px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <div style="font-family:var(--fh);font-size:.78rem;font-weight:800;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;">📚 Semester</div>
+      <div style="flex:1;height:1px;background:var(--cb);"></div>
+    </div>
+    <div class="sem-big-cards">
+      <div class="sem-big-card harmattan-card" id="sem-card-harmattan" onclick="openSemHub('harmattan')">
+        <span class="sbc-badge">1st Sem</span>
+        <span class="sbc-ico">☀️</span>
+        <div class="sbc-title">Harmattan</div>
+        <div class="sbc-sub">13 courses · Files, Quizzes & more</div>
+      </div>
+      <div class="sem-big-card raining-card" id="sem-card-raining" onclick="openSemHub('raining')">
+        <span class="sbc-badge">2nd Sem</span>
+        <span class="sbc-ico">🌧️</span>
+        <div class="sbc-title">Raining</div>
+        <div class="sbc-sub" id="rain-card-sub">Tap to explore</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ HARMATTAN HUB ══ -->
+  <div class="sem-hub" id="sem-hub-harmattan">
+    <div class="sem-hub-header harmattan-hdr">
+      <button class="sem-hub-back" onclick="closeSemHub()">← Semesters</button>
+      <div class="sem-hub-info">
+        <h3>☀️ Harmattan Semester</h3>
+        <p>1st Semester · All your courses and materials</p>
+      </div>
+      <span class="sem-hub-ico">☀️</span>
+    </div>
+    <div class="sem-feature-grid">
+      <div class="sem-feat" onclick="showHubSection('files-section')">
+        <span class="sem-feat-ico">📁</span>
+        <span class="sem-feat-label">Course Files</span>
+        <span class="sem-feat-count" id="hub-file-count">Loading...</span>
+      </div>
+      <div class="sem-feat" onclick="sut('quiz',null)">
+        <span class="sem-feat-ico">📝</span>
+        <span class="sem-feat-label">Quizzes</span>
+      </div>
+      <div class="sem-feat" onclick="sut('exams',null)">
+        <span class="sem-feat-ico">📅</span>
+        <span class="sem-feat-label">Exam Dates</span>
+      </div>
+      <div class="sem-feat" onclick="sut('notes',null)">
+        <span class="sem-feat-ico">📓</span>
+        <span class="sem-feat-label">Notes</span>
+      </div>
+      <div class="sem-feat" onclick="sut('mindmap',null)">
+        <span class="sem-feat-ico">🗺️</span>
+        <span class="sem-feat-label">Mind Maps</span>
+      </div>
+      <div class="sem-feat" onclick="sut('ann',null)">
+        <span class="sem-feat-ico">📢</span>
+        <span class="sem-feat-label">News</span>
+      </div>
+      <div class="sem-feat" onclick="sut('forum',null)">
+        <span class="sem-feat-ico">💬</span>
+        <span class="sem-feat-label">Forum</span>
+      </div>
+      <div class="sem-feat" onclick="sut('groups',null)">
+        <span class="sem-feat-ico">👥</span>
+        <span class="sem-feat-label">Groups</span>
+      </div>
+      <div class="sem-feat" onclick="sut('bookmarks',null)">
+        <span class="sem-feat-ico">🔖</span>
+        <span class="sem-feat-label">Saved</span>
+      </div>
+    </div>
+    <div id="files-section">
+      <div class="sem-section-label">☀️ Harmattan Courses</div>
+      <div class="course-grid" id="course-grid">
+        <div class="course-card cc-all" onclick="jumpToFileCat('All')"><span class="cc-icon">📚</span><div class="cc-name">All Files</div><div class="cc-sub" id="cc-count-all">Loading...</div></div>
+        <div class="course-card cc-phy1" onclick="jumpToFileCat('PHY 101')"><span class="cc-icon">⚡</span><div class="cc-name">PHY 101</div><div class="cc-sub" id="cc-count-phy1">Physics I</div></div>
+        <div class="course-card cc-phy3" onclick="jumpToFileCat('PHY 103')"><span class="cc-icon">🔭</span><div class="cc-name">PHY 103</div><div class="cc-sub" id="cc-count-phy3">Physics II</div></div>
+        <div class="course-card cc-bio" onclick="jumpToFileCat('BIO 101')"><span class="cc-icon">🧬</span><div class="cc-name">BIO 101</div><div class="cc-sub" id="cc-count-bio">Biology I</div></div>
+        <div class="course-card cc-mth" onclick="jumpToFileCat('MTH 101')"><span class="cc-icon">📐</span><div class="cc-name">MTH 101</div><div class="cc-sub" id="cc-count-mth">Mathematics I</div></div>
+        <div class="course-card cc-chm" onclick="jumpToFileCat('CHM 101')"><span class="cc-icon">⚗️</span><div class="cc-name">CHM 101</div><div class="cc-sub" id="cc-count-chm">Chemistry I</div></div>
+        <div class="course-card cc-gst" onclick="jumpToFileCat('GST 101')"><span class="cc-icon">📖</span><div class="cc-name">GST 101</div><div class="cc-sub" id="cc-count-gst">Use of English</div></div>
+        <div class="course-card cc-soc" onclick="jumpToFileCat('SOC 101')"><span class="cc-icon">🧑‍🤝‍🧑</span><div class="cc-name">SOC 101</div><div class="cc-sub" id="cc-count-soc">Sociology</div></div>
+        <div class="course-card cc-phl1" onclick="jumpToFileCat('PHL 101')"><span class="cc-icon">🏛️</span><div class="cc-name">PHL 101</div><div class="cc-sub" id="cc-count-phl1">Philosophy I</div></div>
+        <div class="course-card cc-phl5" onclick="jumpToFileCat('PHL 105')"><span class="cc-icon">📜</span><div class="cc-name">PHL 105</div><div class="cc-sub" id="cc-count-phl5">Philosophy II</div></div>
+        <div class="course-card cc-egl" onclick="jumpToFileCat('EGL 101')"><span class="cc-icon">✍️</span><div class="cc-name">EGL 101</div><div class="cc-sub" id="cc-count-egl">English Lang.</div></div>
+        <div class="course-card cc-lib" onclick="jumpToFileCat('LIB 101')"><span class="cc-icon">📚</span><div class="cc-name">LIB 101</div><div class="cc-sub" id="cc-count-lib">Library Studies</div></div>
+        <div class="course-card cc-cos" onclick="jumpToFileCat('COS 101')"><span class="cc-icon">💻</span><div class="cc-name">COS 101</div><div class="cc-sub" id="cc-count-cos">Intro to Computing</div></div>
+      </div>
+      <div class="card"><div class="st"><span class="dot"></span>Study Materials</div>
+        <div class="search-bar"><input type="text" id="usearch" placeholder="🔍 Search files..." oninput="filterUFiles()"/></div>
+        <div class="cat-tabs" id="ucat-tabs"></div>
+        <input type="hidden" id="fcat" value="General"/>
+        <div id="ufl"><div class="ld">Loading<span class="sp"></span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RAINING HUB ══ -->
+  <div class="sem-hub" id="sem-hub-raining">
+    <div class="sem-hub-header raining-hdr">
+      <button class="sem-hub-back" onclick="closeSemHub()">← Semesters</button>
+      <div class="sem-hub-info">
+        <h3>🌧️ Raining Semester</h3>
+        <p>2nd Semester · Courses and materials</p>
+      </div>
+      <span class="sem-hub-ico">🌧️</span>
+    </div>
+    <div class="sem-feature-grid">
+      <div class="sem-feat" onclick="showRainFiles()">
+        <span class="sem-feat-ico">📁</span>
+        <span class="sem-feat-label">Course Files</span>
+      </div>
+      <div class="sem-feat" onclick="sut('quiz',null)">
+        <span class="sem-feat-ico">📝</span>
+        <span class="sem-feat-label">Quizzes</span>
+      </div>
+      <div class="sem-feat" onclick="sut('exams',null)">
+        <span class="sem-feat-ico">📅</span>
+        <span class="sem-feat-label">Exam Dates</span>
+      </div>
+      <div class="sem-feat" onclick="sut('notes',null)">
+        <span class="sem-feat-ico">📓</span>
+        <span class="sem-feat-label">Notes</span>
+      </div>
+      <div class="sem-feat" onclick="sut('mindmap',null)">
+        <span class="sem-feat-ico">🗺️</span>
+        <span class="sem-feat-label">Mind Maps</span>
+      </div>
+      <div class="sem-feat" onclick="sut('ann',null)">
+        <span class="sem-feat-ico">📢</span>
+        <span class="sem-feat-label">News</span>
+      </div>
+      <div class="sem-feat" onclick="sut('forum',null)">
+        <span class="sem-feat-ico">💬</span>
+        <span class="sem-feat-label">Forum</span>
+      </div>
+      <div class="sem-feat" onclick="sut('groups',null)">
+        <span class="sem-feat-ico">👥</span>
+        <span class="sem-feat-label">Groups</span>
+      </div>
+      <div class="sem-feat" onclick="sut('bookmarks',null)">
+        <span class="sem-feat-ico">🔖</span>
+        <span class="sem-feat-label">Saved</span>
+      </div>
+    </div>
+    <div id="sem-panel-raining">
+      <div class="sem-section-label">🌧️ Raining Semester — Courses</div>
+      <div class="sem-empty">
+        <div class="sem-empty-ico">🌧️</div>
+        <p>Raining Semester courses will appear here.<br/>Admin is preparing courses for this semester.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tnav" style="display:none" id="u-tnav">
     <button class="tb on" onclick="sut('profile',this)">👤 Profile</button>
-    <button class="tb" onclick="sut('files',this)">📁 Files</button>
     <button class="tb" onclick="sut('ann',this)">📢 News</button>
     <button class="tb" onclick="sut('quiz',this)">📝 Quizzes</button>
     <button class="tb" onclick="sut('calc',this)">🧮 Calc</button>
@@ -2852,116 +3060,6 @@ textarea.mm-notes::placeholder{color:rgba(176,168,216,.35);}
         <span id="u-pts-total-badge" style="font-family:var(--fh);font-weight:800;font-size:1rem;color:var(--accent)"></span>
       </div>
       <div id="u-pts-history-list" style="margin-top:10px"><div class="ld">Loading<span class="sp"></span></div></div>
-    </div>
-  </div>
-  <div class="tp" id="ut-files">
-    <!-- Browser notification permission prompt -->
-    <div class="notif-prompt" id="notif-prompt">
-      <div class="notif-prompt-text">🔔 <strong>Stay updated!</strong> Enable browser notifications to get alerts when new files or quizzes are posted — even when the app is closed.</div>
-      <div style="display:flex;gap:6px">
-        <button class="btn bp bsm" onclick="requestBrowserNotif()">Enable</button>
-        <button class="btn bs bsm" onclick="dismissNotifPrompt()">Not now</button>
-      </div>
-    </div>
-    <!-- ══ SEMESTER TABS ══ -->
-    <div class="sem-tabs">
-      <button class="sem-tab harmattan active" id="sem-btn-harmattan" onclick="switchSemester('harmattan')">
-        <span class="sem-ico">☀️</span>
-        Harmattan
-        <span class="sem-badge">1st Sem</span>
-      </button>
-      <button class="sem-tab raining" id="sem-btn-raining" onclick="switchSemester('raining')">
-        <span class="sem-ico">🌧️</span>
-        Raining
-        <span class="sem-badge">2nd Sem</span>
-      </button>
-    </div>
-
-    <!-- ══ HARMATTAN SEMESTER PANEL ══ -->
-    <div class="sem-panel active" id="sem-panel-harmattan">
-      <div class="sem-section-label">☀️ Harmattan Semester — All Courses</div>
-      <div class="course-grid" id="course-grid">
-        <div class="course-card cc-all" onclick="jumpToFileCat('All')">
-          <span class="cc-icon">📚</span>
-          <div class="cc-name">All Files</div>
-          <div class="cc-sub" id="cc-count-all">Loading...</div>
-        </div>
-        <div class="course-card cc-phy1" onclick="jumpToFileCat('PHY 101')">
-          <span class="cc-icon">⚡</span>
-          <div class="cc-name">PHY 101</div>
-          <div class="cc-sub" id="cc-count-phy1">Physics I</div>
-        </div>
-        <div class="course-card cc-phy3" onclick="jumpToFileCat('PHY 103')">
-          <span class="cc-icon">🔭</span>
-          <div class="cc-name">PHY 103</div>
-          <div class="cc-sub" id="cc-count-phy3">Physics II</div>
-        </div>
-        <div class="course-card cc-bio" onclick="jumpToFileCat('BIO 101')">
-          <span class="cc-icon">🧬</span>
-          <div class="cc-name">BIO 101</div>
-          <div class="cc-sub" id="cc-count-bio">Biology I</div>
-        </div>
-        <div class="course-card cc-mth" onclick="jumpToFileCat('MTH 101')">
-          <span class="cc-icon">📐</span>
-          <div class="cc-name">MTH 101</div>
-          <div class="cc-sub" id="cc-count-mth">Mathematics I</div>
-        </div>
-        <div class="course-card cc-chm" onclick="jumpToFileCat('CHM 101')">
-          <span class="cc-icon">⚗️</span>
-          <div class="cc-name">CHM 101</div>
-          <div class="cc-sub" id="cc-count-chm">Chemistry I</div>
-        </div>
-        <div class="course-card cc-gst" onclick="jumpToFileCat('GST 101')">
-          <span class="cc-icon">📖</span>
-          <div class="cc-name">GST 101</div>
-          <div class="cc-sub" id="cc-count-gst">Use of English</div>
-        </div>
-        <div class="course-card cc-soc" onclick="jumpToFileCat('SOC 101')">
-          <span class="cc-icon">🧑‍🤝‍🧑</span>
-          <div class="cc-name">SOC 101</div>
-          <div class="cc-sub" id="cc-count-soc">Sociology</div>
-        </div>
-        <div class="course-card cc-phl1" onclick="jumpToFileCat('PHL 101')">
-          <span class="cc-icon">🏛️</span>
-          <div class="cc-name">PHL 101</div>
-          <div class="cc-sub" id="cc-count-phl1">Philosophy I</div>
-        </div>
-        <div class="course-card cc-phl5" onclick="jumpToFileCat('PHL 105')">
-          <span class="cc-icon">📜</span>
-          <div class="cc-name">PHL 105</div>
-          <div class="cc-sub" id="cc-count-phl5">Philosophy II</div>
-        </div>
-        <div class="course-card cc-egl" onclick="jumpToFileCat('EGL 101')">
-          <span class="cc-icon">✍️</span>
-          <div class="cc-name">EGL 101</div>
-          <div class="cc-sub" id="cc-count-egl">English Lang.</div>
-        </div>
-        <div class="course-card cc-lib" onclick="jumpToFileCat('LIB 101')">
-          <span class="cc-icon">📚</span>
-          <div class="cc-name">LIB 101</div>
-          <div class="cc-sub" id="cc-count-lib">Library Studies</div>
-        </div>
-        <div class="course-card cc-cos" onclick="jumpToFileCat('COS 101')">
-          <span class="cc-icon">💻</span>
-          <div class="cc-name">COS 101</div>
-          <div class="cc-sub" id="cc-count-cos">Intro to Computing</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ══ RAINING SEMESTER PANEL ══ -->
-    <div class="sem-panel" id="sem-panel-raining">
-      <div class="sem-section-label">🌧️ Raining Semester — Courses</div>
-      <div class="sem-empty">
-        <div class="sem-empty-ico">🌧️</div>
-        <p>Raining Semester courses will appear here.<br/>Ask admin to add courses for this semester.</p>
-      </div>
-    </div>
-    <div class="card"><div class="st"><span class="dot"></span>Study Materials</div>
-      <div class="search-bar"><input type="text" id="usearch" placeholder="🔍 Search files..." oninput="filterUFiles()"/></div>
-      <div class="cat-tabs" id="ucat-tabs"></div>
-      <input type="hidden" id="fcat" value="General"/>
-      <div id="ufl"><div class="ld">Loading<span class="sp"></span></div></div>
     </div>
   </div>
   <div class="tp" id="ut-ann">
@@ -3383,6 +3481,8 @@ textarea.mm-notes::placeholder{color:rgba(176,168,216,.35);}
     <button class="anb anb-red" onclick="sat2('security',this)">🔐 Security</button>
     <button class="anb anb-purple" onclick="sat2('subadmins',this)">👮 Sub-Admins</button>
     <button class="anb anb-cyan" onclick="sat2('aikey',this)">🤖 AI Key</button>
+    <button class="anb anb-green" onclick="sat2('emailkey',this)">📧 Email</button>
+    <button class="anb anb-pink" onclick="sat2('emailblast',this)">📨 Blast</button>
     <button class="anb anb-blue" onclick="sat2('raining',this)" style="background:linear-gradient(135deg,#0369a1,#38bdf8)">🌧️ Raining Sem</button>
   </div>
 
@@ -4855,6 +4955,84 @@ D. Base</code>
     </div>
   </div>
 
+  <!-- ══ EMAIL SETTINGS TAB ══ -->
+  <div class="tp" id="at-emailkey">
+    <div class="card" style="max-width:480px;margin-bottom:14px">
+      <div class="st"><span class="dot"></span>📧 Brevo Email Settings</div>
+      <p style="font-size:.8rem;color:var(--text2);margin-bottom:16px;line-height:1.6">
+        Paste your Brevo API key here and <strong style="color:var(--accent)">welcome emails will be sent automatically</strong> whenever a new student registers.
+        Get your key at <a href="https://app.brevo.com/settings/keys/api" target="_blank" style="color:var(--a2)">app.brevo.com → Settings → SMTP &amp; API</a>.
+      </p>
+      <div class="fg">
+        <label>Brevo API Key</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="password" id="admin-brevo-key-input" placeholder="xkeysib-..." style="flex:1;letter-spacing:.5px"/>
+          <button class="btn bs bsm" onclick="toggleBrevoKeyVisibility()" id="brevo-key-eye" title="Show/hide key">👁</button>
+        </div>
+        <span style="font-size:.7rem;color:var(--text2);margin-top:5px;display:block">Key starts with <code style="color:var(--accent)">xkeysib-</code> — stored securely in your platform database.</span>
+      </div>
+      <div class="fg">
+        <label>Sender Email <span style="font-size:.68rem;color:var(--text2)">(must match your Brevo account)</span></label>
+        <input type="email" id="admin-brevo-sender-input" placeholder="e.g. babspharm1@gmail.com" style="text-transform:lowercase"/>
+      </div>
+      <div id="brevo-key-status" style="display:none;padding:9px 12px;border-radius:9px;font-size:.8rem;margin-bottom:10px"></div>
+      <button class="btn bp" style="width:100%;justify-content:center;margin-top:8px" onclick="saveBrevoSettings()">💾 Save &amp; Activate</button>
+      <button class="btn bd" style="width:100%;justify-content:center;margin-top:8px" onclick="removeBrevoSettings()">🗑️ Remove &amp; Disable</button>
+    </div>
+    <!-- Email Triggers -->
+    <div class="card" style="max-width:480px;margin-bottom:14px">
+      <div class="st"><span class="dot"></span>🔔 Email Triggers</div>
+      <p style="font-size:.8rem;color:var(--text2);margin-bottom:12px">Choose which events automatically send an email to all students.</p>
+      <div id="brevo-triggers-list">
+        <div class="ld">Loading<span class="sp"></span></div>
+      </div>
+      <button class="btn bp" style="width:100%;justify-content:center;margin-top:12px" onclick="saveBrevoTriggers()">💾 Save Trigger Settings</button>
+    </div>
+    <!-- Test -->
+    <div class="card" style="max-width:480px">
+      <div class="st"><span class="dot"></span>🧪 Test Welcome Email</div>
+      <div class="fg"><label>Test Email Address</label><input type="email" id="brevo-test-email" placeholder="your@email.com"/></div>
+      <button class="btn bg2" style="width:100%;justify-content:center" onclick="sendBrevoTestEmail()">📤 Send Test Email</button>
+    </div>
+  </div>
+
+  <!-- ══ EMAIL BLAST TAB ══ -->
+  <div class="tp" id="at-emailblast">
+    <div class="card" style="max-width:480px;margin-bottom:14px">
+      <div class="st"><span class="dot"></span>📨 Send Email to All Students</div>
+      <p style="font-size:.8rem;color:var(--text2);margin-bottom:14px;line-height:1.6">Write a message and send it instantly to every student who has an email address on record.</p>
+      <div class="fg">
+        <label>Subject</label>
+        <input type="text" id="blast-subject" placeholder="e.g. New files uploaded for PHY 101 📚"/>
+      </div>
+      <div class="fg">
+        <label>Message</label>
+        <textarea id="blast-body" placeholder="Write your message here..." style="min-height:100px"></textarea>
+      </div>
+      <div class="fg">
+        <label>Category <span style="font-size:.68rem;color:var(--text2)">(optional tag for students)</span></label>
+        <select id="blast-category">
+          <option value="📢 Announcement">📢 Announcement</option>
+          <option value="📁 New Files">📁 New Files</option>
+          <option value="📝 New Quiz">📝 New Quiz</option>
+          <option value="📅 Exam Alert">📅 Exam Alert</option>
+          <option value="✨ Motivation">✨ Motivation</option>
+          <option value="⚠️ Important">⚠️ Important</option>
+        </select>
+      </div>
+      <div id="blast-status" style="display:none;padding:9px 12px;border-radius:9px;font-size:.8rem;margin-bottom:10px"></div>
+      <button class="btn bp" style="width:100%;justify-content:center" onclick="sendEmailBlast()">🚀 Send to All Students</button>
+    </div>
+    <div class="card" style="max-width:480px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="st" style="margin-bottom:0"><span class="dot"></span>📋 Blast History & Open Tracking</div>
+        <button class="btn bs bsm" onclick="loadBlastHistory()">🔄 Refresh</button>
+      </div>
+      <p style="font-size:.75rem;color:var(--text2);margin-bottom:10px">Open rates update as students open their emails. Refresh to see latest data.</p>
+      <div id="blast-history-list"><div class="ld">Loading<span class="sp"></span></div></div>
+    </div>
+  </div>
+
   <div class="tp" id="at-security">
 
     <!-- Contact Info Settings -->
@@ -4985,6 +5163,299 @@ var GROQ_KEY=localStorage.getItem('babspharm_apikey')||'';
     }).catch(function(){});
 })();
 // GROQ_MODEL is defined below with the full model list
+
+// ══ BREVO EMAIL SYSTEM ══
+var BREVO_API_KEY = '';
+var BREVO_SENDER_EMAIL = '';
+var BREVO_TRIGGERS = {new_file:true, new_quiz:true, new_announcement:true, new_exam:true};
+
+(function loadBrevoSettingsOnStartup(){
+  fetch("https://firestore.googleapis.com/v1/projects/babspharmcloud/databases/(default)/documents/settings?key="+KEY+"&pageSize=500")
+    .then(function(r){return r.json();})
+    .then(function(res){
+      var docs=(res.documents||[]).map(function(d){
+        var fields=d.fields||{};
+        var obj={__path:d.name};
+        Object.keys(fields).forEach(function(k){obj[k]=fields[k].stringValue||fields[k].integerValue||fields[k].booleanValue||'';});
+        return obj;
+      });
+      var keyDoc=docs.find(function(d){return d.key==='brevo_api_key';});
+      var senderDoc=docs.find(function(d){return d.key==='brevo_sender_email';});
+      var trigDoc=docs.find(function(d){return d.key==='brevo_triggers';});
+      if(keyDoc&&keyDoc.value) BREVO_API_KEY=keyDoc.value;
+      if(senderDoc&&senderDoc.value) BREVO_SENDER_EMAIL=senderDoc.value;
+      if(trigDoc&&trigDoc.value){try{BREVO_TRIGGERS=JSON.parse(trigDoc.value);}catch(e){}}
+    }).catch(function(){});
+})();
+
+function _brevoSendEmail(toEmail, toName, subject, htmlContent){
+  if(!toEmail||!BREVO_API_KEY||!BREVO_SENDER_EMAIL) return Promise.resolve();
+  return fetch('https://api.brevo.com/v3/smtp/email',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','api-key':BREVO_API_KEY},
+    body:JSON.stringify({
+      sender:{name:'BABSPHARM Cloud',email:BREVO_SENDER_EMAIL},
+      to:[{email:toEmail,name:toName||'Student'}],
+      subject:subject,
+      htmlContent:htmlContent
+    })
+  }).catch(function(){});
+}
+
+function sendBrevoWelcomeEmail(toEmail, toName){
+  var html=
+    '<div style="font-family:Arial,sans-serif;background:#0f0c29;padding:32px;border-radius:16px;max-width:480px;margin:0 auto">'+
+    '<h1 style="background:linear-gradient(90deg,#a78bfa,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.6rem;margin-bottom:8px">⚗️ BABSPHARM Cloud</h1>'+
+    '<p style="color:#b0a8d8;font-size:.95rem;margin-bottom:16px">Hi <strong style="color:#f8f7ff">'+toName+'</strong>, welcome aboard!</p>'+
+    '<p style="color:#b0a8d8;font-size:.9rem;line-height:1.6">Your account is being reviewed. Once approved you\'ll have access to study materials, past questions, quizzes, forums and more.</p>'+
+    '<div style="margin:24px 0;padding:16px;background:rgba(167,139,250,.12);border-left:4px solid #a78bfa;border-radius:8px">'+
+    '<p style="color:#f8f7ff;font-size:.88rem;margin:0">📚 Study hard. 🏆 Quiz often. 🚀 Aim higher.</p>'+
+    '<p style="color:#b0a8d8;font-size:.82rem;margin-top:8px">🎁 You\'ve been given <strong style="color:#4ade80">50 bonus points</strong> to get started!</p></div>'+
+    '<p style="color:#b0a8d8;font-size:.82rem">— The BABSPHARM Team</p></div>';
+  _brevoSendEmail(toEmail, toName, '🎉 Welcome to BABSPHARM Cloud, '+toName+'!', html);
+}
+
+function sendBrevoBroadcast(trigger, subject, message, category){
+  if(!BREVO_API_KEY||!BREVO_SENDER_EMAIL) return;
+  if(BREVO_TRIGGERS&&BREVO_TRIGGERS[trigger]===false) return;
+  fsGet('users').then(function(res){
+    var users=getDocs(res).filter(function(u){return u.email&&u.status==='approved';});
+    users.forEach(function(u){
+      var html=
+        '<div style="font-family:Arial,sans-serif;background:#0f0c29;padding:32px;border-radius:16px;max-width:480px;margin:0 auto">'+
+        '<h2 style="color:#a78bfa;font-size:1.2rem;margin-bottom:4px">⚗️ BABSPHARM Cloud</h2>'+
+        '<div style="display:inline-block;padding:3px 10px;border-radius:20px;background:rgba(167,139,250,.2);color:#a78bfa;font-size:.75rem;font-weight:700;margin-bottom:14px">'+esc(category||'📢 Announcement')+'</div>'+
+        '<p style="color:#f8f7ff;font-size:1rem;font-weight:700;margin-bottom:10px">'+esc(subject)+'</p>'+
+        '<p style="color:#b0a8d8;font-size:.9rem;line-height:1.7;white-space:pre-line">'+esc(message)+'</p>'+
+        '<div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1);font-size:.75rem;color:#6b6b8a">Sent by BABSPHARM Cloud admin</div></div>';
+      _brevoSendEmail(u.email, u.name, subject, html);
+    });
+    fsAdd('emailblasts',{subject:subject,message:message,category:category||'',
+      sentAt:new Date().toISOString(),recipientCount:String(users.length)}).catch(function(){});
+  }).catch(function(){});
+}
+
+function _brevoStatus(msg,type){
+  var el=document.getElementById('brevo-key-status');if(!el)return;
+  el.style.display='block';
+  el.style.background=type==='success'?'rgba(74,222,128,.12)':type==='error'?'rgba(248,113,113,.12)':'rgba(251,191,36,.12)';
+  el.style.border='1px solid '+(type==='success'?'rgba(74,222,128,.3)':type==='error'?'rgba(248,113,113,.3)':'rgba(251,191,36,.3)');
+  el.style.color=type==='success'?'#4ade80':type==='error'?'#f87171':'#fbbf24';
+  el.textContent=msg;
+}
+
+function toggleBrevoKeyVisibility(){
+  var inp=document.getElementById('admin-brevo-key-input');
+  var btn=document.getElementById('brevo-key-eye');
+  if(!inp)return;
+  inp.type=inp.type==='password'?'text':'password';
+  if(btn)btn.textContent=inp.type==='password'?'👁':'🙈';
+}
+
+function saveBrevoSettings(){
+  var key=(document.getElementById('admin-brevo-key-input').value||'').trim();
+  var sender=(document.getElementById('admin-brevo-sender-input').value||'').trim().toLowerCase();
+  if(!key||!key.startsWith('xkeysib-')){_brevoStatus('❌ Invalid key — must start with xkeysib-','error');return;}
+  if(!sender||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sender)){_brevoStatus('❌ Please enter a valid sender email','error');return;}
+  fsGet('settings').then(function(res){
+    var docs=getDocs(res);
+    var ek=docs.find(function(d){return d.key==='brevo_api_key';});
+    var es=docs.find(function(d){return d.key==='brevo_sender_email';});
+    var p1=ek?fsPatch(ek.__path,{value:key}):fsAdd('settings',{key:'brevo_api_key',value:key});
+    var p2=es?fsPatch(es.__path,{value:sender}):fsAdd('settings',{key:'brevo_sender_email',value:sender});
+    Promise.all([p1,p2]).then(function(){
+      BREVO_API_KEY=key;BREVO_SENDER_EMAIL=sender;
+      _brevoStatus('✅ Saved! Welcome emails are now active.','success');
+      notify('📧 Brevo email settings saved!','success','✅');
+      logActivity('settings','brevo email settings updated');
+    }).catch(function(){_brevoStatus('❌ Failed to save. Try again.','error');});
+  }).catch(function(){_brevoStatus('❌ Database error.','error');});
+}
+
+function removeBrevoSettings(){
+  if(!confirm('Remove Brevo settings? Welcome emails will stop being sent.'))return;
+  fsGet('settings').then(function(res){
+    var docs=getDocs(res);
+    var tasks=[];
+    ['brevo_api_key','brevo_sender_email','brevo_triggers'].forEach(function(k){
+      var d=docs.find(function(x){return x.key===k;});
+      if(d)tasks.push(fsDel(d.__path));
+    });
+    Promise.all(tasks).then(function(){
+      BREVO_API_KEY='';BREVO_SENDER_EMAIL='';
+      document.getElementById('admin-brevo-key-input').value='';
+      document.getElementById('admin-brevo-sender-input').value='';
+      _brevoStatus('✅ Removed. Welcome emails disabled.','success');
+      notify('📧 Brevo settings removed','success','🗑️');
+    }).catch(function(){_brevoStatus('❌ Failed to remove.','error');});
+  });
+}
+
+function loadBrevoSettingsToPanel(){
+  fsGet('settings').then(function(res){
+    var docs=getDocs(res);
+    var keyDoc=docs.find(function(d){return d.key==='brevo_api_key';});
+    var senderDoc=docs.find(function(d){return d.key==='brevo_sender_email';});
+    var trigDoc=docs.find(function(d){return d.key==='brevo_triggers';});
+    var ki=document.getElementById('admin-brevo-key-input');
+    var si=document.getElementById('admin-brevo-sender-input');
+    if(keyDoc&&keyDoc.value&&ki) ki.value=keyDoc.value;
+    if(senderDoc&&senderDoc.value&&si) si.value=senderDoc.value;
+    if(trigDoc&&trigDoc.value){try{BREVO_TRIGGERS=JSON.parse(trigDoc.value);}catch(e){}}
+    _brevoStatus(keyDoc&&keyDoc.value?'✅ Welcome emails are currently active.':'⚠️ No key set — emails disabled.',keyDoc&&keyDoc.value?'success':'warn');
+    renderBrevoTriggers();
+  }).catch(function(){});
+}
+
+var BREVO_TRIGGER_DEFS=[
+  {key:'new_file',      label:'📁 New File Uploaded',      desc:'Email students when admin uploads a new file'},
+  {key:'new_quiz',      label:'📝 New Quiz Available',      desc:'Email students when a new quiz is posted'},
+  {key:'new_announcement',label:'📢 New Announcement',     desc:'Email students when an announcement is posted'},
+  {key:'new_exam',      label:'📅 New Exam Date Added',     desc:'Email students when an exam date is scheduled'},
+  {key:'new_motivation',label:'✨ Daily Motivation',        desc:'Email students when motivation is posted'},
+];
+
+function renderBrevoTriggers(){
+  var el=document.getElementById('brevo-triggers-list');if(!el)return;
+  el.innerHTML=BREVO_TRIGGER_DEFS.map(function(t){
+    var on=BREVO_TRIGGERS[t.key]!==false;
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:10px;border:1px solid var(--cb);background:var(--card);margin-bottom:7px">'+
+      '<div><div style="font-size:.85rem;font-weight:700">'+t.label+'</div>'+
+      '<div style="font-size:.72rem;color:var(--text2);margin-top:2px">'+t.desc+'</div></div>'+
+      '<label style="display:flex;align-items:center;gap:6px;cursor:pointer;flex-shrink:0;margin-left:10px">'+
+      '<input type="checkbox" id="trig-'+t.key+'" '+(on?'checked':'')+' style="accent-color:var(--accent);width:17px;height:17px;cursor:pointer"/>'+
+      '</label></div>';
+  }).join('');
+}
+
+function saveBrevoTriggers(){
+  var obj={};
+  BREVO_TRIGGER_DEFS.forEach(function(t){
+    var cb=document.getElementById('trig-'+t.key);
+    obj[t.key]=cb?cb.checked:true;
+  });
+  BREVO_TRIGGERS=obj;
+  var val=JSON.stringify(obj);
+  fsGet('settings').then(function(res){
+    var docs=getDocs(res);
+    var existing=docs.find(function(d){return d.key==='brevo_triggers';});
+    var p=existing?fsPatch(existing.__path,{value:val}):fsAdd('settings',{key:'brevo_triggers',value:val});
+    p.then(function(){notify('🔔 Email trigger settings saved!','success','✅');})
+     .catch(function(){notify('Failed to save triggers','error','❌');});
+  });
+}
+
+function sendBrevoTestEmail(){
+  var testEmail=(document.getElementById('brevo-test-email').value||'').trim();
+  if(!testEmail||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testEmail)){notify('Please enter a valid test email','error','📧');return;}
+  if(!BREVO_API_KEY){notify('Save your Brevo API key first!','error','⚠️');return;}
+  sendBrevoWelcomeEmail(testEmail,'Test Student');
+  notify('📤 Test email sent to '+testEmail+'! Check your inbox.','success','📧');
+}
+
+// ── EMAIL BLAST ──
+function _blastStatus(msg,type){
+  var el=document.getElementById('blast-status');if(!el)return;
+  el.style.display='block';
+  el.style.background=type==='success'?'rgba(74,222,128,.12)':type==='error'?'rgba(248,113,113,.12)':'rgba(251,191,36,.12)';
+  el.style.border='1px solid '+(type==='success'?'rgba(74,222,128,.3)':type==='error'?'rgba(248,113,113,.3)':'rgba(251,191,36,.3)');
+  el.style.color=type==='success'?'#4ade80':type==='error'?'#f87171':'#fbbf24';
+  el.textContent=msg;
+}
+
+function _genBlastId(){
+  return 'bl_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,7);
+}
+
+function _trackingPixelHtml(blastId, userId){
+  var trackUrl='https://firestore.googleapis.com/v1/projects/babspharmcloud/databases/(default)/documents/emailopens?key='+KEY;
+  return '<img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" width="1" height="1" style="display:block" '+
+    'onload="(function(){try{fetch(\''+trackUrl+'\',{method:\'POST\',headers:{\'Content-Type\':\'application/json\'},'+
+    'body:JSON.stringify({fields:{blastId:{stringValue:\''+blastId+'\'},userId:{stringValue:\''+userId+'\'},openedAt:{stringValue:new Date().toISOString()}}})});}catch(e){}})()"/>';
+}
+
+function sendEmailBlast(){
+  var subject=(document.getElementById('blast-subject').value||'').trim();
+  var body=(document.getElementById('blast-body').value||'').trim();
+  var category=document.getElementById('blast-category').value;
+  if(!subject){_blastStatus('❌ Please enter a subject','error');return;}
+  if(!body){_blastStatus('❌ Please write a message','error');return;}
+  if(!BREVO_API_KEY){_blastStatus('❌ No Brevo key set — go to 📧 Email tab first','error');return;}
+  if(!confirm('Send this email to ALL approved students?'))return;
+  _blastStatus('⏳ Sending...','warn');
+  var blastId=_genBlastId();
+  fsGet('users').then(function(res){
+    var users=getDocs(res).filter(function(u){return u.email&&u.status==='approved';});
+    if(!users.length){_blastStatus('⚠️ No students with email addresses found.','warn');return;}
+    users.forEach(function(u){
+      var pixel=_trackingPixelHtml(blastId, u.__id||u.username);
+      var html=
+        '<div style="font-family:Arial,sans-serif;background:#0f0c29;padding:32px;border-radius:16px;max-width:480px;margin:0 auto">'+
+        '<h2 style="color:#a78bfa;font-size:1.2rem;margin-bottom:4px">⚗️ BABSPHARM Cloud</h2>'+
+        '<div style="display:inline-block;padding:3px 10px;border-radius:20px;background:rgba(167,139,250,.2);color:#a78bfa;font-size:.75rem;font-weight:700;margin-bottom:14px">'+esc(category)+'</div>'+
+        '<p style="color:#f8f7ff;font-size:1rem;font-weight:700;margin-bottom:10px">'+esc(subject)+'</p>'+
+        '<p style="color:#b0a8d8;font-size:.9rem;line-height:1.7;white-space:pre-line">'+esc(body)+'</p>'+
+        '<div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1);font-size:.75rem;color:#6b6b8a">Sent by BABSPHARM Cloud admin</div>'+
+        pixel+'</div>';
+      _brevoSendEmail(u.email, u.name, subject, html);
+    });
+    fsAdd('emailblasts',{blastId:blastId,subject:subject,message:body,category:category,
+      sentAt:new Date().toISOString(),recipientCount:String(users.length)}).catch(function(){});
+    setTimeout(function(){
+      _blastStatus('✅ Email sent to '+users.length+' student(s)! Open tracking active 👁','success');
+      document.getElementById('blast-subject').value='';
+      document.getElementById('blast-body').value='';
+      notify('📨 Email blast sent to '+users.length+' students!','success','📧');
+      loadBlastHistory();
+      logActivity('email','blast sent: '+subject+' → '+users.length+' students');
+    },1500);
+  }).catch(function(){_blastStatus('❌ Failed to load students. Try again.','error');});
+}
+
+function loadBlastHistory(){
+  var el=document.getElementById('blast-history-list');if(!el)return;
+  el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
+  Promise.all([fsGet('emailblasts'),fsGet('emailopens')]).then(function(results){
+    var blasts=getDocs(results[0]).sort(function(a,b){return new Date(b.sentAt)-new Date(a.sentAt);});
+    var opens=getDocs(results[1]);
+    if(!blasts.length){el.innerHTML='<div class="empty"><span>📨</span>No blasts sent yet.</div>';return;}
+    el.innerHTML=blasts.slice(0,20).map(function(b){
+      var d=new Date(b.sentAt);
+      var dateStr=d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+      var total=Number(b.recipientCount||0);
+      var blastOpens=opens.filter(function(o){return o.blastId===b.blastId;});
+      var uniqueOpeners=[...new Set(blastOpens.map(function(o){return o.userId;}))];
+      var openCount=uniqueOpeners.length;
+      var openPct=total>0?Math.round((openCount/total)*100):0;
+      var barColor=openPct>=50?'#4ade80':openPct>=25?'#fbbf24':'#f87171';
+      return '<div style="padding:13px 14px;border-radius:11px;border:1px solid var(--cb);background:var(--card);margin-bottom:10px">'+
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'+
+        '<div style="font-size:.85rem;font-weight:700;flex:1;margin-right:8px">'+esc(b.subject)+'</div>'+
+        '<span style="font-size:.67rem;color:var(--text2);white-space:nowrap">'+esc(dateStr)+'</span></div>'+
+        '<div style="font-size:.72rem;color:var(--accent);margin-bottom:8px">'+esc(b.category||'')+'</div>'+
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px">'+
+        '<div style="background:rgba(255,255,255,.06);border-radius:8px;padding:7px 10px;text-align:center">'+
+        '<div style="font-size:1.1rem;font-weight:800;color:var(--a2)">'+total+'</div>'+
+        '<div style="font-size:.65rem;color:var(--text2)">Sent</div></div>'+
+        '<div style="background:rgba(255,255,255,.06);border-radius:8px;padding:7px 10px;text-align:center">'+
+        '<div style="font-size:1.1rem;font-weight:800;color:'+barColor+'">'+openCount+'</div>'+
+        '<div style="font-size:.65rem;color:var(--text2)">Opened</div></div>'+
+        '<div style="background:rgba(255,255,255,.06);border-radius:8px;padding:7px 10px;text-align:center">'+
+        '<div style="font-size:1.1rem;font-weight:800;color:'+barColor+'">'+openPct+'%</div>'+
+        '<div style="font-size:.65rem;color:var(--text2)">Open Rate</div></div></div>'+
+        '<div style="height:6px;background:rgba(255,255,255,.08);border-radius:20px;overflow:hidden;margin-bottom:6px">'+
+        '<div style="height:100%;width:'+openPct+'%;background:'+barColor+';border-radius:20px"></div></div>'+
+        (openCount>0?
+          '<div style="font-size:.7rem;color:var(--text2)">👁 Opened by: '+
+          uniqueOpeners.slice(0,5).map(function(id){return '<strong style="color:var(--text)">'+esc(id)+'</strong>';}).join(', ')+
+          (uniqueOpeners.length>5?' +'+( uniqueOpeners.length-5)+' more':'')+
+          '</div>':
+          '<div style="font-size:.7rem;color:var(--text2)">👁 No opens recorded yet</div>')+
+        '</div>';
+    }).join('');
+  }).catch(function(){el.innerHTML='<div class="empty"><span>📨</span>Could not load history.</div>';});
+}
+
 
 // ══ GROQ AI HELPER ══
 async function askGroq(prompt, systemPrompt){
@@ -5268,12 +5739,13 @@ function doRegister(){
     fsGet('users').then(function(res){
       if(getDocs(res).some(function(u){return u.username===un;})){notify('Username taken','error','⚠️');return;}
       fsAdd('users',{name:name,username:un,password:pw,level:level,email:email,status:initialStatus,
-        joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',totalScore:'0',quizzesTaken:'0'})
+        joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',totalScore:'50',quizzesTaken:'0'})
         .then(function(){
+          sendBrevoWelcomeEmail(email, name);
           if(mode==='auto'){
-            notify('Registered! You can log in now ⚡','success','✅');
+            notify('Registered! 🎁 50 bonus points added! You can log in now ⚡','success','✅');
           } else {
-            notify('Registered! Awaiting admin approval ⏳','success','✅');
+            notify('Registered! 🎁 50 bonus points added! Awaiting admin approval ⏳','success','✅');
           }
           sat('login');
         })
@@ -5284,8 +5756,8 @@ function doRegister(){
     fsGet('users').then(function(res){
       if(getDocs(res).some(function(u){return u.username===un;})){notify('Username taken','error','⚠️');return;}
       fsAdd('users',{name:name,username:un,password:pw,level:level,email:email,status:'pending',
-        joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',totalScore:'0',quizzesTaken:'0'})
-        .then(function(){notify('Registered! Awaiting admin approval ⏳','success','✅');sat('login');})
+        joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',totalScore:'50',quizzesTaken:'0'})
+        .then(function(){sendBrevoWelcomeEmail(email, name);notify('Registered! 🎁 50 bonus points added! Awaiting admin approval ⏳','success','✅');sat('login');})
         .catch(function(){notify('Failed','error','❌');});
     });
   });
@@ -5711,7 +6183,12 @@ function showDash(role){
   if(role==='user'){
     document.getElementById('ud').style.display='';
     document.getElementById('uwh').textContent='Welcome, '+CU.name+'! 👋';
-    loadBanner();loadUserProfile();loadUFiles();loadUAnn();loadUQuizzes();
+    // Always show semester cards fresh on login — no hub pre-opened
+    document.querySelectorAll('.sem-hub').forEach(function(h){h.classList.remove('active');});
+    var sbar=document.getElementById('sem-selector-bar');
+    if(sbar)sbar.style.display='';
+    try{localStorage.removeItem('bp_last_sem');}catch(e){}
+    loadBanner();loadUserProfile();loadRainCoursesForStudent();loadUFiles();loadUAnn();loadUQuizzes();
     loadForum();loadGroups();loadNotes();loadExams('u-exams-list');loadLeaderboard('u-lb-list');
     startUserChatPoll();startNotifPoll();loadFeaturesForUser();
     startOnlineTracking(); // track student online status
@@ -6018,6 +6495,12 @@ function uploadFiles(files){
 
 function canPreview(type,name){ return true; }
 function openPreview(data,name,type){
+  // Deduct 1 point for viewing a file
+  if(CU&&CU.id&&CU.role==='user'){
+    var newPts=Math.max(0,CU.totalScore-1);
+    fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+CU.id,
+      {totalScore:String(newPts)}).then(function(){CU.totalScore=newPts;}).catch(function(){});
+  }
   var overlay=document.getElementById('prev-overlay');
   var body=document.getElementById('prev-body');
   var dl=document.getElementById('prev-dl');
@@ -6276,7 +6759,8 @@ function filterAFiles(){
 }
 function filterAByCat(btn,cat){document.querySelectorAll('#acat-tabs .cat-tab').forEach(function(b){b.classList.remove('on');});btn.classList.add('on');filterAFiles();}
 function loadUFiles(){
-  var el=document.getElementById('ufl');el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
+  var el=document.getElementById('ufl');if(!el)return;
+  el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
   checkNotifPrompt();
   loadRainCoursesForStudent();
   fsGet('files').then(function(res){
@@ -6285,6 +6769,8 @@ function loadUFiles(){
     tabsEl.innerHTML=CATS.map(function(c,i){return'<button class="cat-tab'+(i===0?' on':'')+'" onclick="filterByCat(this,\''+c+'\')">'+esc(c)+'</button>';}).join('');
     renderUFiles(allUFiles);
     updateCourseCovers(allUFiles);
+    var hfc=document.getElementById('hub-file-count');
+    if(hfc)hfc.textContent=allUFiles.length+' file'+(allUFiles.length!==1?'s':'');
   }).catch(function(){el.innerHTML='<div class="empty"><span>⚠️</span>Error</div>';});
 }
 function updateCourseCovers(files){
@@ -6373,6 +6859,7 @@ function rainDeleteCourse(id, code){
 }
 
 function renderRainStudentCourses(courses){
+  updateRainCard(courses);
   var panel=document.getElementById('sem-panel-raining');
   if(!panel)return;
   if(!courses||!courses.length){
@@ -6402,7 +6889,48 @@ function loadRainCoursesForStudent(){
   }).catch(function(){});
 }
 
-function switchSemester(sem){
+// ══ SEMESTER HUB NAVIGATION ══
+function openSemHub(sem){
+  var bar=document.getElementById('sem-selector-bar');
+  if(bar)bar.style.display='none';
+  document.querySelectorAll('.sem-hub').forEach(function(h){h.classList.remove('active');});
+  document.querySelectorAll('.sem-big-card').forEach(function(c){c.classList.remove('sem-card-active');});
+  var card=document.getElementById('sem-card-'+sem);
+  if(card)card.classList.add('sem-card-active');
+  var hub=document.getElementById('sem-hub-'+sem);
+  if(hub){hub.classList.add('active');hub.scrollIntoView({behavior:'smooth',block:'start'});}
+  if(sem==='harmattan'){loadUFiles();}
+  else{loadRainCoursesForStudent();}
+}
+function closeSemHub(){
+  document.querySelectorAll('.sem-hub').forEach(function(h){h.classList.remove('active');});
+  var bar=document.getElementById('sem-selector-bar');
+  if(bar){bar.style.display='';bar.scrollIntoView({behavior:'smooth',block:'start'});}
+}
+function showHubSection(id){
+  // Already visible, just scroll to it
+  var el=document.getElementById(id);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function showRainFiles(){
+  var el=document.getElementById('sem-panel-raining');
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+}
+// Update raining card subtitle with course count
+function updateRainCard(courses){
+  var sub=document.getElementById('rain-card-sub');
+  if(sub){
+    if(courses&&courses.length){
+      sub.textContent=courses.length+' course'+(courses.length!==1?'s':'')+' · Files, Quizzes & more';
+    } else {
+      sub.textContent='Coming soon — check back later';
+    }
+  }
+}
+// Keep old switchSemester as no-op for compatibility
+function switchSemester(sem){openSemHub(sem);}
+
+function jumpToFileCat(cat){
   // Update tab buttons
   document.querySelectorAll('.sem-tab').forEach(function(b){b.classList.remove('active');});
   var activeBtn = document.getElementById('sem-btn-'+sem);
@@ -6412,15 +6940,8 @@ function switchSemester(sem){
   var activePanel = document.getElementById('sem-panel-'+sem);
   if(activePanel) activePanel.classList.add('active');
   // Save preference
-  try{localStorage.setItem('bp_semester', sem);}catch(e){}
+  try{localStorage.removeItem('bp_semester');}catch(e){}
 }
-// Restore last selected semester on load
-(function(){
-  try{
-    var saved = localStorage.getItem('bp_semester');
-    if(saved === 'raining') switchSemester('raining');
-  }catch(e){}
-})();
 
 function jumpToFileCat(cat){
   document.querySelectorAll('#ucat-tabs .cat-tab').forEach(function(b){
@@ -7772,7 +8293,8 @@ function submitQuiz(){
     quizTitle:currentQuiz.title,score:score,total:qs.length,pct:pct,pts:pts,
     timeTaken:String(timeTaken),
     answers:JSON.stringify(userAnswers),takenAt:new Date().toISOString()}).catch(function(){});
-  var newScore=CU.totalScore+pts,newCount=CU.quizzesTaken+1;
+  var QUIZ_COST=8;
+  var newScore=Math.max(0,CU.totalScore+pts-QUIZ_COST),newCount=CU.quizzesTaken+1;
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+CU.id,
     {totalScore:String(newScore),quizzesTaken:String(newCount)}).then(function(){CU.totalScore=newScore;CU.quizzesTaken=newCount;}).catch(function(){});
 
@@ -7822,7 +8344,7 @@ function submitQuiz(){
   html+='<div style="font-size:2.5rem;margin-bottom:6px">'+medal+'</div>';
   html+='<div class="quiz-score-big">'+score+'/'+qs.length+'</div>';
   html+='<div style="font-size:1rem;font-weight:700;margin-top:4px">'+pct+'% &nbsp;·&nbsp; '+perfLabel+'</div>';
-  html+='<div style="font-size:.82rem;color:var(--text2);margin-top:4px">+'+pts+' points earned</div>';
+  html+='<div style="font-size:.82rem;color:var(--text2);margin-top:4px">+'+pts+' points earned &nbsp;·&nbsp; <span style="color:#f87171">-8 quiz cost</span> &nbsp;·&nbsp; <span style="color:#4ade80">net '+(pts-8)+' pts</span></div>';
   html+='<div class="progress-bar" style="margin:14px 0 18px"><div class="progress-fill" style="width:'+pct+'%"></div></div>';
 
   // ── Analysis Cards ──
@@ -8825,6 +9347,8 @@ function loadAdminAll(){
   loadExams('a-exams-list');loadBulkStudents();updateStats();
   loadAndApplyContactInfo();
   loadAdminGroqKeyToPanel();
+  loadBrevoSettingsToPanel();
+  loadBlastHistory();
   convPoll=setInterval(loadConvList,8000);
 }
 
@@ -10231,12 +10755,13 @@ doRegister=function(){
     fsGet('users').then(function(res){
       if(getDocs(res).some(function(u){return u.username===un;})){notify('Username taken','error','⚠️');return;}
       fsAdd('users',{name:name,username:un,password:pw,level:level,status:initialStatus,
-        joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',totalScore:'0',quizzesTaken:'0',
+        joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',totalScore:'50',quizzesTaken:'0',
         referredBy:refCode||''})
         .then(function(){
-          if(refCode){notify('Registered with referral! 🔗','success','✅');}
-          else if(mode==='auto'){notify('Registered! You can log in now ⚡','success','✅');}
-          else{notify('Registered! Awaiting admin approval ⏳','success','✅');}
+          sendBrevoWelcomeEmail(email, name);
+          if(refCode){notify('Registered with referral! 🎁 50 bonus points! 🔗','success','✅');}
+          else if(mode==='auto'){notify('Registered! 🎁 50 bonus points! You can log in now ⚡','success','✅');}
+          else{notify('Registered! 🎁 50 bonus points! Awaiting admin approval ⏳','success','✅');}
           sat('login');
         })
         .catch(function(){notify('Failed','error','❌');});
@@ -10245,9 +10770,9 @@ doRegister=function(){
     fsGet('users').then(function(res){
       if(getDocs(res).some(function(u){return u.username===un;})){notify('Username taken','error','⚠️');return;}
       fsAdd('users',{name:name,username:un,password:pw,level:level,status:'pending',
-        joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',totalScore:'0',quizzesTaken:'0',
+        joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',totalScore:'50',quizzesTaken:'0',
         referredBy:refCode||''})
-        .then(function(){notify('Registered! Awaiting admin approval ⏳','success','✅');sat('login');})
+        .then(function(){sendBrevoWelcomeEmail(email, name);notify('Registered! 🎁 50 bonus points! Awaiting admin approval ⏳','success','✅');sat('login');})
         .catch(function(){notify('Failed','error','❌');});
     });
   });
@@ -10992,7 +11517,7 @@ loadSavedTheme();
   <button class="bn-item" id="bn-profile" onclick="bnNav('profile')">
     <span class="bn-icon">👤</span>Profile
   </button>
-  <button class="bn-item" id="bn-files" onclick="bnNav('files')">
+  <button class="bn-item" id="bn-files" onclick="document.getElementById('sem-selector-bar').scrollIntoView({behavior:'smooth',block:'start'})">
     <span class="bn-icon">📁</span>Files
   </button>
   <button class="bn-item" id="bn-ann" onclick="bnNav('ann')">
