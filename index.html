@@ -2804,7 +2804,7 @@ textarea.mm-notes::placeholder{color:rgba(176,168,216,.35);}
         <div class="gdc-stat-row"><span>⬇️ Files Downloaded</span><strong id="gdc-dl">—</strong></div>
         <div class="gdc-stat-row"><span>🔥 Streak</span><strong id="gdc-streak">—</strong></div>
       </div>
-      <button class="gdc-btn" onclick="showSec('profile')">View Progress →</button>
+      <button class="gdc-btn" onclick="sut('reportcard',null);showSec('reportcard')">View Progress →</button>
     </div>
 
   </section>
@@ -3006,6 +3006,7 @@ textarea.mm-notes::placeholder{color:rgba(176,168,216,.35);}
     <button class="tb" onclick="sut('bookmarks',this)">🔖 Saved</button>
     <button class="tb" onclick="sut('ai',this)">🤖 AI</button>
     <button class="tb" onclick="sut('mindmap',this)">🗺️ Mind Maps</button>
+    <button class="tb" onclick="sut('reportcard',this)">📊 My Report</button>
   </div>
   <div class="tp on" id="ut-profile"><div id="user-profile-card"><div class="ld">Loading<span class="sp"></span></div></div>
 
@@ -3432,6 +3433,10 @@ textarea.mm-notes::placeholder{color:rgba(176,168,216,.35);}
     <button class="vs-btn vs-student" id="vs-student-btn" onclick="vsSwitchView('student')">
       🎓 Student View
     </button>
+  </div>
+
+  <div class="tp" id="ut-reportcard">
+    <div id="report-card-content"><div class="ld">Loading<span class="sp"></span></div></div>
   </div>
 
   <!-- ══ ADMIN STATS CARDS ══ -->
@@ -4201,13 +4206,14 @@ textarea.mm-notes::placeholder{color:rgba(176,168,216,.35);}
     </div>
     <!-- ══ BULK QUIZ IMPORT ══ -->
     <div class="card" style="margin-bottom:12px">
-      <div class="st"><span class="dot"></span>⚡ Bulk Quiz Import <span style="font-size:.68rem;font-weight:500;color:var(--text2);margin-left:6px">— save time, import many at once</span></div>
+      <div class="st"><span class="dot"></span>⚡ Quiz Import <span style="font-size:.68rem;font-weight:500;color:var(--text2);margin-left:6px">— AI-powered, sectioned format</span></div>
 
       <!-- Method tabs -->
       <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
         <button class="bulk-tab on" id="btab-paste" onclick="switchBulkTab('paste')">📋 Paste Text</button>
         <button class="bulk-tab" id="btab-ai" onclick="switchBulkTab('ai')">🤖 AI Generate</button>
         <button class="bulk-tab" id="btab-doc" onclick="switchBulkTab('doc')">📄 Upload Doc/PDF</button>
+        <button class="bulk-tab" id="btab-aitext" onclick="switchBulkTab('aitext')">✍️ AI from Text</button>
       </div>
 
       <!-- Shared: title / course / timing for ALL bulk methods -->
@@ -4225,15 +4231,23 @@ textarea.mm-notes::placeholder{color:rgba(176,168,216,.35);}
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
-        <div class="fg" style="margin:0"><label>Duration (mins)</label><input type="number" id="bk-dur" value="30" min="1" max="180"/></div>
-        <div class="fg" style="margin:0"><label>Secs per Q <span style="font-size:.65rem;opacity:.6">(optional)</span></label><input type="number" id="bk-perq" placeholder="e.g. 60"/></div>
+        <div class="fg" style="margin:0"><label>Time per Section (mins)</label><input type="number" id="bk-dur" value="5" min="1" max="60"/></div>
+        <div class="fg" style="margin:0"><label>Questions per Section</label>
+          <select id="bk-qps">
+            <option value="5" selected>5 per section</option>
+            <option value="10">10 per section</option>
+            <option value="15">15 per section</option>
+          </select>
+        </div>
       </div>
 
       <!-- ── TAB 1: PASTE TEXT ── -->
       <div class="bulk-panel on" id="bpanel-paste">
         <div style="background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.2);border-radius:9px;padding:10px 12px;font-size:.73rem;color:var(--text2);line-height:1.8;margin-bottom:10px">
-          <strong style="color:var(--accent);display:block;margin-bottom:4px">📝 Paste format — each question like this:</strong>
-          <code style="display:block;background:rgba(0,0,0,.3);border-radius:6px;padding:8px;font-size:.7rem;color:var(--a2);line-height:1.9;white-space:pre-wrap">1. What is NaCl?
+          <strong style="color:var(--accent);display:block;margin-bottom:4px">📝 Paste format — supports sections:</strong>
+          <code style="display:block;background:rgba(0,0,0,.3);border-radius:6px;padding:8px;font-size:.68rem;color:var(--a2);line-height:1.9;white-space:pre-wrap">SECTION: Acid-Base Chemistry
+
+1. What is NaCl?
 A. Sugar
 B. Salt*
 C. Water
@@ -4243,8 +4257,16 @@ D. Acid
 A. Water*
 B. Salt
 C. Acid
-D. Base</code>
-          <span style="margin-top:5px;display:block">Mark the correct answer with a <strong style="color:var(--green)">*</strong> after it. Blank line between questions.</span>
+D. Base
+
+SECTION: Thermodynamics
+
+3. What is the SI unit of temperature?
+A. Celsius
+B. Fahrenheit
+C. Kelvin*
+D. Rankine</code>
+          <span style="margin-top:5px;display:block">Use <strong style="color:var(--accent)">SECTION: Name</strong> to split into sections. Mark correct answer with <strong style="color:var(--green)">*</strong>. Without SECTION headers, questions auto-split every 5.</span>
         </div>
         <textarea id="bk-paste" rows="8" placeholder="Paste your questions here..." style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:var(--fb);font-size:.8rem;resize:vertical;outline:none;box-sizing:border-box" oninput="parsePastePreview()"></textarea>
         <div id="bk-paste-preview"></div>
@@ -4255,12 +4277,13 @@ D. Base</code>
       <div class="bulk-panel" id="bpanel-ai">
         <div class="fg"><label>Topic / Subject Area</label><input type="text" id="ai-topic" placeholder="e.g. Acid-Base Reactions, Newton's Laws, Cell Division..."/></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-          <div class="fg" style="margin:0"><label>Number of Questions</label>
-            <select id="ai-qcount">
-              <option value="5">5 questions</option>
-              <option value="10" selected>10 questions</option>
-              <option value="15">15 questions</option>
-              <option value="20">20 questions</option>
+          <div class="fg" style="margin:0"><label>Number of Sections</label>
+            <select id="ai-seccount">
+              <option value="1">1 section (5 Qs)</option>
+              <option value="2">2 sections (10 Qs)</option>
+              <option value="3" selected>3 sections (15 Qs)</option>
+              <option value="4">4 sections (20 Qs)</option>
+              <option value="5">5 sections (25 Qs)</option>
             </select>
           </div>
           <div class="fg" style="margin:0"><label>Difficulty</label>
@@ -4272,7 +4295,7 @@ D. Base</code>
             </select>
           </div>
         </div>
-        <button class="btn bp" style="width:100%;justify-content:center" onclick="generateAIQuiz()" id="ai-gen-btn">🤖 Generate Quiz with AI</button>
+        <button class="btn bp" style="width:100%;justify-content:center" onclick="generateAIQuiz()" id="ai-gen-btn">🤖 Generate Sectioned Quiz with AI</button>
         <div class="ai-gen-status" id="ai-gen-status"></div>
         <div id="ai-gen-preview"></div>
         <button class="btn bg2" style="width:100%;justify-content:center;margin-top:10px;display:none" id="ai-save-btn" onclick="saveAIQuiz()">💾 Save AI-Generated Quiz</button>
@@ -4281,24 +4304,37 @@ D. Base</code>
       <!-- ── TAB 3: UPLOAD DOC / PDF ── -->
       <div class="bulk-panel" id="bpanel-doc">
         <div style="background:rgba(56,189,248,.07);border:1px solid rgba(56,189,248,.2);border-radius:9px;padding:10px 12px;font-size:.73rem;color:var(--text2);margin-bottom:10px">
-          <strong style="color:var(--a2);display:block;margin-bottom:3px">📄 Upload ANY file — PDF, Word, Image, Excel, PowerPoint, CSV, TXT &amp; more</strong>
-          AI will read the file and extract all questions automatically. Works with numbered lists, CBT formats, scanned images, spreadsheets, and most exam formats.
+          <strong style="color:var(--a2);display:block;margin-bottom:3px">📄 Upload ANY file — PDF, Word, Image, TXT &amp; more</strong>
+          AI reads the file, extracts all questions, and <strong style="color:var(--a2)">auto-splits them into sections</strong> of 5 questions each.
         </div>
         <div class="uz" onclick="document.getElementById('bk-doc-input').click()" id="bk-doc-zone">
           <input type="file" id="bk-doc-input" accept="*/*" style="display:none" onchange="handleDocUpload(this)"/>
           <div style="font-size:1.6rem">📂</div>
           <p style="margin:4px 0 2px;font-weight:600">Drop any file here or tap to browse</p>
-          <p style="font-size:.68rem">.pdf · .docx · .txt · .png · .jpg · .xlsx · .csv · .pptx · and more</p>
+          <p style="font-size:.68rem">.pdf · .docx · .txt · .png · .jpg · .xlsx · .csv · and more</p>
         </div>
         <div class="ai-gen-status" id="doc-gen-status"></div>
         <div id="doc-gen-preview"></div>
         <button class="btn bg2" style="width:100%;justify-content:center;margin-top:10px;display:none" id="doc-save-btn" onclick="saveDocQuiz()">💾 Save Extracted Quiz</button>
       </div>
+
+      <!-- ── TAB 4: AI FROM RAW TEXT ── -->
+      <div class="bulk-panel" id="bpanel-aitext">
+        <div style="background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.2);border-radius:9px;padding:10px 12px;font-size:.73rem;color:var(--text2);margin-bottom:10px">
+          <strong style="color:var(--accent);display:block;margin-bottom:3px">✍️ Paste any quiz text — AI structures it into sections automatically</strong>
+          Paste raw questions in any format (numbered, lettered, CBT-style, mixed). AI reads them, groups them into named sections of 5 questions each, and formats everything correctly.
+        </div>
+        <textarea id="aitext-input" rows="10" placeholder="Paste your raw quiz questions here in any format...&#10;&#10;Example:&#10;1. What is NaCl? A) Sugar B) Salt C) Water D) Acid (Answer: B)&#10;2. pH of pure water is? A) 5 B) 6 C) 7 D) 8 (Answer: C)" style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:var(--fb);font-size:.8rem;resize:vertical;outline:none;box-sizing:border-box"></textarea>
+        <button class="btn bp" style="width:100%;justify-content:center;margin-top:10px" onclick="generateFromRawText()" id="aitext-gen-btn">🤖 Let AI Structure into Sections</button>
+        <div class="ai-gen-status" id="aitext-gen-status"></div>
+        <div id="aitext-gen-preview"></div>
+        <button class="btn bg2" style="width:100%;justify-content:center;margin-top:10px;display:none" id="aitext-save-btn" onclick="saveAITextQuiz()">💾 Save Quiz</button>
+      </div>
     </div>
 
     <!-- Interactive Quiz Builder -->
     <div class="card" style="margin-bottom:12px">
-      <div class="st"><span class="dot"></span>✏️ Create Interactive Quiz <span style="font-size:.68rem;font-weight:500;color:var(--text2)">(manual, question by question)</span></div>
+      <div class="st"><span class="dot"></span>✏️ Create Sectioned Quiz</div>
       <div class="fg"><label>Title</label><input type="text" id="qtitle" placeholder="Quiz title"/></div>
       <div class="fg"><label>Course</label>
         <select id="qcat">
@@ -4315,11 +4351,13 @@ D. Base</code>
           <option value="General">General</option>
         </select>
       </div>
-      <div class="fg"><label>Total Duration (minutes)</label><input type="number" id="qdur" value="30" min="1" max="180" placeholder="e.g. 30"/></div>
-      <div class="fg"><label>Time Per Question (seconds) <span style="font-size:.68rem;color:var(--text2)">— optional, overrides total timer per question</span></label><input type="number" id="qpqtime" value="" min="10" max="300" placeholder="e.g. 60 — leave blank to use total duration only"/></div>
-      <div id="questions-container"></div>
-      <button class="btn bs bsm" style="margin-bottom:9px" onclick="addQuestion()">➕ Add Question</button><br/>
-      <button class="btn bp" onclick="saveQuiz()">💾 Save Quiz</button>
+      <div class="fg"><label>Time Per Section (minutes)</label><input type="number" id="qdur" value="5" min="1" max="60" placeholder="e.g. 5"/></div>
+      <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;padding:8px 12px;background:rgba(167,139,250,.08);border-radius:8px;border-left:3px solid var(--accent)">
+        📋 Each section has <strong style="color:var(--accent)">5 questions</strong>. Students submit each section before moving to the next. Results shown after all sections.
+      </div>
+      <div id="sections-container"></div>
+      <button class="btn bs bsm" style="margin-bottom:9px;width:100%;justify-content:center" onclick="addSection()">➕ Add Section</button>
+      <button class="btn bp" style="width:100%;justify-content:center" onclick="saveQuiz()">💾 Save Quiz</button>
     </div>
     <!-- All interactive quizzes with category filter -->
     <div class="card">
@@ -5522,7 +5560,6 @@ function getDocs(res){if(!res||!res.documents)return[];return res.documents.map(
 // STATE
 // ══════════════════════════════════
 var CU=null,allUFiles=[],allAFiles=[],chatPoll=null,convPoll=null,activeConv=null,qCount=0;
-var currentQuiz=null,userAnswers={},quizTimer=null;
 var localNotifs=[],notifSeen=0;
 var CATS=['All','PHY 101','PHY 103','BIO 101','MTH 101','CHM 101','GST 101','SOC 101','PHL 101','PHL 105','EGL 101','LIB 101','COS 101','General'];
 
@@ -6192,6 +6229,7 @@ function showDash(role){
     loadForum();loadGroups();loadNotes();loadExams('u-exams-list');loadLeaderboard('u-lb-list');
     startUserChatPoll();startNotifPoll();loadFeaturesForUser();
     startOnlineTracking(); // track student online status
+    handleDeepLink(); // handle ?quiz= or ?file= deep links
     // Show browser notification prompt after a short delay on first login
     setTimeout(checkNotifPrompt, 1500);
     // init notif counts
@@ -6697,6 +6735,7 @@ function renderFileDocs(docs,admin){
       '<div class="fa">'+
         '<button class="btn bs bsm" onclick="event.stopPropagation();openPreview(\''+f.data+'\',\''+esc(f.name)+'\',\''+esc(f.type||'')+'\')">👁 View</button>'+
         '<a href="'+f.data+'" download="'+esc(f.name)+'" class="btn '+( admin?'bs':'bp')+' bsm" onclick="event.stopPropagation()">⬇️</a>'+
+        (admin?'<button class="btn bs bsm" onclick="event.stopPropagation();shareFileLink(\''+f.__id+'\',\''+esc(f.name)+'\')">🔗 Share</button>':'')+
         (!admin?'<button class="bm-btn '+(isFileBookmarked(f.__id)?'bm-saved':'')+'" title="Bookmark" onclick="event.stopPropagation();toggleFileBookmark(\''+f.__id+'\',\''+esc(f.name)+'\',\''+esc(f.category||'General')+'\',\''+esc(f.type||'')+'\',this)">'+(isFileBookmarked(f.__id)?'🔖':'🔖')+'</button>':'')+
         (!admin?'<button class="bm-btn" title="Notes &amp; Highlights" onclick="event.stopPropagation();openAnnotModal(\''+f.__id+'\',\''+esc(f.name)+'\')">📝</button>':'')+
         (admin?'<button class="btn bd bsm" onclick="event.stopPropagation();delFile(\''+f.__id+'\')">🗑️</button>':'')+
@@ -6739,6 +6778,7 @@ function loadAFiles(){
           +'<div class="fm">'+fsz(f.size||0)+'</div></div></div>'
           +'<div class="fa">'
           +'<button class="btn bs bsm" onclick="event.stopPropagation();openPreview(\''+f.data+'\',\''+esc(f.name)+'\',\''+esc(f.type||'')+'\')">👁 View</button>'+
+          '<button class="btn bs bsm" onclick="event.stopPropagation();shareFileLink(\''+f.__id+'\',\''+esc(f.name)+'\')">🔗 Share</button>'+
           '<a href="'+f.data+'" download="'+esc(f.name)+'" class="btn bs bsm" onclick="event.stopPropagation()">⬇️</a>'
           +'<button class="btn bd bsm" onclick="event.stopPropagation();delFile(\''+f.__id+'\')">🗑️</button>'
           +'</div></div>';
@@ -7526,9 +7566,11 @@ var aiGeneratedQuestions=[];
 var docExtractedQuestions=[];
 
 function switchBulkTab(tab){
-  ['paste','ai','doc'].forEach(function(t){
-    document.getElementById('btab-'+t).classList.toggle('on',t===tab);
-    document.getElementById('bpanel-'+t).classList.toggle('on',t===tab);
+  ['paste','ai','doc','aitext'].forEach(function(t){
+    var btn=document.getElementById('btab-'+t);
+    var panel=document.getElementById('bpanel-'+t);
+    if(btn)btn.classList.toggle('on',t===tab);
+    if(panel)panel.classList.toggle('on',t===tab);
   });
 }
 
@@ -7537,31 +7579,37 @@ function getBulkMeta(){
   return {
     title:(document.getElementById('bk-title').value||'').trim(),
     cat:document.getElementById('bk-cat').value,
-    dur:document.getElementById('bk-dur').value||'30',
-    perQ:document.getElementById('bk-perq').value||''
+    dur:document.getElementById('bk-dur').value||'5',
+    qps:Number(document.getElementById('bk-qps')?document.getElementById('bk-qps').value:5)||5
   };
+}
+
+// Helper: convert flat question array into sections of N
+function _chunkIntoSections(qs, chunkSize, topicHint){
+  var sections=[];
+  for(var i=0;i<qs.length;i+=chunkSize){
+    var chunk=qs.slice(i,i+chunkSize);
+    sections.push({name:topicHint?topicHint+' Part '+(sections.length+1):'Section '+(sections.length+1),questions:chunk});
+  }
+  return sections;
 }
 
 // ─────────────────────────────────────────────────
 // TAB 1 — PASTE TEXT PARSER
 // ─────────────────────────────────────────────────
 function parsePasteText(raw){
-  // Split into question blocks by blank lines or numbered pattern
   var blocks=raw.trim().split(/\n\s*\n/);
   var questions=[];
   blocks.forEach(function(block){
     var lines=block.trim().split('\n').map(function(l){return l.trim();}).filter(Boolean);
     if(lines.length<2)return;
-    // First line is question (strip leading number+dot)
     var qtext=lines[0].replace(/^\d+[\.\)]\s*/,'').trim();
     if(!qtext)return;
-    var opts={A:'',B:'',C:'',D:''};
-    var correct='';
+    var opts={A:'',B:'',C:'',D:''};var correct='';
     lines.slice(1).forEach(function(line){
       var m=line.match(/^([A-Da-d])[\.\)]\s*(.*)/);
       if(!m)return;
-      var letter=m[1].toUpperCase();
-      var val=m[2].trim();
+      var letter=m[1].toUpperCase();var val=m[2].trim();
       var isCorrect=val.endsWith('*');
       if(isCorrect){val=val.slice(0,-1).trim();correct=letter;}
       opts[letter]=val;
@@ -7571,16 +7619,43 @@ function parsePasteText(raw){
   return questions;
 }
 
+// Parse paste text WITH section headers into sections array
+function parsePasteTextSections(raw){
+  var qps=Number(document.getElementById('bk-qps')?document.getElementById('bk-qps').value:5)||5;
+  var sections=[];
+  var currentSection={name:'',questions:[]};
+  // Check if SECTION: headers exist
+  var hasSections=/^SECTION:/im.test(raw);
+  if(hasSections){
+    var parts=raw.split(/^SECTION:/im);
+    parts.forEach(function(part){
+      part=part.trim();if(!part)return;
+      var firstLine=part.split('\n')[0].trim();
+      var rest=part.slice(firstLine.length).trim();
+      var qs=parsePasteText(rest);
+      if(qs.length>0)sections.push({name:firstLine,questions:qs});
+    });
+  } else {
+    // Auto split by qps
+    var allQs=parsePasteText(raw);
+    sections=_chunkIntoSections(allQs, qps, '');
+  }
+  return sections;
+}
+
 function parsePastePreview(){
   var raw=document.getElementById('bk-paste').value;
   var prev=document.getElementById('bk-paste-preview');
   if(!raw.trim()){prev.innerHTML='';return;}
-  var qs=parsePasteText(raw);
-  if(!qs.length){prev.innerHTML='<div style="font-size:.74rem;color:var(--red);padding:6px 0">⚠️ No questions detected. Check your format.</div>';return;}
-  prev.innerHTML='<div style="font-size:.76rem;color:var(--green);font-weight:700;padding:8px 0">✅ '+qs.length+' question'+(qs.length!==1?'s':'')+' detected — preview:</div>'+
-    '<div style="max-height:260px;overflow-y:auto;border:1px solid var(--cb);border-radius:10px;padding:8px">'+
-    qs.map(function(q,i){
-      return'<div class="parse-q">'+
+  var sections=parsePasteTextSections(raw);
+  var totalQs=sections.reduce(function(s,sec){return s+sec.questions.length;},0);
+  if(!totalQs){prev.innerHTML='<div style="font-size:.74rem;color:var(--red);padding:6px 0">⚠️ No questions detected. Check your format.</div>';return;}
+  var html='<div style="font-size:.76rem;color:var(--green);font-weight:700;padding:8px 0">✅ '+totalQs+' question'+(totalQs!==1?'s':'')+' in '+sections.length+' section'+(sections.length!==1?'s':'')+' — preview:</div>'+
+    '<div style="max-height:300px;overflow-y:auto;border:1px solid var(--cb);border-radius:10px;padding:8px">';
+  sections.forEach(function(sec,si){
+    html+='<div style="font-size:.75rem;font-weight:800;color:var(--accent);padding:5px 0 3px;border-bottom:1px solid rgba(167,139,250,.2);margin-bottom:5px">📂 Section '+(si+1)+': '+esc(sec.name)+'</div>';
+    sec.questions.forEach(function(q,i){
+      html+='<div class="parse-q">'+
         '<div class="parse-q-text">'+(i+1)+'. '+esc(q.text)+'</div>'+
         ['A','B','C','D'].filter(function(o){return q['opt'+o];}).map(function(o){
           var c=q.correct===o;
@@ -7588,23 +7663,29 @@ function parsePastePreview(){
         }).join('')+
         (!q.correct?'<div style="font-size:.67rem;color:var(--red);margin-top:3px">⚠️ No correct answer marked (add * after correct option)</div>':'')+
       '</div>';
-    }).join('')+
-  '</div>';
+    });
+  });
+  html+='</div>';
+  prev.innerHTML=html;
 }
 
 function saveBulkPaste(){
   var meta=getBulkMeta();
   if(!meta.title){notify('Enter a quiz title above','error','⚠️');return;}
   var raw=document.getElementById('bk-paste').value;
-  var qs=parsePasteText(raw);
-  if(!qs.length){notify('No questions detected — check your format','error','⚠️');return;}
-  var noAnswer=qs.filter(function(q){return!q.correct;});
-  if(noAnswer.length){notify(noAnswer.length+' question(s) missing correct answer (mark with *)','error','⚠️');return;}
-  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,perQTime:meta.perQ,
-    questions:JSON.stringify(qs),createdAt:new Date().toISOString(),active:'yes'})
+  var sections=parsePasteTextSections(raw);
+  var totalQs=sections.reduce(function(s,sec){return s+sec.questions.length;},0);
+  if(!totalQs){notify('No questions detected — check your format','error','⚠️');return;}
+  var allMissing=[];
+  sections.forEach(function(sec){sec.questions.forEach(function(q){if(!q.correct)allMissing.push(q.text.slice(0,30));});});
+  if(allMissing.length){notify(allMissing.length+' question(s) missing correct answer (mark with *)','error','⚠️');return;}
+  var allQs=[];sections.forEach(function(s){s.questions.forEach(function(q){allQs.push(q);});});
+  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,
+    sections:JSON.stringify(sections),questions:JSON.stringify(allQs),
+    createdAt:new Date().toISOString(),active:'yes'})
     .then(function(){
-      notify('✅ Quiz saved! ('+qs.length+' questions)','success','✅');
-      logActivity('quiz_bulk_paste',meta.title+' — '+qs.length+'Qs');
+      notify('✅ Quiz saved! '+sections.length+' sections, '+totalQs+' questions','success','✅');
+      logActivity('quiz_bulk_paste',meta.title+' — '+sections.length+' sections');
       document.getElementById('bk-title').value='';
       document.getElementById('bk-paste').value='';
       document.getElementById('bk-paste-preview').innerHTML='';
@@ -7722,10 +7803,12 @@ function renderQuizPreview(qs){
     }).join('')+'</div>';
 }
 
+var aiGeneratedSections=[];
+
 function generateAIQuiz(){
   var meta=getBulkMeta();
   var topic=(document.getElementById('ai-topic').value||'').trim();
-  var count=document.getElementById('ai-qcount').value;
+  var secCount=Number(document.getElementById('ai-seccount')?document.getElementById('ai-seccount').value:3)||3;
   var diff=document.getElementById('ai-diff').value;
   var apiKey=GROQ_KEY;
   if(!topic){notify('Enter a topic first','error','⚠️');return;}
@@ -7735,51 +7818,106 @@ function generateAIQuiz(){
   var saveBtn=document.getElementById('ai-save-btn');
   btn.disabled=true;btn.textContent='⏳ Generating...';
   status.className='ai-gen-status spin';
-  status.textContent='AI is writing your quiz — usually takes 10-20 seconds...';
+  status.textContent='AI is writing your sectioned quiz — takes about 15-30 seconds...';
   preview.innerHTML='';saveBtn.style.display='none';
-  aiGeneratedQuestions=[];
+  aiGeneratedSections=[];
 
   var course=meta.cat||'General';
-  var prompt='You are a university exam question writer for '+course+' ('+topic+'). '+
-    'Generate exactly '+count+' multiple-choice questions at '+diff+' difficulty. '+
-    'Return ONLY valid JSON — an array of objects. No markdown, no explanation, no preamble. '+
-    'Each object must have: "text" (question), "optA", "optB", "optC", "optD" (option text without letters), "correct" (uppercase letter A/B/C/D). '+
-    'Example: [{"text":"What is NaCl?","optA":"Sugar","optB":"Salt","optC":"Water","optD":"Acid","correct":"B"}]';
+  var totalQs=secCount*5;
+  var prompt=
+    'You are a university exam question writer for '+course+'. Topic: '+topic+'. '+
+    'Generate exactly '+secCount+' sections, each with exactly 5 multiple-choice questions at '+diff+' difficulty. '+
+    'Name each section after a specific sub-topic of "'+topic+'". '+
+    'Return ONLY valid JSON — an array of section objects. No markdown, no explanation, no preamble. '+
+    'Each section object must have: "name" (section sub-topic name) and "questions" (array of 5 question objects). '+
+    'Each question object must have: "text", "optA", "optB", "optC", "optD", "correct" (uppercase letter A/B/C/D). '+
+    'Example format: [{"name":"Acid-Base Theory","questions":[{"text":"What is pH of pure water?","optA":"5","optB":"6","optC":"7","optD":"8","correct":"C"},...4 more...]},...more sections...]';
 
   callGemini(apiKey,prompt,function(raw){
-    btn.disabled=false;btn.textContent='🤖 Generate Quiz with AI';
+    btn.disabled=false;btn.textContent='🤖 Generate Sectioned Quiz with AI';
     try{
-      var qs=parseQuizJSON(raw);
-      aiGeneratedQuestions=qs;
+      var sections=parseQuizSectionsJSON(raw);
+      if(!sections.length)throw new Error('No sections parsed');
+      aiGeneratedSections=sections;
       status.className='ai-gen-status';status.textContent='';
-      preview.innerHTML=renderQuizPreview(qs);
+      preview.innerHTML=renderSectionsPreview(sections);
       saveBtn.style.display='';
     }catch(err){
       status.className='ai-gen-status';status.textContent='';
-      notify('Could not parse questions: '+(err.message||'unknown'),'error','❌');
+      notify('Could not parse sections: '+(err.message||'unknown'),'error','❌');
     }
   },function(err){
-    btn.disabled=false;btn.textContent='🤖 Generate Quiz with AI';
+    btn.disabled=false;btn.textContent='🤖 Generate Sectioned Quiz with AI';
     status.className='ai-gen-status';status.textContent='';
     notify('AI generation failed: '+err,'error','❌');
   });
 }
 
+function parseQuizSectionsJSON(raw){
+  var clean=raw.replace(/```json|```/gi,'').trim();
+  // Try direct parse first
+  try{
+    var arr=JSON.parse(clean);
+    if(Array.isArray(arr)){
+      // Could be sections array or flat questions array
+      if(arr.length&&arr[0].questions){return arr;} // sections format
+      if(arr.length&&arr[0].text){
+        // Flat questions — auto-chunk into sections of 5
+        return _chunkIntoSections(arr,5,'Section');
+      }
+    }
+  }catch(e){}
+  // Try to extract JSON array
+  var m=clean.match(/\[\s*\{[\s\S]*\}\s*\]/);
+  if(m){
+    try{
+      var arr2=JSON.parse(m[0]);
+      if(arr2.length&&arr2[0].questions)return arr2;
+      if(arr2.length&&arr2[0].text)return _chunkIntoSections(arr2,5,'Section');
+    }catch(e){}
+  }
+  throw new Error('Could not parse AI response as sections');
+}
+
+function renderSectionsPreview(sections){
+  var totalQs=sections.reduce(function(s,sec){return s+(sec.questions?sec.questions.length:0);},0);
+  var html='<div style="font-size:.76rem;color:var(--green);font-weight:700;padding:8px 0">✅ '+sections.length+' section(s), '+totalQs+' questions generated!</div>'+
+    '<div style="max-height:350px;overflow-y:auto;border:1px solid var(--cb);border-radius:10px;padding:8px">';
+  sections.forEach(function(sec,si){
+    html+='<div style="font-size:.75rem;font-weight:800;color:var(--accent);padding:6px 0 3px;'+(si>0?'border-top:1px solid rgba(167,139,250,.2);margin-top:6px;':'')+'">📂 Section '+(si+1)+': '+esc(sec.name)+'</div>';
+    (sec.questions||[]).forEach(function(q,i){
+      html+='<div class="parse-q">'+
+        '<div class="parse-q-text">'+(i+1)+'. '+esc(q.text||'')+'</div>'+
+        ['A','B','C','D'].map(function(o){
+          var val=q['opt'+o]||'';if(!val)return'';
+          var c=q.correct===o;
+          return'<div class="parse-opt '+(c?'correct':'wrong')+'">'+(c?'✓ ':'  ')+o+'. '+esc(val)+'</div>';
+        }).join('')+
+      '</div>';
+    });
+  });
+  html+='</div>';
+  return html;
+}
+
 function saveAIQuiz(){
   var meta=getBulkMeta();
   if(!meta.title){notify('Enter a quiz title above','error','⚠️');return;}
-  if(!aiGeneratedQuestions.length){notify('Generate questions first','error','⚠️');return;}
-  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,perQTime:meta.perQ,
-    questions:JSON.stringify(aiGeneratedQuestions),createdAt:new Date().toISOString(),active:'yes'})
+  if(!aiGeneratedSections.length){notify('Generate sections first','error','⚠️');return;}
+  var allQs=[];
+  aiGeneratedSections.forEach(function(s){(s.questions||[]).forEach(function(q){allQs.push(q);});});
+  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,
+    sections:JSON.stringify(aiGeneratedSections),questions:JSON.stringify(allQs),
+    createdAt:new Date().toISOString(),active:'yes'})
     .then(function(){
-      notify('✅ AI quiz saved! ('+aiGeneratedQuestions.length+' questions)','success','✅');
-      logActivity('quiz_ai_gen',meta.title+' — '+aiGeneratedQuestions.length+'Qs');
+      notify('✅ AI quiz saved! '+aiGeneratedSections.length+' sections, '+allQs.length+' questions','success','✅');
+      logActivity('quiz_ai_gen',meta.title+' — '+aiGeneratedSections.length+' sections');
       document.getElementById('bk-title').value='';
       document.getElementById('ai-topic').value='';
       document.getElementById('ai-gen-preview').innerHTML='';
       document.getElementById('ai-gen-status').textContent='';
       document.getElementById('ai-save-btn').style.display='none';
-      aiGeneratedQuestions=[];
+      aiGeneratedSections=[];
       loadAdminQuizzes();updateStats();loadAnalyticsQuizSelect();
     }).catch(function(){notify('Save failed','error','❌');});
 }
@@ -7833,7 +7971,7 @@ function handleDocUpload(inp){
   inp.value='';
 }
 
-var EXTRACT_PROMPT='Extract ALL multiple-choice questions from this content. Return ONLY a valid JSON array — no markdown, no explanation, no extra text. Each item must have exactly: {"text":"question text","optA":"option A text","optB":"option B text","optC":"option C text","optD":"option D text","correct":"A or B or C or D"}. If an option is missing use empty string. If the correct answer is not marked, use your best academic judgment.';
+var EXTRACT_PROMPT='Extract ALL multiple-choice questions from this content. Return ONLY a valid JSON array of question objects — no markdown, no explanation, no extra text. Each item must have exactly: {"text":"question text","optA":"option A text","optB":"option B text","optC":"option C text","optD":"option D text","correct":"A or B or C or D"}. If an option is missing use empty string. If the correct answer is not marked, use your best academic judgment. Return a flat array of questions — they will be grouped into sections automatically.';
 
 function _getApiKey(status){
   return GROQ_KEY;
@@ -7926,11 +8064,13 @@ function saveDocQuiz(){
   var meta=getBulkMeta();
   if(!meta.title){notify('Enter a quiz title above','error','⚠️');return;}
   if(!docExtractedQuestions.length){notify('No questions to save','error','⚠️');return;}
-  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,perQTime:meta.perQ,
-    questions:JSON.stringify(docExtractedQuestions),createdAt:new Date().toISOString(),active:'yes'})
+  var sections=_chunkIntoSections(docExtractedQuestions, meta.qps||5, meta.title);
+  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,
+    sections:JSON.stringify(sections),questions:JSON.stringify(docExtractedQuestions),
+    createdAt:new Date().toISOString(),active:'yes'})
     .then(function(){
-      notify('✅ Quiz saved! ('+docExtractedQuestions.length+' questions)','success','✅');
-      logActivity('quiz_doc_extract',meta.title+' — '+docExtractedQuestions.length+'Qs');
+      notify('✅ Quiz saved! '+sections.length+' sections, '+docExtractedQuestions.length+' questions','success','✅');
+      logActivity('quiz_doc_extract',meta.title+' — '+sections.length+' sections');
       document.getElementById('bk-title').value='';
       document.getElementById('doc-gen-preview').innerHTML='';
       document.getElementById('doc-gen-status').textContent='';
@@ -7940,49 +8080,171 @@ function saveDocQuiz(){
     }).catch(function(){notify('Save failed','error','❌');});
 }
 
-function addQuestion(){
-  qCount++;var n=qCount;
-  var div=document.createElement('div');div.className='q-item';div.id='q-'+n;
-  div.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">'+
-    '<div style="font-weight:700;font-size:.83rem">Question '+n+'</div>'+
-    '<button class="btn bd bsm" onclick="removeQ('+n+')">✕</button></div>'+
-    '<div class="fg"><input type="text" id="qtext-'+n+'" placeholder="Question text..."/></div>'+
+// ─────────────────────────────────────────────────
+// TAB 4 — AI FROM RAW TEXT
+// ─────────────────────────────────────────────────
+var aiTextGeneratedSections=[];
+
+function generateFromRawText(){
+  var raw=(document.getElementById('aitext-input').value||'').trim();
+  var meta=getBulkMeta();
+  var btn=document.getElementById('aitext-gen-btn');
+  var status=document.getElementById('aitext-gen-status');
+  var preview=document.getElementById('aitext-gen-preview');
+  var saveBtn=document.getElementById('aitext-save-btn');
+  if(!raw){notify('Paste your quiz questions first','error','⚠️');return;}
+  if(!GROQ_KEY){notify('No AI key set — go to ⚙️ Settings → AI Key','error','⚠️');return;}
+  btn.disabled=true;btn.textContent='⏳ AI is reading...';
+  status.className='ai-gen-status spin';
+  status.textContent='AI is reading your text and building sections — takes 15-25 seconds...';
+  preview.innerHTML='';saveBtn.style.display='none';
+  aiTextGeneratedSections=[];
+
+  var qps=meta.qps||5;
+  var prompt=
+    'You are a quiz formatter. The user has provided raw quiz questions in any format. '+
+    'Your job is to: '+
+    '1. Extract ALL multiple-choice questions (even if poorly formatted). '+
+    '2. Group them into sections of exactly '+qps+' questions each. '+
+    '3. Name each section after the main topic/theme of its questions. '+
+    '4. For any question missing a correct answer, use your best academic judgment to mark one. '+
+    'Return ONLY valid JSON — an array of section objects. No markdown, no explanation, no extra text. '+
+    'Format: [{"name":"Section Name","questions":[{"text":"question","optA":"...","optB":"...","optC":"...","optD":"...","correct":"A"},...]},...] '+
+    '\n\nRAW QUIZ TEXT:\n'+raw.slice(0,8000);
+
+  callGemini(GROQ_KEY,prompt,function(raw2){
+    btn.disabled=false;btn.textContent='🤖 Let AI Structure into Sections';
+    try{
+      var sections=parseQuizSectionsJSON(raw2);
+      if(!sections.length)throw new Error('No sections found');
+      aiTextGeneratedSections=sections;
+      status.className='ai-gen-status';status.textContent='';
+      preview.innerHTML=renderSectionsPreview(sections);
+      saveBtn.style.display='';
+    }catch(err){
+      status.className='ai-gen-status';status.textContent='';
+      notify('Could not parse AI response. Try again or check your text.','error','❌');
+    }
+  },function(err){
+    btn.disabled=false;btn.textContent='🤖 Let AI Structure into Sections';
+    status.className='ai-gen-status';status.textContent='';
+    notify('AI failed: '+err,'error','❌');
+  });
+}
+
+function saveAITextQuiz(){
+  var meta=getBulkMeta();
+  if(!meta.title){notify('Enter a quiz title above','error','⚠️');return;}
+  if(!aiTextGeneratedSections.length){notify('Generate sections first','error','⚠️');return;}
+  var allQs=[];
+  aiTextGeneratedSections.forEach(function(s){(s.questions||[]).forEach(function(q){allQs.push(q);});});
+  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,
+    sections:JSON.stringify(aiTextGeneratedSections),questions:JSON.stringify(allQs),
+    createdAt:new Date().toISOString(),active:'yes'})
+    .then(function(){
+      notify('✅ Quiz saved! '+aiTextGeneratedSections.length+' sections, '+allQs.length+' questions','success','✅');
+      logActivity('quiz_ai_text',meta.title+' — '+aiTextGeneratedSections.length+' sections');
+      document.getElementById('bk-title').value='';
+      document.getElementById('aitext-input').value='';
+      document.getElementById('aitext-gen-preview').innerHTML='';
+      document.getElementById('aitext-gen-status').textContent='';
+      document.getElementById('aitext-save-btn').style.display='none';
+      aiTextGeneratedSections=[];
+      loadAdminQuizzes();updateStats();loadAnalyticsQuizSelect();
+    }).catch(function(){notify('Save failed','error','❌');});
+}
+
+
+// ══ SECTIONED QUIZ BUILDER (Admin) ══
+var sectionCount=0;
+function addSection(){
+  sectionCount++;
+  var sn=sectionCount;
+  var div=document.createElement('div');
+  div.id='section-'+sn;
+  div.style.cssText='background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.25);border-radius:14px;padding:14px;margin-bottom:12px;';
+  div.innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+    '<div style="font-family:var(--fh);font-weight:800;font-size:.9rem;color:var(--accent)">📂 Section '+sn+'</div>'+
+    '<button class="btn bd bsm" onclick="removeSection('+sn+')">✕ Remove</button></div>'+
+    '<div class="fg"><input type="text" id="sname-'+sn+'" placeholder="Section name e.g. Thermodynamics" style="width:100%;padding:8px 11px;border-radius:9px;border:1px solid var(--cb);background:rgba(255,255,255,.06);color:var(--text);font-family:var(--fb);font-size:.85rem;outline:none"/></div>'+
+    '<div id="sq-container-'+sn+'"></div>'+
+    '<button class="btn bs bsm" style="width:100%;justify-content:center;margin-top:6px" onclick="addSectionQ('+sn+')">➕ Add Question</button>';
+  document.getElementById('sections-container').appendChild(div);
+  // Auto-add 5 questions
+  for(var i=0;i<5;i++) addSectionQ(sn);
+}
+
+var sqCount={};
+function addSectionQ(sn){
+  if(!sqCount[sn])sqCount[sn]=0;
+  sqCount[sn]++;
+  var qn=sqCount[sn];
+  var container=document.getElementById('sq-container-'+sn);
+  if(!container)return;
+  var div=document.createElement('div');
+  div.id='sq-'+sn+'-'+qn;
+  div.style.cssText='background:rgba(255,255,255,.04);border:1px solid var(--cb);border-radius:10px;padding:12px;margin-bottom:8px;';
+  div.innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
+    '<div style="font-size:.78rem;font-weight:700;color:var(--text2)">Q'+qn+'</div>'+
+    '<button class="btn bd bsm" onclick="removeSectionQ('+sn+','+qn+')">✕</button></div>'+
+    '<div class="fg" style="margin-bottom:6px"><input type="text" id="sqtext-'+sn+'-'+qn+'" placeholder="Question text..." style="width:100%;padding:8px 11px;border-radius:9px;border:1px solid var(--cb);background:rgba(255,255,255,.06);color:var(--text);font-family:var(--fb);font-size:.82rem;outline:none"/></div>'+
     ['A','B','C','D'].map(function(o){
-      return'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'+
-        '<input type="radio" name="correct-'+n+'" value="'+o+'" style="flex-shrink:0"/>'+
-        '<input type="text" id="qopt'+o+'-'+n+'" placeholder="Option '+o+'" style="flex:1;padding:7px 11px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.06);color:var(--text);font-family:var(--fb);font-size:.82rem;outline:none"/>'+
+      return'<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">'+
+        '<input type="radio" name="sqcorrect-'+sn+'-'+qn+'" value="'+o+'" style="flex-shrink:0"/>'+
+        '<input type="text" id="sqopt'+o+'-'+sn+'-'+qn+'" placeholder="Option '+o+'" style="flex:1;padding:6px 10px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.06);color:var(--text);font-family:var(--fb);font-size:.8rem;outline:none"/>'+
       '</div>';
     }).join('')+
-    '<div style="font-size:.7rem;color:var(--text2)">☝️ Select radio = correct answer</div>';
-  document.getElementById('questions-container').appendChild(div);
+    '<div style="font-size:.68rem;color:var(--text2);margin-top:3px">☝️ Select radio = correct answer</div>';
+  container.appendChild(div);
 }
-function removeQ(n){var el=document.getElementById('q-'+n);if(el)el.remove();}
+
+function removeSectionQ(sn,qn){var el=document.getElementById('sq-'+sn+'-'+qn);if(el)el.remove();}
+function removeSection(sn){var el=document.getElementById('section-'+sn);if(el)el.remove();}
+
 function saveQuiz(){
-  var title=document.getElementById('qtitle').value.trim(),cat=document.getElementById('qcat').value;
-  var dur=document.getElementById('qdur').value||'30';
-  var perQ=document.getElementById('qpqtime').value||'';
+  var title=document.getElementById('qtitle').value.trim();
+  var cat=document.getElementById('qcat').value;
+  var secDur=document.getElementById('qdur').value||'5';
   if(!title){notify('Enter quiz title','error','⚠️');return;}
-  var questions=[];
-  document.querySelectorAll('[id^="q-"]').forEach(function(qEl){
-    var n=qEl.id.replace('q-','');
-    var text=document.getElementById('qtext-'+n)?document.getElementById('qtext-'+n).value.trim():'';
-    if(!text)return;
-    var opts={A:'',B:'',C:'',D:''};
-    ['A','B','C','D'].forEach(function(o){var i=document.getElementById('qopt'+o+'-'+n);if(i)opts[o]=i.value.trim();});
-    var correct='';var rad=document.querySelectorAll('input[name="correct-'+n+'"]:checked');
-    if(rad.length)correct=rad[0].value;
-    questions.push({text:text,optA:opts.A,optB:opts.B,optC:opts.C,optD:opts.D,correct:correct});
+  // Collect sections
+  var sections=[];
+  document.querySelectorAll('[id^="section-"]').forEach(function(secEl){
+    var sn=secEl.id.replace('section-','');
+    var sname=document.getElementById('sname-'+sn)?document.getElementById('sname-'+sn).value.trim():'Section '+sn;
+    var questions=[];
+    secEl.querySelectorAll('[id^="sq-'+sn+'-"]').forEach(function(qEl){
+      var parts=qEl.id.split('-');var qn=parts[parts.length-1];
+      var text=document.getElementById('sqtext-'+sn+'-'+qn)?document.getElementById('sqtext-'+sn+'-'+qn).value.trim():'';
+      if(!text)return;
+      var opts={A:'',B:'',C:'',D:''};
+      ['A','B','C','D'].forEach(function(o){var i=document.getElementById('sqopt'+o+'-'+sn+'-'+qn);if(i)opts[o]=i.value.trim();});
+      var correct='';var rad=document.querySelectorAll('input[name="sqcorrect-'+sn+'-'+qn+'"]:checked');
+      if(rad.length)correct=rad[0].value;
+      questions.push({text:text,optA:opts.A,optB:opts.B,optC:opts.C,optD:opts.D,correct:correct});
+    });
+    if(questions.length>0)sections.push({name:sname||'Section '+sn,questions:questions});
   });
-  if(!questions.length){notify('Add at least one question','error','⚠️');return;}
-  fsAdd('quizzes',{title:title,category:cat,duration:dur,perQTime:perQ,questions:JSON.stringify(questions),
-    createdAt:new Date().toISOString(),active:'yes'})
-    .then(function(){notify('Quiz saved!','success','✅');logActivity('quiz_created',title);
-      document.getElementById('qtitle').value='';document.getElementById('qdur').value='30';
-      document.getElementById('qpqtime').value='';
-      document.getElementById('questions-container').innerHTML='';qCount=0;
-      loadAdminQuizzes();updateStats();loadAnalyticsQuizSelect();})
-    .catch(function(){notify('Failed','error','❌');});
+  if(!sections.length){notify('Add at least one section with questions','error','⚠️');return;}
+  // Flatten all questions for backward compat, store sections separately
+  var allQs=[];
+  sections.forEach(function(s){s.questions.forEach(function(q){allQs.push(q);});});
+  fsAdd('quizzes',{title:title,category:cat,duration:secDur,sections:JSON.stringify(sections),
+    questions:JSON.stringify(allQs),createdAt:new Date().toISOString(),active:'yes'})
+    .then(function(){
+      notify('Quiz saved! '+sections.length+' sections, '+allQs.length+' questions total ✅','success','✅');
+      logActivity('quiz_created',title);
+      document.getElementById('qtitle').value='';document.getElementById('qdur').value='5';
+      document.getElementById('sections-container').innerHTML='';sectionCount=0;sqCount={};
+      loadAdminQuizzes();updateStats();loadAnalyticsQuizSelect();
+    }).catch(function(){notify('Failed','error','❌');});
 }
+
+// Keep old addQuestion for any legacy code
+var qCount=0;
+function addQuestion(){addSectionQ(1);}
+
 var allAQuizzes=[];
 var allAQuizFiles=[];
 var activeQuizCat='All';
@@ -8001,12 +8263,24 @@ function renderAQuizList(){
   var list=activeAQuizCat==='All'?allAQuizzes:allAQuizzes.filter(function(q){return(q.category||'General')===activeAQuizCat;});
   if(!list.length){el.innerHTML='<div class="empty"><span>📝</span>No quizzes in this category yet.</div>';return;}
   el.innerHTML=list.map(function(q){
+    var secs=[];try{secs=JSON.parse(q.sections||'[]');}catch(e){}
     var qs=[];try{qs=JSON.parse(q.questions||'[]');}catch(e){}
+    var secCount=secs.length||0;
+    var totalQs=secs.length?secs.reduce(function(s,sec){return s+(sec.questions?sec.questions.length:0);},0):qs.length;
     return'<div class="quiz-card" style="cursor:default">'+
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:6px">'+
-        '<div><div class="quiz-title">'+esc(q.title)+'</div>'+
-        '<div class="quiz-meta"><span class="badge '+catBadge(q.category)+'">'+esc(q.category||'')+'</span> '+qs.length+' Qs · '+q.duration+' min'+(q.perQTime?(' · '+q.perQTime+'s/Q'):'')+'</div></div>'+
-        '<div style="display:flex;gap:5px">'+
+        '<div style="flex:1;min-width:0"><div class="quiz-title">'+esc(q.title)+'</div>'+
+        '<div class="quiz-meta">'+
+          '<span class="badge '+catBadge(q.category)+'">'+esc(q.category||'')+'</span> '+
+          (secCount?'📂 '+secCount+' section'+(secCount>1?'s':'')+' · ':'')+
+          totalQs+' Qs · ⏱ '+q.duration+' min'+(secCount?' / section':'')+
+        '</div>'+
+        (secs.length?'<div style="display:flex;gap:3px;margin-top:5px;flex-wrap:wrap">'+
+          secs.map(function(s){return'<span style="font-size:.62rem;padding:2px 6px;border-radius:20px;background:rgba(167,139,250,.15);color:var(--accent)">'+esc(s.name)+'</span>';}).join('')+
+        '</div>':'')+
+        '</div>'+
+        '<div style="display:flex;gap:5px;flex-shrink:0">'+
+          '<button class="btn bs bsm" onclick="shareQuizLink(\''+q.__id+'\',\''+esc(q.title)+'\')">🔗 Share</button>'+
           '<button class="btn '+(q.active==='yes'?'bg2':'bo')+' bsm" onclick="toggleQuiz(\''+q.__id+'\',\''+q.active+'\')">'+ 
             (q.active==='yes'?'✅ Active':'⏸ Paused')+'</button>'+
           '<button class="btn bd bsm" onclick="delQuiz(\''+q.__id+'\')">🗑️</button>'+
@@ -8067,6 +8341,8 @@ function renderAQuizFiles(){
       '<div class="fn" title="'+esc(f.name)+'">'+esc(f.name)+'</div>'+
       '<div class="fm">'+fsz(f.size||0)+' <span class="badge '+catBadge(f.category)+'">'+esc(f.category||'General')+'</span></div></div></div>'+
       '<div class="fa">'+
+        '<button class="btn bs bsm" onclick="event.stopPropagation();openPreview(\''+f.data+'\',\''+esc(f.name)+'\',\''+esc(f.type||'')+'\')">👁 View</button>'+
+        '<button class="btn bs bsm" onclick="event.stopPropagation();shareFileLink(\''+f.__id+'\',\''+esc(f.name)+'\',\'quizfiles\')">🔗 Share</button>'+
         '<a href="'+f.data+'" download="'+esc(f.name)+'" class="btn bs bsm" onclick="event.stopPropagation()">⬇️</a>'+
         '<button class="btn bd bsm" onclick="event.stopPropagation();delQuizFile(\''+f.__id+'\')">🗑️</button>'+
       '</div></div>';
@@ -8115,10 +8391,22 @@ function renderUQuizList(){
   var list=activeUQuizCat==='All'?allUQuizzes:allUQuizzes.filter(function(q){return(q.category||'General')===activeUQuizCat;});
   if(!list.length){el.innerHTML='<div class="empty"><span>📝</span>No interactive quizzes in this category yet.</div>';return;}
   el.innerHTML=list.map(function(q){
+    var secs=[];try{secs=JSON.parse(q.sections||'[]');}catch(e){}
     var qs=[];try{qs=JSON.parse(q.questions||'[]');}catch(e){}
+    var secCount=secs.length||1;
+    var totalQs=secs.length?secs.reduce(function(s,sec){return s+(sec.questions?sec.questions.length:0);},0):qs.length;
     return'<div class="quiz-card" onclick="startQuiz(\''+q.__id+'\')">'+
       '<div class="quiz-title">'+esc(q.title)+'</div>'+
-      '<div class="quiz-meta"><span class="badge '+catBadge(q.category)+'">'+esc(q.category||'')+'</span> '+qs.length+' questions · ⏱️ '+q.duration+' min'+(q.perQTime?' · '+q.perQTime+'s per Q':'')+'</div>'+
+      '<div class="quiz-meta">'+
+        '<span class="badge '+catBadge(q.category)+'">'+esc(q.category||'')+'</span> '+
+        (secs.length?
+          '📂 '+secCount+' section'+(secCount>1?'s':'')+' · '+totalQs+' questions · ⏱️ '+q.duration+' min/section':
+          totalQs+' questions · ⏱️ '+q.duration+' min')+
+      '</div>'+
+      (secs.length?
+        '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">'+
+          secs.map(function(s){return'<span style="font-size:.65rem;padding:2px 7px;border-radius:20px;background:rgba(167,139,250,.15);color:var(--accent)">'+esc(s.name)+'</span>';}).join('')+
+        '</div>':'')+
       '<div style="margin-top:7px;font-size:.76rem;color:var(--accent)">▶ Tap to start →</div>'+
     '</div>';
   }).join('');
@@ -8151,168 +8439,253 @@ function filterQuizByCat(btn,cat){
   renderUQuizList();
   renderUQuizFiles();
 }
-var quizStartTime=null;
-var quizTimerPerQ=null;
-var perQTimeLeft=0;
-var currentQIndex=0;
+
+// ══ SECTIONED QUIZ ENGINE (Student) ══
+var currentQuiz=null,userAnswers={},quizTimer=null,quizTimerPerQ=null,perQTimeLeft=0,quizStartTime=null;
+var currentSections=[],currentSectionIdx=0,sectionAnswers=[],quizTotalScore=0,quizTotalQs=0;
 
 function startQuiz(id){
   fsGet('quizzes').then(function(res){
     var quiz=getDocs(res).find(function(q){return q.__id===id;});
     if(!quiz){notify('Not found','error','❌');return;}
-    currentQuiz=quiz;userAnswers={};quizStartTime=Date.now();
-    var qs=[];try{qs=JSON.parse(quiz.questions||'[]');}catch(e){}
-    var hasPerQ=quiz.perQTime&&Number(quiz.perQTime)>0;
-    var timeLeft=Number(quiz.duration||30)*60;
+    currentQuiz=quiz;
+    quizStartTime=Date.now();
+    // Parse sections
+    var sections=[];
+    try{sections=JSON.parse(quiz.sections||'[]');}catch(e){}
+    // Fallback: if no sections, wrap all questions in one section
+    if(!sections.length){
+      var allQs=[];try{allQs=JSON.parse(quiz.questions||'[]');}catch(e){}
+      if(allQs.length){
+        // Split into groups of 5
+        for(var i=0;i<allQs.length;i+=5){
+          sections.push({name:'Section '+(Math.floor(i/5)+1),questions:allQs.slice(i,i+5)});
+        }
+      }
+    }
+    if(!sections.length){notify('No questions found in this quiz','error','❌');return;}
+    currentSections=sections;
+    currentSectionIdx=0;
+    sectionAnswers=sections.map(function(){return{};});
+    quizTotalScore=0;
+    quizTotalQs=sections.reduce(function(s,sec){return s+sec.questions.length;},0);
     document.getElementById('quiz-list-view').style.display='none';
     document.getElementById('quiz-result-view').style.display='none';
-    var tv=document.getElementById('quiz-take-view');tv.style.display='';
-
-    if(hasPerQ){
-      // ── PER-QUESTION TIMER MODE ──
-      var qIdx=0;
-      function showQ(){
-        if(qIdx>=qs.length){submitQuiz();return;}
-        var q=qs[qIdx];
-        perQTimeLeft=Number(quiz.perQTime);
-        function renderQ(){
-          var pct2=Math.round(((qIdx)/qs.length)*100);
-          tv.innerHTML='<div class="card">'+
-            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'+
-              '<div style="font-size:.74rem;color:var(--text2)">Question <strong>'+(qIdx+1)+'</strong> of '+qs.length+'</div>'+
-              '<div style="font-family:var(--fh);font-size:1.1rem;font-weight:800;color:'+(perQTimeLeft<=5?'var(--red)':perQTimeLeft<=10?'var(--yellow)':'var(--accent)')+'">⏱ '+perQTimeLeft+'s</div>'+
-            '</div>'+
-            '<div class="progress-bar" style="margin-bottom:12px"><div class="progress-fill" style="width:'+pct2+'%"></div></div>'+
-            '<div class="q-item"><div class="q-text">'+(qIdx+1)+'. '+esc(q.text)+'</div>'+
-              ['A','B','C','D'].map(function(o){
-                var val=q['opt'+o]||'';if(!val)return'';
-                var sel=userAnswers[qIdx]===o;
-                return'<div class="q-opt'+(sel?' selected':'')+'" onclick="pickAnswerPerQ('+qIdx+',\''+o+'\')">'+
-                  '<div class="opt-circle" style="'+(sel?'background:var(--accent);border-color:var(--accent);color:#fff':'')+'">'+o+'</div>'+esc(val)+'</div>';
-              }).join('')+
-            '</div>'+
-            '<div style="display:flex;gap:8px;margin-top:14px">'+
-              '<button class="btn bs" onclick="cancelQuiz()">✕ Cancel</button>'+
-              (qIdx>0?'<button class="btn bs" onclick="prevQ()">◀ Prev</button>':'')+
-              '<button class="btn bp" style="flex:1;justify-content:center" onclick="nextQ()">'+(qIdx===qs.length-1?'✅ Submit':'Next ▶')+'</button>'+
-            '</div></div>';
-        }
-        renderQ();
-        if(quizTimerPerQ)clearInterval(quizTimerPerQ);
-        quizTimerPerQ=setInterval(function(){
-          perQTimeLeft--;
-          // Update just the timer display
-          var tEl=tv.querySelector('[style*="font-weight:800"]');
-          if(tEl){tEl.textContent='⏱ '+perQTimeLeft+'s';tEl.style.color=perQTimeLeft<=5?'var(--red)':perQTimeLeft<=10?'var(--yellow)':'var(--accent)';}
-          if(perQTimeLeft<=0){clearInterval(quizTimerPerQ);quizTimerPerQ=null;nextQ();}
-        },1000);
-      }
-      window.nextQ=function(){
-        if(quizTimerPerQ){clearInterval(quizTimerPerQ);quizTimerPerQ=null;}
-        qIdx++;
-        if(qIdx>=qs.length)submitQuiz();
-        else showQ();
-      };
-      window.prevQ=function(){
-        if(quizTimerPerQ){clearInterval(quizTimerPerQ);quizTimerPerQ=null;}
-        if(qIdx>0){qIdx--;showQ();}
-      };
-      window.pickAnswerPerQ=function(qi,opt){
-        userAnswers[qi]=opt;
-        // Re-render options only
-        var tv2=document.getElementById('quiz-take-view');
-        tv2.querySelectorAll('.q-opt').forEach(function(o,i){
-          var letter=['A','B','C','D'][i];
-          o.classList.toggle('selected',letter===opt);
-          var circle=o.querySelector('.opt-circle');
-          if(circle)circle.style.cssText=letter===opt?'background:var(--accent);border-color:var(--accent);color:#fff':'';
-        });
-      };
-      showQ();
-    } else {
-      // ── TOTAL TIMER MODE (original behaviour) ──
-      function render(){
-        var mins=Math.floor(timeLeft/60),secs=timeLeft%60;
-        tv.innerHTML='<div class="card">'+
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'+
-            '<div class="quiz-title">'+esc(quiz.title)+'</div>'+
-            '<div style="font-family:var(--fh);font-size:1rem;font-weight:800;color:'+(timeLeft<60?'var(--red)':'var(--accent)')+'">⏱️ '+
-            String(mins).padStart(2,'0')+':'+String(secs).padStart(2,'0')+'</div></div>'+
-          '<div class="progress-bar"><div class="progress-fill" style="width:'+Math.round((Object.keys(userAnswers).length/qs.length)*100)+'%"></div></div>'+
-          '<div style="font-size:.74rem;color:var(--text2);margin-bottom:12px">'+Object.keys(userAnswers).length+'/'+qs.length+' answered</div>'+
-          qs.map(function(q,i){
-            return'<div class="q-item" id="qi-'+i+'"><div class="q-text">'+(i+1)+'. '+esc(q.text)+'</div>'+
-              ['A','B','C','D'].map(function(o){
-                var val=q['opt'+o]||'';if(!val)return'';
-                return'<div class="q-opt'+(userAnswers[i]===o?' selected':'')+'" onclick="pickAnswer('+i+',\''+o+'\','+qs.length+')">'+
-                  '<div class="opt-circle" style="'+(userAnswers[i]===o?'background:var(--accent);border-color:var(--accent);color:#fff':'')+'">'+o+'</div>'+esc(val)+'</div>';
-              }).join('')+'</div>';
-          }).join('')+
-          '<div style="display:flex;gap:8px;margin-top:14px">'+
-            '<button class="btn bs" onclick="cancelQuiz()">✕ Cancel</button>'+
-            '<button class="btn bp" style="flex:1;justify-content:center" onclick="submitQuiz()">✅ Submit</button>'+
-          '</div></div>';
-      }
-      render();
-      if(quizTimer)clearInterval(quizTimer);
-      quizTimer=setInterval(function(){timeLeft--;render();if(timeLeft<=0){clearInterval(quizTimer);quizTimer=null;submitQuiz();}},1000);
-    }
+    document.getElementById('quiz-take-view').style.display='';
+    renderSection();
   });
 }
-function pickAnswer(qi,opt,total){
-  userAnswers[qi]=opt;
-  var qEl=document.getElementById('qi-'+qi);
+
+function renderSection(){
+  if(currentSectionIdx>=currentSections.length){finishAllSections();return;}
+  var sec=currentSections[currentSectionIdx];
+  var qs=sec.questions;
+  var secDur=Number(currentQuiz.duration||5)*60;
+  var timeLeft=secDur;
+  var tv=document.getElementById('quiz-take-view');
+
+  function render(){
+    var mins=Math.floor(timeLeft/60),secs=timeLeft%60;
+    var answered=Object.keys(sectionAnswers[currentSectionIdx]).length;
+    tv.innerHTML=
+      '<div class="card">'+
+      // Header
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+
+        '<div>'+
+          '<div style="font-family:var(--fh);font-size:.78rem;font-weight:800;color:var(--accent)">'+
+            '📂 Section '+(currentSectionIdx+1)+' of '+currentSections.length+
+          '</div>'+
+          '<div style="font-size:.72rem;color:var(--text2);font-weight:700">'+esc(sec.name)+'</div>'+
+        '</div>'+
+        '<div style="font-family:var(--fh);font-size:1.1rem;font-weight:800;color:'+(timeLeft<60?'var(--red)':timeLeft<120?'var(--yellow)':'var(--accent)')+'">'+
+          '⏱ '+String(mins).padStart(2,'0')+':'+String(secs).padStart(2,'0')+
+        '</div>'+
+      '</div>'+
+      // Section progress dots
+      '<div style="display:flex;gap:5px;margin-bottom:10px">'+
+        currentSections.map(function(s,i){
+          var done=i<currentSectionIdx;
+          var active=i===currentSectionIdx;
+          return'<div style="flex:1;height:5px;border-radius:20px;background:'+(done?'var(--green)':active?'var(--accent)':'rgba(255,255,255,.12)')+';transition:background .3s"></div>';
+        }).join('')+
+      '</div>'+
+      '<div style="font-size:.72rem;color:var(--text2);margin-bottom:10px">'+answered+'/'+qs.length+' answered</div>'+
+      // Questions
+      qs.map(function(q,i){
+        var gi=currentSectionIdx*100+i; // global index key
+        return'<div class="q-item" id="sqitem-'+i+'">'+
+          '<div class="q-text">'+(i+1)+'. '+esc(q.text)+'</div>'+
+          ['A','B','C','D'].map(function(o){
+            var val=q['opt'+o]||'';if(!val)return'';
+            var sel=sectionAnswers[currentSectionIdx][i]===o;
+            return'<div class="q-opt'+(sel?' selected':'')+'" onclick="pickSectionAnswer('+i+',\''+o+'\')">'+
+              '<div class="opt-circle" style="'+(sel?'background:var(--accent);border-color:var(--accent);color:#fff':'')+'">'+o+'</div>'+
+              esc(val)+'</div>';
+          }).join('')+
+        '</div>';
+      }).join('')+
+      // Action buttons
+      '<div style="display:flex;gap:8px;margin-top:14px">'+
+        '<button class="btn bs" onclick="cancelQuiz()">✕ Cancel</button>'+
+        '<button class="btn bp" style="flex:1;justify-content:center" onclick="submitSection()">'+
+          (currentSectionIdx===currentSections.length-1?'✅ Finish Quiz':'✅ Submit Section & Continue →')+
+        '</button>'+
+      '</div>'+
+      '<div style="font-size:.7rem;color:var(--text2);text-align:center;margin-top:8px">'+
+        'You cannot go back after submitting a section'+
+      '</div>'+
+      '</div>';
+  }
+
+  render();
+  if(quizTimer)clearInterval(quizTimer);
+  quizTimer=setInterval(function(){
+    timeLeft--;
+    // Update timer display only
+    var mins=Math.floor(timeLeft/60),secs=timeLeft%60;
+    var tEl=tv.querySelector('[style*="font-weight:800"][style*="1.1rem"]');
+    if(tEl){
+      tEl.textContent='⏱ '+String(mins).padStart(2,'0')+':'+String(secs).padStart(2,'0');
+      tEl.style.color=timeLeft<60?'var(--red)':timeLeft<120?'var(--yellow)':'var(--accent)';
+    }
+    if(timeLeft<=0){clearInterval(quizTimer);quizTimer=null;submitSection();}
+  },1000);
+}
+
+window.pickSectionAnswer=function(qi,opt){
+  sectionAnswers[currentSectionIdx][qi]=opt;
+  var sec=currentSections[currentSectionIdx];
+  var tv=document.getElementById('quiz-take-view');
+  var qEl=document.getElementById('sqitem-'+qi);
   if(qEl){
     qEl.querySelectorAll('.q-opt').forEach(function(o,i){
-      o.classList.toggle('selected',['A','B','C','D'][i]===opt);
+      var letter=['A','B','C','D'][i];
+      o.classList.toggle('selected',letter===opt);
       var circle=o.querySelector('.opt-circle');
-      if(circle)circle.style.cssText=['A','B','C','D'][i]===opt?'background:var(--accent);border-color:var(--accent);color:#fff':'';
+      if(circle)circle.style.cssText=letter===opt?'background:var(--accent);border-color:var(--accent);color:#fff':'';
     });
   }
+  // Update answered count
+  var answered=Object.keys(sectionAnswers[currentSectionIdx]).length;
+  var countEl=tv.querySelector('[style*="margin-bottom:10px"][style*="color:var(--text2)"]');
+  if(countEl)countEl.textContent=answered+'/'+sec.questions.length+' answered';
+};
+
+function submitSection(){
+  if(quizTimer){clearInterval(quizTimer);quizTimer=null;}
+  var sec=currentSections[currentSectionIdx];
+  var qs=sec.questions;
+  var answers=sectionAnswers[currentSectionIdx];
+  // Score this section
+  var sectionScore=0;
+  qs.forEach(function(q,i){if(answers[i]&&answers[i]===q.correct)sectionScore++;});
+  quizTotalScore+=sectionScore;
+  // Show section result briefly then move on
+  var tv=document.getElementById('quiz-take-view');
+  var pct=qs.length?Math.round((sectionScore/qs.length)*100):0;
+  var isLast=currentSectionIdx===currentSections.length-1;
+  tv.innerHTML=
+    '<div class="card" style="text-align:center;padding:28px 20px">'+
+    '<div style="font-size:2rem;margin-bottom:8px">'+(pct>=80?'🎉':pct>=60?'👏':pct>=40?'💪':'📚')+'</div>'+
+    '<div style="font-family:var(--fh);font-size:1.3rem;font-weight:800;background:linear-gradient(90deg,var(--accent),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">'+
+      'Section '+(currentSectionIdx+1)+' Done!'+
+    '</div>'+
+    '<div style="font-size:.9rem;color:var(--text2);margin:8px 0">'+esc(sec.name)+'</div>'+
+    '<div style="font-size:1.8rem;font-weight:800;color:var(--accent);margin:10px 0">'+sectionScore+'/'+qs.length+'</div>'+
+    '<div style="font-size:.82rem;color:var(--text2);margin-bottom:18px">'+pct+'% correct</div>'+
+    // Mini answer review
+    '<div style="text-align:left;margin-bottom:18px">'+
+    qs.map(function(q,i){
+      var chosen=answers[i];
+      var right=chosen&&chosen===q.correct;
+      var skipped=!chosen;
+      return'<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;margin-bottom:5px;background:'+(right?'rgba(74,222,128,.1)':skipped?'rgba(251,191,36,.08)':'rgba(248,113,113,.1)')+';border:1px solid '+(right?'rgba(74,222,128,.3)':skipped?'rgba(251,191,36,.25)':'rgba(248,113,113,.3)')+'">'+
+        '<div style="font-size:1rem">'+(right?'✅':skipped?'⏭️':'❌')+'</div>'+
+        '<div style="flex:1;font-size:.76rem;color:var(--text)">'+esc(q.text.slice(0,60))+(q.text.length>60?'…':'')+'</div>'+
+        '<div style="font-size:.72rem;font-weight:700;color:'+(right?'var(--green)':skipped?'var(--yellow)':'var(--red)')+'">'+
+          (right?'✓ Correct':skipped?'Skipped':'✗ Wrong'+(chosen?' ('+chosen+')':''))+
+        '</div>'+
+      '</div>';
+    }).join('')+
+    '</div>'+
+    (isLast?
+      '<button class="btn bp" style="width:100%;justify-content:center" onclick="finishAllSections()">🏁 See Final Results</button>':
+      '<div style="font-size:.8rem;color:var(--text2);margin-bottom:12px">'+
+        (currentSections.length-currentSectionIdx-1)+' section(s) remaining'+
+      '</div>'+
+      '<button class="btn bp" style="width:100%;justify-content:center" onclick="goNextSection()">▶ Next Section: '+esc(currentSections[currentSectionIdx+1]?currentSections[currentSectionIdx+1].name:'')+'</button>'
+    )+
+    '</div>';
 }
+
+window.goNextSection=function(){
+  currentSectionIdx++;
+  renderSection();
+};
+
+function finishAllSections(){
+  submitQuiz();
+}
+
+function pickAnswer(qi,opt,total){
+  sectionAnswers[currentSectionIdx][qi]=opt;
+  window.pickSectionAnswer(qi,opt);
+}
+
 function cancelQuiz(){
   if(quizTimer){clearInterval(quizTimer);quizTimer=null;}
   if(quizTimerPerQ){clearInterval(quizTimerPerQ);quizTimerPerQ=null;}
   currentQuiz=null;userAnswers={};quizStartTime=null;
+  currentSections=[];currentSectionIdx=0;sectionAnswers=[];
   document.getElementById('quiz-take-view').style.display='none';
   document.getElementById('quiz-list-view').style.display='';
 }
+
 function submitQuiz(){
   if(quizTimer){clearInterval(quizTimer);quizTimer=null;}
   if(quizTimerPerQ){clearInterval(quizTimerPerQ);quizTimerPerQ=null;}
-  var qs=[];try{qs=JSON.parse(currentQuiz.questions||'[]');}catch(e){}
-  var score=0;
-  qs.forEach(function(q,i){if(userAnswers[i]&&userAnswers[i]===q.correct)score++;});
-  var pct=qs.length?Math.round((score/qs.length)*100):0;
+  // Build flat userAnswers from all sections for scoring & review
+  userAnswers={};
+  var allQs=[];
+  currentSections.forEach(function(sec,si){
+    sec.questions.forEach(function(q,qi){
+      var globalIdx=allQs.length;
+      userAnswers[globalIdx]=sectionAnswers[si][qi]||null;
+      allQs.push(q);
+    });
+  });
+  var score=quizTotalScore;
+  var total=quizTotalQs||allQs.length;
+  var pct=total?Math.round((score/total)*100):0;
   var pts=score*10;
   var timeTaken=quizStartTime?Math.round((Date.now()-quizStartTime)/1000):0;
   var timeMins=Math.floor(timeTaken/60),timeSecs=timeTaken%60;
   var timeStr=String(timeMins).padStart(2,'0')+':'+String(timeSecs).padStart(2,'0');
 
   fsAdd('quizscores',{username:CU.username,name:CU.name,quizId:currentQuiz.__id,
-    quizTitle:currentQuiz.title,score:score,total:qs.length,pct:pct,pts:pts,
-    timeTaken:String(timeTaken),
-    answers:JSON.stringify(userAnswers),takenAt:new Date().toISOString()}).catch(function(){});
+    quizTitle:currentQuiz.title,score:score,total:total,pct:pct,pts:pts,
+    timeTaken:String(timeTaken),answers:JSON.stringify(userAnswers),
+    takenAt:new Date().toISOString()}).catch(function(){});
+
   var QUIZ_COST=8;
   var newScore=Math.max(0,CU.totalScore+pts-QUIZ_COST),newCount=CU.quizzesTaken+1;
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+CU.id,
-    {totalScore:String(newScore),quizzesTaken:String(newCount)}).then(function(){CU.totalScore=newScore;CU.quizzesTaken=newCount;}).catch(function(){});
+    {totalScore:String(newScore),quizzesTaken:String(newCount)})
+    .then(function(){CU.totalScore=newScore;CU.quizzesTaken=newCount;}).catch(function(){});
 
-  // ── REFERRAL BONUS ──
+  // Referral bonus
   var REFERRAL_BONUS=5;
   fsGet('users').then(function(res){
     var users=getDocs(res);
     var me=users.find(function(u){return u.username===CU.username;});
     if(!me||!me.referredBy||!me.referredBy.trim())return;
-    var myRefCode=me.referredBy.trim();
-    var referrer=users.find(function(u){return generateRefCode(u.username)===myRefCode;});
+    var referrer=users.find(function(u){return generateRefCode(u.username)===me.referredBy.trim();});
     if(!referrer)return;
     var refNewScore=Number(referrer.totalScore||0)+REFERRAL_BONUS;
     fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+referrer.__id,
       {totalScore:String(refNewScore)})
       .then(function(){
-        fsAdd('referralbonuses',{
-          referrer:referrer.username,referrerName:referrer.name,
+        fsAdd('referralbonuses',{referrer:referrer.username,referrerName:referrer.name,
           student:CU.username,studentName:CU.name,
           quizTitle:currentQuiz?currentQuiz.title:'',
           bonus:String(REFERRAL_BONUS),awardedAt:new Date().toISOString()
@@ -8323,61 +8696,51 @@ function submitQuiz(){
   document.getElementById('quiz-take-view').style.display='none';
   document.getElementById('quiz-result-view').style.display='';
 
-  // Save for AI review
-  _reviewQuizData={qs:qs,answers:JSON.parse(JSON.stringify(userAnswers)),title:currentQuiz.title};
+  _reviewQuizData={qs:allQs,answers:JSON.parse(JSON.stringify(userAnswers)),title:currentQuiz.title};
 
-  // ── BUILD RESULT PAGE ──
+  // Build final result page
   var medal=pct>=90?'🥇':pct>=70?'🥈':pct>=50?'🥉':'📚';
   var perfLabel=pct>=90?'Outstanding! 🎉':pct>=70?'Great job! 👏':pct>=50?'Good effort! 💪':'Keep studying! 📖';
-
-  // Analysis stats
-  var correct=score, wrong=qs.length-score, skipped=0;
-  qs.forEach(function(q,i){if(!userAnswers[i])skipped++;});
-  wrong=qs.length-score-skipped;
-
-  // Topic breakdown by question (first word of question text as topic proxy)
-  var wrongTopics=qs.filter(function(q,i){return userAnswers[i]!==q.correct;}).map(function(q){return esc(q.text.split(' ').slice(0,4).join(' '))+'…';});
+  var correct=score,skipped=0;
+  allQs.forEach(function(q,i){if(!userAnswers[i])skipped++;});
+  var wrong=total-score-skipped;
+  var wrongTopics=allQs.filter(function(q,i){return userAnswers[i]!==q.correct;}).map(function(q){return esc(q.text.split(' ').slice(0,4).join(' '))+'…';});
 
   var html='<div class="quiz-result">';
-
-  // ── Header ──
   html+='<div style="font-size:2.5rem;margin-bottom:6px">'+medal+'</div>';
-  html+='<div class="quiz-score-big">'+score+'/'+qs.length+'</div>';
+  html+='<div class="quiz-score-big">'+score+'/'+total+'</div>';
   html+='<div style="font-size:1rem;font-weight:700;margin-top:4px">'+pct+'% &nbsp;·&nbsp; '+perfLabel+'</div>';
-  html+='<div style="font-size:.82rem;color:var(--text2);margin-top:4px">+'+pts+' points earned &nbsp;·&nbsp; <span style="color:#f87171">-8 quiz cost</span> &nbsp;·&nbsp; <span style="color:#4ade80">net '+(pts-8)+' pts</span></div>';
+  html+='<div style="font-size:.82rem;color:var(--text2);margin-top:4px">+'+pts+' pts earned &nbsp;·&nbsp; <span style="color:#f87171">-8 quiz cost</span> &nbsp;·&nbsp; <span style="color:#4ade80">net '+(pts-8)+' pts</span></div>';
   html+='<div class="progress-bar" style="margin:14px 0 18px"><div class="progress-fill" style="width:'+pct+'%"></div></div>';
 
-  // ── Analysis Cards ──
-  html+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px">';
-  html+='<div style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:12px;padding:10px 6px;text-align:center">'+
-    '<div style="font-family:var(--fh);font-size:1.4rem;font-weight:800;color:var(--green)">'+correct+'</div>'+
-    '<div style="font-size:.65rem;color:var(--text2);margin-top:2px">Correct</div></div>';
-  html+='<div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);border-radius:12px;padding:10px 6px;text-align:center">'+
-    '<div style="font-family:var(--fh);font-size:1.4rem;font-weight:800;color:var(--red)">'+wrong+'</div>'+
-    '<div style="font-size:.65rem;color:var(--text2);margin-top:2px">Wrong</div></div>';
-  html+='<div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);border-radius:12px;padding:10px 6px;text-align:center">'+
-    '<div style="font-family:var(--fh);font-size:1.4rem;font-weight:800;color:var(--yellow)">'+skipped+'</div>'+
-    '<div style="font-size:.65rem;color:var(--text2);margin-top:2px">Skipped</div></div>';
-  html+='<div style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);border-radius:12px;padding:10px 6px;text-align:center">'+
-    '<div style="font-family:var(--fh);font-size:1rem;font-weight:800;color:var(--a2)">'+timeStr+'</div>'+
-    '<div style="font-size:.65rem;color:var(--text2);margin-top:2px">Time taken</div></div>';
-  html+='</div>';
-
-  // ── Accuracy bar ──
+  // Section breakdown
   html+='<div style="text-align:left;margin-bottom:18px">';
-  html+='<div style="font-size:.76rem;font-weight:700;color:var(--text2);margin-bottom:5px">Accuracy breakdown</div>';
-  html+='<div style="height:12px;border-radius:20px;overflow:hidden;display:flex;border:1px solid var(--cb)">';
-  if(correct)html+='<div style="flex:'+correct+';background:var(--green)" title="'+correct+' correct"></div>';
-  if(wrong)html+='<div style="flex:'+wrong+';background:var(--red)" title="'+wrong+' wrong"></div>';
-  if(skipped)html+='<div style="flex:'+skipped+';background:rgba(251,191,36,.5)" title="'+skipped+' skipped"></div>';
+  html+='<div style="font-size:.82rem;font-weight:800;margin-bottom:8px">📂 Section Breakdown</div>';
+  html+=currentSections.map(function(sec,si){
+    var answers=sectionAnswers[si]||{};
+    var secScore=0;
+    sec.questions.forEach(function(q,qi){if(answers[qi]&&answers[qi]===q.correct)secScore++;});
+    var secPct=sec.questions.length?Math.round((secScore/sec.questions.length)*100):0;
+    var c=secPct>=70?'var(--green)':secPct>=40?'var(--yellow)':'var(--red)';
+    return'<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:9px;border:1px solid var(--cb);background:var(--card);margin-bottom:6px">'+
+      '<div><div style="font-size:.8rem;font-weight:700">'+esc(sec.name)+'</div>'+
+      '<div style="font-size:.68rem;color:var(--text2)">Section '+(si+1)+'</div></div>'+
+      '<div style="text-align:right">'+
+        '<div style="font-size:.95rem;font-weight:800;color:'+c+'">'+secScore+'/'+sec.questions.length+'</div>'+
+        '<div style="font-size:.67rem;color:var(--text2)">'+secPct+'%</div>'+
+      '</div></div>';
+  }).join('');
   html+='</div>';
-  html+='<div style="display:flex;gap:10px;margin-top:5px;font-size:.65rem;color:var(--text2)">';
-  html+='<span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>'+correct+' correct</span>';
-  html+='<span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:var(--red);display:inline-block"></span>'+wrong+' wrong</span>';
-  if(skipped)html+='<span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:50%;background:var(--yellow);display:inline-block"></span>'+skipped+' skipped</span>';
-  html+='</div></div>';
 
-  // ── Areas to review ──
+  // Stats
+  html+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px">';
+  html+='<div style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:12px;padding:10px 6px;text-align:center"><div style="font-family:var(--fh);font-size:1.4rem;font-weight:800;color:var(--green)">'+correct+'</div><div style="font-size:.65rem;color:var(--text2);margin-top:2px">Correct</div></div>';
+  html+='<div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);border-radius:12px;padding:10px 6px;text-align:center"><div style="font-family:var(--fh);font-size:1.4rem;font-weight:800;color:var(--red)">'+wrong+'</div><div style="font-size:.65rem;color:var(--text2);margin-top:2px">Wrong</div></div>';
+  html+='<div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);border-radius:12px;padding:10px 6px;text-align:center"><div style="font-family:var(--fh);font-size:1.4rem;font-weight:800;color:var(--yellow)">'+skipped+'</div><div style="font-size:.65rem;color:var(--text2);margin-top:2px">Skipped</div></div>';
+  html+='<div style="background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);border-radius:12px;padding:10px 6px;text-align:center"><div style="font-family:var(--fh);font-size:1rem;font-weight:800;color:var(--a2)">'+timeStr+'</div><div style="font-size:.65rem;color:var(--text2);margin-top:2px">Time</div></div>';
+  html+='</div>';
+
+  // Areas to review
   if(wrongTopics.length){
     html+='<div style="text-align:left;background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);border-radius:12px;padding:12px;margin-bottom:18px">';
     html+='<div style="font-size:.78rem;font-weight:700;color:var(--red);margin-bottom:6px">📌 Questions to review ('+wrongTopics.length+')</div>';
@@ -8385,45 +8748,45 @@ function submitQuiz(){
     html+='</div>';
   }
 
-  // ── Full Corrections ──
+  // Full answer key per section
   html+='<div style="text-align:left">';
-  html+='<div style="font-size:.82rem;font-weight:800;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px"><span style="font-size:1.1rem">📋</span> Complete Answer Key</div>';
-  html+=qs.map(function(q,i){
-    var chosen=userAnswers[i]||null;
-    var right=chosen===q.correct;
-    var skippedQ=!chosen;
-    var borderColor=right?'var(--green)':skippedQ?'var(--yellow)':'var(--red)';
-    var bgColor=right?'rgba(74,222,128,.07)':skippedQ?'rgba(251,191,36,.07)':'rgba(248,113,113,.07)';
-    var statusIcon=right?'✅':skippedQ?'⏭️':'❌';
-    // Render all options with highlighting
-    var optsHtml=['A','B','C','D'].map(function(o){
-      var val=q['opt'+o]||'';if(!val)return'';
-      var isCorrect=o===q.correct;
-      var isChosen=o===chosen;
-      var bg=isCorrect?'rgba(74,222,128,.18)':isChosen&&!isCorrect?'rgba(248,113,113,.18)':'rgba(255,255,255,.04)';
-      var border=isCorrect?'rgba(74,222,128,.5)':isChosen&&!isCorrect?'rgba(248,113,113,.4)':'var(--cb)';
-      var icon=isCorrect?'✓':isChosen&&!isCorrect?'✗':'';
-      return'<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;margin-bottom:4px;background:'+bg+';border:1px solid '+border+'">'+
-        '<div style="width:20px;height:20px;border-radius:50%;background:'+(isCorrect?'var(--green)':isChosen&&!isCorrect?'var(--red)':'rgba(255,255,255,.1)')+
-        ';display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;flex-shrink:0;color:#fff">'+
-        (icon||o)+'</div>'+
-        '<span style="font-size:.78rem;'+(isCorrect?'font-weight:700;color:var(--green)':isChosen&&!isCorrect?'color:var(--red)':'color:var(--text2)')+'">'+esc(val)+'</span>'+
-        (isCorrect?'<span style="font-size:.65rem;color:var(--green);font-weight:700;margin-left:auto">Correct answer</span>':'')+
-        (isChosen&&!isCorrect?'<span style="font-size:.65rem;color:var(--red);margin-left:auto">Your answer</span>':'')+
-      '</div>';
-    }).join('');
-    return'<div style="margin-bottom:12px;border-radius:12px;border:1px solid '+borderColor+';overflow:hidden">'+
-      '<div style="background:'+bgColor+';padding:10px 12px;border-bottom:1px solid '+borderColor+'">'+
-        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'+
-          '<div style="font-size:.82rem;font-weight:700;line-height:1.4;flex:1">'+(i+1)+'. '+esc(q.text)+'</div>'+
-          '<div style="font-size:1rem;flex-shrink:0">'+statusIcon+'</div>'+
+  html+='<div style="font-size:.82rem;font-weight:800;color:var(--text);margin-bottom:10px">📋 Complete Answer Key</div>';
+  var globalQIdx=0;
+  currentSections.forEach(function(sec,si){
+    html+='<div style="font-size:.78rem;font-weight:800;color:var(--accent);margin:10px 0 6px;padding:5px 10px;background:rgba(167,139,250,.1);border-radius:8px">📂 '+esc(sec.name)+'</div>';
+    sec.questions.forEach(function(q,qi){
+      var gIdx=globalQIdx++;
+      var chosen=userAnswers[gIdx]||null;
+      var right=chosen===q.correct;
+      var skippedQ=!chosen;
+      var borderColor=right?'var(--green)':skippedQ?'var(--yellow)':'var(--red)';
+      var bgColor=right?'rgba(74,222,128,.07)':skippedQ?'rgba(251,191,36,.07)':'rgba(248,113,113,.07)';
+      var statusIcon=right?'✅':skippedQ?'⏭️':'❌';
+      var optsHtml=['A','B','C','D'].map(function(o){
+        var val=q['opt'+o]||'';if(!val)return'';
+        var isCorrect=o===q.correct;var isChosen=o===chosen;
+        var bg=isCorrect?'rgba(74,222,128,.18)':isChosen&&!isCorrect?'rgba(248,113,113,.18)':'rgba(255,255,255,.04)';
+        var border=isCorrect?'rgba(74,222,128,.5)':isChosen&&!isCorrect?'rgba(248,113,113,.4)':'var(--cb)';
+        var icon=isCorrect?'✓':isChosen&&!isCorrect?'✗':'';
+        return'<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;margin-bottom:4px;background:'+bg+';border:1px solid '+border+'">'+
+          '<div style="width:20px;height:20px;border-radius:50%;background:'+(isCorrect?'var(--green)':isChosen&&!isCorrect?'var(--red)':'rgba(255,255,255,.1)')+
+          ';display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:800;flex-shrink:0;color:#fff">'+(icon||o)+'</div>'+
+          '<span style="font-size:.78rem;'+(isCorrect?'font-weight:700;color:var(--green)':isChosen&&!isCorrect?'color:var(--red)':'color:var(--text2)')+'">'+esc(val)+'</span>'+
+          (isCorrect?'<span style="font-size:.65rem;color:var(--green);font-weight:700;margin-left:auto">Correct</span>':'')+
+          (isChosen&&!isCorrect?'<span style="font-size:.65rem;color:var(--red);margin-left:auto">Your answer</span>':'')+
+        '</div>';
+      }).join('');
+      html+='<div style="margin-bottom:10px;border-radius:12px;border:1px solid '+borderColor+';overflow:hidden">'+
+        '<div style="background:'+bgColor+';padding:10px 12px;border-bottom:1px solid '+borderColor+'">'+
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'+
+            '<div style="font-size:.82rem;font-weight:700;line-height:1.4;flex:1">'+(qi+1)+'. '+esc(q.text)+'</div>'+
+            '<div>'+statusIcon+'</div>'+
+          '</div>'+
         '</div>'+
-        (!right&&!skippedQ?'<div style="font-size:.71rem;margin-top:4px;color:var(--text2)">You chose <strong style="color:var(--red)">'+chosen+': '+esc(q['opt'+chosen]||'')+'</strong></div>':'')+
-        (skippedQ?'<div style="font-size:.71rem;margin-top:4px;color:var(--yellow)">Not answered</div>':'')+
-      '</div>'+
-      '<div style="padding:8px 10px;background:'+(right?'rgba(74,222,128,.03)':'rgba(0,0,0,.1)')+'">'+optsHtml+'</div>'+
-    '</div>';
-  }).join('');
+        '<div style="padding:8px 10px;background:'+(right?'rgba(74,222,128,.03)':'rgba(0,0,0,.1)')+'">'+optsHtml+'</div>'+
+      '</div>';
+    });
+  });
   html+='</div>';
 
   html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">';
@@ -8438,12 +8801,244 @@ function submitQuiz(){
   document.getElementById('quiz-result-view').innerHTML=html;
   logActivity('quiz_taken',currentQuiz.title+' — '+pct+'%');
   currentQuiz=null;userAnswers={};quizStartTime=null;
+  currentSections=[];currentSectionIdx=0;sectionAnswers=[];quizTotalScore=0;
 }
+
 function backToQuizList(){
   document.getElementById('quiz-result-view').style.display='none';
   document.getElementById('quiz-list-view').style.display='';
   loadUQuizzes();loadLeaderboard('u-lb-list');loadUserProfile();
 }
+
+// ══ PERSONAL REPORT CARD ══
+function loadReportCard(){
+  var el=document.getElementById('report-card-content');
+  if(!el)return;
+  el.innerHTML='<div class="ld">Loading your report<span class="sp"></span></div>';
+  Promise.all([
+    fsGet('quizscores'),
+    fsGet('quizzes'),
+    fsGet('files'),
+    fsGet('users')
+  ]).then(function(results){
+    var allScores=getDocs(results[0]);
+    var allQuizzes=getDocs(results[1]);
+    var allFiles=getDocs(results[2]);
+    var allUsers=getDocs(results[3]);
+
+    // My scores only
+    var myScores=allScores.filter(function(s){return s.username===CU.username;})
+      .sort(function(a,b){return new Date(a.takenAt)-new Date(b.takenAt);});
+
+    // My rank on leaderboard
+    var ranked=allUsers.filter(function(u){return u.status==='approved';})
+      .sort(function(a,b){return Number(b.totalScore||0)-Number(a.totalScore||0);});
+    var myRank=ranked.findIndex(function(u){return u.username===CU.username;})+1;
+    var totalStudents=ranked.length;
+
+    // Overall stats
+    var totalAttempts=myScores.length;
+    var avgPct=totalAttempts?Math.round(myScores.reduce(function(s,r){return s+Number(r.pct||0);},0)/totalAttempts):0;
+    var bestPct=totalAttempts?Math.max.apply(null,myScores.map(function(r){return Number(r.pct||0);})):0;
+    var totalPtsEarned=myScores.reduce(function(s,r){return s+Number(r.pts||0);},0);
+
+    // Per-course breakdown
+    var courseMap={};
+    myScores.forEach(function(s){
+      var quiz=allQuizzes.find(function(q){return q.__id===s.quizId;});
+      var cat=(quiz&&quiz.category)||s.quizTitle||'General';
+      if(!courseMap[cat])courseMap[cat]={attempts:[],totalScore:0,totalQs:0};
+      courseMap[cat].attempts.push(s);
+      courseMap[cat].totalScore+=Number(s.score||0);
+      courseMap[cat].totalQs+=Number(s.total||0);
+    });
+
+    // Weak topics — questions answered wrong most
+    var wrongMap={};
+    myScores.forEach(function(s){
+      var quiz=allQuizzes.find(function(q){return q.__id===s.quizId;});
+      if(!quiz)return;
+      var qs=[];try{qs=JSON.parse(quiz.questions||'[]');}catch(e){}
+      var answers={};try{answers=JSON.parse(s.answers||'{}');}catch(e){}
+      qs.forEach(function(q,i){
+        if(answers[i]&&answers[i]!==q.correct){
+          var key=q.text.slice(0,60);
+          wrongMap[key]=(wrongMap[key]||0)+1;
+        }
+      });
+    });
+    var weakTopics=Object.keys(wrongMap)
+      .sort(function(a,b){return wrongMap[b]-wrongMap[a];})
+      .slice(0,5);
+
+    // Improvement trend — compare first 3 vs last 3 scores
+    var trend=null;
+    if(myScores.length>=4){
+      var firstAvg=myScores.slice(0,3).reduce(function(s,r){return s+Number(r.pct||0);},0)/3;
+      var lastAvg=myScores.slice(-3).reduce(function(s,r){return s+Number(r.pct||0);},0)/3;
+      trend=Math.round(lastAvg-firstAvg);
+    }
+
+    // Score history for sparkline (last 10)
+    var history=myScores.slice(-10);
+
+    // Grade
+    function grade(pct){return pct>=90?'A+':pct>=80?'A':pct>=70?'B':pct>=60?'C':pct>=50?'D':'F';}
+    function gradeColor(pct){return pct>=70?'var(--green)':pct>=50?'var(--yellow)':'var(--red)';}
+
+    var overallGrade=grade(avgPct);
+    var gColor=gradeColor(avgPct);
+
+    var html='<div style="padding:2px 0 16px">';
+
+    // ── Header card ──
+    html+='<div style="background:linear-gradient(135deg,rgba(167,139,250,.18),rgba(56,189,248,.12));border:1px solid rgba(167,139,250,.3);border-radius:16px;padding:20px;margin-bottom:14px;text-align:center">';
+    html+='<div style="font-size:3rem;font-weight:900;color:'+gColor+';font-family:var(--fh);line-height:1">'+overallGrade+'</div>';
+    html+='<div style="font-size:.78rem;color:var(--text2);margin-top:4px">Overall Grade</div>';
+    html+='<div style="font-size:.9rem;font-weight:700;margin-top:10px">'+esc(CU.name)+'</div>';
+    html+='<div style="font-size:.73rem;color:var(--text2)">@'+esc(CU.username)+' · '+esc(CU.level||'')+'</div>';
+    // Rank badge
+    if(myRank>0){
+      var rankColor=myRank<=3?'#fbbf24':myRank<=10?'var(--accent)':'var(--text2)';
+      html+='<div style="margin-top:10px;display:inline-flex;align-items:center;gap:5px;padding:4px 14px;border-radius:20px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)">';
+      html+='<span style="font-size:.9rem">'+(myRank===1?'🥇':myRank===2?'🥈':myRank===3?'🥉':'🏅')+'</span>';
+      html+='<span style="font-size:.77rem;font-weight:700;color:'+rankColor+'">#'+myRank+' of '+totalStudents+' students</span></div>';
+    }
+    html+='</div>';
+
+    // ── Key Stats ──
+    html+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">';
+    var stats=[
+      {val:totalAttempts,label:'Quizzes Taken',color:'var(--accent)'},
+      {val:avgPct+'%',label:'Avg Score',color:gradeColor(avgPct)},
+      {val:bestPct+'%',label:'Best Score',color:'var(--green)'},
+      {val:'#'+myRank,label:'Rank',color:myRank<=10?'#fbbf24':'var(--text2)'}
+    ];
+    stats.forEach(function(s){
+      html+='<div class="pstat"><div class="pstat-val" style="color:'+s.color+'">'+s.val+'</div><div class="pstat-label">'+s.label+'</div></div>';
+    });
+    html+='</div>';
+
+    // ── Improvement Trend ──
+    if(trend!==null){
+      var trendIcon=trend>0?'📈':trend<0?'📉':'➡️';
+      var trendColor=trend>5?'var(--green)':trend<-5?'var(--red)':'var(--yellow)';
+      var trendLabel=trend>5?'Improving! Keep it up 🎉':trend<-5?'Needs attention — review weak topics':'Staying consistent';
+      html+='<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:'+(trend>0?'rgba(74,222,128,.08)':trend<0?'rgba(248,113,113,.08)':'rgba(251,191,36,.08)')+';border:1px solid '+(trend>0?'rgba(74,222,128,.25)':trend<0?'rgba(248,113,113,.25)':'rgba(251,191,36,.2)')+';margin-bottom:14px">';
+      html+='<div style="font-size:1.5rem">'+trendIcon+'</div>';
+      html+='<div><div style="font-size:.82rem;font-weight:700;color:'+trendColor+'">'+(trend>0?'+':'')+trend+'% improvement trend</div>';
+      html+='<div style="font-size:.72rem;color:var(--text2)">'+trendLabel+'</div></div></div>';
+    }
+
+    // ── Score History Sparkline ──
+    if(history.length>0){
+      html+='<div style="background:var(--card);border:1px solid var(--cb);border-radius:12px;padding:13px;margin-bottom:14px">';
+      html+='<div style="font-size:.8rem;font-weight:800;margin-bottom:10px">📈 Score History (last '+history.length+' quizzes)</div>';
+      var maxH=200;
+      var barW=Math.floor((100/history.length));
+      html+='<div style="display:flex;align-items:flex-end;gap:3px;height:'+maxH+'px;padding:0 2px">';
+      history.forEach(function(s,i){
+        var pct=Number(s.pct||0);
+        var h=Math.max(6,Math.round((pct/100)*maxH));
+        var col=pct>=70?'var(--green)':pct>=50?'var(--yellow)':'var(--red)';
+        var d=new Date(s.takenAt);
+        var label=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+        html+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px" title="'+esc(s.quizTitle)+' — '+pct+'% — '+label+'">';
+        html+='<div style="font-size:.58rem;color:var(--text2)">'+pct+'%</div>';
+        html+='<div style="width:100%;border-radius:4px 4px 0 0;background:'+col+';height:'+h+'px;min-height:6px;transition:height .3s"></div>';
+        html+='</div>';
+      });
+      html+='</div>';
+      // x-axis labels
+      html+='<div style="display:flex;gap:3px;padding:4px 2px 0;border-top:1px solid rgba(255,255,255,.07)">';
+      history.forEach(function(s){
+        var d=new Date(s.takenAt);
+        html+='<div style="flex:1;text-align:center;font-size:.54rem;color:var(--text2);overflow:hidden">'+d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+'</div>';
+      });
+      html+='</div></div>';
+    }
+
+    // ── Course Breakdown ──
+    var courseKeys=Object.keys(courseMap);
+    if(courseKeys.length>0){
+      html+='<div style="background:var(--card);border:1px solid var(--cb);border-radius:12px;padding:13px;margin-bottom:14px">';
+      html+='<div style="font-size:.8rem;font-weight:800;margin-bottom:10px">📚 Performance by Course</div>';
+      courseKeys.forEach(function(cat){
+        var data=courseMap[cat];
+        var attempts=data.attempts.length;
+        var catPct=data.totalQs?Math.round((data.totalScore/data.totalQs)*100):0;
+        var catGrade=grade(catPct);
+        var catColor=gradeColor(catPct);
+        var catAvgPct=Math.round(data.attempts.reduce(function(s,r){return s+Number(r.pct||0);},0)/attempts);
+        html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">';
+        html+='<div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid var(--cb);display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;color:'+catColor+';flex-shrink:0">'+catGrade+'</div>';
+        html+='<div style="flex:1;min-width:0">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+        html+='<div style="font-size:.78rem;font-weight:700">'+esc(cat)+'</div>';
+        html+='<div style="font-size:.72rem;color:var(--text2)">'+attempts+' attempt'+(attempts!==1?'s':'')+' · '+catAvgPct+'% avg</div></div>';
+        html+='<div style="height:6px;background:rgba(255,255,255,.08);border-radius:20px;overflow:hidden">';
+        html+='<div style="height:100%;width:'+catAvgPct+'%;background:'+catColor+';border-radius:20px;transition:width .5s"></div></div>';
+        html+='</div></div>';
+      });
+      html+='</div>';
+    }
+
+    // ── Weak Topics ──
+    if(weakTopics.length){
+      html+='<div style="background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.2);border-radius:12px;padding:13px;margin-bottom:14px">';
+      html+='<div style="font-size:.8rem;font-weight:800;color:var(--red);margin-bottom:8px">📌 Weak Topics — Questions you miss most</div>';
+      weakTopics.forEach(function(t,i){
+        html+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;'+(i<weakTopics.length-1?'border-bottom:1px solid rgba(248,113,113,.15)':'')+'">';
+        html+='<div style="width:20px;height:20px;border-radius:50%;background:rgba(248,113,113,.2);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:var(--red);flex-shrink:0">'+(i+1)+'</div>';
+        html+='<div style="flex:1;font-size:.76rem;color:var(--text)">'+esc(t)+'…</div>';
+        html+='<div style="font-size:.68rem;color:var(--red);font-weight:700">✗ '+wrongMap[t]+'x</div>';
+        html+='</div>';
+      });
+      html+='</div>';
+    }
+
+    // ── Recent Quiz History ──
+    if(myScores.length){
+      html+='<div style="background:var(--card);border:1px solid var(--cb);border-radius:12px;padding:13px;margin-bottom:14px">';
+      html+='<div style="font-size:.8rem;font-weight:800;margin-bottom:10px">🗓️ Quiz History</div>';
+      myScores.slice().reverse().slice(0,15).forEach(function(s){
+        var d=new Date(s.takenAt);
+        var dateStr=d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+' · '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+        var pct=Number(s.pct||0);
+        var col=gradeColor(pct);
+        html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)">';
+        html+='<div style="width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--cb);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0">';
+        html+='<div style="font-size:.75rem;font-weight:800;color:'+col+'">'+pct+'%</div>';
+        html+='<div style="font-size:.55rem;color:var(--text2)">'+grade(pct)+'</div></div>';
+        html+='<div style="flex:1;min-width:0">';
+        html+='<div style="font-size:.78rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(s.quizTitle||'Quiz')+'</div>';
+        html+='<div style="font-size:.67rem;color:var(--text2)">'+esc(dateStr)+' · '+s.score+'/'+s.total+' correct</div></div>';
+        html+='<div style="font-size:.7rem;color:var(--accent);font-weight:700">+'+s.pts+' pts</div>';
+        html+='</div>';
+      });
+      html+='</div>';
+    }
+
+    // ── Empty state ──
+    if(!totalAttempts){
+      html='<div style="text-align:center;padding:40px 20px">';
+      html+='<div style="font-size:3rem;margin-bottom:12px">📋</div>';
+      html+='<div style="font-weight:800;font-size:1rem;margin-bottom:6px">No quiz history yet</div>';
+      html+='<div style="font-size:.8rem;color:var(--text2);margin-bottom:16px">Take some quizzes to see your personal report card here!</div>';
+      html+='<button class="btn bp" onclick="sut(\'quiz\',null)">📝 Go to Quizzes</button>';
+      html+='</div>';
+    } else {
+      html+='</div>';
+    }
+
+    el.innerHTML=html;
+  }).catch(function(e){
+    var el=document.getElementById('report-card-content');
+    if(el)el.innerHTML='<div class="empty"><span>⚠️</span>Could not load report. Try again.</div>';
+  });
+}
+
+
 
 // ── AI Quiz Explanations ──
 var _reviewQuizData=null; // saved after submit for review
@@ -9382,7 +9977,8 @@ function sut(name,btn){
     ai:initAiAssistant,
     calc:function(){},
     bookmarks:function(){renderBookmarks('files');},
-    mindmap:function(){mmInitTab();}
+    mindmap:function(){mmInitTab();},
+    reportcard:loadReportCard
   };
   if(loaders[name])loaders[name]();
 }
@@ -9421,6 +10017,75 @@ function sat2(name,btn){
 // MISC
 // ══════════════════════════════════
 function copyURL(){navigator.clipboard.writeText(window.location.href).then(function(){notify('Copied!','success','📋');}).catch(function(){notify('Failed','error','❌');});}
+
+// ── Deep link share helpers ──
+function getBaseUrl(){return window.location.href.split('?')[0].split('#')[0];}
+
+function shareQuizLink(id,title){
+  var url=getBaseUrl()+'?quiz='+encodeURIComponent(id);
+  if(navigator.share){
+    navigator.share({title:'Quiz: '+title,text:'Take this quiz on BABSPHARM Cloud: '+title,url:url}).catch(function(){});
+  } else {
+    navigator.clipboard.writeText(url).then(function(){
+      notify('Quiz link copied! 📋 Share it with students','success','🔗');
+    }).catch(function(){
+      prompt('Copy this quiz link:',url);
+    });
+  }
+}
+
+function shareFileLink(id,name,collection){
+  var col=collection||'files';
+  var url=getBaseUrl()+'?'+col+'='+encodeURIComponent(id);
+  if(navigator.share){
+    navigator.share({title:'File: '+name,text:'View this file on BABSPHARM Cloud: '+name,url:url}).catch(function(){});
+  } else {
+    navigator.clipboard.writeText(url).then(function(){
+      notify('File link copied! 📋 Share it with students','success','🔗');
+    }).catch(function(){
+      prompt('Copy this file link:',url);
+    });
+  }
+}
+
+// ── Deep link handler — called after login ──
+function handleDeepLink(){
+  var params=new URLSearchParams(window.location.search);
+  var quizId=params.get('quiz');
+  var fileId=params.get('files');
+  var quizFileId=params.get('quizfiles');
+  if(quizId){
+    setTimeout(function(){
+      if(CU&&CU.role==='user'){
+        sat('quizzes');
+        setTimeout(function(){startQuiz(quizId);},800);
+      }
+    },600);
+    try{history.replaceState({},'',window.location.pathname);}catch(e){}
+  } else if(fileId){
+    setTimeout(function(){
+      if(CU&&CU.role==='user'){
+        fsGet('files').then(function(res){
+          var file=getDocs(res).find(function(f){return f.__id===fileId;});
+          if(file){sat('files');setTimeout(function(){openPreview(file.data,file.name,file.type||'');},600);}
+          else{notify('File not found or no longer available','warn','⚠️');}
+        }).catch(function(){});
+      }
+    },600);
+    try{history.replaceState({},'',window.location.pathname);}catch(e){}
+  } else if(quizFileId){
+    setTimeout(function(){
+      if(CU&&CU.role==='user'){
+        fsGet('quizfiles').then(function(res){
+          var file=getDocs(res).find(function(f){return f.__id===quizFileId;});
+          if(file){sat('quizzes');setTimeout(function(){openPreview(file.data,file.name,file.type||'');},600);}
+          else{notify('Quiz file not found','warn','⚠️');}
+        }).catch(function(){});
+      }
+    },600);
+    try{history.replaceState({},'',window.location.pathname);}catch(e){}
+  }
+}
 
 // ══════════════════════════════════
 // FEATURE CONTROLS
@@ -10745,8 +11410,11 @@ var _origDoRegister=doRegister;
 doRegister=function(){
   var name=document.getElementById('rname').value.trim(),un=document.getElementById('run').value.trim().toLowerCase();
   var pw=document.getElementById('rpw').value.trim(),level=document.getElementById('rlevel').value;
+  var email=document.getElementById('remail')?document.getElementById('remail').value.trim().toLowerCase():'';
   var refCode=(document.getElementById('rref')?document.getElementById('rref').value.trim().toUpperCase():'');
   if(!name||!un||!pw){notify('Fill all fields','error','⚠️');return;}
+  if(!email){notify('Please enter your email address for notifications','error','📧');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){notify('Please enter a valid email address','error','📧');return;}
   fsGet('settings').then(function(sRes){
     var settings=getDocs(sRes);
     var modeSetting=settings.find(function(d){return d.key==='regmode';});
@@ -10754,7 +11422,7 @@ doRegister=function(){
     var initialStatus=mode==='auto'?'approved':'pending';
     fsGet('users').then(function(res){
       if(getDocs(res).some(function(u){return u.username===un;})){notify('Username taken','error','⚠️');return;}
-      fsAdd('users',{name:name,username:un,password:pw,level:level,status:initialStatus,
+      fsAdd('users',{name:name,username:un,password:pw,level:level,email:email,status:initialStatus,
         joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',totalScore:'50',quizzesTaken:'0',
         referredBy:refCode||''})
         .then(function(){
@@ -10769,7 +11437,7 @@ doRegister=function(){
   }).catch(function(){
     fsGet('users').then(function(res){
       if(getDocs(res).some(function(u){return u.username===un;})){notify('Username taken','error','⚠️');return;}
-      fsAdd('users',{name:name,username:un,password:pw,level:level,status:'pending',
+      fsAdd('users',{name:name,username:un,password:pw,level:level,email:email,status:'pending',
         joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',totalScore:'50',quizzesTaken:'0',
         referredBy:refCode||''})
         .then(function(){sendBrevoWelcomeEmail(email, name);notify('Registered! 🎁 50 bonus points! Awaiting admin approval ⏳','success','✅');sat('login');})
