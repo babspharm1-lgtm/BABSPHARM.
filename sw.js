@@ -1,81 +1,58 @@
-const CACHE_NAME = 'babspharm-v1';
-const STATIC_ASSETS = [
-  '/BABSPHARM./',
-  '/BABSPHARM./index.html',
+const CACHE = 'babspharm-v2';
+const PRECACHE = [
+  '/BABSPHARM./index-2.html',
   '/BABSPHARM./manifest.json',
   '/BABSPHARM./icon-192x192.png',
   '/BABSPHARM./icon-512x512.png',
   '/BABSPHARM./icon-maskable-512x512.png'
 ];
 
-// Install: cache static assets
-self.addEventListener('install', function(event) {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(function(cache) {
-      return cache.addAll(STATIC_ASSETS);
-    })
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll(PRECACHE)).then(() => self.skipWaiting())
   );
-  self.skipWaiting();
 });
 
-// Activate: clean up old caches
-self.addEventListener('activate', function(event) {
-  event.waitUntil(
-    caches.keys().then(function(keys) {
-      return Promise.all(
-        keys.filter(function(key) { return key !== CACHE_NAME; })
-            .map(function(key) { return caches.delete(key); })
-      );
-    })
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    ).then(() => clients.claim())
   );
-  self.clients.claim();
 });
 
-// Fetch: serve from cache, fall back to network
-self.addEventListener('fetch', function(event) {
-  // Skip non-GET requests and chrome-extension requests
-  if (event.request.method !== 'GET') return;
-  if (event.request.url.startsWith('chrome-extension://')) return;
-
-  // For API calls (Groq, Firebase etc), always use network
-  if (
-    event.request.url.includes('groq.com') ||
-    event.request.url.includes('firebase') ||
-    event.request.url.includes('firebaseio') ||
-    event.request.url.includes('googleapis.com/identitytoolkit') ||
-    event.request.url.includes('googleapis.com/storage')
-  ) {
-    return; // Let browser handle it normally
+self.addEventListener('fetch', e => {
+  if (e.request.method !== 'GET') return;
+  if (e.request.url.includes('firestore.googleapis.com') ||
+      e.request.url.includes('anthropic.com') ||
+      e.request.url.includes('groq.com')) {
+    return e.respondWith(fetch(e.request).catch(() => caches.match(e.request)));
   }
-
-  event.respondWith(
-    caches.match(event.request).then(function(cachedResponse) {
-      if (cachedResponse) {
-        // Return cached version and update cache in background
-        fetch(event.request).then(function(networkResponse) {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then(function(cache) {
-              cache.put(event.request, networkResponse.clone());
-            });
-          }
-        }).catch(function() {});
-        return cachedResponse;
-      }
-      // Not in cache, fetch from network
-      return fetch(event.request).then(function(networkResponse) {
-        if (networkResponse && networkResponse.status === 200) {
-          var responseToCache = networkResponse.clone();
-          caches.open(CACHE_NAME).then(function(cache) {
-            cache.put(event.request, responseToCache);
-          });
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      var networkFetch = fetch(e.request).then(resp => {
+        if (resp && resp.status === 200) {
+          var clone = resp.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
         }
-        return networkResponse;
-      }).catch(function() {
-        // Offline fallback for HTML pages
-        if (event.request.destination === 'document') {
-          return caches.match('/BABSPHARM./index.html');
-        }
-      });
+        return resp;
+      }).catch(() => null);
+      return cached || networkFetch;
     })
   );
+});
+
+self.addEventListener('push', e => {
+  var data = e.data ? e.data.json() : { title: 'BABSPHARM Cloud', body: 'New update!' };
+  e.waitUntil(self.registration.showNotification(data.title, {
+    body: data.body,
+    icon: data.icon || '/BABSPHARM./icon-192x192.png',
+    badge: '/BABSPHARM./icon-96x96.png',
+    tag: data.tag || 'babspharm'
+  }));
+});
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(clients.openWindow('/BABSPHARM./index-2.html'));
 });

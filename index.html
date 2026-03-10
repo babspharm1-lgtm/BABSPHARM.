@@ -10503,52 +10503,13 @@ console.log('✅ BABSPHARM Cloud v4 — Full Education Platform');
   // (keeping manifest var for reference only)
 
   // Register service worker
+  // Register external sw.js so PWABuilder and browsers can detect it properly
   if('serviceWorker' in navigator){
-    var swCode=`
-const CACHE='babspharm-v1';
-const PRECACHE=['/'];
-self.addEventListener('install',e=>{
-  e.waitUntil(caches.open(CACHE).then(c=>c.addAll(PRECACHE)).then(()=>self.skipWaiting()));
-});
-self.addEventListener('activate',e=>{
-  e.waitUntil(clients.claim());
-});
-self.addEventListener('fetch',e=>{
-  if(e.request.method!=='GET')return;
-  // For API calls, network first
-  if(e.request.url.includes('firestore.googleapis.com')||e.request.url.includes('anthropic.com')){
-    return e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));
-  }
-  // Cache-first for same-origin assets
-  e.respondWith(
-    caches.match(e.request).then(cached=>{
-      var networkFetch=fetch(e.request).then(resp=>{
-        if(resp&&resp.status===200){
-          var clone=resp.clone();
-          caches.open(CACHE).then(c=>c.put(e.request,clone));
-        }
-        return resp;
-      }).catch(()=>null);
-      return cached||networkFetch;
-    })
-  );
-});
-self.addEventListener('push',e=>{
-  var data=e.data?e.data.json():{title:'BABSPHARM Cloud',body:'New update!'};
-  e.waitUntil(self.registration.showNotification(data.title,{
-    body:data.body,icon:data.icon||'',badge:data.icon||'',tag:data.tag||'babspharm'
-  }));
-});
-self.addEventListener('notificationclick',e=>{
-  e.notification.close();
-  e.waitUntil(clients.openWindow('/'));
-});
-`;
-    try{
-      var swBlob=new Blob([swCode],{type:'application/javascript'});
-      var swUrl=URL.createObjectURL(swBlob);
-      navigator.serviceWorker.register(swUrl,{scope:'/'}).catch(function(){});
-    }catch(e){}
+    navigator.serviceWorker.register('/BABSPHARM./sw.js', {scope:'/BABSPHARM./'})
+      .catch(function(){
+        // fallback: try root scope
+        navigator.serviceWorker.register('sw.js').catch(function(){});
+      });
   }
 })();
 
