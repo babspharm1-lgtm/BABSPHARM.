@@ -10481,18 +10481,23 @@ console.log('✅ BABSPHARM Cloud v4 — Full Education Platform');
 (function initPWA(){
   // Inject manifest as blob
   var manifest={
-    name:'BABSPHARM Cloud',short_name:'BABSPHARM',
-    description:'education platform',
-    start_url:window.location.pathname,
+    name:'BABSPHARM Cloud',
+    short_name:'BABSPHARM',
+    description:'Your Ultimate Study Companion — Download lecture resources, practice CBT exams, and unlock premium materials.',
+    start_url:'https://babspharm1-lgtm.github.io/BABSPHARM./index-2.html',
+    scope:'https://babspharm1-lgtm.github.io/BABSPHARM./',
     display:'standalone',
     orientation:'portrait',
     background_color:'#0f0c29',
-    theme_color:'#0f0c29',
+    theme_color:'#7c3aed',
+    categories:['education','productivity'],
+    lang:'en-NG',
     icons:[
       {src:'https://babspharm1-lgtm.github.io/BABSPHARM./icon-192x192.png',sizes:'192x192',type:'image/png',purpose:'any'},
       {src:'https://babspharm1-lgtm.github.io/BABSPHARM./icon-512x512.png',sizes:'512x512',type:'image/png',purpose:'any'},
       {src:'https://babspharm1-lgtm.github.io/BABSPHARM./icon-maskable-512x512.png',sizes:'512x512',type:'image/png',purpose:'maskable'}
-    ]
+    ],
+    prefer_related_applications:false
   };
   try{
     var blob=new Blob([JSON.stringify(manifest)],{type:'application/json'});
