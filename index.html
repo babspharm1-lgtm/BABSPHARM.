@@ -10636,7 +10636,34 @@ function loadAdminAll(){
   loadAdminGroqKeyToPanel();
   loadBrevoSettingsToPanel();
   loadBlastHistory();
+  // Reload Brevo settings now that admin is authenticated
+  reloadBrevoSettingsAuthenticated();
   convPoll=setInterval(loadConvList,8000);
+}
+
+function reloadBrevoSettingsAuthenticated(){
+  // Re-fetch settings using Firebase Auth token so Firestore rules allow access
+  if(!window._fbAuth || !window._fbAuth.currentUser) return;
+  window._fbAuth.currentUser.getIdToken().then(function(token){
+    fetch("https://firestore.googleapis.com/v1/projects/babspharmcloud/databases/(default)/documents/settings?pageSize=500",{
+      headers:{'Authorization':'Bearer '+token}
+    })
+    .then(function(r){return r.json();})
+    .then(function(res){
+      var docs=(res.documents||[]).map(function(d){
+        var fields=d.fields||{};
+        var obj={__path:d.name};
+        Object.keys(fields).forEach(function(k){obj[k]=fields[k].stringValue||fields[k].integerValue||fields[k].booleanValue||'';});
+        return obj;
+      });
+      var keyDoc=docs.find(function(d){return d.key==='brevo_api_key';});
+      var senderDoc=docs.find(function(d){return d.key==='brevo_sender_email';});
+      var trigDoc=docs.find(function(d){return d.key==='brevo_triggers';});
+      if(keyDoc&&keyDoc.value) BREVO_API_KEY=keyDoc.value;
+      if(senderDoc&&senderDoc.value) BREVO_SENDER_EMAIL=senderDoc.value;
+      if(trigDoc&&trigDoc.value){try{BREVO_TRIGGERS=JSON.parse(trigDoc.value);}catch(e){}}
+    }).catch(function(){});
+  }).catch(function(){});
 }
 
 // ══════════════════════════════════
