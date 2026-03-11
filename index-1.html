@@ -6796,73 +6796,44 @@ function doLogin(){
 async function doAdminLogin(){
   var pw = document.getElementById('apw').value.trim();
   if(!pw){notify('Enter password','error','🔒');return;}
-  // SECURITY: No default password. Admin must set a password on first run via the
-  // First-Run Setup flow. If no hash is stored yet, access is denied until one is set.
-  var storedHash = null;
-  try{storedHash = localStorage.getItem('bp_admin_pw_h');}catch(e){}
-  var storedPlain = null;
-  try{storedPlain = localStorage.getItem('bp_admin_pw');}catch(e){}
-  var authenticated = false;
-  if(storedHash){
-    // Support legacy djb2 hash (h...) — migrate to SHA-256 transparently
-    var match = false;
-    if(storedHash.indexOf('sha256:') === 0){
-      match = ('sha256:'+(await sha256(pw))) === storedHash;
-    } else {
-      match = simpleHash(pw) === storedHash; // legacy check
-      if(match) await _migrateAdminPwIfNeeded(pw); // upgrade to SHA-256
-    }
-    authenticated = match;
-  } else if(storedPlain){
-    authenticated = (pw === storedPlain);
-    if(authenticated){ // migrate plaintext to SHA-256 hash
-      try{localStorage.setItem('bp_admin_pw_h','sha256:'+(await sha256(pw)));localStorage.removeItem('bp_admin_pw');}catch(e){}
-    }
-  } else {
-    // SECURITY: No default password. Prompt admin to set one via First-Run Setup.
-    notify('No admin password set. Please complete First-Run Setup.','error','🔒');
-    return;
+
+  if(!window._fbSignIn){notify('Auth not ready. Please refresh.','error','❌');return;}
+
+  // SECURITY: Admin login now uses Firebase Authentication.
+  // The admin email is fixed — only the password is entered in the UI.
+  var adminEmail = 'bayo0476@gmail.com';
+
+  // Rate limiting
+  var rl={count:0,until:0};
+  try{rl=JSON.parse(sessionStorage.getItem('bp_admin_rl')||'{"count":0,"until":0}');}catch(e){}
+  if(Date.now()<(rl.until||0)){
+    var mins=Math.ceil(((rl.until||0)-Date.now())/60000);
+    notify('Too many failed attempts. Try again in '+mins+' min.','error','🔒');return;
   }
-  if(authenticated){
-    CU={name:'Admin',username:'admin',role:'admin',permissions:'all'};
-    showDash('admin');
-    return;
-  }
-  // Check sub-admin accounts in Firestore
-  fsGet('subadmins').then(function(res){
-    var admins = getDocs(res);
-    // Find by username first, then verify password (supports hashed + legacy)
-    var found = admins.find(function(a){ return a.username === document.getElementById('apw').value.trim().toLowerCase() || a.password === document.getElementById('apw').value.trim(); });
-    // Re-find properly: match username submitted in a separate field, or fall back to password-only match for legacy
-    // Sub-admin login uses only the password field — find the matching sub-admin
-    var candidates = admins;
-    var pwVal = document.getElementById('apw').value.trim();
-    // Try each candidate asynchronously
-    var idx = 0;
-    function tryNext(){
-      if(idx >= candidates.length){ notify('Wrong password','error','🔒'); return; }
-      var a = candidates[idx++];
-      verifyPassword(pwVal, a.password).then(function(ok){
-        if(ok){
-          // Auto-migrate legacy plaintext sub-admin password
-          if(a.password && a.password.indexOf('sha256:')!==0){
-            hashPassword(pwVal).then(function(h){
-              fsPatch('projects/'+PROJECT+'/databases/(default)/documents/subadmins/'+a.__id,{password:h}).catch(function(){});
-            });
-          }
-          var perms = a.permissions ? a.permissions.split(',') : [];
-          CU={name:a.name,username:a.username,role:'subadmin',permissions:perms,id:a.__id};
-          showDash('subadmin');
-        } else {
-          tryNext();
-        }
-      });
-    }
-    tryNext();
-  }).catch(function(){
-    notify('Wrong password','error','🔒');
+
+  window._fbSignIn(adminEmail, pw).then(function(cred){
+    // Verify the custom claim confirms this is actually admin
+    cred.user.getIdTokenResult().then(function(idTokenResult){
+      if(idTokenResult.claims.role === 'admin'){
+        try{sessionStorage.removeItem('bp_admin_rl');}catch(e){}
+        CU={name:'Admin',username:'admin',role:'admin',permissions:'all',
+            uid:cred.user.uid};
+        showDash('admin');
+      } else {
+        window._fbSignOut().catch(function(){});
+        notify('Not authorised as admin','error','🔒');
+      }
+    });
+  }).catch(function(err){
+    rl.count=(rl.count||0)+1;
+    rl.until=rl.count>=5?Date.now()+15*60000:0;
+    try{sessionStorage.setItem('bp_admin_rl',JSON.stringify(rl));}catch(e){}
+    var msg=rl.count>=5?'Too many attempts — wait 15 min.':'Wrong password';
+    if(err.code==='auth/too-many-requests') msg='Too many attempts. Try again later.';
+    notify(msg,'error','🔒');
   });
 }
+
 async function changeAdminPassword(){
   var cur=document.getElementById('sec-cur-pw').value;
   var nw=document.getElementById('sec-new-pw').value;
