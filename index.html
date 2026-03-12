@@ -28,7 +28,7 @@
 <meta name="twitter:title" content="BABSPHARM Cloud ⚗️"/>
 <meta name="twitter:description" content="Your all-in-one education platform — study materials, past questions, quizzes, forums & more."/>
 <meta name="twitter:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' viewBox='0 0 1200 630'%3E%3Crect width='1200' height='630' fill='%230f0c29'/%3E%3Ctext x='600' y='270' font-family='Arial Black,sans-serif' font-size='120' font-weight='900' fill='white' text-anchor='middle'%3E⚗️%3C/text%3E%3Ctext x='600' y='390' font-family='Arial Black,sans-serif' font-size='72' font-weight='900' fill='%23a78bfa' text-anchor='middle'%3EBABSPHARM Cloud%3C/text%3E%3Ctext x='600' y='460' font-family='Arial,sans-serif' font-size='32' fill='%23b0a8d8' text-anchor='middle'%3EYour education platform%3C/text%3E%3C/svg%3E"/>
-<link id="pwa-manifest-link" rel="manifest" href="https://babspharm1-lgtm.github.io/BABSPHARM./manifest.json" crossorigin="use-credentials"/>
+<link id="pwa-manifest-link" rel="manifest"/>
 <link rel="apple-touch-icon" href="https://babspharm1-lgtm.github.io/BABSPHARM./icon-192x192.png"/>
 <!-- PDF.js for in-app PDF reading -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -1564,8 +1564,75 @@ body.has-bottom-nav #app{padding-bottom:0;}
 }
 .lp-cta h2{font-family:var(--fh);font-size:clamp(1.6rem,4vw,2.2rem);font-weight:900;color:#fff;margin-bottom:12px;}
 .lp-cta p{color:var(--text2);margin-bottom:28px;font-size:.92rem;}
-/* Footer */
-.lp-footer{
+/* ── UPDATED HERO STYLES ── */
+.lp-hero-welcome{font-size:1rem;color:rgba(200,190,255,.75);margin-bottom:4px;font-weight:500;letter-spacing:.3px;}
+.lp-logo-inline{font-size:clamp(1.8rem,5vw,2.8rem);-webkit-text-fill-color:initial;}
+.lp-hero h1{font-family:var(--fh);font-size:clamp(2.4rem,7vw,3.8rem);font-weight:900;line-height:1.1;margin-bottom:10px;color:#fff;}
+.lp-hero h1 span{background:linear-gradient(90deg,#a78bfa,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.lp-hero-sub{font-size:1rem;color:rgba(220,215,255,.9);margin-bottom:20px;font-weight:600;line-height:1.5;}
+.lp-hero-checklist{list-style:none;padding:0;margin:0 0 28px;display:flex;flex-direction:column;gap:9px;}
+.lp-hero-checklist li{display:flex;align-items:center;gap:10px;font-size:.88rem;color:rgba(200,190,255,.9);}
+.lp-check{color:#4ade80;font-weight:900;font-size:1rem;flex-shrink:0;}
+.lp-fire{font-size:.95rem;flex-shrink:0;}
+/* Hero visual / mockup */
+.lp-hero-visual{position:relative;flex-shrink:0;width:clamp(240px,40vw,380px);display:flex;align-items:flex-end;justify-content:center;}
+.lp-hero-mockup{
+  width:100%;background:rgba(30,20,70,.85);border-radius:16px;
+  border:1px solid rgba(167,139,250,.3);overflow:hidden;
+  box-shadow:0 20px 60px rgba(0,0,0,.5),0 0 40px rgba(109,40,217,.2);
+  animation:heroFloat 3.5s ease-in-out infinite;
+}
+.lp-mockup-bar{
+  background:rgba(255,255,255,.06);padding:8px 12px;
+  display:flex;gap:6px;align-items:center;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.lp-mockup-bar span{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.2);}
+.lp-mockup-bar span:first-child{background:#ff5f57;}
+.lp-mockup-bar span:nth-child(2){background:#ffbd2e;}
+.lp-mockup-bar span:nth-child(3){background:#28c840;}
+.lp-mockup-body{display:flex;padding:12px;gap:10px;min-height:120px;}
+.lp-mockup-sidebar{width:35%;display:flex;flex-direction:column;gap:8px;padding-top:4px;}
+.lp-mockup-line{height:8px;border-radius:4px;background:rgba(167,139,250,.25);}
+.lp-ml-full{width:100%;}
+.lp-ml-short{width:55%;}
+.lp-ml-med{width:75%;}
+.lp-mockup-main{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.lp-mockup-card{border-radius:8px;min-height:40px;}
+.lp-mc-blue{background:linear-gradient(135deg,rgba(56,189,248,.35),rgba(56,189,248,.1));border:1px solid rgba(56,189,248,.2);}
+.lp-mc-yellow{background:linear-gradient(135deg,rgba(251,191,36,.35),rgba(251,191,36,.1));border:1px solid rgba(251,191,36,.2);}
+.lp-mc-purple{background:linear-gradient(135deg,rgba(167,139,250,.35),rgba(167,139,250,.1));border:1px solid rgba(167,139,250,.2);grid-column:span 2;}
+.lp-hero-avatar{
+  position:absolute;bottom:-10px;right:-10px;
+  font-size:clamp(3.5rem,10vw,5.5rem);
+  filter:drop-shadow(0 4px 20px rgba(167,139,250,.4));
+  animation:heroFloat 4s ease-in-out infinite;animation-delay:.5s;
+}
+/* How It Works grid */
+.lp-how-section{background:rgba(10,8,28,1);}
+.lp-how-section h2{font-family:var(--fh);font-size:clamp(1.4rem,4vw,1.9rem);font-weight:900;color:#fff;margin-bottom:32px;text-align:center;}
+.lp-how-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-top:8px;}
+.lp-how-card{
+  background:rgba(255,255,255,.05);backdrop-filter:blur(15px);
+  border:1px solid rgba(167,139,250,.15);border-radius:18px;
+  padding:22px 18px;text-align:left;
+  transition:all .3s ease;
+}
+.lp-how-card:hover{transform:translateY(-6px);border-color:rgba(167,139,250,.4);box-shadow:0 12px 32px rgba(109,40,217,.2);}
+.lp-how-num{
+  width:44px;height:44px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--fh);font-size:1.3rem;font-weight:900;
+  color:#fff;margin-bottom:14px;position:relative;
+}
+.lp-how-orange{background:linear-gradient(135deg,#f97316,#fb923c);}
+.lp-how-purple{background:linear-gradient(135deg,#7c3aed,#a78bfa);}
+.lp-how-blue{background:linear-gradient(135deg,#2563eb,#60a5fa);}
+.lp-how-yellow{background:linear-gradient(135deg,#d97706,#fbbf24);}
+.lp-how-emoji{font-size:.75rem;position:absolute;top:-4px;right:-6px;}
+.lp-how-card h3{font-family:var(--fh);font-size:.92rem;font-weight:800;color:#fff;margin-bottom:8px;}
+.lp-how-card p{font-size:.78rem;color:var(--text2);line-height:1.6;}
+
   padding:40px 5%;text-align:center;
   border-top:1px solid rgba(255,255,255,.07);
 }
@@ -2981,16 +3048,40 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
 <!-- HERO -->
 <section class="lp-hero">
   <div class="lp-hero-content">
-    <div class="lp-hero-badge">🎓 Student Learning Platform</div>
-    <h1>Welcome to <span>BABSPHARM Cloud</span></h1>
-    <p class="lp-hero-sub">Your Ultimate Learning Platform</p>
-    <p class="lp-hero-desc">Access study materials, practice exams, and improve your academic performance all in one place — anytime, anywhere.</p>
+    <p class="lp-hero-welcome">Welcome to</p>
+    <h1><span class="lp-logo-inline">⚗️</span> <span>BABSPHARM</span><br><span>Cloud</span></h1>
+    <p class="lp-hero-sub">The Smart Learning Platform<br>for University Students</p>
+    <ul class="lp-hero-checklist">
+      <li><span class="lp-check">✔</span> Download Lecture Resources</li>
+      <li><span class="lp-check">✔</span> Practice CBT Exams</li>
+      <li><span class="lp-check">✔</span> Unlock Premium Study Materials</li>
+      <li><span class="lp-fire">🔥</span> Compete on Student Leaderboards</li>
+    </ul>
     <div class="lp-hero-btns">
-      <button class="lp-btn-primary lp-btn-lg" onclick="showLoginFromLanding()">🚀 Get Started</button>
-      <button class="lp-btn-secondary lp-btn-lg" onclick="showLoginFromLanding()">🔑 Login</button>
+      <button class="lp-btn-primary lp-btn-lg" onclick="showLoginFromLanding()">Get Started</button>
+      <button class="lp-btn-secondary lp-btn-lg" onclick="showLoginFromLanding()">Log In</button>
     </div>
   </div>
-  <div class="lp-hero-img">⚗️</div>
+  <div class="lp-hero-visual">
+    <div class="lp-hero-mockup">
+      <div class="lp-mockup-bar"><span></span><span></span><span></span></div>
+      <div class="lp-mockup-body">
+        <div class="lp-mockup-sidebar">
+          <div class="lp-mockup-line lp-ml-full"></div>
+          <div class="lp-mockup-line lp-ml-short"></div>
+          <div class="lp-mockup-line lp-ml-med"></div>
+          <div class="lp-mockup-line lp-ml-short"></div>
+          <div class="lp-mockup-line lp-ml-full"></div>
+        </div>
+        <div class="lp-mockup-main">
+          <div class="lp-mockup-card lp-mc-blue"></div>
+          <div class="lp-mockup-card lp-mc-yellow"></div>
+          <div class="lp-mockup-card lp-mc-purple"></div>
+        </div>
+      </div>
+    </div>
+    <div class="lp-hero-avatar">👨‍💻</div>
+  </div>
 </section>
 
 <!-- ABOUT -->
@@ -3059,27 +3150,29 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
 </section>
 
 <!-- HOW IT WORKS -->
-<section class="lp-section lp-section-alt">
+<section class="lp-section lp-section-alt lp-how-section">
   <div class="lp-section-inner">
-    <div class="lp-section-badge">How It Works</div>
-    <h2>Start in 3 Simple Steps</h2>
-    <div class="lp-steps">
-      <div class="lp-step">
-        <div class="lp-step-num">1</div>
-        <h3>Register</h3>
-        <p>Create your free student account in seconds.</p>
+    <h2>How BABSPHARM Cloud Works</h2>
+    <div class="lp-how-grid">
+      <div class="lp-how-card">
+        <div class="lp-how-num lp-how-orange">1<span class="lp-how-emoji">🎓</span></div>
+        <h3>Create an Account</h3>
+        <p>Sign up and access your personalized student dashboard.</p>
       </div>
-      <div class="lp-step-arrow">→</div>
-      <div class="lp-step">
-        <div class="lp-step-num">2</div>
-        <h3>Login</h3>
-        <p>Sign in to access your personal dashboard.</p>
+      <div class="lp-how-card">
+        <div class="lp-how-num lp-how-purple">2</div>
+        <h3>Study Smart</h3>
+        <p>Download lecture materials and explore curated academic resources.</p>
       </div>
-      <div class="lp-step-arrow">→</div>
-      <div class="lp-step">
-        <div class="lp-step-num">3</div>
-        <h3>Start Learning</h3>
-        <p>Download materials and practice CBT exams.</p>
+      <div class="lp-how-card">
+        <div class="lp-how-num lp-how-blue">3</div>
+        <h3>Practice CBT Exams</h3>
+        <p>Test your knowledge with timed CBT practice tests.</p>
+      </div>
+      <div class="lp-how-card">
+        <div class="lp-how-num lp-how-yellow">🏆</div>
+        <h3>Track Progress</h3>
+        <p>Monitor your performance and climb the leaderboard.</p>
       </div>
     </div>
   </div>
@@ -3204,21 +3297,20 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
   <div class="apk-card">
     <div class="apk-icon">📲</div>
     <div class="apk-text">
-      <h3>Get the App</h3>
-      <p>Install BABSPHARM Cloud directly on your Android phone — no Play Store needed!</p>
+      <h3>Install the App</h3>
+      <p>Add BABSPHARM Cloud to your home screen — works on Android &amp; iPhone, no app store needed!</p>
       <div class="apk-steps">
-        <span>1️⃣ Download APK</span>
-        <span>2️⃣ Open file</span>
-        <span>3️⃣ Allow & Install</span>
-        <span>4️⃣ Start learning!</span>
+        <span>📱 Android</span>
+        <span>🍎 iPhone</span>
+        <span>💻 Desktop</span>
       </div>
     </div>
     <div class="apk-btns">
-      <a class="apk-btn-android" href="https://github.com/babspharm1-lgtm/BABSPHARM./raw/main/babscloud.apk" download="babscloud.apk">
-        🤖 Download APK<br><span>Android</span>
-      </a>
-      <div class="apk-btn-ios" onclick="alert('iOS: Open in Safari → Share → Add to Home Screen')">
-        🍎 iOS Install<br><span>Safari Guide</span>
+      <div class="apk-btn-android" onclick="triggerInstall()" style="cursor:pointer">
+        📲 Install App<br><span>Android / Desktop</span>
+      </div>
+      <div class="apk-btn-ios" onclick="document.getElementById('ios-install-modal').classList.add('open')">
+        🍎 iPhone Guide<br><span>Safari → Share → Add</span>
       </div>
     </div>
   </div>
@@ -3228,7 +3320,7 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
 <footer class="lp-footer">
   <div class="lp-footer-logo">⚗️ BABSPHARM Cloud</div>
   <p>Your Ultimate Learning Platform — Available 24/7</p>
-  <a class="apk-footer-link" href="https://github.com/babspharm1-lgtm/BABSPHARM./raw/main/babscloud.apk" download="babscloud.apk">📲 Download Android App</a>
+  <p style="margin-top:6px;font-size:.8rem;color:var(--accent);cursor:pointer" onclick="triggerInstall()">📲 Install App on your device</p>
   <p style="margin-top:8px;font-size:.75rem;opacity:.5;">© 2026 BABSPHARM Cloud. All rights reserved.</p>
 </footer>
 
@@ -3919,7 +4011,7 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
     <div id="mm-panel-create">
       <div class="mm-input-panel">
         <h3>📝 Paste lecture notes <span class="mm-ai-tag">AI</span></h3>
-        <textarea class="mm-notes" id="mm-notes-ta" placeholder="Paste your lecture notes or topic here…&#10;&#10;e.g. Pharmacokinetics describes how the body handles a drug. The four main processes are Absorption, Distribution, Metabolism, and Excretion (ADME)…"></textarea>
+        <textarea class="mm-notes" id="mm-notes-ta" placeholder="Paste your lecture notes or topic here…&#10;&#10;e.g. The cell cycle has four main phases: G1, S, G2, and M phase. During S phase, DNA replication occurs…"></textarea>
         <div class="mm-gen-row">
           <button class="btn bp" id="mm-gen-btn" onclick="mmGenerate()">🧠 Generate Map</button>
           <button class="btn bs bsm" onclick="mmLoadDemo()">🎯 Try Demo</button>
@@ -5097,7 +5189,7 @@ D. Rankine</code>
           <option value="🏆 Top Scorer">🏆 Top Scorer</option>
           <option value="📚 Bookworm">📚 Bookworm</option>
           <option value="⚗️ Science Star">⚗️ Science Star</option>
-          <option value="💊 Pharma Pro">💊 Pharma Pro</option>
+          <option value="🎓 Academic Pro">🎓 Academic Pro</option>
           <option value="🔬 Lab Expert">🔬 Lab Expert</option>
           <option value="⚡ Quick Learner">⚡ Quick Learner</option>
           <option value="🎯 Perfect Score">🎯 Perfect Score</option>
@@ -6594,7 +6686,7 @@ async function generateAiQuiz(){
   output.style.display='block';
   output.innerHTML='<div class="ld">Generating '+count+' questions<span class="sp"></span></div>';
   try{
-    var prompt = 'You are a university exam question creator for pharmacy and science students. '+
+    var prompt = 'You are a university exam question creator for students. '+
       'Based on the following text, generate exactly '+count+' '+type+' questions. '+
       'Format each question clearly with a number. For multiple choice include 4 options (A B C D) and mark the correct answer at the end. '+
       'Text:\n\n'+input;
@@ -6635,7 +6727,7 @@ async function runAiAnalyzer(){
       '4. Specific actionable study recommendations\n'+
       '5. A motivational message\n\n'+
       'Be encouraging, specific and helpful.';
-    var reply = await askGroq(prompt, 'You are a supportive academic performance coach for pharmacy students.');
+    var reply = await askGroq(prompt, 'You are a supportive academic performance coach for university students.');
     loading.style.display='none';
     output.style.display='block';
     output.innerHTML='<div style="white-space:pre-wrap;font-size:.82rem;line-height:1.8">'+esc(reply)+'</div>';
@@ -6657,12 +6749,12 @@ async function loadAiDailyTips(){
   if(btn){ btn.disabled=true; btn.textContent='⏳ Generating...'; }
   try{
     var today = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-    var prompt = 'Today is '+today+'. Generate 5 personalized daily study tips for a pharmacy/science student named '+
+    var prompt = 'Today is '+today+'. Generate 5 personalized daily study tips for a university student named '+
       (CU.name||CU.username)+'. Their current points are '+(CU.points||0)+' and study streak is '+(CU.streak||0)+' days. '+
-      'Make the tips practical, motivating and specific to pharmacy or science studies. '+
+      'Make the tips practical, motivating and specific to university studies. '+
       'Include one tip about: study technique, time management, health/wellbeing, memory retention, and exam preparation. '+
       'Format each tip with an emoji and keep them concise.';
-    var reply = await askGroq(prompt, 'You are a motivating academic coach for pharmacy students. Be warm, practical and encouraging.');
+    var reply = await askGroq(prompt, 'You are a motivating academic coach for university students. Be warm, practical and encouraging.');
     loading.style.display='none';
     output.style.display='block';
     output.innerHTML='<div class="ait-date">📅 '+today+'</div>'+
@@ -8232,7 +8324,7 @@ async function aiGroupSuggest(){
   out.style.display='block';
   out.innerHTML='<div class="ld">Generating suggestions<span class="sp"></span></div>';
   try{
-    var prompt = 'Suggest 5 creative, fun and motivating study group names for '+course+' students at a pharmacy/science university. '+
+    var prompt = 'Suggest 5 creative, fun and motivating study group names for '+course+' students at a university. '+
       'Each name should be catchy, relevant to the subject, and make students want to join. '+
       'Format: just the names, one per line, with an emoji at the start.';
     var reply = await askGroq(prompt);
@@ -8654,11 +8746,11 @@ function generateAIQuiz(){
   var course=meta.cat||'General';
   var totalQs=secCount*5;
   var prompt=
-    'You are a senior Nigerian university pharmacy lecturer and expert exam setter for '+course+'. '+
+    'You are a senior Nigerian university lecturer and expert exam setter for '+course+'. '+
     'Create a rigorous, high-quality exam on the topic: '+topic+'. '+
     'Generate exactly '+secCount+' sections, each with exactly 5 unique MCQs at '+diff+' difficulty. '+
     'RULES: Questions must be accurate. Each section covers a different sub-topic. Wrong options must be plausible. '+
-    'For pharmacy/science topics: include drug names, mechanisms, doses, interactions where relevant. '+
+    ''+
     'Name each section after a specific sub-topic of '+topic+'. '+
     'Return ONLY valid JSON. Zero markdown. Start response with [ end with ]. '+
     'Format: [{"name":"sub-topic","questions":[{"text":"...","optA":"...","optB":"...","optC":"...","optD":"...","correct":"A"},...4 more]}]'
@@ -11384,18 +11476,45 @@ function landingGo(tab){
   // manifest.json is served as a static file — no blob needed
   // (keeping manifest var for reference only)
 
-  // Register service worker
-  // Register external sw.js so PWABuilder and browsers can detect it properly
+  // Register service worker inline as a blob — works on any hosting, no sw.js file needed
   if('serviceWorker' in navigator){
-    navigator.serviceWorker.register('/BABSPHARM./sw.js', {scope:'/BABSPHARM./'})
-      .catch(function(){
-        // fallback: try root scope
-        navigator.serviceWorker.register('sw.js').catch(function(){});
-      });
+    var swCode = [
+      "var CACHE='babspharm-v1';",
+      "self.addEventListener('install',function(e){self.skipWaiting();});",
+      "self.addEventListener('activate',function(e){e.waitUntil(clients.claim());});",
+      "self.addEventListener('fetch',function(e){",
+      "  if(e.request.method!=='GET')return;",
+      "  e.respondWith(fetch(e.request).catch(function(){return caches.match(e.request);}));",
+      "});"
+    ].join('\n');
+    var swBlob = new Blob([swCode], {type:'application/javascript'});
+    var swUrl = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swUrl).catch(function(){});
   }
 })();
 
 // PWA INSTALL PROMPT
+// Inject PWA manifest as inline blob — no manifest.json file needed
+(function(){
+  var manifest = {
+    name: 'BABSPHARM Cloud',
+    short_name: 'BABSPHARM',
+    start_url: window.location.pathname || '/',
+    display: 'standalone',
+    background_color: '#0a0919',
+    theme_color: '#7c3aed',
+    description: 'Your Ultimate Learning Platform',
+    icons: [
+      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%237c3aed'/%3E%3Ctext x='96' y='130' font-size='110' text-anchor='middle'%3E⚗️%3C/text%3E%3C/svg%3E", sizes: '192x192', type: 'image/svg+xml' },
+      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%237c3aed'/%3E%3Ctext x='256' y='360' font-size='300' text-anchor='middle'%3E⚗️%3C/text%3E%3C/svg%3E", sizes: '512x512', type: 'image/svg+xml' }
+    ]
+  };
+  var blob = new Blob([JSON.stringify(manifest)], {type:'application/manifest+json'});
+  var url = URL.createObjectURL(blob);
+  var link = document.getElementById('pwa-manifest-link');
+  if(link) link.href = url;
+})();
+
 var pwaInstallPrompt=null;
 window.addEventListener('beforeinstallprompt',function(e){
   e.preventDefault();
@@ -12456,7 +12575,7 @@ function _appendCommentsToPreview(fileId){
     {q:"Your only limit is your mind.",a:"Unknown",e:"🧠"},
     {q:"The harder you work for something, the greater you'll feel when you achieve it.",a:"Unknown",e:"🏆"},
     {q:"Don't stop when you're tired. Stop when you're done.",a:"Unknown",e:"💊"},
-    {q:"Pharmacy is the art and science of healing — embrace both.",a:"Unknown",e:"⚗️"},
+    {q:"Knowledge is the greatest gift — pursue it relentlessly.",a:"Unknown",e:"⚗️"},
     {q:"Every expert was once a beginner. Keep going.",a:"Unknown",e:"📚"},
     {q:"Dream big. Study hard. Stay humble.",a:"Unknown",e:"🌙"},
     {q:"Today's preparation determines tomorrow's achievement.",a:"Unknown",e:"🗓️"},
@@ -14002,10 +14121,10 @@ function deleteSubAdmin(id, name){
       // Extract text hint from filename + ask AI to generate questions
       var context='The quiz file is titled: "'+_qfFileName+'". ';
       var prompt=context+
-        'Generate exactly '+count+' multiple-choice questions based on the likely content of this pharmacy/science study file. '+
+        'Generate exactly '+count+' multiple-choice questions based on the likely content of this study file. '+
         'Return ONLY a JSON array. Each element: {"q":"question text","a":"A","b":"B","c":"C","d":"D","ans":"A"} '+
         'where "ans" is the correct option letter. No extra text, no markdown.';
-      var raw=await askGroq(prompt,'You are an expert pharmacy/science MCQ generator. Output ONLY valid JSON, no markdown fences.');
+      var raw=await askGroq(prompt,'You are an expert MCQ generator. Output ONLY valid JSON, no markdown fences.');
       // Parse JSON
       var cleaned=raw.replace(/```json|```/g,'').trim();
       var qs=JSON.parse(cleaned);
@@ -14141,11 +14260,11 @@ function deleteSubAdmin(id, name){
   var mmPanning=false,mmPX=0,mmPY=0,mmPanStartX=0,mmPanStartY=0;
   var mmSelectedId=null,mmEditingId=null,mmTc={};
 
-  // Demo data — Pharmacokinetics ADME
+  // Demo data — Cell Biology
   var MM_DEMO={
-    title:'Pharmacokinetics (ADME)',
+    title:'Cell Biology (Overview)',
     nodes:[
-      {id:'root',label:'Pharmacokinetics\n(ADME)',level:0,color:0,x:.5,y:.5,parent:null},
+      {id:'root',label:'Cell Biology\n(Overview)',level:0,color:0,x:.5,y:.5,parent:null},
       {id:'n1',label:'Absorption',level:1,color:1,x:.22,y:.27,parent:'root'},
       {id:'n2',label:'Distribution',level:1,color:2,x:.78,y:.27,parent:'root'},
       {id:'n3',label:'Metabolism',level:1,color:3,x:.22,y:.73,parent:'root'},
@@ -14166,9 +14285,9 @@ function deleteSubAdmin(id, name){
   };
 
   var MM_SAVED=[
-    {id:'mm_s1',title:'Pharmacokinetics (ADME)',subject:'Pharmacy',nodes:17,date:'Mar 07'},
+    {id:'mm_s1',title:'Cell Biology (Overview)',subject:'Biology',nodes:17,date:'Mar 07'},
     {id:'mm_s2',title:'Cell Signaling Pathways',subject:'Biochemistry',nodes:14,date:'Mar 05'},
-    {id:'mm_s3',title:'Autonomic Nervous System',subject:'Pharmacology',nodes:20,date:'Mar 02'}
+    {id:'mm_s3',title:'Autonomic Nervous System',subject:'Biology',nodes:20,date:'Mar 02'}
   ];
 
   // Public init called by sut() loader
@@ -14766,6 +14885,55 @@ window.pqAILoadIntoForm = function(sectionsEncoded) {
   }
 };
 
+function pqAILoadIntoForm(sections) {
+  if (!sections || !sections.length) { notify('No questions to load', 'error', '⚠️'); return; }
+  // Clear existing questions
+  var wrap = document.getElementById('pq-questions-wrap');
+  if (wrap) wrap.innerHTML = '';
+  pqQuestionCount = 0;
+  // Flatten all questions from all sections and inject into the form
+  sections.forEach(function(sec) {
+    (sec.questions || []).forEach(function(q) {
+      if (!q.text || !q.text.trim()) return;
+      pqQuestionCount++;
+      var qid = 'pq-q-' + pqQuestionCount;
+      var div = document.createElement('div');
+      div.className = 'card';
+      div.id = qid + '-wrap';
+      div.style.cssText = 'margin-bottom:10px;padding:12px 14px;border:1px solid var(--cb)';
+      var correct = (q.correct || q.ans || 'a').toLowerCase();
+      div.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+          '<div style="font-weight:700;font-size:.83rem">Question ' + pqQuestionCount + (sec.name ? ' <span style="font-weight:400;color:var(--text2);font-size:.72rem">— ' + esc(sec.name) + '</span>' : '') + '</div>' +
+          '<button class="btn bd bsm" onclick="document.getElementById(\'' + qid + '-wrap\').remove()">🗑️</button>' +
+        '</div>' +
+        '<div class="fg" style="margin-bottom:8px"><input type="text" id="' + qid + '-text" placeholder="Question text..." style="width:100%" value="' + esc(q.text||'') + '"/></div>' +
+        '<div class="fg" style="margin-bottom:5px"><label style="font-size:.73rem">Option A</label><input type="text" id="' + qid + '-a" placeholder="Option A" value="' + esc(q.optA||q.a||'') + '"/></div>' +
+        '<div class="fg" style="margin-bottom:5px"><label style="font-size:.73rem">Option B</label><input type="text" id="' + qid + '-b" placeholder="Option B" value="' + esc(q.optB||q.b||'') + '"/></div>' +
+        '<div class="fg" style="margin-bottom:5px"><label style="font-size:.73rem">Option C</label><input type="text" id="' + qid + '-c" placeholder="Option C" value="' + esc(q.optC||q.c||'') + '"/></div>' +
+        '<div class="fg" style="margin-bottom:8px"><label style="font-size:.73rem">Option D</label><input type="text" id="' + qid + '-d" placeholder="Option D" value="' + esc(q.optD||q.d||'') + '"/></div>' +
+        '<div class="fg"><label style="font-size:.73rem">Correct Answer</label>' +
+          '<select id="' + qid + '-ans" style="width:100%;padding:7px 10px;border-radius:8px;background:var(--card);border:1px solid var(--cb);color:var(--text)">' +
+            '<option value="a"' + (correct==='a'?' selected':'') + '>A</option>' +
+            '<option value="b"' + (correct==='b'?' selected':'') + '>B</option>' +
+            '<option value="c"' + (correct==='c'?' selected':'') + '>C</option>' +
+            '<option value="d"' + (correct==='d'?' selected':'') + '>D</option>' +
+          '</select>' +
+        '</div>';
+      wrap.appendChild(div);
+    });
+  });
+  // Clear AI preview area
+  var previewEl = document.getElementById('pqai-preview');
+  if (previewEl) previewEl.innerHTML = '';
+  var statusEl = document.getElementById('pqai-status');
+  if (statusEl) statusEl.innerHTML = '<span style="color:var(--green)">✅ ' + pqQuestionCount + ' question(s) loaded into the form below.</span>';
+  notify('✅ ' + pqQuestionCount + ' questions loaded!', 'success', '📥');
+  // Scroll down to the quiz form
+  var titleEl = document.getElementById('pq-title');
+  if (titleEl) titleEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function pqAddQuestion() {
   pqQuestionCount++;
   var wrap = document.getElementById('pq-questions-wrap');
@@ -14850,9 +15018,11 @@ function pqSaveQuiz() {
 function pqLoadQuizzes() {
   var el = document.getElementById('pq-list');
   if (!el) return;
+  if (!CU) { el.innerHTML = '<div class="empty"><span>🔒</span>Please log in to view your quizzes.</div>'; return; }
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
   fsGet('privatequizzes').then(function(res) {
-    var quizzes = getDocs(res).sort(function(a,b){ return new Date(b.createdAt)-new Date(a.createdAt); });
+    var allDocs = getDocs(res);
+    var quizzes = allDocs.filter(function(q){ return q.createdBy === CU.username; }).sort(function(a,b){ return new Date(b.createdAt)-new Date(a.createdAt); });
     if (!quizzes.length) { el.innerHTML = '<div class="empty"><span>🔗</span>No private quizzes yet.</div>'; return; }
     el.innerHTML = quizzes.map(function(q) {
       var link = window.location.origin + window.location.pathname + '?pquiz=' + q.__id;
