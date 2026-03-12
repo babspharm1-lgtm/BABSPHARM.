@@ -5759,6 +5759,10 @@ D. Rankine</code>
             <input type="file" id="pqai-img" accept="image/*" style="display:none" onchange="pqAIPreviewImage(this)"/>
             <div class="btn bs bsm" style="width:100%;justify-content:center;pointer-events:none">📸 Upload Screenshot</div>
           </label>
+          <label style="flex:1;min-width:140px;cursor:pointer">
+            <input type="file" id="pqai-pdf" accept=".pdf,application/pdf" style="display:none" onchange="pqAIPreviewPDF(this)"/>
+            <div class="btn bs bsm" style="width:100%;justify-content:center;pointer-events:none">📄 Upload PDF</div>
+          </label>
           <div style="flex:1;min-width:120px">
             <select id="pqai-sections" style="width:100%;padding:8px 10px;border-radius:8px;background:var(--card);border:1px solid var(--cb);color:var(--text);font-size:.8rem">
               <option value="auto">Auto-detect sections</option>
@@ -5773,6 +5777,14 @@ D. Rankine</code>
         <div id="pqai-img-preview" style="display:none;margin-bottom:8px">
           <img id="pqai-img-thumb" style="max-width:100%;max-height:160px;border-radius:8px;border:1px solid var(--cb)"/>
           <button class="btn bd bsm" style="margin-top:5px" onclick="pqAIClearImage()">✕ Remove image</button>
+        </div>
+        <div id="pqai-pdf-preview" style="display:none;margin-bottom:8px;padding:10px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.25);border-radius:10px;display:none;align-items:center;gap:10px">
+          <span style="font-size:1.4rem">📄</span>
+          <div style="flex:1;min-width:0">
+            <div id="pqai-pdf-name" style="font-size:.8rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+            <div id="pqai-pdf-pages" style="font-size:.7rem;color:var(--text2)"></div>
+          </div>
+          <button class="btn bd bsm" onclick="pqAIClearPDF()">✕</button>
         </div>
         <div id="pqai-status" style="font-size:.75rem;color:var(--text2);min-height:18px;margin-bottom:6px"></div>
         <button class="btn bp" style="width:100%;justify-content:center" onclick="pqAIExtract()">⚡ Extract Questions with AI</button>
@@ -14476,13 +14488,172 @@ function pqAIClearImage() {
   document.getElementById('pqai-status').textContent = '';
 }
 
+// ── PDF upload for private quiz AI extractor ──
+var pqAIPDFText = null;
+
+window.pqAIPreviewPDF = function(inp) {
+  var file = inp.files[0];
+  if (!file) return;
+  var statusEl = document.getElementById('pqai-status');
+  var previewEl = document.getElementById('pqai-pdf-preview');
+  statusEl.textContent = '⏳ Reading PDF...';
+  previewEl.style.display = 'flex';
+  document.getElementById('pqai-pdf-name').textContent = file.name;
+  document.getElementById('pqai-pdf-pages').textContent = 'Loading...';
+  pqAIPDFText = null;
+
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var typedarray = new Uint8Array(e.target.result);
+    var loadingTask = pdfjsLib.getDocument({ data: typedarray });
+    loadingTask.promise.then(function(pdf) {
+      var totalPages = pdf.numPages;
+      document.getElementById('pqai-pdf-pages').textContent = totalPages + ' page(s)';
+      var textPromises = [];
+      for (var i = 1; i <= totalPages; i++) {
+        textPromises.push(pdf.getPage(i).then(function(page) {
+          return page.getTextContent().then(function(tc) {
+            return tc.items.map(function(item) { return item.str; }).join(' ');
+          });
+        }));
+      }
+      Promise.all(textPromises).then(function(pages) {
+        pqAIPDFText = pages.join('\n');
+        statusEl.textContent = '✅ PDF loaded (' + totalPages + ' pages) — ready to extract';
+      });
+    }).catch(function(err) {
+      statusEl.textContent = '❌ Could not read PDF: ' + err.message;
+      previewEl.style.display = 'none';
+    });
+  };
+  reader.readAsArrayBuffer(file);
+};
+
+window.pqAIClearPDF = function() {
+  pqAIPDFText = null;
+  document.getElementById('pqai-pdf-preview').style.display = 'none';
+  document.getElementById('pqai-pdf-name').textContent = '';
+  document.getElementById('pqai-pdf-pages').textContent = '';
+  document.getElementById('pqai-pdf').value = '';
+  document.getElementById('pqai-status').textContent = '';
+};
+
+// ── Editable extracted sections store ──
+var pqAIEditableSections = [];
+
+function pqRenderEditablePreview(sections) {
+  pqAIEditableSections = JSON.parse(JSON.stringify(sections)); // deep copy
+  var previewEl = document.getElementById('pqai-preview');
+
+  function render() {
+    var totalQs = pqAIEditableSections.reduce(function(s, sec) { return s + (sec.questions ? sec.questions.length : 0); }, 0);
+    var html = '<div style="border:1px solid rgba(74,222,128,.25);border-radius:12px;padding:12px;background:rgba(74,222,128,.05);margin-bottom:8px">' +
+      '<div style="font-size:.78rem;color:var(--green);font-weight:700;margin-bottom:10px">📋 ' + pqAIEditableSections.length + ' section(s) · ' + totalQs + ' questions — edit or reorder below</div>';
+
+    pqAIEditableSections.forEach(function(sec, si) {
+      html += '<div style="background:rgba(167,139,250,.07);border:1px solid rgba(167,139,250,.18);border-radius:10px;padding:10px;margin-bottom:10px">' +
+        // Section header with name edit + move buttons
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">' +
+          '<span style="font-size:.8rem">📂</span>' +
+          '<input id="pqai-sec-name-'+si+'" value="'+esc(sec.name)+'" style="flex:1;padding:5px 8px;border-radius:7px;background:rgba(0,0,0,.3);border:1px solid var(--cb);color:var(--text);font-size:.78rem;font-weight:700" onchange="pqAIEditableSections['+si+'].name=this.value"/>' +
+          (si > 0 ? '<button class="btn bs bsm" style="padding:4px 8px;font-size:.7rem" onclick="pqAIMoveSection('+si+',-1)">▲</button>' : '') +
+          (si < pqAIEditableSections.length - 1 ? '<button class="btn bs bsm" style="padding:4px 8px;font-size:.7rem" onclick="pqAIMoveSection('+si+',1)">▼</button>' : '') +
+          '<button class="btn bd bsm" style="padding:4px 8px;font-size:.7rem" onclick="pqAIDeleteSection('+si+')" title="Delete section">🗑️</button>' +
+        '</div>';
+
+      // Questions list
+      (sec.questions || []).forEach(function(q, qi) {
+        html += '<div style="background:rgba(0,0,0,.2);border-radius:8px;padding:8px;margin-bottom:6px;border:1px solid rgba(255,255,255,.06)">' +
+          '<div style="display:flex;align-items:flex-start;gap:6px;margin-bottom:5px">' +
+            '<span style="font-size:.72rem;color:var(--text2);margin-top:3px;flex-shrink:0">'+(qi+1)+'.</span>' +
+            '<input id="pqai-q-'+si+'-'+qi+'-text" value="'+esc(q.text||'')+'" style="flex:1;padding:5px 8px;border-radius:6px;background:rgba(0,0,0,.3);border:1px solid var(--cb);color:var(--text);font-size:.76rem" onchange="pqAIEditableSections['+si+'].questions['+qi+'].text=this.value"/>' +
+            (qi > 0 ? '<button class="btn bs bsm" style="padding:3px 6px;font-size:.65rem" onclick="pqAIMoveQuestion('+si+','+qi+',-1)">▲</button>' : '') +
+            (qi < (sec.questions||[]).length - 1 ? '<button class="btn bs bsm" style="padding:3px 6px;font-size:.65rem" onclick="pqAIMoveQuestion('+si+','+qi+',1)">▼</button>' : '') +
+            '<button class="btn bd bsm" style="padding:3px 6px;font-size:.65rem" onclick="pqAIDeleteQuestion('+si+','+qi+')" title="Delete question">✕</button>' +
+          '</div>' +
+          '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px">' +
+          ['A','B','C','D'].map(function(opt, oi) {
+            var fld = 'opt' + opt;
+            var isCorrect = (q.correct || '').toUpperCase() === opt;
+            return '<div style="display:flex;align-items:center;gap:3px">' +
+              '<span style="font-size:.65rem;font-weight:700;color:'+(isCorrect?'var(--green)':'var(--text2)')+';width:12px">'+opt+'</span>' +
+              '<input value="'+esc(q[fld]||'')+'" style="flex:1;padding:3px 6px;border-radius:5px;background:rgba(0,0,0,.25);border:1px solid '+(isCorrect?'rgba(74,222,128,.4)':'var(--cb)')+';color:var(--text);font-size:.72rem" onchange="pqAIEditableSections['+si+'].questions['+qi+'][\''+fld+'\']=this.value"/>' +
+            '</div>';
+          }).join('') +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:6px">' +
+            '<span style="font-size:.7rem;color:var(--text2)">✓ Correct:</span>' +
+            '<select style="padding:3px 7px;border-radius:6px;background:rgba(0,0,0,.3);border:1px solid var(--cb);color:var(--green);font-size:.73rem;font-weight:700" onchange="pqAIEditableSections['+si+'].questions['+qi+'].correct=this.value">' +
+            ['A','B','C','D'].map(function(opt) {
+              return '<option value="'+opt+'"'+((q.correct||'').toUpperCase()===opt?' selected':'')+'>'+opt+'</option>';
+            }).join('') +
+            '</select>' +
+          '</div>' +
+        '</div>';
+      });
+
+      // Add question to section button
+      html += '<button class="btn bs bsm" style="width:100%;justify-content:center;margin-top:4px;font-size:.72rem" onclick="pqAIAddBlankQuestion('+si+')">➕ Add Question</button>' +
+      '</div>';
+    });
+
+    html += '</div>' +
+      '<div style="display:flex;gap:8px">' +
+        '<button class="btn bg2" style="flex:1;justify-content:center" id="pqai-load-btn">📥 Load into Quiz Form</button>' +
+        '<button class="btn bs bsm" style="white-space:nowrap" onclick="pqAIAddBlankSection()">➕ Section</button>' +
+      '</div>';
+
+    previewEl.innerHTML = html;
+
+    document.getElementById('pqai-load-btn').addEventListener('click', function() {
+      pqAILoadIntoForm(pqAIEditableSections);
+    });
+  }
+
+  render();
+
+  // Expose mutation helpers
+  window.pqAIMoveSection = function(si, dir) {
+    var ni = si + dir;
+    if (ni < 0 || ni >= pqAIEditableSections.length) return;
+    var tmp = pqAIEditableSections[si];
+    pqAIEditableSections[si] = pqAIEditableSections[ni];
+    pqAIEditableSections[ni] = tmp;
+    render();
+  };
+  window.pqAIDeleteSection = function(si) {
+    if (!confirm('Delete this section and all its questions?')) return;
+    pqAIEditableSections.splice(si, 1);
+    render();
+  };
+  window.pqAIMoveQuestion = function(si, qi, dir) {
+    var qs = pqAIEditableSections[si].questions;
+    var ni = qi + dir;
+    if (ni < 0 || ni >= qs.length) return;
+    var tmp = qs[qi]; qs[qi] = qs[ni]; qs[ni] = tmp;
+    render();
+  };
+  window.pqAIDeleteQuestion = function(si, qi) {
+    pqAIEditableSections[si].questions.splice(qi, 1);
+    render();
+  };
+  window.pqAIAddBlankQuestion = function(si) {
+    pqAIEditableSections[si].questions.push({ text: '', optA: '', optB: '', optC: '', optD: '', correct: 'A' });
+    render();
+  };
+  window.pqAIAddBlankSection = function() {
+    pqAIEditableSections.push({ name: 'New Section', questions: [] });
+    render();
+  };
+}
+
 function pqAIExtract() {
   var text = (document.getElementById('pqai-text').value || '').trim();
   var secPref = document.getElementById('pqai-sections').value;
   var apiKey = GROQ_KEY;
 
   if (!apiKey) { notify('No Groq API key set. Go to Settings → API Key.', 'error', '🔑'); return; }
-  if (!text && !pqAIImageBase64) { notify('Paste some text or upload a screenshot first', 'error', '⚠️'); return; }
+  if (!text && !pqAIImageBase64 && !pqAIPDFText) { notify('Paste some text, upload a PDF, or upload a screenshot first', 'error', '⚠️'); return; }
 
   var statusEl = document.getElementById('pqai-status');
   var previewEl = document.getElementById('pqai-preview');
@@ -14508,25 +14679,9 @@ function pqAIExtract() {
     try {
       var sections = parseQuizSectionsJSON(raw);
       if (!sections.length) throw new Error('No sections found');
-      statusEl.innerHTML = '<span style="color:var(--green)">✅ Extracted ' + sections.length + ' section(s) — review below then click "Load into Form"</span>';
-      // Preview
       var totalQs = sections.reduce(function(s, sec) { return s + (sec.questions ? sec.questions.length : 0); }, 0);
-      var html = '<div style="border:1px solid rgba(74,222,128,.25);border-radius:12px;padding:12px;background:rgba(74,222,128,.05);margin-bottom:8px">' +
-        '<div style="font-size:.78rem;color:var(--green);font-weight:700;margin-bottom:8px">📋 ' + sections.length + ' section(s) · ' + totalQs + ' questions extracted</div>';
-      sections.forEach(function(sec, si) {
-        html += '<div style="margin-bottom:10px">' +
-          '<div style="font-size:.78rem;font-weight:800;color:var(--accent);margin-bottom:4px">📂 ' + esc(sec.name) + ' (' + (sec.questions || []).length + ' Qs)</div>';
-        (sec.questions || []).slice(0, 2).forEach(function(q, qi) {
-          html += '<div style="font-size:.72rem;color:var(--text2);padding:3px 0">· ' + esc((q.text || '').slice(0, 80)) + (q.text && q.text.length > 80 ? '…' : '') + '</div>';
-        });
-        if ((sec.questions || []).length > 2) {
-          html += '<div style="font-size:.7rem;color:var(--text2);opacity:.6">...and ' + ((sec.questions || []).length - 2) + ' more</div>';
-        }
-        html += '</div>';
-      });
-      html += '</div>';
-      html += '<button class="btn bg2" style="width:100%;justify-content:center" onclick="pqAILoadIntoForm(' + encodeURIComponent(JSON.stringify(sections)) + ')">📥 Load into Quiz Form</button>';
-      previewEl.innerHTML = html;
+      statusEl.innerHTML = '<span style="color:var(--green)">✅ Extracted ' + sections.length + ' section(s), ' + totalQs + ' questions — edit below then click Load</span>';
+      pqRenderEditablePreview(sections);
     } catch(err) {
       statusEl.innerHTML = '<span style="color:var(--red)">❌ Could not parse response: ' + (err.message || 'unknown error') + '. Try again or simplify your input.</span>';
     }
@@ -14568,7 +14723,9 @@ function pqAIExtract() {
     xhr.ontimeout = function() { onError('Timed out — try again'); };
     xhr.send(visionBody);
   } else {
-    _groqCall(apiKey, [{ role: 'user', content: prompt + '\n\nContent to extract from:\n' + text }], onSuccess, onError);
+    // Use PDF text if available, otherwise use pasted text
+    var sourceText = pqAIPDFText ? pqAIPDFText : text;
+    _groqCall(apiKey, [{ role: 'user', content: prompt + '\n\nContent to extract from:\n' + sourceText }], onSuccess, onError);
   }
 }
 
@@ -14884,8 +15041,19 @@ function pqCheckURLParam() {
   var params = new URLSearchParams(window.location.search);
   var quizId = params.get('pquiz');
   if (!quizId) return;
-  document.getElementById('pq-take-overlay').style.display = 'block';
+  var takeOverlay = document.getElementById('pq-take-overlay');
+  var nameCard = document.getElementById('pq-name-card');
+  takeOverlay.style.display = 'block';
+
+  // Disable Start button and show loading hint while fetching quiz data
+  var startBtn = nameCard.querySelector('button.btn.bp');
+  if (startBtn) { startBtn.disabled = true; startBtn.textContent = '⏳ Loading quiz...'; }
+
   fsGet('privatequizzes').then(function(res) {
+    // Re-enable start button after data loads
+    var startBtn2 = document.getElementById('pq-name-card').querySelector('button.btn.bp');
+    if (startBtn2) { startBtn2.disabled = false; startBtn2.innerHTML = '🚀 Start Quiz'; }
+
     var quizzes = getDocs(res);
     var quiz = quizzes.find(function(q){ return q.__id === quizId; });
     if (!quiz) {
@@ -14933,7 +15101,15 @@ function pqCheckURLParam() {
 
     pqTakeData = quiz;
     pqTakeData.__quizId = quizId;
-  }).catch(function() {});
+  }).catch(function() {
+    document.getElementById('pq-name-card').innerHTML =
+      '<div style="text-align:center;padding:30px">' +
+      '<div style="font-size:2rem">⚠️</div>' +
+      '<div style="font-weight:700;margin-top:10px;color:var(--red)">Failed to Load Quiz</div>' +
+      '<div style="color:var(--text2);font-size:.85rem;margin-top:6px;line-height:1.6">Could not connect to the server.<br>Please check your internet connection and refresh the page.</div>' +
+      '<button class="btn bp" style="margin-top:16px;width:100%;justify-content:center" onclick="location.reload()">🔄 Refresh</button>' +
+      '</div>';
+  });
 }
 
 function pqStartTaking() {
