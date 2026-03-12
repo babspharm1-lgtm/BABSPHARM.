@@ -97,7 +97,7 @@ public class MainActivity extends Activity {
             }
         });
 
-        webView.loadUrl("file:///android_asset/index.html");
+        webView.loadUrl("https://babspharm1-lgtm.github.io/BABSPHARM.");
     }
 
     @Override
