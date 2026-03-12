@@ -63,9 +63,12 @@ public class MainActivity extends Activity {
                     return false;
                 }
                 if (url.startsWith("http://") || url.startsWith("https://")) {
-                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                    startActivity(intent);
-                    return true;
+    if (url.contains("babspharm1-lgtm.github.io")) {
+        return false;
+    }
+    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+    startActivity(intent);
+    return true;
                 }
                 return false;
             }
