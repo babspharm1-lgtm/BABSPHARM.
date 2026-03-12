@@ -1,21 +1,15 @@
-plugins {
-    id 'com.android.application'
-}
-android {
-    compileSdk 34
-    namespace 'com.babspharm.cloud'
-    defaultConfig {
-        applicationId "com.babspharm.cloud"
-        minSdk 21
-        targetSdk 34
-        versionCode 1
-        versionName "1.0"
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.4.2'
     }
 }
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.6.1'
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
 }
