@@ -4057,6 +4057,7 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
     <button class="anb anb-green" onclick="sat2('emailkey',this)">📧 Email</button>
     <button class="anb anb-pink" onclick="sat2('emailblast',this)">📨 Blast</button>
     <button class="anb anb-blue" onclick="sat2('raining',this)" style="background:linear-gradient(135deg,#0369a1,#38bdf8)">🌧️ Raining Sem</button>
+    <button class="anb" onclick="sat2('pquiz',this)" style="background:linear-gradient(135deg,#7c3aed,#a78bfa)">🔗 Private Quiz</button>
   </div>
 
   <div class="tp on" id="at-files">
@@ -5737,6 +5738,121 @@ D. Rankine</code>
     </div>
   </div>
 
+  <!-- ══ PRIVATE QUIZ PANEL ══ -->
+  <div class="tp" id="at-pquiz">
+    <div class="card" style="margin-bottom:14px">
+      <div class="st"><span class="dot"></span>🔗 Create Private Quiz</div>
+      <p style="font-size:.78rem;color:var(--text2);margin-bottom:14px">Create a quiz, share the link. Students submit answers but won't see their score — only you see the results ranked by score.</p>
+
+      <!-- AI Assistant -->
+      <div style="background:linear-gradient(135deg,rgba(109,40,217,.12),rgba(167,139,250,.06));border:1px solid rgba(167,139,250,.25);border-radius:14px;padding:14px;margin-bottom:14px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="font-size:1.2rem">🤖</div>
+          <div>
+            <div style="font-family:var(--fh);font-weight:800;font-size:.88rem">AI Question Extractor</div>
+            <div style="font-size:.72rem;color:var(--text2)">Paste text, HTML or upload a screenshot — AI will extract the questions for you</div>
+          </div>
+        </div>
+        <textarea id="pqai-text" placeholder="Paste your questions here as text or HTML... e.g. copied from a Word doc, website, WhatsApp message, PDF text..." style="width:100%;min-height:100px;padding:10px;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid var(--cb);color:var(--text);font-size:.8rem;resize:vertical;line-height:1.5;margin-bottom:8px"></textarea>
+        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+          <label style="flex:1;min-width:140px;cursor:pointer">
+            <input type="file" id="pqai-img" accept="image/*" style="display:none" onchange="pqAIPreviewImage(this)"/>
+            <div class="btn bs bsm" style="width:100%;justify-content:center;pointer-events:none">📸 Upload Screenshot</div>
+          </label>
+          <div style="flex:1;min-width:120px">
+            <select id="pqai-sections" style="width:100%;padding:8px 10px;border-radius:8px;background:var(--card);border:1px solid var(--cb);color:var(--text);font-size:.8rem">
+              <option value="auto">Auto-detect sections</option>
+              <option value="1">1 section</option>
+              <option value="2">2 sections</option>
+              <option value="3">3 sections</option>
+              <option value="4">4 sections</option>
+              <option value="5">5 sections</option>
+            </select>
+          </div>
+        </div>
+        <div id="pqai-img-preview" style="display:none;margin-bottom:8px">
+          <img id="pqai-img-thumb" style="max-width:100%;max-height:160px;border-radius:8px;border:1px solid var(--cb)"/>
+          <button class="btn bd bsm" style="margin-top:5px" onclick="pqAIClearImage()">✕ Remove image</button>
+        </div>
+        <div id="pqai-status" style="font-size:.75rem;color:var(--text2);min-height:18px;margin-bottom:6px"></div>
+        <button class="btn bp" style="width:100%;justify-content:center" onclick="pqAIExtract()">⚡ Extract Questions with AI</button>
+        <div id="pqai-preview" style="margin-top:10px"></div>
+      </div>
+      <div class="fg"><label>Quiz Title</label><input type="text" id="pq-title" placeholder="e.g. Anatomy Test 1"/></div>
+      <div class="fg"><label>Description (optional)</label><input type="text" id="pq-desc" placeholder="e.g. 100 level Anatomy mid-semester test"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="fg" style="margin-bottom:0"><label>⏰ Opens At</label><input type="datetime-local" id="pq-open-time" style="width:100%"/></div>
+        <div class="fg" style="margin-bottom:0"><label>⛔ Closes At</label><input type="datetime-local" id="pq-close-time" style="width:100%"/></div>
+      </div>
+      <p style="font-size:.72rem;color:var(--text2);margin-bottom:12px;padding:8px 10px;background:rgba(167,139,250,.08);border-radius:8px;border-left:3px solid var(--accent)">💡 Students who try to open the link before <strong>Opens At</strong> or after <strong>Closes At</strong> will be blocked. Leave both blank to allow access anytime.</p>
+      <div id="pq-questions-wrap" style="margin-bottom:12px"></div>
+      <button class="btn bs bsm" onclick="pqAddQuestion()" style="margin-bottom:12px;width:100%;justify-content:center">➕ Add Question</button>
+      <button class="btn bp" style="width:100%;justify-content:center" onclick="pqSaveQuiz()">💾 Save & Generate Link</button>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="st"><span class="dot"></span>📋 My Private Quizzes</div>
+      <div id="pq-list"><div class="ld">Loading<span class="sp"></span></div></div>
+    </div>
+    <!-- Results modal -->
+    <div id="pq-results-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.7);overflow-y:auto;padding:16px">
+      <div style="background:var(--bg2);border-radius:var(--r-xl);max-width:500px;margin:0 auto;padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div style="font-family:var(--fh);font-weight:800;font-size:1rem" id="pqr-title">Results</div>
+          <button class="btn bs bsm" onclick="document.getElementById('pq-results-modal').style.display='none'">✕ Close</button>
+        </div>
+        <div id="pqr-body"></div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn bp" style="flex:1;justify-content:center" onclick="pqDownloadPDF()">📄 Download PDF</button>
+          <button class="btn bg2" style="flex:1;justify-content:center" onclick="pqShareWA()">📲 Share via WhatsApp</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ QUIZ TAKING OVERLAY ══ -->
+  <!-- Edit Time Modal -->
+  <div id="pq-edittime-modal" style="display:none;position:fixed;inset:0;z-index:1001;background:rgba(0,0,0,.75);align-items:center;justify-content:center;padding:16px">
+    <div style="background:var(--bg2);border-radius:var(--r-xl);max-width:380px;width:100%;padding:20px">
+      <div style="font-family:var(--fh);font-weight:800;font-size:1rem;margin-bottom:6px">⏰ Edit Quiz Time Window</div>
+      <div style="font-size:.8rem;color:var(--text2);margin-bottom:14px" id="pqet-name"></div>
+      <input type="hidden" id="pqet-id"/>
+      <div class="fg"><label>⏰ Opens At</label><input type="datetime-local" id="pqet-open" style="width:100%"/></div>
+      <div class="fg"><label>⛔ Closes At</label><input type="datetime-local" id="pqet-close" style="width:100%"/></div>
+      <p style="font-size:.72rem;color:var(--text2);margin-bottom:14px;padding:8px 10px;background:rgba(167,139,250,.08);border-radius:8px;border-left:3px solid var(--accent)">💡 To <strong>reopen</strong> a closed quiz — just set a new <strong>Closes At</strong> time in the future. Students can enter again immediately.</p>
+      <div style="display:flex;gap:8px">
+        <button class="btn bs" style="flex:1;justify-content:center" onclick="document.getElementById('pq-edittime-modal').style.display='none'">Cancel</button>
+        <button class="btn bp" style="flex:1;justify-content:center" onclick="pqSaveEditTime()">💾 Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pq-take-overlay" style="display:none;position:fixed;inset:0;z-index:2000;background:radial-gradient(circle at top,#2b0f55,#120022 70%);overflow-y:auto;padding:20px 16px">
+    <div style="max-width:520px;margin:0 auto">
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="font-size:2rem">⚗️</div>
+        <div style="font-family:var(--fh);font-size:1.3rem;font-weight:800;background:linear-gradient(90deg,var(--accent),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">BABSPHARM Cloud</div>
+      </div>
+      <div class="card" style="margin-bottom:14px" id="pq-name-card">
+        <div class="st"><span class="dot"></span>📝 Enter Your Details</div>
+        <div class="fg"><label>Your Full Name</label><input type="text" id="pq-taker-name" placeholder="e.g. John Adebayo"/></div>
+        <button class="btn bp" style="width:100%;justify-content:center" onclick="pqStartTaking()">🚀 Start Quiz</button>
+      </div>
+      <div id="pq-take-body" style="display:none">
+        <div class="card" style="margin-bottom:10px;padding:12px 14px">
+          <div style="font-family:var(--fh);font-weight:800;font-size:1rem" id="pq-take-title"></div>
+          <div style="font-size:.78rem;color:var(--text2);margin-top:3px" id="pq-take-desc"></div>
+        </div>
+        <div id="pq-take-questions"></div>
+        <button class="btn bp" style="width:100%;justify-content:center;margin-top:10px" onclick="pqSubmitAnswers()">✅ Submit Quiz</button>
+      </div>
+      <div id="pq-take-done" style="display:none;text-align:center;padding:40px 20px">
+        <div style="font-size:3rem;margin-bottom:16px">🎉</div>
+        <div style="font-family:var(--fh);font-size:1.2rem;font-weight:800;margin-bottom:10px">Submitted Successfully!</div>
+        <div style="color:var(--text2);font-size:.88rem;line-height:1.6">Your answers have been recorded.<br>Your instructor will share the results with everyone.</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
@@ -6087,8 +6203,8 @@ async function askGroq(prompt, systemPrompt){
     body: JSON.stringify({
       model: GROQ_MODEL,
       messages: messages,
-      max_tokens: 1024,
-      temperature: 0.7
+      max_tokens: 4096,
+      temperature: 0.4
     })
   });
   var data = await response.json();
@@ -6649,7 +6765,7 @@ async function sendAiMessage(){
       body: JSON.stringify({
         model: GROQ_MODEL,
         messages: messages,
-        max_tokens: 1024,
+        max_tokens: 4096,
         temperature: 0.7
       })
     });
@@ -8398,13 +8514,16 @@ function saveBulkPaste(){
 var GROQ_URL='https://api.groq.com/openai/v1/chat/completions';
 var GROQ_MODEL='llama-3.3-70b-versatile';
 
-function _groqCall(apiKey,messages,onSuccess,onError){
-  var body=JSON.stringify({model:GROQ_MODEL,messages:messages,max_tokens:4000,temperature:0.7});
+function _groqCall(apiKey,messages,onSuccess,onError,opts){
+  opts=opts||{};
+  var sysMsg={role:'system',content:'You are an expert academic assistant for BABSPHARM Cloud, a Nigerian university pharmacy education platform. You are highly intelligent, precise and thorough. You produce well-structured, accurate, professional responses. For quiz and question generation you are meticulous — you never skip questions, always return valid JSON, and ensure every answer is correct.'};
+  var fullMessages=[sysMsg].concat(messages);
+  var body=JSON.stringify({model:GROQ_MODEL,messages:fullMessages,max_tokens:opts.max_tokens||8000,temperature:opts.temperature!==undefined?opts.temperature:0.3});
   var xhr=new XMLHttpRequest();
   xhr.open('POST',GROQ_URL,true);
   xhr.setRequestHeader('Content-Type','application/json');
   xhr.setRequestHeader('Authorization','Bearer '+apiKey);
-  xhr.timeout=60000;
+  xhr.timeout=90000;
   xhr.onreadystatechange=function(){
     if(xhr.readyState!==4)return;
     try{
@@ -8442,18 +8561,20 @@ function callGeminiRaw(apiKey,bodyObj,onSuccess,onError){
       } else {
         // Use vision model for images
         var visionBody=JSON.stringify({
-          model:'meta-llama/llama-4-scout-17b-16e-instruct',
-          messages:[{role:'user',content:[
+          model:'meta-llama/llama-4-maverick-17b-128e-instruct',
+          messages:[
+            {role:'system',content:'You are an expert academic assistant for BABSPHARM Cloud, a Nigerian university pharmacy education platform. You are highly intelligent, precise and thorough. For quiz extraction from images you are meticulous — extract every question visible, return valid JSON only, and ensure correct answers are accurate.'},
+            {role:'user',content:[
             {type:'image_url',image_url:{url:'data:'+mime+';base64,'+imagePart.inline_data.data}},
-            {type:'text',text:textPart||'Extract all multiple-choice questions from this image. Return only a JSON array.'}
+            {type:'text',text:textPart||'Extract all multiple-choice questions from this image. Return only a JSON array of objects with fields: text, optA, optB, optC, optD, correct (uppercase letter).'}
           ]}],
-          max_tokens:4000
+          max_tokens:8000
         });
         var xhr2=new XMLHttpRequest();
         xhr2.open('POST',GROQ_URL,true);
         xhr2.setRequestHeader('Content-Type','application/json');
         xhr2.setRequestHeader('Authorization','Bearer '+apiKey);
-        xhr2.timeout=60000;
+        xhr2.timeout=90000;
         xhr2.onreadystatechange=function(){
           if(xhr2.readyState!==4)return;
           try{
@@ -8521,13 +8642,14 @@ function generateAIQuiz(){
   var course=meta.cat||'General';
   var totalQs=secCount*5;
   var prompt=
-    'You are a university exam question writer for '+course+'. Topic: '+topic+'. '+
-    'Generate exactly '+secCount+' sections, each with exactly 5 multiple-choice questions at '+diff+' difficulty. '+
-    'Name each section after a specific sub-topic of "'+topic+'". '+
-    'Return ONLY valid JSON — an array of section objects. No markdown, no explanation, no preamble. '+
-    'Each section object must have: "name" (section sub-topic name) and "questions" (array of 5 question objects). '+
-    'Each question object must have: "text", "optA", "optB", "optC", "optD", "correct" (uppercase letter A/B/C/D). '+
-    'Example format: [{"name":"Acid-Base Theory","questions":[{"text":"What is pH of pure water?","optA":"5","optB":"6","optC":"7","optD":"8","correct":"C"},...4 more...]},...more sections...]';
+    'You are a senior Nigerian university pharmacy lecturer and expert exam setter for '+course+'. '+
+    'Create a rigorous, high-quality exam on the topic: '+topic+'. '+
+    'Generate exactly '+secCount+' sections, each with exactly 5 unique MCQs at '+diff+' difficulty. '+
+    'RULES: Questions must be accurate. Each section covers a different sub-topic. Wrong options must be plausible. '+
+    'For pharmacy/science topics: include drug names, mechanisms, doses, interactions where relevant. '+
+    'Name each section after a specific sub-topic of '+topic+'. '+
+    'Return ONLY valid JSON. Zero markdown. Start response with [ end with ]. '+
+    'Format: [{"name":"sub-topic","questions":[{"text":"...","optA":"...","optB":"...","optC":"...","optD":"...","correct":"A"},...4 more]}]'
 
   callGemini(apiKey,prompt,function(raw){
     btn.disabled=false;btn.textContent='🤖 Generate Sectioned Quiz with AI';
@@ -9138,11 +9260,21 @@ var currentQuiz=null,userAnswers={},quizTimer=null,quizTimerPerQ=null,perQTimeLe
 var currentSections=[],currentSectionIdx=0,sectionAnswers=[],quizTotalScore=0,quizTotalQs=0;
 
 function startQuiz(id){
+  // Check if student is banned from this quiz
+  var cheatKey = 'quiz_cheat_' + id + '_' + (CU ? CU.username : '');
+  var banned = false;
+  try { banned = localStorage.getItem(cheatKey) === 'banned'; } catch(e) {}
+  if (banned) {
+    notify('⛔ You were removed from this quiz for switching apps. You cannot retake it.', 'error', '🚫');
+    return;
+  }
   fsGet('quizzes').then(function(res){
     var quiz=getDocs(res).find(function(q){return q.__id===id;});
     if(!quiz){notify('Not found','error','❌');return;}
     currentQuiz=quiz;
     quizStartTime=Date.now();
+    acStartAntiCheat(id);
+    showCalculator();
     // Parse sections
     var sections=[];
     try{sections=JSON.parse(quiz.sections||'[]');}catch(e){}
@@ -9328,6 +9460,8 @@ function pickAnswer(qi,opt,total){
 function cancelQuiz(){
   if(quizTimer){clearInterval(quizTimer);quizTimer=null;}
   if(quizTimerPerQ){clearInterval(quizTimerPerQ);quizTimerPerQ=null;}
+  acStopAntiCheat();
+  hideCalculator();
   currentQuiz=null;userAnswers={};quizStartTime=null;
   currentSections=[];currentSectionIdx=0;sectionAnswers=[];
   document.getElementById('quiz-take-view').style.display='none';
@@ -9337,6 +9471,8 @@ function cancelQuiz(){
 function submitQuiz(){
   if(quizTimer){clearInterval(quizTimer);quizTimer=null;}
   if(quizTimerPerQ){clearInterval(quizTimerPerQ);quizTimerPerQ=null;}
+  acStopAntiCheat();
+  hideCalculator();
   // Build flat userAnswers from all sections for scoring & review
   userAnswers={};
   var allQs=[];
@@ -13189,7 +13325,7 @@ loadSavedTheme();
         },
         body: JSON.stringify({
           model: GROQ_MODEL,
-          max_tokens: 1024,
+          max_tokens: 4096,
           messages: [
             { role: 'system', content: SYSTEM_PROMPT },
             ...chatHistory
@@ -14306,6 +14442,818 @@ function deleteSubAdmin(id, name){
     mmCloseShare();
   };
 })();
+
+// ══════════════════════════════════
+// PRIVATE QUIZ SYSTEM
+// ══════════════════════════════════
+var pqCurrentQuiz = null;
+var pqQuestionCount = 0;
+
+// ── PRIVATE QUIZ AI EXTRACTOR ──
+var pqAIImageBase64 = null;
+var pqAIImageMime = null;
+
+function pqAIPreviewImage(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    pqAIImageBase64 = e.target.result.split(',')[1];
+    pqAIImageMime = file.type || 'image/jpeg';
+    document.getElementById('pqai-img-thumb').src = e.target.result;
+    document.getElementById('pqai-img-preview').style.display = 'block';
+    document.getElementById('pqai-status').textContent = '✅ Image loaded — ready to extract';
+  };
+  reader.readAsDataURL(file);
+}
+
+function pqAIClearImage() {
+  pqAIImageBase64 = null;
+  pqAIImageMime = null;
+  document.getElementById('pqai-img-preview').style.display = 'none';
+  document.getElementById('pqai-img-thumb').src = '';
+  document.getElementById('pqai-img').value = '';
+  document.getElementById('pqai-status').textContent = '';
+}
+
+function pqAIExtract() {
+  var text = (document.getElementById('pqai-text').value || '').trim();
+  var secPref = document.getElementById('pqai-sections').value;
+  var apiKey = GROQ_KEY;
+
+  if (!apiKey) { notify('No Groq API key set. Go to Settings → API Key.', 'error', '🔑'); return; }
+  if (!text && !pqAIImageBase64) { notify('Paste some text or upload a screenshot first', 'error', '⚠️'); return; }
+
+  var statusEl = document.getElementById('pqai-status');
+  var previewEl = document.getElementById('pqai-preview');
+  statusEl.innerHTML = '<span style="color:var(--accent)">⏳ AI is reading and extracting questions...</span>';
+  previewEl.innerHTML = '';
+
+  var secInstruction = secPref === 'auto'
+    ? 'Group questions into logical sections based on topic or subject area. Use between 1 and 5 sections as appropriate.'
+    : 'Group ALL questions into exactly ' + secPref + ' section(s) of equal size.';
+
+  var prompt =
+    'You are an expert question extractor and academic assistant for BABSPHARM Cloud pharmacy university. ' +
+    'Extract EVERY SINGLE multiple-choice question from the provided content — do not skip any. ' +
+    secInstruction + ' ' +
+    'RULES: Extract all questions even if formatting is messy or inconsistent. Clean up spelling and formatting errors. ' +
+    'Use provided answer key if available, otherwise use expert knowledge to pick the correct answer. ' +
+    'If fewer than 4 options exist for a question, fill missing ones with "". ' +
+    'Return ONLY valid JSON. Zero markdown. Start with [ end with ]. ' +
+    'Each section: {"name":"descriptive title","questions":[...]}. ' +
+    'Each question: {"text":"...","optA":"...","optB":"...","optC":"...","optD":"...","correct":"A|B|C|D"}.'
+
+  function onSuccess(raw) {
+    try {
+      var sections = parseQuizSectionsJSON(raw);
+      if (!sections.length) throw new Error('No sections found');
+      statusEl.innerHTML = '<span style="color:var(--green)">✅ Extracted ' + sections.length + ' section(s) — review below then click "Load into Form"</span>';
+      // Preview
+      var totalQs = sections.reduce(function(s, sec) { return s + (sec.questions ? sec.questions.length : 0); }, 0);
+      var html = '<div style="border:1px solid rgba(74,222,128,.25);border-radius:12px;padding:12px;background:rgba(74,222,128,.05);margin-bottom:8px">' +
+        '<div style="font-size:.78rem;color:var(--green);font-weight:700;margin-bottom:8px">📋 ' + sections.length + ' section(s) · ' + totalQs + ' questions extracted</div>';
+      sections.forEach(function(sec, si) {
+        html += '<div style="margin-bottom:10px">' +
+          '<div style="font-size:.78rem;font-weight:800;color:var(--accent);margin-bottom:4px">📂 ' + esc(sec.name) + ' (' + (sec.questions || []).length + ' Qs)</div>';
+        (sec.questions || []).slice(0, 2).forEach(function(q, qi) {
+          html += '<div style="font-size:.72rem;color:var(--text2);padding:3px 0">· ' + esc((q.text || '').slice(0, 80)) + (q.text && q.text.length > 80 ? '…' : '') + '</div>';
+        });
+        if ((sec.questions || []).length > 2) {
+          html += '<div style="font-size:.7rem;color:var(--text2);opacity:.6">...and ' + ((sec.questions || []).length - 2) + ' more</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+      html += '<button class="btn bg2" style="width:100%;justify-content:center" onclick="pqAILoadIntoForm(' + encodeURIComponent(JSON.stringify(sections)) + ')">📥 Load into Quiz Form</button>';
+      previewEl.innerHTML = html;
+    } catch(err) {
+      statusEl.innerHTML = '<span style="color:var(--red)">❌ Could not parse response: ' + (err.message || 'unknown error') + '. Try again or simplify your input.</span>';
+    }
+  }
+
+  function onError(err) {
+    statusEl.innerHTML = '<span style="color:var(--red)">❌ AI error: ' + err + '</span>';
+  }
+
+  if (pqAIImageBase64) {
+    // Vision call with optional text overlay
+    var visionBody = JSON.stringify({
+      model: 'meta-llama/llama-4-maverick-17b-128e-instruct',
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: 'data:' + pqAIImageMime + ';base64,' + pqAIImageBase64 } },
+          { type: 'text', text: prompt + (text ? '\n\nAdditional context:\n' + text : '') }
+        ]
+      }],
+      max_tokens: 8000
+    });
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', GROQ_URL, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('Authorization', 'Bearer ' + apiKey);
+    xhr.timeout = 60000;
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState !== 4) return;
+      try {
+        var data = JSON.parse(xhr.responseText || '{}');
+        if (data.error) { onError(data.error.message || 'API error'); return; }
+        var content = ((((data.choices || [])[0]) || {}).message || {}).content || '';
+        if (!content) { onError('Empty response from AI'); return; }
+        onSuccess(content);
+      } catch(e) { onError('Parse error: ' + e.message); }
+    };
+    xhr.onerror = function() { onError('Network error'); };
+    xhr.ontimeout = function() { onError('Timed out — try again'); };
+    xhr.send(visionBody);
+  } else {
+    _groqCall(apiKey, [{ role: 'user', content: prompt + '\n\nContent to extract from:\n' + text }], onSuccess, onError);
+  }
+}
+
+window.pqAILoadIntoForm = function(sectionsEncoded) {
+  try {
+    var sections = JSON.parse(decodeURIComponent(sectionsEncoded));
+    // Clear existing questions
+    document.getElementById('pq-questions-wrap').innerHTML = '';
+    pqQuestionCount = 0;
+
+    sections.forEach(function(sec, si) {
+      // Add a section divider label
+      var divider = document.createElement('div');
+      divider.style.cssText = 'font-size:.75rem;font-weight:800;color:var(--accent);padding:10px 0 4px;border-top:' + (si > 0 ? '1px solid rgba(167,139,250,.2)' : 'none') + ';margin-top:' + (si > 0 ? '8px' : '0');
+      divider.textContent = '📂 ' + sec.name;
+      document.getElementById('pq-questions-wrap').appendChild(divider);
+
+      (sec.questions || []).forEach(function(q) {
+        pqAddQuestion();
+        var n = pqQuestionCount;
+        var setVal = function(id, val) { var el = document.getElementById(id); if (el) el.value = val || ''; };
+        setVal('pq-q-' + n + '-text', q.text);
+        setVal('pq-q-' + n + '-a', q.optA);
+        setVal('pq-q-' + n + '-b', q.optB);
+        setVal('pq-q-' + n + '-c', q.optC);
+        setVal('pq-q-' + n + '-d', q.optD);
+        setVal('pq-q-' + n + '-ans', (q.correct || 'a').toLowerCase());
+      });
+    });
+
+    notify('✅ ' + sections.length + ' section(s) loaded into form! Fill in the title and save.', 'success', '📥');
+    document.getElementById('pqai-preview').innerHTML = '<div style="font-size:.78rem;color:var(--green);padding:8px;text-align:center">✅ Questions loaded! Scroll down to review, add title and save.</div>';
+    // Scroll to title field
+    document.getElementById('pq-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('pq-title').focus();
+  } catch(e) {
+    notify('Failed to load questions: ' + e.message, 'error', '❌');
+  }
+};
+
+function pqAddQuestion() {
+  pqQuestionCount++;
+  var wrap = document.getElementById('pq-questions-wrap');
+  var qid = 'pq-q-' + pqQuestionCount;
+  var div = document.createElement('div');
+  div.className = 'card';
+  div.id = qid + '-wrap';
+  div.style.cssText = 'margin-bottom:10px;padding:12px 14px;border:1px solid var(--cb)';
+  div.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+      '<div style="font-weight:700;font-size:.83rem">Question ' + pqQuestionCount + '</div>' +
+      '<button class="btn bd bsm" onclick="document.getElementById(\'' + qid + '-wrap\').remove()">🗑️</button>' +
+    '</div>' +
+    '<div class="fg" style="margin-bottom:8px"><input type="text" id="' + qid + '-text" placeholder="Question text..." style="width:100%"/></div>' +
+    '<div class="fg" style="margin-bottom:5px"><label style="font-size:.73rem">Option A</label><input type="text" id="' + qid + '-a" placeholder="Option A"/></div>' +
+    '<div class="fg" style="margin-bottom:5px"><label style="font-size:.73rem">Option B</label><input type="text" id="' + qid + '-b" placeholder="Option B"/></div>' +
+    '<div class="fg" style="margin-bottom:5px"><label style="font-size:.73rem">Option C</label><input type="text" id="' + qid + '-c" placeholder="Option C"/></div>' +
+    '<div class="fg" style="margin-bottom:8px"><label style="font-size:.73rem">Option D</label><input type="text" id="' + qid + '-d" placeholder="Option D"/></div>' +
+    '<div class="fg"><label style="font-size:.73rem">Correct Answer</label>' +
+      '<select id="' + qid + '-ans" style="width:100%;padding:7px 10px;border-radius:8px;background:var(--card);border:1px solid var(--cb);color:var(--text)">' +
+        '<option value="a">A</option><option value="b">B</option><option value="c">C</option><option value="d">D</option>' +
+      '</select>' +
+    '</div>';
+  wrap.appendChild(div);
+}
+
+function pqGetQuestions() {
+  var qs = [];
+  var wrap = document.getElementById('pq-questions-wrap');
+  if (!wrap) return qs;
+  var qDivs = wrap.querySelectorAll('[id$="-wrap"]');
+  qDivs.forEach(function(div) {
+    var base = div.id.replace('-wrap','');
+    var text = document.getElementById(base+'-text');
+    var a = document.getElementById(base+'-a');
+    var b = document.getElementById(base+'-b');
+    var c = document.getElementById(base+'-c');
+    var d = document.getElementById(base+'-d');
+    var ans = document.getElementById(base+'-ans');
+    if (text && text.value.trim()) {
+      qs.push({ text: text.value.trim(), a: (a&&a.value)||'', b: (b&&b.value)||'', c: (c&&c.value)||'', d: (d&&d.value)||'', ans: ans?ans.value:'a' });
+    }
+  });
+  return qs;
+}
+
+function pqSaveQuiz() {
+  var title = document.getElementById('pq-title').value.trim();
+  var desc = document.getElementById('pq-desc').value.trim();
+  var openTime = document.getElementById('pq-open-time').value;
+  var closeTime = document.getElementById('pq-close-time').value;
+  var questions = pqGetQuestions();
+  if (!title) { notify('Enter a quiz title', 'error', '⚠️'); return; }
+  if (questions.length === 0) { notify('Add at least one question', 'error', '⚠️'); return; }
+  if (openTime && closeTime && new Date(openTime) >= new Date(closeTime)) {
+    notify('Close time must be after open time', 'error', '⚠️'); return;
+  }
+  var id = 'pq_' + Date.now();
+  fsAdd('privatequizzes', { id: id, title: title, desc: desc, questions: JSON.stringify(questions),
+    openTime: openTime || '', closeTime: closeTime || '',
+    createdAt: new Date().toISOString(), createdBy: CU ? CU.username : 'admin' })
+    .then(function(res) {
+      var docId = res.name ? res.name.split('/').pop() : id;
+      var link = window.location.origin + window.location.pathname + '?pquiz=' + docId;
+      notify('✅ Quiz created!', 'success', '🔗');
+      document.getElementById('pq-title').value = '';
+      document.getElementById('pq-desc').value = '';
+      document.getElementById('pq-open-time').value = '';
+      document.getElementById('pq-close-time').value = '';
+      document.getElementById('pq-questions-wrap').innerHTML = '';
+      pqQuestionCount = 0;
+      pqLoadQuizzes();
+      setTimeout(function() {
+        var msg = '🔗 Quiz Link:\n' + link + '\n\nShare this with your students!';
+        alert(msg);
+        if (navigator.clipboard) navigator.clipboard.writeText(link).catch(function(){});
+      }, 400);
+    })
+    .catch(function() { notify('Failed to save quiz', 'error', '❌'); });
+}
+
+function pqLoadQuizzes() {
+  var el = document.getElementById('pq-list');
+  if (!el) return;
+  el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
+  fsGet('privatequizzes').then(function(res) {
+    var quizzes = getDocs(res).sort(function(a,b){ return new Date(b.createdAt)-new Date(a.createdAt); });
+    if (!quizzes.length) { el.innerHTML = '<div class="empty"><span>🔗</span>No private quizzes yet.</div>'; return; }
+    el.innerHTML = quizzes.map(function(q) {
+      var link = window.location.origin + window.location.pathname + '?pquiz=' + q.__id;
+      var qs = [];
+      try { qs = JSON.parse(q.questions||'[]'); } catch(e) {}
+      var timeInfo = '';
+      if (q.openTime || q.closeTime) {
+        var fmt = function(dt) { return dt ? new Date(dt).toLocaleString([],{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'; };
+        timeInfo = '<div style="font-size:.7rem;color:var(--text2);margin-top:3px">⏰ '+fmt(q.openTime)+' → ⛔ '+fmt(q.closeTime)+'</div>';
+      }
+      return '<div class="pu-item" style="flex-direction:column;align-items:flex-start;gap:8px">' +
+        '<div style="display:flex;justify-content:space-between;width:100%;align-items:center">' +
+          '<div>' +
+            '<div style="font-weight:700;font-size:.88rem">' + esc(q.title) + '</div>' +
+            '<div style="font-size:.72rem;color:var(--text2)">' + qs.length + ' questions · ' + (q.createdAt?q.createdAt.substring(0,10):'') + '</div>' +
+            timeInfo +
+          '</div>' +
+          '<div style="display:flex;gap:5px">' +
+            '<button class="btn bg2 bsm" onclick="pqViewResults(\'' + q.__id + '\',\'' + esc(q.title) + '\')">📊 Results</button>' +
+            '<button class="btn bs bsm" onclick="pqCopyLink(\'' + q.__id + '\')">🔗 Link</button>' +
+            '<button class="btn bo bsm" onclick="pqEditTime(\'' + q.__id + '\',\'' + esc(q.title) + '\',\'' + (q.openTime||'') + '\',\'' + (q.closeTime||'') + '\')">⏰ Edit Time</button>' +
+            '<button class="btn bd bsm" onclick="pqDeleteQuiz(\'' + q.__id + '\',\'' + esc(q.title) + '\')">🗑️</button>' +
+          '</div>' +
+        '</div>' +
+        '<div style="width:100%;background:rgba(255,255,255,.06);border-radius:8px;padding:7px 10px;font-size:.72rem;color:var(--text2);word-break:break-all">' + link + '</div>' +
+      '</div>';
+    }).join('');
+  }).catch(function() { el.innerHTML = '<div class="empty"><span>⚠️</span>Failed to load quizzes.</div>'; });
+}
+
+function pqCopyLink(id) {
+  var link = window.location.origin + window.location.pathname + '?pquiz=' + id;
+  if (navigator.clipboard) navigator.clipboard.writeText(link).then(function(){ notify('🔗 Link copied!','success','✅'); }).catch(function(){ notify(link,'info','🔗'); });
+  else notify(link, 'info', '🔗');
+}
+
+function pqEditTime(id, title, openTime, closeTime) {
+  document.getElementById('pqet-id').value = id;
+  document.getElementById('pqet-name').textContent = '📝 ' + title;
+  document.getElementById('pqet-open').value = openTime || '';
+  document.getElementById('pqet-close').value = closeTime || '';
+  document.getElementById('pq-edittime-modal').style.display = 'flex';
+}
+
+function pqSaveEditTime() {
+  var id = document.getElementById('pqet-id').value;
+  var openTime = document.getElementById('pqet-open').value;
+  var closeTime = document.getElementById('pqet-close').value;
+  if (openTime && closeTime && new Date(openTime) >= new Date(closeTime)) {
+    notify('Close time must be after open time', 'error', '⚠️'); return;
+  }
+  fsPatch('projects/' + PROJECT + '/databases/(default)/documents/privatequizzes/' + id,
+    { openTime: openTime || '', closeTime: closeTime || '' })
+    .then(function() {
+      document.getElementById('pq-edittime-modal').style.display = 'none';
+      notify('✅ Time window updated!', 'success', '⏰');
+      pqLoadQuizzes();
+    })
+    .catch(function() { notify('Failed to update time', 'error', '❌'); });
+}
+
+function pqDeleteQuiz(id, title) {
+  if (!confirm('Delete quiz "' + title + '"? This will also delete all submissions.')) return;
+  fsDel('projects/' + PROJECT + '/databases/(default)/documents/privatequizzes/' + id)
+    .then(function() {
+      notify('🗑️ Quiz deleted', 'warn', '✅');
+      pqLoadQuizzes();
+    });
+}
+
+// ── RESULTS ──
+var pqResultsData = [];
+var pqResultsTitle = '';
+
+function pqViewResults(quizId, title) {
+  pqResultsTitle = title;
+  document.getElementById('pqr-title').textContent = '📊 ' + title + ' — Results';
+  document.getElementById('pqr-body').innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
+  document.getElementById('pq-results-modal').style.display = 'block';
+
+  Promise.all([
+    fsGet('privatequizzes').then(function(r){ return getDocs(r).find(function(q){return q.__id===quizId;}); }),
+    fsGetAll('pqresults_' + quizId)
+  ]).then(function(results) {
+    var quiz = results[0];
+    var submissions = results[1] ? getDocs(results[1]) : [];
+    if (!quiz) { document.getElementById('pqr-body').innerHTML = '<div class="empty">Quiz not found.</div>'; return; }
+    var questions = [];
+    try { questions = JSON.parse(quiz.questions||'[]'); } catch(e) {}
+    var total = questions.length;
+
+    // Score each submission
+    var scored = submissions.map(function(sub) {
+      var answers = {};
+      try { answers = JSON.parse(sub.answers||'{}'); } catch(e) {}
+      var score = 0;
+      questions.forEach(function(q, i) { if (answers['q'+i] === q.ans) score++; });
+      return { name: sub.name||'Unknown', score: score, total: total, submittedAt: sub.submittedAt||'' };
+    }).sort(function(a,b){ return b.score - a.score; });
+
+    pqResultsData = { quiz: quiz, scored: scored, total: total };
+
+    if (!scored.length) {
+      document.getElementById('pqr-body').innerHTML = '<div class="empty"><span>📭</span>No submissions yet.</div>';
+      return;
+    }
+
+    var html = '<div style="font-size:.78rem;color:var(--text2);margin-bottom:10px">' + scored.length + ' submission(s) · ' + total + ' questions</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:6px">';
+    scored.forEach(function(s, i) {
+      var pct = total > 0 ? Math.round(s.score/total*100) : 0;
+      var color = pct >= 70 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--red)';
+      html += '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.05);border-radius:10px;border-left:3px solid '+color+'">' +
+        '<div style="font-family:var(--fh);font-weight:800;font-size:.9rem;color:'+color+';min-width:24px">#'+(i+1)+'</div>' +
+        '<div style="flex:1">' +
+          '<div style="font-weight:600;font-size:.85rem">' + esc(s.name) + '</div>' +
+        '</div>' +
+        '<div style="text-align:right">' +
+          '<div style="font-weight:800;font-size:.95rem;color:'+color+'">' + s.score + '/' + total + '</div>' +
+          '<div style="font-size:.68rem;color:var(--text2)">' + pct + '%</div>' +
+        '</div>' +
+      '</div>';
+    });
+    html += '</div>';
+    document.getElementById('pqr-body').innerHTML = html;
+  }).catch(function() {
+    document.getElementById('pqr-body').innerHTML = '<div class="empty"><span>⚠️</span>Failed to load results.</div>';
+  });
+}
+
+function pqDownloadPDF() {
+  if (!pqResultsData || !pqResultsData.scored) { notify('No results to download', 'error', '⚠️'); return; }
+  var scored = pqResultsData.scored;
+  var total = pqResultsData.total;
+  var title = pqResultsTitle;
+
+  // Build PDF using print/jsPDF approach via hidden iframe
+  var rows = scored.map(function(s, i) {
+    var pct = total > 0 ? Math.round(s.score/total*100) : 0;
+    return '<tr style="border-bottom:1px solid #eee">' +
+      '<td style="padding:7px 10px;font-weight:700">#'+(i+1)+'</td>' +
+      '<td style="padding:7px 10px">' + s.name + '</td>' +
+      '<td style="padding:7px 10px;font-weight:700;color:'+(pct>=70?'#16a34a':pct>=50?'#d97706':'#dc2626')+'">'+s.score+'/'+total+'</td>' +
+      '<td style="padding:7px 10px;font-weight:700;color:'+(pct>=70?'#16a34a':pct>=50?'#d97706':'#dc2626')+'">'+pct+'%</td>' +
+    '</tr>';
+  }).join('');
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+title+'</title>' +
+    '<style>body{font-family:Arial,sans-serif;padding:30px;color:#111}h1{font-size:1.3rem;margin-bottom:4px}' +
+    '.sub{color:#666;font-size:.85rem;margin-bottom:20px}' +
+    'table{width:100%;border-collapse:collapse;font-size:.9rem}' +
+    'th{background:#0f0c29;color:#fff;padding:9px 10px;text-align:left}' +
+    'tr:nth-child(even){background:#f5f5f5}' +
+    '.footer{margin-top:24px;font-size:.75rem;color:#999;text-align:center}' +
+    '@media print{button{display:none}}' +
+    '</style></head><body>' +
+    '<h1>📊 ' + title + '</h1>' +
+    '<div class="sub">Generated by BABSPHARM Cloud · ' + new Date().toLocaleString() + ' · ' + scored.length + ' submissions</div>' +
+    '<table><thead><tr><th>Rank</th><th>Name</th><th>Score</th><th>%</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+    '<div class="footer">BABSPHARM Cloud ⚗️ — Private Quiz Results</div>' +
+    '<br><button onclick="window.print()" style="padding:10px 20px;background:#7c3aed;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.9rem">🖨️ Print / Save as PDF</button>' +
+    '</body></html>';
+
+  var w = window.open('', '_blank');
+  if (w) { w.document.write(html); w.document.close(); }
+  else notify('Please allow popups to download PDF', 'warn', '⚠️');
+}
+
+function pqShareWA() {
+  if (!pqResultsData || !pqResultsData.scored) return;
+  var scored = pqResultsData.scored;
+  var total = pqResultsData.total;
+  var text = '📊 *' + pqResultsTitle + ' — Results*\n\n';
+  scored.forEach(function(s, i) {
+    var pct = total > 0 ? Math.round(s.score/total*100) : 0;
+    text += '#'+(i+1)+' '+s.name+' — '+s.score+'/'+total+' ('+pct+'%)\n';
+  });
+  text += '\n_Powered by BABSPHARM Cloud ⚗️_';
+  window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+}
+
+// ── QUIZ TAKING (public, via URL param) ──
+var pqTakeData = null;
+
+function pqCheckURLParam() {
+  var params = new URLSearchParams(window.location.search);
+  var quizId = params.get('pquiz');
+  if (!quizId) return;
+  document.getElementById('pq-take-overlay').style.display = 'block';
+  fsGet('privatequizzes').then(function(res) {
+    var quizzes = getDocs(res);
+    var quiz = quizzes.find(function(q){ return q.__id === quizId; });
+    if (!quiz) {
+      document.getElementById('pq-name-card').innerHTML = '<div style="text-align:center;padding:30px"><div style="font-size:2rem">😕</div><div style="font-weight:700;margin-top:10px">Quiz not found</div><div style="color:var(--text2);font-size:.85rem;margin-top:6px">This quiz link may be invalid or expired.</div></div>';
+      return;
+    }
+
+    // ── Time window check ──
+    var now = new Date();
+    if (quiz.openTime && now < new Date(quiz.openTime)) {
+      var opensAt = new Date(quiz.openTime).toLocaleString([],{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      document.getElementById('pq-name-card').innerHTML =
+        '<div style="text-align:center;padding:30px">' +
+        '<div style="font-size:2.5rem;margin-bottom:12px">⏳</div>' +
+        '<div style="font-family:var(--fh);font-weight:800;font-size:1rem;margin-bottom:8px">Quiz Not Open Yet</div>' +
+        '<div style="color:var(--text2);font-size:.85rem;line-height:1.6">This quiz will open on:<br><strong style="color:var(--accent)">' + opensAt + '</strong></div>' +
+        '<div style="font-size:.78rem;color:var(--text2);margin-top:12px">Please come back at the scheduled time.</div>' +
+        '</div>';
+      return;
+    }
+
+    if (quiz.closeTime && now > new Date(quiz.closeTime)) {
+      var closedAt = new Date(quiz.closeTime).toLocaleString([],{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      document.getElementById('pq-name-card').innerHTML =
+        '<div style="text-align:center;padding:30px">' +
+        '<div style="font-size:2.5rem;margin-bottom:12px">⛔</div>' +
+        '<div style="font-family:var(--fh);font-weight:800;font-size:1rem;margin-bottom:8px">Quiz Closed</div>' +
+        '<div style="color:var(--text2);font-size:.85rem;line-height:1.6">This quiz closed on:<br><strong style="color:var(--red)">' + closedAt + '</strong></div>' +
+        '<div style="font-size:.78rem;color:var(--text2);margin-top:12px">The submission window has ended. Contact your instructor.</div>' +
+        '</div>';
+      return;
+    }
+
+    // Show countdown to close time if set
+    if (quiz.closeTime) {
+      var closeMs = new Date(quiz.closeTime) - now;
+      var closeMins = Math.floor(closeMs / 60000);
+      var closeHrs = Math.floor(closeMins / 60);
+      var timeLeft = closeHrs > 0 ? closeHrs + 'h ' + (closeMins % 60) + 'm' : closeMins + ' min';
+      var warn = document.createElement('div');
+      warn.style.cssText = 'background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:8px 12px;font-size:.78rem;color:var(--yellow);text-align:center;margin-bottom:12px';
+      warn.innerHTML = '⏰ Quiz closes in <strong>' + timeLeft + '</strong>';
+      document.getElementById('pq-name-card').insertBefore(warn, document.getElementById('pq-name-card').firstChild);
+    }
+
+    pqTakeData = quiz;
+    pqTakeData.__quizId = quizId;
+  }).catch(function() {});
+}
+
+function pqStartTaking() {
+  var name = document.getElementById('pq-taker-name').value.trim();
+  if (!name) { notify('Please enter your name', 'error', '⚠️'); return; }
+  if (!pqTakeData) { notify('Quiz not loaded. Please refresh.', 'error', '❌'); return; }
+  var questions = [];
+  try { questions = JSON.parse(pqTakeData.questions||'[]'); } catch(e) {}
+  if (!questions.length) { notify('This quiz has no questions.', 'error', '⚠️'); return; }
+
+  document.getElementById('pq-name-card').style.display = 'none';
+  document.getElementById('pq-take-body').style.display = 'block';
+  document.getElementById('pq-take-title').textContent = pqTakeData.title;
+  document.getElementById('pq-take-desc').textContent = pqTakeData.desc || '';
+
+  var html = '';
+  questions.forEach(function(q, i) {
+    html += '<div class="card" style="margin-bottom:10px;padding:12px 14px">' +
+      '<div style="font-weight:700;font-size:.88rem;margin-bottom:10px">'+(i+1)+'. '+esc(q.text)+'</div>';
+    ['a','b','c','d'].forEach(function(opt) {
+      if (!q[opt]) return;
+      html += '<label style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;margin-bottom:5px;background:rgba(255,255,255,.05);border:1px solid var(--cb)">' +
+        '<input type="radio" name="pq_q'+i+'" value="'+opt+'" style="accent-color:var(--accent)"/> ' +
+        '<span style="font-size:.85rem"><strong>'+opt.toUpperCase()+'.</strong> '+esc(q[opt])+'</span>' +
+      '</label>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('pq-take-questions').innerHTML = html;
+}
+
+function pqSubmitAnswers() {
+  var name = document.getElementById('pq-taker-name').value.trim();
+  if (!pqTakeData) return;
+  var questions = [];
+  try { questions = JSON.parse(pqTakeData.questions||'[]'); } catch(e) {}
+
+  var answers = {};
+  questions.forEach(function(q, i) {
+    var sel = document.querySelector('input[name="pq_q'+i+'"]:checked');
+    answers['q'+i] = sel ? sel.value : '';
+  });
+
+  var unanswered = questions.filter(function(q,i){ return !answers['q'+i]; }).length;
+  if (unanswered > 0) {
+    if (!confirm('You have ' + unanswered + ' unanswered question(s). Submit anyway?')) return;
+  }
+
+  fsAdd('pqresults_' + pqTakeData.__quizId, {
+    name: name,
+    answers: JSON.stringify(answers),
+    submittedAt: new Date().toISOString()
+  }).then(function() {
+    document.getElementById('pq-take-body').style.display = 'none';
+    document.getElementById('pq-take-done').style.display = 'block';
+  }).catch(function() { notify('Submission failed. Please try again.', 'error', '❌'); });
+}
+
+// Load quizzes when admin opens the panel
+(function() {
+  var origSat2 = typeof sat2 === 'function' ? sat2 : null;
+  if (origSat2) {
+    var _origSat2 = sat2;
+    sat2 = function(name, btn) {
+      _origSat2(name, btn);
+      if (name === 'pquiz') pqLoadQuizzes();
+    };
+  }
+})();
+
+// Check URL param on page load
+window.addEventListener('load', function() {
+  setTimeout(pqCheckURLParam, 1200);
+});
+
+
+// ══════════════════════════════════
+// ANTI-CHEAT SYSTEM
+// ══════════════════════════════════
+var acQuizId = null;
+var acCheatCount = 0;
+var acWarningShown = false;
+
+function acStartAntiCheat(quizId) {
+  acQuizId = quizId;
+  acCheatCount = 0;
+  acWarningShown = false;
+
+  // Disable right-click
+  document.addEventListener('contextmenu', acBlockEvent, true);
+  // Disable copy, cut, paste
+  document.addEventListener('copy', acBlockEvent, true);
+  document.addEventListener('cut', acBlockEvent, true);
+  document.addEventListener('paste', acBlockEvent, true);
+  // Disable keyboard shortcuts (Ctrl+C, Ctrl+A, Ctrl+V, etc.)
+  document.addEventListener('keydown', acBlockKeys, true);
+  // Detect tab switch / minimize
+  document.addEventListener('visibilitychange', acOnVisibilityChange);
+  // Detect window blur (switch app on desktop)
+  window.addEventListener('blur', acOnWindowBlur);
+
+  // Disable text selection via CSS
+  var style = document.getElementById('ac-style');
+  if (!style) {
+    style = document.createElement('style');
+    style.id = 'ac-style';
+    document.head.appendChild(style);
+  }
+  style.textContent = '#quiz-take-view { user-select: none; -webkit-user-select: none; }';
+}
+
+function acStopAntiCheat() {
+  acQuizId = null;
+  document.removeEventListener('contextmenu', acBlockEvent, true);
+  document.removeEventListener('copy', acBlockEvent, true);
+  document.removeEventListener('cut', acBlockEvent, true);
+  document.removeEventListener('paste', acBlockEvent, true);
+  document.removeEventListener('keydown', acBlockKeys, true);
+  document.removeEventListener('visibilitychange', acOnVisibilityChange);
+  window.removeEventListener('blur', acOnWindowBlur);
+  var style = document.getElementById('ac-style');
+  if (style) style.textContent = '';
+}
+
+function acBlockEvent(e) {
+  if (!acQuizId) return;
+  var tv = document.getElementById('quiz-take-view');
+  if (!tv || tv.style.display === 'none') return;
+  e.preventDefault();
+  e.stopPropagation();
+  notify('⛔ Not allowed during quiz!', 'error', '🚫');
+  return false;
+}
+
+function acBlockKeys(e) {
+  if (!acQuizId) return;
+  var tv = document.getElementById('quiz-take-view');
+  if (!tv || tv.style.display === 'none') return;
+  // Block Ctrl/Cmd combos except normal typing
+  if (e.ctrlKey || e.metaKey) {
+    var blocked = ['c','a','v','x','u','s','p','f','e','r'];
+    if (blocked.indexOf(e.key.toLowerCase()) !== -1) {
+      e.preventDefault();
+      e.stopPropagation();
+      notify('⛔ Keyboard shortcuts disabled during quiz!', 'error', '🚫');
+    }
+  }
+  // Block F12, PrintScreen
+  if (e.key === 'F12' || e.key === 'PrintScreen') {
+    e.preventDefault();
+    notify('⛔ Not allowed during quiz!', 'error', '🚫');
+  }
+}
+
+function acOnVisibilityChange() {
+  if (!acQuizId) return;
+  var tv = document.getElementById('quiz-take-view');
+  if (!tv || tv.style.display === 'none') return;
+  if (document.hidden) {
+    acCheatCount++;
+    acHandleCheat();
+  }
+}
+
+function acOnWindowBlur() {
+  if (!acQuizId) return;
+  var tv = document.getElementById('quiz-take-view');
+  if (!tv || tv.style.display === 'none') return;
+  // Small delay to avoid false positives from calculator or alerts
+  setTimeout(function() {
+    if (!document.hasFocus() && acQuizId) {
+      acCheatCount++;
+      acHandleCheat();
+    }
+  }, 500);
+}
+
+function acHandleCheat() {
+  if (!acQuizId || !currentQuiz) return;
+  var quizId = acQuizId;
+  var username = CU ? CU.username : 'unknown';
+
+  // Log cheat attempt to Firestore
+  fsAdd('cheatlog', {
+    username: username,
+    name: CU ? CU.name : '',
+    quizId: quizId,
+    quizTitle: currentQuiz ? currentQuiz.title : '',
+    attempts: String(acCheatCount),
+    at: new Date().toISOString()
+  }).catch(function(){});
+
+  // Show warning overlay and auto-submit
+  var overlay = document.createElement('div');
+  overlay.id = 'ac-cheat-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML =
+    '<div style="background:#1a0a2e;border:2px solid var(--red);border-radius:20px;padding:28px 24px;max-width:340px;text-align:center">' +
+      '<div style="font-size:2.5rem;margin-bottom:12px">🚨</div>' +
+      '<div style="font-family:var(--fh);font-weight:800;font-size:1.1rem;color:var(--red);margin-bottom:10px">Quiz Violation Detected!</div>' +
+      '<div style="font-size:.85rem;color:var(--text2);line-height:1.6;margin-bottom:18px">You left the quiz app. Your answers have been auto-submitted and you have been <strong style="color:var(--red)">permanently removed</strong> from this quiz.</div>' +
+      '<div style="font-size:.78rem;color:var(--text2);margin-bottom:18px">This incident has been reported to your instructor.</div>' +
+      '<button class="btn bd" style="width:100%;justify-content:center" onclick="acDismissAndSubmit()">OK — I understand</button>' +
+    '</div>';
+  document.body.appendChild(overlay);
+
+  // Ban student from retaking
+  var cheatKey = 'quiz_cheat_' + quizId + '_' + username;
+  try { localStorage.setItem(cheatKey, 'banned'); } catch(e) {}
+
+  // Auto-submit after 4 seconds
+  setTimeout(function() {
+    if (acQuizId) acDismissAndSubmit();
+  }, 4000);
+}
+
+window.acDismissAndSubmit = function() {
+  var overlay = document.getElementById('ac-cheat-overlay');
+  if (overlay) overlay.remove();
+  if (currentQuiz) {
+    // Auto-submit whatever they answered so far
+    acStopAntiCheat();
+    hideCalculator();
+    submitQuiz();
+  }
+};
+
+// ══════════════════════════════════
+// CALCULATOR WIDGET
+// ══════════════════════════════════
+function showCalculator() {
+  var existing = document.getElementById('quiz-calculator');
+  if (existing) { existing.style.display = 'block'; return; }
+
+  var calc = document.createElement('div');
+  calc.id = 'quiz-calculator';
+  calc.style.cssText = 'position:fixed;bottom:80px;right:14px;z-index:3000;background:#1a0a2e;border:1px solid var(--cb);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.6);width:220px;display:none;font-family:monospace;overflow:hidden;';
+  calc.innerHTML =
+    '<div style="background:linear-gradient(135deg,var(--accent),var(--a2));padding:8px 12px;display:flex;justify-content:space-between;align-items:center">' +
+      '<span style="font-family:var(--fh);font-weight:800;font-size:.82rem;color:#fff">🧮 Calculator</span>' +
+      '<button onclick="toggleCalcVisibility()" style="background:none;border:none;color:#fff;font-size:.9rem;cursor:pointer">—</button>' +
+    '</div>' +
+    '<div id="calc-display" style="background:#0a091d;padding:10px 12px;text-align:right;font-size:1.3rem;font-weight:700;color:var(--accent);min-height:44px;word-break:break-all;border-bottom:1px solid var(--cb)">0</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;padding:6px;background:#120022">' +
+      ['C','±','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','0','.','⌫','='].map(function(k) {
+        var isOp = ['÷','×','−','+','='].indexOf(k) !== -1;
+        var isC = k === 'C';
+        var bg = isC ? 'rgba(248,113,113,.2)' : isOp ? 'rgba(167,139,250,.2)' : 'rgba(255,255,255,.07)';
+        var col = isC ? 'var(--red)' : isOp ? 'var(--accent)' : 'var(--text)';
+        return '<button onclick="calcPress(\''+k+'\')" style="padding:9px 4px;background:'+bg+';border:none;border-radius:8px;color:'+col+';font-size:.9rem;font-weight:700;cursor:pointer;transition:all .15s" onmousedown="this.style.transform=\'scale(.93)\'" onmouseup="this.style.transform=\'scale(1)\'">'+k+'</button>';
+      }).join('') +
+    '</div>';
+  document.body.appendChild(calc);
+
+  // Show toggle button
+  var btn = document.getElementById('calc-toggle-btn');
+  if (!btn) {
+    btn = document.createElement('button');
+    btn.id = 'calc-toggle-btn';
+    btn.className = 'btn bp';
+    btn.style.cssText = 'position:fixed;bottom:20px;right:14px;z-index:3001;border-radius:50px;padding:10px 16px;font-size:.85rem;display:none;box-shadow:0 4px 20px rgba(109,40,217,.5)';
+    btn.innerHTML = '🧮 Calc';
+    btn.onclick = toggleCalcVisibility;
+    document.body.appendChild(btn);
+  }
+  btn.style.display = 'flex';
+  calc.style.display = 'block';
+}
+
+function hideCalculator() {
+  var calc = document.getElementById('quiz-calculator');
+  if (calc) calc.style.display = 'none';
+  var btn = document.getElementById('calc-toggle-btn');
+  if (btn) btn.style.display = 'none';
+}
+
+window.toggleCalcVisibility = function() {
+  var calc = document.getElementById('quiz-calculator');
+  if (!calc) return;
+  calc.style.display = calc.style.display === 'none' ? 'block' : 'none';
+};
+
+var calcCurrent = '0', calcPrev = '', calcOperator = '', calcNewNum = false;
+
+window.calcPress = function(key) {
+  var display = document.getElementById('calc-display');
+  if (!display) return;
+
+  if (key === 'C') {
+    calcCurrent = '0'; calcPrev = ''; calcOperator = ''; calcNewNum = false;
+  } else if (key === '⌫') {
+    calcCurrent = calcCurrent.length > 1 ? calcCurrent.slice(0,-1) : '0';
+  } else if (key === '±') {
+    calcCurrent = String(parseFloat(calcCurrent) * -1);
+  } else if (key === '%') {
+    calcCurrent = String(parseFloat(calcCurrent) / 100);
+  } else if (['÷','×','−','+'].indexOf(key) !== -1) {
+    calcPrev = calcCurrent;
+    calcOperator = key;
+    calcNewNum = true;
+  } else if (key === '=') {
+    if (!calcOperator || !calcPrev) return;
+    var a = parseFloat(calcPrev), b = parseFloat(calcCurrent), result;
+    if (calcOperator === '+') result = a + b;
+    else if (calcOperator === '−') result = a - b;
+    else if (calcOperator === '×') result = a * b;
+    else if (calcOperator === '÷') result = b !== 0 ? a / b : 'Error';
+    calcCurrent = String(Math.round(result * 1e10) / 1e10);
+    calcPrev = ''; calcOperator = ''; calcNewNum = false;
+  } else if (key === '.') {
+    if (calcNewNum) { calcCurrent = '0.'; calcNewNum = false; }
+    else if (calcCurrent.indexOf('.') === -1) calcCurrent += '.';
+  } else {
+    if (calcNewNum || calcCurrent === '0') { calcCurrent = key; calcNewNum = false; }
+    else calcCurrent += key;
+  }
+
+  display.textContent = calcCurrent;
+};
+
 </script>
 
 </body>
