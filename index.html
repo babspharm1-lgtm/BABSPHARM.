@@ -6812,18 +6812,16 @@ async function doAdminLogin(){
   }
 
   window._fbSignIn(adminEmail, pw).then(function(cred){
-    // Verify the custom claim confirms this is actually admin
-    cred.user.getIdTokenResult().then(function(idTokenResult){
-      if(idTokenResult.claims.role === 'admin'){
-        try{sessionStorage.removeItem('bp_admin_rl');}catch(e){}
-        CU={name:'Admin',username:'admin',role:'admin',permissions:'all',
-            uid:cred.user.uid};
-        showDash('admin');
-      } else {
-        window._fbSignOut().catch(function(){});
-        notify('Not authorised as admin','error','🔒');
-      }
-    });
+    // Verify the signed-in email matches the fixed admin email
+    if(cred.user.email === adminEmail){
+      try{sessionStorage.removeItem('bp_admin_rl');}catch(e){}
+      CU={name:'Admin',username:'admin',role:'admin',permissions:'all',
+          uid:cred.user.uid};
+      showDash('admin');
+    } else {
+      window._fbSignOut().catch(function(){});
+      notify('Not authorised as admin','error','🔒');
+    }
   }).catch(function(err){
     rl.count=(rl.count||0)+1;
     rl.until=rl.count>=5?Date.now()+15*60000:0;
