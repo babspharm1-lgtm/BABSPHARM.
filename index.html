@@ -6339,7 +6339,7 @@ function sendBrevoWelcomeEmail(toEmail, toName){
 function sendBrevoBroadcast(trigger, subject, message, category){
   if(!BREVO_API_KEY||!BREVO_SENDER_EMAIL) return;
   if(BREVO_TRIGGERS&&BREVO_TRIGGERS[trigger]===false) return;
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     var users=getDocs(res).filter(function(u){return u.email&&u.status==='approved';});
     users.forEach(function(u){
       var html=
@@ -6512,7 +6512,7 @@ function sendEmailBlast(){
   if(!confirm('Send this email to ALL approved students?'))return;
   _blastStatus('⏳ Sending...','warn');
   var blastId=_genBlastId();
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     var users=getDocs(res).filter(function(u){return u.email&&u.status==='approved';});
     if(!users.length){_blastStatus('⚠️ No students with email addresses found.','warn');return;}
     users.forEach(function(u){
@@ -6785,7 +6785,7 @@ var lastFilesCount=0,lastQuizCount=0,lastAnnCount=0,lastMotivCount=0,lastFlyerCo
 function startNotifPoll(){
   setInterval(function(){
     if(!CU||CU.role==='admin')return;
-    Promise.all([fsGet('files'),fsGet('quizzes'),fsGet('announcements')]).then(function(results){
+    Promise.all([fsGetAll('files'),fsGetAll('quizzes'),fsGet('announcements')]).then(function(results){
       // ── Files ──
       var fc=results[0].documents?results[0].documents.length:0;
       if(lastFilesCount>0&&fc>lastFilesCount){
@@ -6910,7 +6910,7 @@ async function doRegister(){
   }
 
   // Check username availability first
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     if(getDocs(res).some(function(u){return u.username===un;})){
       notify('Username taken','error','⚠️');return;
     }
@@ -7308,7 +7308,7 @@ async function doLogin(){
   }
 
   // Look up the user's email by username first
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     var users=getDocs(res);
     var user=users.find(function(u){return u.username===un;});
     if(!user){
@@ -7523,8 +7523,8 @@ function showDash(role){
     // Show browser notification prompt after a short delay on first login
     setTimeout(checkNotifPrompt, 1500);
     // init notif counts
-    fsGet('files').then(function(r){lastFilesCount=r.documents?r.documents.length:0;}).catch(function(){});
-    fsGet('quizzes').then(function(r){lastQuizCount=r.documents?r.documents.length:0;}).catch(function(){});
+    fsGetAll('files').then(function(r){lastFilesCount=r.documents?r.documents.length:0;}).catch(function(){});
+    fsGetAll('quizzes').then(function(r){lastQuizCount=r.documents?r.documents.length:0;}).catch(function(){});
     fsGet('announcements').then(function(r){lastAnnCount=r.documents?r.documents.length:0;}).catch(function(){});
     fsGet('motivations').then(function(r){lastMotivCount=r.documents?r.documents.length:0;}).catch(function(){});
     fsGet('flyers').then(function(r){lastFlyerCount=r.documents?r.documents.length:0;}).catch(function(){});
@@ -8105,7 +8105,7 @@ function renderFileDocs(docs,admin){
 function loadAFiles(){
   var el=document.getElementById('afl');
   if(el)el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('files').then(function(res){
+  fsGetAll('files').then(function(res){
     allAFiles=getDocs(res).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
     // Update global search tabs
     var tabsEl=document.getElementById('acat-tabs');
@@ -8163,7 +8163,7 @@ function loadUFiles(){
   el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
   checkNotifPrompt();
   loadRainCoursesForStudent();
-  fsGet('files').then(function(res){
+  fsGetAll('files').then(function(res){
     allUFiles=getDocs(res).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
     var tabsEl=document.getElementById('ucat-tabs');
     tabsEl.innerHTML=CATS.map(function(c,i){return'<button class="cat-tab'+(i===0?' on':'')+'" onclick="filterByCat(this,\''+c+'\')">'+esc(c)+'</button>';}).join('');
@@ -9614,7 +9614,7 @@ var activeAQuizFileCat='All';
 
 function loadAdminQuizzes(){
   var el=document.getElementById('aql');el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('quizzes').then(function(res){
+  fsGetAll('quizzes').then(function(res){
     allAQuizzes=getDocs(res).sort(function(a,b){return new Date(b.createdAt)-new Date(a.createdAt);});
     renderAQuizList();
   }).catch(function(){el.innerHTML='<div class="empty"><span>⚠️</span>Error</div>';});
@@ -9687,7 +9687,7 @@ function uploadQuizFileTo(files, cat){
 function loadAQuizFiles(){
   var el=document.getElementById('aqfl');if(!el)return;
   el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('quizfiles').then(function(res){
+  fsGetAll('quizfiles').then(function(res){
     allAQuizFiles=getDocs(res).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
     renderAQuizFiles();
   }).catch(function(){el.innerHTML='<div class="empty"><span>⚠️</span>Error loading files</div>';});
@@ -9723,7 +9723,7 @@ function delQuizFile(id){
 
 function toggleQuiz(id,current){
   var newStatus=current==='yes'?'no':'yes';
-  fsGet('quizzes').then(function(res){
+  fsGetAll('quizzes').then(function(res){
     var q=getDocs(res).find(function(q){return q.__id===id;});if(!q)return;
     fsPatch(q.__path,{active:newStatus}).then(function(){notify(newStatus==='yes'?'Quiz activated!':'Quiz paused','info','📝');loadAdminQuizzes();}).catch(function(){});
   });
@@ -9737,13 +9737,13 @@ var activeUQuizCat='All';
 function loadUQuizzes(){
   var el=document.getElementById('uql');el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
   // Load interactive quizzes
-  fsGet('quizzes').then(function(res){
+  fsGetAll('quizzes').then(function(res){
     allUQuizzes=getDocs(res).filter(function(q){return q.active==='yes';})
       .sort(function(a,b){return new Date(b.createdAt)-new Date(a.createdAt);});
     renderUQuizList();
   }).catch(function(){el.innerHTML='<div class="empty"><span>⚠️</span>Error</div>';});
   // Load quiz files
-  fsGet('quizfiles').then(function(res){
+  fsGetAll('quizfiles').then(function(res){
     allUQuizFiles=getDocs(res).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
     renderUQuizFiles();
   }).catch(function(){});
@@ -9818,7 +9818,7 @@ function startQuiz(id){
     notify('⛔ You were removed from this quiz for switching apps. You cannot retake it.', 'error', '🚫');
     return;
   }
-  fsGet('quizzes').then(function(res){
+  fsGetAll('quizzes').then(function(res){
     var quiz=getDocs(res).find(function(q){return q.__id===id;});
     if(!quiz){notify('Not found','error','❌');return;}
     currentQuiz=quiz;
@@ -10107,7 +10107,7 @@ function submitQuiz(){
 
   // Referral bonus
   var REFERRAL_BONUS=5;
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     var users=getDocs(res);
     var me=users.find(function(u){return u.username===CU.username;});
     if(!me||!me.referredBy||!me.referredBy.trim())return;
@@ -10311,9 +10311,9 @@ function loadReportCard(){
   el.innerHTML='<div class="ld">Loading your report<span class="sp"></span></div>';
   Promise.all([
     fsGet('quizscores'),
-    fsGet('quizzes'),
-    fsGet('files'),
-    fsGet('users')
+    fsGetAll('quizzes'),
+    fsGetAll('files'),
+    fsGetAll('users')
   ]).then(function(results){
     var allScores=getDocs(results[0]);
     var allQuizzes=getDocs(results[1]);
@@ -10622,7 +10622,7 @@ function loadQuizExplanations(){
 // ══════════════════════════════════
 function loadAnalyticsQuizSelect(){
   var sel=document.getElementById('analytics-quiz-sel');if(!sel)return;
-  fsGet('quizzes').then(function(res){
+  fsGetAll('quizzes').then(function(res){
     var docs=getDocs(res);
     sel.innerHTML='<option value="">— Select a quiz —</option>'+docs.map(function(q){
       return'<option value="'+q.__id+'">'+esc(q.title)+'</option>';
@@ -10634,7 +10634,7 @@ function loadAnalytics(){
   var el=document.getElementById('analytics-content');
   if(!id){el.innerHTML='<div class="empty"><span>📊</span>Select a quiz.</div>';return;}
   el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  Promise.all([fsGet('quizzes'),fsGet('quizscores')]).then(function(results){
+  Promise.all([fsGetAll('quizzes'),fsGet('quizscores')]).then(function(results){
     var quizzes=getDocs(results[0]),scores=getDocs(results[1]);
     var quiz=quizzes.find(function(q){return q.__id===id;});
     if(!quiz){el.innerHTML='<div class="empty"><span>⚠️</span>Quiz not found.</div>';return;}
@@ -10670,7 +10670,7 @@ function loadAnalytics(){
 // ══════════════════════════════════
 function loadLeaderboard(elId){
   var el=document.getElementById(elId);el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     var users=getDocs(res).filter(function(u){return u.status==='approved';})
       .sort(function(a,b){return Number(b.totalScore||0)-Number(a.totalScore||0);});
     if(!users.length){el.innerHTML='<div class="empty"><span>🏆</span>No students yet.</div>';return;}
@@ -10694,7 +10694,7 @@ function loadLeaderboard(elId){
 // EXPORT CSV
 // ══════════════════════════════════
 function exportScores(){
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     var users=getDocs(res).filter(function(u){return u.status==='approved';})
       .sort(function(a,b){return Number(b.totalScore||0)-Number(a.totalScore||0);});
     var csv='Rank,Name,Username,Level,Total Points,Quizzes Taken,Badges\n';
@@ -10716,7 +10716,7 @@ function awardBadge(){
   var un=document.getElementById('badge-user').value.trim().toLowerCase();
   var badge=document.getElementById('badge-type').value;
   if(!un){notify('Enter username','error','⚠️');return;}
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     var user=getDocs(res).find(function(u){return u.username===un;});
     if(!user){notify('User not found','error','❌');return;}
     var existing=(user.badges||'').split('||').filter(function(b){return b.trim();});
@@ -10734,7 +10734,7 @@ function awardBadge(){
 // ══════════════════════════════════
 function loadBulkStudents(){
   var el=document.getElementById('bulk-student-list');el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     var users=getDocs(res).filter(function(u){return u.status==='approved';});
     if(!users.length){el.innerHTML='<div class="empty"><span>👥</span>No students.</div>';return;}
     el.innerHTML=users.map(function(u){
@@ -10791,7 +10791,7 @@ function sendUser(){
 }
 function loadConvList(){
   var el=document.getElementById('conv-list-el');el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     var users=getDocs(res).filter(function(u){return u.status==='approved';});
     if(!users.length){el.innerHTML='<div class="empty"><span>💬</span>No students yet.</div>';return;}
     Promise.all(users.map(function(u){
@@ -11148,7 +11148,7 @@ async function renderOnlineStudents(){
   var onlineCount = 0;
 
   try{
-    var res = await fsGet('users');
+    var res = await fsGetAll('users');
     var students = getDocs(res).filter(function(u){ return u.role !== 'admin'; });
 
     if(!students.length){
@@ -11214,7 +11214,7 @@ function _processUsersRes(res){
   }
   var users=getDocs(res);
   var pending=users.filter(function(u){return u.status==='pending';});
-  allStudents=users.filter(function(u){return u.status==='approved'||u.status==='deactivated';});
+  allStudents=users.filter(function(u){return u.role!=='admin'&&u.status!=='pending';});
   document.getElementById('pending-list').innerHTML=pending.length?
     pending.map(function(u){
       return'<div class="pu-item"><div style="display:flex;align-items:center;gap:7px">'+
@@ -11449,9 +11449,9 @@ function loadLog(){
 // STATS
 // ══════════════════════════════════
 function updateStats(){
-  fsGet('files').then(function(r){document.getElementById('sf').textContent=r.documents?r.documents.length:0;}).catch(function(){});
-  fsGet('users').then(function(r){document.getElementById('su').textContent=r.documents?getDocs(r).filter(function(u){return u.status==='approved';}).length:0;}).catch(function(){});
-  fsGet('quizzes').then(function(r){document.getElementById('sq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
+  fsGetAll('files').then(function(r){document.getElementById('sf').textContent=r.documents?r.documents.length:0;}).catch(function(){});
+  fsGetAll('users').then(function(r){document.getElementById('su').textContent=r.documents?getDocs(r).filter(function(u){return u.status==='approved';}).length:0;}).catch(function(){});
+  fsGetAll('quizzes').then(function(r){document.getElementById('sq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
   fsGet('quizscores').then(function(r){document.getElementById('stq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
 }
 // logActivity defined earlier in HELPERS section
@@ -11614,7 +11614,7 @@ function handleDeepLink(){
   } else if(fileId){
     setTimeout(function(){
       if(CU&&CU.role==='user'){
-        fsGet('files').then(function(res){
+        fsGetAll('files').then(function(res){
           var file=getDocs(res).find(function(f){return f.__id===fileId;});
           if(file){sat('files');setTimeout(function(){openPreview(file.data,file.name,file.type||'');},600);}
           else{notify('File not found or no longer available','warn','⚠️');}
@@ -11625,7 +11625,7 @@ function handleDeepLink(){
   } else if(quizFileId){
     setTimeout(function(){
       if(CU&&CU.role==='user'){
-        fsGet('quizfiles').then(function(res){
+        fsGetAll('quizfiles').then(function(res){
           var file=getDocs(res).find(function(f){return f.__id===quizFileId;});
           if(file){sat('quizzes');setTimeout(function(){openPreview(file.data,file.name,file.type||'');},600);}
           else{notify('Quiz file not found','warn','⚠️');}
@@ -11830,7 +11830,7 @@ function loadGlassDashCards(){
     el('gdc-streak',streak+' day'+(streak!==1?'s':''));
   }catch(e){}
   // Populate leaderboard top 3
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     var users=getDocs(res);
     users.sort(function(a,b){return (b.points||0)-(a.points||0);});
     var rows=document.querySelectorAll('.gdc-lb-row');
@@ -12403,7 +12403,7 @@ function checkRefCode(){
   var badge=document.getElementById('ref-valid-badge');
   if(!code||code.length<5){badge.style.display='none';return;}
   // Check if code matches any user
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     var users=getDocs(res);
     var valid=users.some(function(u){return generateRefCode(u.username)===code;});
     badge.style.display=valid?'':'none';
@@ -12415,7 +12415,7 @@ function loadUserReferralCard(){
   var el=document.getElementById('user-ref-code');
   if(el)el.textContent=code;
   // Load referral count and bonus points earned
-  Promise.all([fsGet('users'),fsGet('referralbonuses')]).then(function(results){
+  Promise.all([fsGetAll('users'),fsGet('referralbonuses')]).then(function(results){
     var users=getDocs(results[0]);
     var bonuses=getDocs(results[1]);
     var count=users.filter(function(u){return u.referredBy===code;}).length;
@@ -12427,7 +12427,7 @@ function loadUserReferralCard(){
     if(countEl)countEl.textContent=count+' referral'+(count!==1?'s':'');
     if(ptsEl)ptsEl.textContent='+'+totalBonus+' bonus pts';
   }).catch(function(){
-    fsGet('users').then(function(res){
+    fsGetAll('users').then(function(res){
       var count=getDocs(res).filter(function(u){return u.referredBy===code;}).length;
       var countEl=document.getElementById('user-ref-count');
       if(countEl)countEl.textContent=count+' referral'+(count!==1?'s':'');
@@ -12451,7 +12451,7 @@ function loadAdminReferrals(){
   if(!listEl)return;
   listEl.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
   signupsEl.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  Promise.all([fsGet('users'),fsGet('referralbonuses')]).then(function(results){
+  Promise.all([fsGetAll('users'),fsGet('referralbonuses')]).then(function(results){
     var users=getDocs(results[0]);
     var bonuses=getDocs(results[1]);
     // Build referral counts and bonus totals per code
@@ -12543,7 +12543,7 @@ function loadPointsManager() {
 }
 
 function loadPtsStats() {
-  Promise.all([fsGet('users'), fsGet('pointgrants'), fsGet('referralbonuses')]).then(function(res) {
+  Promise.all([fsGetAll('users'), fsGet('pointgrants'), fsGet('referralbonuses')]).then(function(res) {
     var users = getDocs(res[0]);
     var grants = getDocs(res[1]);
     var refBonuses = getDocs(res[2]);
@@ -12562,7 +12562,7 @@ function loadPtsStudents() {
   var el = document.getElementById('pts-student-list');
   if (!el) return;
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('users').then(function(res) {
+  fsGetAll('users').then(function(res) {
     ptsAllUsers = getDocs(res).filter(function(u){ return u.role !== 'admin'; })
       .sort(function(a,b){ return Number(b.totalScore||0) - Number(a.totalScore||0); });
     renderPtsStudents(ptsAllUsers);
@@ -12656,7 +12656,7 @@ function confirmGrantPoints() {
 
 function doGrantPoints(userId, pts, note) {
   // 1. Patch user totalScore
-  fsGet('users').then(function(res) {
+  fsGetAll('users').then(function(res) {
     var users = getDocs(res);
     var user = users.find(function(u){ return u.__id === userId; });
     if (!user) { notify('User not found','error','❌'); return; }
@@ -12695,7 +12695,7 @@ function loadPtsReferrals() {
   var el = document.getElementById('pts-referral-breakdown');
   if (!el) return;
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-  Promise.all([fsGet('users'), fsGet('referralbonuses')]).then(function(res) {
+  Promise.all([fsGetAll('users'), fsGet('referralbonuses')]).then(function(res) {
     var users = getDocs(res[0]);
     var bonuses = getDocs(res[1]);
     if (!users.length) { el.innerHTML = '<div class="empty"><span>👥</span>No students yet.</div>'; return; }
@@ -12726,7 +12726,7 @@ function loadPtsLeaderboard() {
   var el = document.getElementById('pts-leaderboard-list');
   if (!el) return;
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('users').then(function(res) {
+  fsGetAll('users').then(function(res) {
     var users = getDocs(res).sort(function(a,b){ return Number(b.totalScore||0)-Number(a.totalScore||0); });
     if (!users.length) { el.innerHTML='<div class="empty"><span>🏆</span>No data.</div>'; return; }
     var maxScore = Number(users[0].totalScore||0) || 1;
@@ -12803,7 +12803,7 @@ function loadPtsBalances() {
   var el = document.getElementById('pts-balances-list');
   if (!el) return;
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('users').then(function(res) {
+  fsGetAll('users').then(function(res) {
     balancesAllUsers = getDocs(res)
       .filter(function(u){ return u.role !== 'admin'; })
       .sort(function(a,b){ return Number(b.totalScore||0) - Number(a.totalScore||0); });
@@ -13087,7 +13087,7 @@ function loadMyQuizHistory() {
   var el = document.getElementById('u-quiz-history-list');
   if (!el) return;
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-  Promise.all([fsGet('quizscores'), fsGet('quizzes')]).then(function(res) {
+  Promise.all([fsGet('quizscores'), fsGetAll('quizzes')]).then(function(res) {
     var scores = getDocs(res[0]).filter(function(s){ return s.username === CU.username; })
       .sort(function(a,b){ return new Date(b.takenAt)-new Date(a.takenAt); });
     var quizMap = {};
@@ -13513,7 +13513,7 @@ doRegister=async function(){
   var deviceFp = getDeviceFingerprint();
 
   // ── ONE ACCOUNT PER DEVICE CHECK ──
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     var allUsers = getDocs(res);
     // Block if this device already has a registered account
     var existingDevice = allUsers.find(function(u){
@@ -14078,7 +14078,7 @@ function loadPerformanceReport(){
   var tbody=document.getElementById('rpt-tbody');
   if(!tbody)return;
   tbody.innerHTML='<tr><td colspan="8" style="padding:20px;text-align:center;color:var(--text2)"><div class="ld">Loading<span class="sp"></span></div></td></tr>';
-  Promise.all([fsGet('users'),fsGet('quizscores')]).then(function(results){
+  Promise.all([fsGetAll('users'),fsGet('quizscores')]).then(function(results){
     var users=getDocs(results[0]).filter(function(u){return u.status==='approved';});
     var scores=getDocs(results[1]);
     // Build per-user stats
@@ -17477,7 +17477,7 @@ window.adminCreateAccount = function(){
 
   setStatus('⏳ Checking username…','warn');
 
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     var allUsers = getDocs(res);
     if(allUsers.some(function(u){ return u.username===un; })){
       setStatus('⚠️ Username "'+un+'" is already taken. Choose another.','error'); return;
@@ -17524,7 +17524,7 @@ var _assistAdminState = null; // stores admin CU while in assist mode
 
 window.adminAssistStudent = function(userId, name, username) {
   // Fetch the full student record from Firestore
-  fsGet('users').then(function(res){
+  fsGetAll('users').then(function(res){
     var users = getDocs(res);
     var student = users.find(function(u){ return u.__id === userId || u.username === username; });
     if(!student){ notify('Student not found.','error','❌'); return; }
