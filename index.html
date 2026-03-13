@@ -144,6 +144,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background:linear-gradient(135deg,var(--accent),var(--a2));transition:transform var(--tr);}
 [data-theme="light"] .tt::after{transform:translateX(17px);}
 #app{padding-top:65px;min-height:100vh;position:relative;z-index:1;}
+#app.landing-mode{padding-top:0 !important;}
 .aw{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 65px);padding:16px;}
 .ac{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);
   padding:32px 26px;width:100%;max-width:400px;box-shadow:var(--sh);backdrop-filter:blur(20px);animation:su .5s ease;}
@@ -1436,7 +1437,7 @@ body.has-bottom-nav #app{padding-bottom:0;}
 /* ══ LANDING PAGE STYLES ══ */
 #landing-page{position:relative;z-index:1;}
 /* Landing page is full-viewport, cancel #app top padding */
-#app:has(#landing-page:not([style*="display:none"])) { padding-top: 0 !important; }
+/* #app padding handled via JS landing-mode class */
 #landing-page ~ * { /* nothing — just ensure no gap */ }
 .lp-navbar{
   display:flex;justify-content:space-between;align-items:center;
@@ -3017,8 +3018,7 @@ body:not(.app-mode) #bottom-nav { display: none !important; }
 body:not(.app-mode) #session-timeout-modal { display: none !important; }
 
 /* ── LAYOUT FIXES ── */
-/* When landing page is shown, #app must NOT have top padding (topbar is hidden) */
-body:not(.app-mode) #app { padding-top: 0 !important; }
+/* landing-mode class handles padding removal via JS */
 
 /* Full-viewport landing hero with no gap */
 #landing-page { margin: 0; padding: 0; }
@@ -6850,8 +6850,10 @@ document.addEventListener('click',function(e){
 function showLoginFromLanding(){
   var lp=document.getElementById('landing-page');
   var as=document.getElementById('as');
+  var app=document.getElementById('app');
   if(lp) lp.style.display='none';
   document.body.classList.add('app-mode');
+  if(app) app.classList.remove('landing-mode');
   if(as) as.style.display='';
   window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -11248,35 +11250,7 @@ function loadUsers(forceRefresh){
     notify('Failed to load students: '+msg,'error','⚠️');
   });
 }
-// ── INTERNAL: old loadUsers body replaced — kept for compatibility ──
-function _loadUsersOLD_UNUSED(){
-  loadRegMode();
-  var approvedEl=document.getElementById('approved-list');
-  if(approvedEl)approvedEl.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('users').then(function(res){
-    if(res&&res.error){
-      if(approvedEl)approvedEl.innerHTML='<div class="empty"><span>⚠️</span>Could not load students.<br><small style="color:var(--red)">'+esc(res.error.message||'Firebase error — check your API key or security rules.')+'</small></div>';
-      notify('Failed to load students: '+(res.error.message||'Firebase error'),'error','⚠️');return;
-    }
-    var users=getDocs(res);
-    var pending=users.filter(function(u){return u.status==='pending';});
-    allStudents=users.filter(function(u){return u.status==='approved'||u.status==='deactivated';});
-    document.getElementById('pending-list').innerHTML=pending.length?
-      pending.map(function(u){
-        return'<div class="pu-item"><div style="display:flex;align-items:center;gap:7px">'+
-          '<div class="pu-av">'+(u.name?u.name[0].toUpperCase():'?')+'</div>'+
-          '<div><div style="font-weight:600;font-size:.83rem">'+esc(u.name)+'</div>'+
-          '<div style="font-size:.69rem;color:var(--text2)">@'+esc(u.username)+' · '+esc(u.level||'')+'</div></div></div>'+
-          '<div style="display:flex;gap:4px">'+
-            '<button class="btn bg2 bsm" onclick="approveUser(\''+u.__id+'\',\''+esc(u.name)+'\')">✅ Approve</button>'+
-            '<button class="btn bd bsm" onclick="rejectUser(\''+u.__id+'\',\''+esc(u.name)+'\')">❌ Reject</button>'+
-          '</div></div>';
-      }).join(''):'<div class="empty"><span>✅</span>No pending requests.</div>';
-    renderStudentList();
-    loadDeviceBlockList();
-    document.getElementById('su').textContent=allStudents.filter(function(u){return u.status==='approved';}).length;
-  // end _loadUsersOLD_UNUSED — body kept for reference only, never called
-}
+
 function renderStudentList(){
   var list=allStudents;
   if(studentFilter==='active')list=allStudents.filter(function(u){return u.status==='approved';});
@@ -12067,6 +12041,12 @@ function positionLandingBtns(){
 }
 // Position on load and on resize
 document.addEventListener('DOMContentLoaded', function(){
+  // ── Apply landing-mode to remove topbar padding when landing page is shown ──
+  var appEl = document.getElementById('app');
+  var lpEl  = document.getElementById('landing-page');
+  if(appEl && lpEl && lpEl.style.display !== 'none') {
+    appEl.classList.add('landing-mode');
+  }
   // ── Restore saved theme ──
   var savedTheme=null;try{savedTheme=localStorage.getItem('bp_theme');}catch(e){}
   if(savedTheme==='light'||savedTheme==='dark')document.body.setAttribute('data-theme',savedTheme);
