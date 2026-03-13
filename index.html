@@ -30,6 +30,9 @@
 <meta name="twitter:image" content="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='630' viewBox='0 0 1200 630'%3E%3Crect width='1200' height='630' fill='%230f0c29'/%3E%3Ctext x='600' y='270' font-family='Arial Black,sans-serif' font-size='120' font-weight='900' fill='white' text-anchor='middle'%3E⚗️%3C/text%3E%3Ctext x='600' y='390' font-family='Arial Black,sans-serif' font-size='72' font-weight='900' fill='%23a78bfa' text-anchor='middle'%3EBABSPHARM Cloud%3C/text%3E%3Ctext x='600' y='460' font-family='Arial,sans-serif' font-size='32' fill='%23b0a8d8' text-anchor='middle'%3EYour education platform%3C/text%3E%3C/svg%3E"/>
 <link id="pwa-manifest-link" rel="manifest"/>
 <link rel="apple-touch-icon" href="https://babspharm1-lgtm.github.io/BABSPHARM./icon-192x192.png"/>
+<!-- Firebase Auth SDK — loaded early so it's ready before DOMContentLoaded -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <!-- PDF.js for in-app PDF reading -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -711,6 +714,21 @@ body.has-bottom-nav #app{padding-bottom:0;}
 .flyer-fullscreen-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);
   border:1px solid rgba(255,255,255,.3);border-radius:50%;width:38px;height:38px;
   display:flex;align-items:center;justify-content:center;font-size:1.1rem;cursor:pointer;color:#fff;backdrop-filter:blur(8px);}
+/* ── MOTIVATION FLYER GRID ── */
+.motiv-flyer-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+@media(min-width:480px){.motiv-flyer-grid{grid-template-columns:repeat(3,1fr);}}
+.motiv-flyer-card{border-radius:16px;overflow:hidden;cursor:pointer;position:relative;
+  min-height:180px;display:flex;flex-direction:column;justify-content:flex-end;
+  border:1px solid rgba(255,255,255,.08);box-shadow:0 4px 20px rgba(0,0,0,.25);
+  transition:transform .25s ease,box-shadow .25s ease;}
+.motiv-flyer-card:hover{transform:translateY(-4px);box-shadow:0 12px 36px rgba(0,0,0,.4);}
+.motiv-flyer-card:active{transform:scale(.97);}
+.motiv-flyer-emoji{position:absolute;top:14px;right:14px;font-size:2rem;line-height:1;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.3));}
+.motiv-flyer-body{padding:12px 12px 10px;background:linear-gradient(to top,rgba(0,0,0,.75) 0%,rgba(0,0,0,.3) 70%,transparent 100%);}
+.motiv-flyer-q{font-family:var(--fh);font-size:.78rem;font-weight:800;line-height:1.38;
+  color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.5);margin-bottom:5px;}
+.motiv-flyer-a{font-size:.65rem;color:rgba(255,255,255,.7);font-style:italic;}
 /* ── ADMIN MOTIVATION ── */
 .motiv-admin-item{padding:11px 13px;border-radius:10px;margin-bottom:7px;
   background:rgba(167,139,250,.08);border-left:3px solid var(--a3);position:relative;}
@@ -3021,9 +3039,7 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
   z-index: 1000;
 }
 </style>
-<!-- Firebase Auth SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<!-- Firebase Auth SDK already loaded in <head> above -->
 <script>
   var firebaseConfig = {
     apiKey: "AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8",
@@ -3033,10 +3049,20 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
     messagingSenderId: "385674572482",
     appId: "1:385674572482:web:a427125e649fef011b815b"
   };
+  window._fbAuthReady = false;
+  window._fbAuthQueue = window._fbAuthQueue || [];
+
   function _initFirebase() {
     try {
       if (typeof firebase === 'undefined') throw new Error('firebase not loaded');
-      var fbApp = firebase.initializeApp(firebaseConfig);
+      // Prevent double-init
+      if (window._fbAuthReady) return;
+      var fbApp;
+      try {
+        fbApp = firebase.app();
+      } catch(e) {
+        fbApp = firebase.initializeApp(firebaseConfig);
+      }
       var fbAuth = firebase.auth(fbApp);
       fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(e){ console.warn('Persistence:', e); });
       window._fbAuth = fbAuth;
@@ -3053,12 +3079,21 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
       }
     } catch(e) {
       console.error('Firebase init failed:', e);
+      // Retry once after 1 second in case scripts were still loading
+      if (!window._fbInitRetried) {
+        window._fbInitRetried = true;
+        setTimeout(_initFirebase, 1000);
+      }
     }
   }
+
+  // Try immediately, and also on DOMContentLoaded as a fallback
+  _initFirebase();
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', _initFirebase);
   } else {
-    _initFirebase();
+    // Also try after a short delay to handle slow script loads on mobile
+    setTimeout(_initFirebase, 500);
   }
 </script>
 </head>
@@ -3571,21 +3606,36 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
       <button class="gdc-btn" onclick="sut('reportcard',null);showSec('reportcard')">View Progress →</button>
     </div>
 
+    <div class="glass-dash-card">
+      <div class="gdc-icon">🎯</div>
+      <h3>Semester Goals</h3>
+      <div class="gdc-stats" id="gdc-goals-preview">
+        <div class="gdc-stat-row"><span>Goals set</span><strong id="gdc-goals-count">—</strong></div>
+        <div class="gdc-stat-row"><span>Goals met</span><strong id="gdc-goals-met" style="color:var(--green)">—</strong></div>
+        <div class="gdc-stat-row"><span>Best course</span><strong id="gdc-goals-best" style="color:var(--accent);font-size:.72rem">—</strong></div>
+      </div>
+      <button class="gdc-btn" onclick="sut('goals',null);showSec('reportcard')">Set Goals →</button>
+    </div>
+
+    <div class="glass-dash-card">
+      <div class="gdc-icon">📋</div>
+      <h3>Formula Sheets</h3>
+      <div class="gdc-stats" id="gdc-formulas-preview">
+        <div class="gdc-stat-row"><span>Sheets available</span><strong id="gdc-formula-count">—</strong></div>
+        <div class="gdc-stat-row"><span>Courses covered</span><strong id="gdc-formula-courses">—</strong></div>
+      </div>
+      <button class="gdc-btn" onclick="sut('formulas',null);showSec('reportcard')">Open Formulas →</button>
+    </div>
+
   </section>
 
-  <!-- DAILY MOTIVATION CARD -->
-  <div id="daily-motivation" onclick="cycleMotivation()" title="Click for a new quote">
-    <div class="motiv-top">
-      <span class="motiv-label">✨ Daily Motivation</span>
-      <span class="motiv-date" id="motiv-date"></span>
+  <!-- DAILY MOTIVATION FLYER GRID -->
+  <div id="motiv-flyer-section" style="margin-bottom:18px">
+    <div class="st" style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+      <span><span class="dot"></span>✨ Daily Motivation</span>
+      <button class="motiv-refresh" onclick="motivShuffleGrid()" style="font-size:.72rem;opacity:.7">🔀 Shuffle</button>
     </div>
-    <span class="motiv-emoji" id="motiv-emoji">🔬</span>
-    <div class="motiv-quote" id="motiv-quote">Loading your daily spark…</div>
-    <div class="motiv-author" id="motiv-author"></div>
-    <div class="motiv-footer">
-      <button class="motiv-refresh" onclick="event.stopPropagation();cycleMotivation()">🔄 New quote</button>
-      <div class="motiv-progress" id="motiv-dots"></div>
-    </div>
+    <div class="motiv-flyer-grid" id="motiv-flyer-grid"></div>
   </div>
 
   <!-- FLYERS SECTION (user) -->
@@ -3771,6 +3821,8 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
     <button class="tb" onclick="sut('ai',this)">🤖 AI</button>
     <button class="tb" onclick="sut('mindmap',this)">🗺️ Mind Maps</button>
     <button class="tb" onclick="sut('reportcard',this)">📊 My Report</button>
+    <button class="tb" onclick="sut('goals',this)">🎯 Goals</button>
+    <button class="tb" onclick="sut('formulas',this)">📋 Formulas</button>
   </div>
   <div class="tp on" id="ut-profile"><div id="user-profile-card"><div class="ld">Loading<span class="sp"></span></div></div>
 
@@ -3825,6 +3877,12 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
         <span id="u-pts-total-badge" style="font-family:var(--fh);font-weight:800;font-size:1rem;color:var(--accent)"></span>
       </div>
       <div id="u-pts-history-list" style="margin-top:10px"><div class="ld">Loading<span class="sp"></span></div></div>
+    </div>
+
+    <!-- 📊 QUIZ RETAKE HISTORY (student view) -->
+    <div class="card" style="margin-top:12px">
+      <div class="st"><span class="dot"></span>📊 My Quiz Attempts</div>
+      <div id="u-quiz-history-list" style="margin-top:10px"><div class="ld">Loading<span class="sp"></span></div></div>
     </div>
   </div>
   <div class="tp" id="ut-ann">
@@ -4199,6 +4257,26 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
     </button>
   </div>
 
+  <!-- ══ STUDENT: SEMESTER GOALS ══ -->
+  <div class="tp" id="ut-goals">
+    <div class="card" style="margin-bottom:12px">
+      <div class="st"><span class="dot"></span>🎯 My Semester Goals</div>
+      <p style="font-size:.78rem;color:var(--text2);margin-bottom:14px">Set your target score for each course this semester. Track how your quiz performance compares to your goals.</p>
+      <div id="goals-form-area"></div>
+      <button class="btn bp" style="width:100%;justify-content:center;margin-top:4px" onclick="saveGoals()">💾 Save Goals</button>
+    </div>
+    <div class="card">
+      <div class="st"><span class="dot"></span>📊 Goals vs Performance</div>
+      <div id="goals-progress-area" style="margin-top:10px"><div class="ld">Loading<span class="sp"></span></div></div>
+    </div>
+  </div>
+
+  <!-- ══ STUDENT: FORMULA SHEETS ══ -->
+  <div class="tp" id="ut-formulas">
+    <div id="u-formula-filters" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap"></div>
+    <div id="u-formula-list"><div class="ld">Loading<span class="sp"></span></div></div>
+  </div>
+
   <div class="tp" id="ut-reportcard">
     <div id="report-card-content"><div class="ld">Loading<span class="sp"></span></div></div>
   </div>
@@ -4249,6 +4327,7 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
     <button class="anb anb-gray" onclick="sat2('report',this)">📈 Report</button>
     <button class="anb anb-red" onclick="sat2('security',this)">🔐 Security</button>
     <button class="anb anb-purple" onclick="sat2('subadmins',this)">👮 Sub-Admins</button>
+    <button class="anb anb-teal" onclick="sat2('formulas',this)">📋 Formulas</button>
     <button class="anb anb-cyan" onclick="sat2('aikey',this)">🤖 AI Key</button>
     <button class="anb anb-green" onclick="sat2('emailkey',this)">📧 Email</button>
     <button class="anb anb-pink" onclick="sat2('emailblast',this)">📨 Blast</button>
@@ -4693,6 +4772,38 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
     </div>
   </div>
 
+  <!-- ══ ADMIN: FORMULA SHEETS ══ -->
+  <div class="tp" id="at-formulas">
+    <div class="card" style="margin-bottom:12px">
+      <div class="st"><span class="dot"></span>📋 Add Formula Sheet</div>
+      <p style="font-size:.78rem;color:var(--text2);margin-bottom:12px">Create quick-reference cheat sheets for any course. Students can access them anytime from the Formulas tab.</p>
+      <div class="fg"><label>Course</label>
+        <select id="fs-course">
+          <option value="PHY 101">PHY 101 — Physics I</option>
+          <option value="PHY 103">PHY 103 — Physics II</option>
+          <option value="CHM 101">CHM 101 — Chemistry I</option>
+          <option value="BIO 101">BIO 101 — Biology</option>
+          <option value="MTH 101">MTH 101 — Mathematics</option>
+          <option value="GST 101">GST 101 — Use of English</option>
+          <option value="PHL 101">PHL 101 — Philosophy</option>
+          <option value="SOC 101">SOC 101 — Sociology</option>
+          <option value="EGL 101">EGL 101 — English</option>
+          <option value="General">General / All Courses</option>
+        </select>
+      </div>
+      <div class="fg"><label>Title</label><input type="text" id="fs-title" placeholder="e.g. Newton's Laws, Organic Chemistry Reactions"/></div>
+      <div class="fg"><label>Content</label>
+        <textarea id="fs-content" rows="8" placeholder="Write the formula sheet content here. Use plain text, equations, bullet points...&#10;&#10;e.g.&#10;• F = ma (Newton's 2nd Law)&#10;• v = u + at&#10;• s = ut + ½at²&#10;• v² = u² + 2as" style="font-family:monospace;font-size:.82rem;line-height:1.6"></textarea>
+      </div>
+      <div class="fg"><label>Category / Tag (optional)</label><input type="text" id="fs-tag" placeholder="e.g. Kinematics, Organic, Calculus"/></div>
+      <button class="btn bp" style="width:100%;justify-content:center" onclick="saveFormulaSheet()">💾 Save Formula Sheet</button>
+    </div>
+    <div class="card">
+      <div class="st"><span class="dot"></span>All Formula Sheets</div>
+      <div id="a-formula-list" style="margin-top:10px"><div class="ld">Loading<span class="sp"></span></div></div>
+    </div>
+  </div>
+
   <!-- ══ ADMIN: DAILY MOTIVATION ══ -->
   <div class="tp" id="at-motivation">
     <div class="card" style="margin-bottom:12px">
@@ -5117,6 +5228,7 @@ D. Rankine</code>
         </select>
       </div>
       <div class="fg"><label>Time Per Section (minutes)</label><input type="number" id="qdur" value="5" min="1" max="60" placeholder="e.g. 5"/></div>
+      <div class="fg"><label>🎬 Video Link (optional)</label><input type="url" id="qvideo" placeholder="YouTube or video URL for study reference"/></div>
       <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;padding:8px 12px;background:rgba(167,139,250,.08);border-radius:8px;border-left:3px solid var(--accent)">
         📋 Each section has <strong style="color:var(--accent)">5 questions</strong>. Students submit each section before moving to the next. Results shown after all sections.
       </div>
@@ -6038,6 +6150,7 @@ D. Rankine</code>
       </div>
       <div class="fg"><label>Quiz Title</label><input type="text" id="pq-title" placeholder="e.g. Anatomy Test 1"/></div>
       <div class="fg"><label>Description (optional)</label><input type="text" id="pq-desc" placeholder="e.g. 100 level Anatomy mid-semester test"/></div>
+      <div class="fg"><label>🎬 Video Link (optional)</label><input type="url" id="pq-video" placeholder="YouTube or any video URL for study reference"/></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
         <div class="fg" style="margin-bottom:0"><label>⏰ Opens At</label><input type="datetime-local" id="pq-open-time" style="width:100%"/></div>
         <div class="fg" style="margin-bottom:0"><label>⛔ Closes At</label><input type="datetime-local" id="pq-close-time" style="width:100%"/></div>
@@ -6045,8 +6158,9 @@ D. Rankine</code>
       <p style="font-size:.72rem;color:var(--text2);margin-bottom:12px;padding:8px 10px;background:rgba(167,139,250,.08);border-radius:8px;border-left:3px solid var(--accent)">💡 Students who try to open the link before <strong>Opens At</strong> or after <strong>Closes At</strong> will be blocked. Leave both blank to allow access anytime.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
         <div class="fg" style="margin-bottom:0"><label>🔁 Max Attempts</label><input type="number" id="pq-max-attempts" min="1" max="99" placeholder="Unlimited" style="width:100%"/></div>
-        <div class="fg" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:flex-end"><label style="font-size:.7rem;color:var(--text2)">Leave blank = unlimited retakes</label></div>
+        <div class="fg" style="margin-bottom:0"><label>⏱️ Time Limit (minutes)</label><input type="number" id="pq-duration" min="1" max="300" placeholder="No limit" style="width:100%"/></div>
       </div>
+      <p style="font-size:.72rem;color:var(--text2);margin-bottom:12px;padding:8px 10px;background:rgba(167,139,250,.08);border-radius:8px;border-left:3px solid var(--accent)">⏱️ Leave Time Limit blank for no timer. When set, a countdown shows and quiz auto-submits when time runs out.</p>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid var(--cb);margin-bottom:12px"><div><div style="font-size:.82rem;font-weight:700">📊 Show Results to Students</div><div style="font-size:.71rem;color:var(--text2);margin-top:2px">If ON, students see their score &amp; correct answers immediately after submitting.</div></div><div id="pq-show-results-toggle" onclick="pqToggleResultsVis()" class="tt" style="cursor:pointer;flex-shrink:0;margin-left:12px" title="Toggle result visibility"></div></div>
       <div id="pq-questions-wrap" style="margin-bottom:12px"></div>
       <button class="btn bs bsm" onclick="pqAddQuestion()" style="margin-bottom:12px;width:100%;justify-content:center">➕ Add Question</button>
@@ -6817,7 +6931,7 @@ async function doRegister(){
             // Sign out after registration — require admin approval before login
             window._fbSignOut().catch(function(){});
             if(mode==='auto'){
-              notify('Registered! 🎁 50 bonus points added! You can log in now ⚡','success','✅');
+              notify('Registered! 🎁 50 bonus points added! You can log in now ⚡','success','✅'); logPoints(un,'earn',50,'🎁 Registration bonus');
             } else {
               notify('Registered! 🎁 50 bonus points added! Awaiting admin approval ⏳','success','✅');
             }
@@ -7396,6 +7510,7 @@ function showDash(role){
     if(sbar)sbar.style.display='';
     try{localStorage.removeItem('bp_last_sem');}catch(e){}
     loadBanner();loadUserProfile();loadRainCoursesForStudent();loadUFiles();loadUAnn();loadUQuizzes();
+    setTimeout(loadDashboardPreviews, 400);
     loadForum();loadGroups();loadNotes();loadExams('u-exams-list');loadLeaderboard('u-lb-list');
     startUserChatPoll();startNotifPoll();loadFeaturesForUser();
     loadAndApplyContactInfo(); // apply admin's real WhatsApp/email to contact buttons
@@ -7471,6 +7586,7 @@ function loadUserProfile(){
   document.getElementById('u-phone').value=CU.phone||'';
   document.getElementById('u-email').value=CU.email||'';
   setTimeout(loadMyPointHistory, 100);
+  setTimeout(loadMyQuizHistory, 200);
   // Wire up event listeners (ChatGPT style — only attaches once)
   setTimeout(initProfilePicListeners, 100);
   // Load profile picture if exists
@@ -7666,10 +7782,13 @@ function uploadFilesTo(files, cat){
     if(file.size > 4*1024*1024){notify('"'+file.name+'" too large (max 4MB)','error','⚠️');return;}
     var r = new FileReader();
     r.onload = function(e){
+      var videoEl  = document.getElementById('fvideo-'+safe);
+      var videoUrl = videoEl ? videoEl.value.trim() : '';
       var payload = {name:file.name, size:file.size,
         type:file.type||'application/octet-stream',
         data:e.target.result, category:cat,
         topic: topic || file.name,
+        videoUrl: videoUrl || '',
         uploadedAt:new Date().toISOString()};
       var saves = [];
       if(dest==='files'||dest==='both')    saves.push(fsAdd('files',     payload));
@@ -7698,6 +7817,8 @@ function uploadFilesTo(files, cat){
   var inp = document.getElementById('fui-'+safe);
   if(inp) inp.value = '';
   if(topicEl) topicEl.value = '';
+  var videoEl2 = document.getElementById('fvideo-'+safe);
+  if(videoEl2) videoEl2.value = '';
 }
 function uploadFiles(files){
   var catEl = document.getElementById('fcat');
@@ -7769,7 +7890,7 @@ document.addEventListener('click', function(e) {
   var newDlPts = Math.max(0, CU.totalScore - DOWNLOAD_COST);
   fsPatch('projects/' + PROJECT + '/databases/(default)/documents/users/' + CU.id,
     { totalScore: String(newDlPts) })
-    .then(function() { CU.totalScore = newDlPts; })
+    .then(function() { CU.totalScore = newDlPts; logPoints(CU.username,'spend',DOWNLOAD_COST,'📥 File download'); })
     .catch(function() {});
 }, true);
 
@@ -7970,6 +8091,7 @@ function renderFileDocs(docs,admin){
       '<div class="fm">'+fsz(f.size||0)+' <span class="badge '+catBadge(f.category)+'">'+esc(f.category||'General')+'</span></div></div></div>'+
       '<div class="fa">'+
         '<button class="btn bs bsm" onclick="event.stopPropagation();openPreview(\''+f.data+'\',\''+esc(f.name)+'\',\''+esc(f.type||'')+'\')">👁 View</button>'+
+        (f.videoUrl?'<a href="'+esc(f.videoUrl)+'" target="_blank" rel="noopener" class="btn bs bsm" style="color:#f87171" onclick="event.stopPropagation()">▶ Video</a>':'')+
         '<a href="'+f.data+'" download="'+esc(f.name)+'" class="btn '+( admin?'bs':'bp')+' bsm" onclick="event.stopPropagation()">⬇️</a>'+
         (admin?'<button class="btn bs bsm" onclick="event.stopPropagation();shareFileLink(\''+f.__id+'\',\''+esc(f.name)+'\')">🔗 Share</button>':'')+
         (!admin?'<button class="bm-btn '+(isFileBookmarked(f.__id)?'bm-saved':'')+'" title="Bookmark" onclick="event.stopPropagation();toggleFileBookmark(\''+f.__id+'\',\''+esc(f.name)+'\',\''+esc(f.category||'General')+'\',\''+esc(f.type||'')+'\',this)">'+(isFileBookmarked(f.__id)?'🔖':'🔖')+'</button>':'')+
@@ -8555,7 +8677,7 @@ function postForum(){
     if(CU.totalScore<3){showInsufficientPoints('post in the forum',3);return;}
     var newForumPts=Math.max(0,CU.totalScore-3);
     fsPatch('projects/'+PROJECT+'/databases/(default)/documents/users/'+CU.id,
-      {totalScore:String(newForumPts)}).then(function(){CU.totalScore=newForumPts;}).catch(function(){});
+      {totalScore:String(newForumPts)}).then(function(){CU.totalScore=newForumPts; logPoints(CU.username,'spend',3,'💬 Forum post');}).catch(function(){});
   }
   fsAdd('forum',{text:text,category:cat,author:CU.name,username:CU.username,
     postedAt:new Date().toISOString(),replies:'',reactions:''})
@@ -8914,7 +9036,7 @@ function saveBulkPaste(){
   sections.forEach(function(sec){sec.questions.forEach(function(q){if(!q.correct)allMissing.push(q.text.slice(0,30));});});
   if(allMissing.length){notify(allMissing.length+' question(s) missing correct answer (mark with *)','error','⚠️');return;}
   var allQs=[];sections.forEach(function(s){s.questions.forEach(function(q){allQs.push(q);});});
-  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,
+  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,videoUrl:meta.video||'',
     sections:JSON.stringify(sections),questions:JSON.stringify(allQs),
     createdAt:new Date().toISOString(),active:'yes'})
     .then(function(){
@@ -9145,7 +9267,7 @@ function saveAIQuiz(){
   if(!aiGeneratedSections.length){notify('Generate sections first','error','⚠️');return;}
   var allQs=[];
   aiGeneratedSections.forEach(function(s){(s.questions||[]).forEach(function(q){allQs.push(q);});});
-  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,
+  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,videoUrl:meta.video||'',
     sections:JSON.stringify(aiGeneratedSections),questions:JSON.stringify(allQs),
     createdAt:new Date().toISOString(),active:'yes'})
     .then(function(){
@@ -9302,7 +9424,7 @@ function saveDocQuiz(){
   if(!meta.title){notify('Enter a quiz title above','error','⚠️');return;}
   if(!docExtractedQuestions.length){notify('No questions to save','error','⚠️');return;}
   var sections=_chunkIntoSections(docExtractedQuestions, meta.qps||5, meta.title);
-  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,
+  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,videoUrl:meta.video||'',
     sections:JSON.stringify(sections),questions:JSON.stringify(docExtractedQuestions),
     createdAt:new Date().toISOString(),active:'yes'})
     .then(function(){
@@ -9375,7 +9497,7 @@ function saveAITextQuiz(){
   if(!aiTextGeneratedSections.length){notify('Generate sections first','error','⚠️');return;}
   var allQs=[];
   aiTextGeneratedSections.forEach(function(s){(s.questions||[]).forEach(function(q){allQs.push(q);});});
-  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,
+  fsAdd('quizzes',{title:meta.title,category:meta.cat,duration:meta.dur,videoUrl:meta.video||'',
     sections:JSON.stringify(aiTextGeneratedSections),questions:JSON.stringify(allQs),
     createdAt:new Date().toISOString(),active:'yes'})
     .then(function(){
@@ -9466,12 +9588,14 @@ function saveQuiz(){
   // Flatten all questions for backward compat, store sections separately
   var allQs=[];
   sections.forEach(function(s){s.questions.forEach(function(q){allQs.push(q);});});
+  var qvideo = document.getElementById('qvideo') ? document.getElementById('qvideo').value.trim() : '';
   fsAdd('quizzes',{title:title,category:cat,duration:secDur,sections:JSON.stringify(sections),
-    questions:JSON.stringify(allQs),createdAt:new Date().toISOString(),active:'yes'})
+    questions:JSON.stringify(allQs),videoUrl:qvideo,createdAt:new Date().toISOString(),active:'yes'})
     .then(function(){
       notify('Quiz saved! '+sections.length+' sections, '+allQs.length+' questions total ✅','success','✅');
       logActivity('quiz_created',title);
       document.getElementById('qtitle').value='';document.getElementById('qdur').value='5';
+      if(document.getElementById('qvideo')) document.getElementById('qvideo').value='';
       document.getElementById('sections-container').innerHTML='';sectionCount=0;sqCount={};
       loadAdminQuizzes();updateStats();loadAnalyticsQuizSelect();
     }).catch(function(){notify('Failed','error','❌');});
@@ -9643,6 +9767,7 @@ function renderUQuizList(){
         '<div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap">'+
           secs.map(function(s){return'<span style="font-size:.65rem;padding:2px 7px;border-radius:20px;background:rgba(167,139,250,.15);color:var(--accent)">'+esc(s.name)+'</span>';}).join('')+
         '</div>':'')+
+      (q.videoUrl?'<a href="'+esc(q.videoUrl)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;font-size:.72rem;color:#f87171;font-weight:700;text-decoration:none">▶ Study Video</a>':'')+
       '<div style="margin-top:7px;font-size:.76rem;color:var(--accent)">▶ Tap to start →</div>'+
     '</div>';
   }).join('');
@@ -9662,7 +9787,6 @@ function renderUQuizFiles(){
         '<div class="fa">'+
         '<button class="btn bs bsm" onclick="event.stopPropagation();openPreview(\''+f.data+'\',\''+esc(f.name)+'\',\''+esc(f.type||'')+'\')">👁 View</button>'+
         '<button class="btn bp bsm" style="background:linear-gradient(135deg,#a78bfa,#6d28d9)" onclick="event.stopPropagation();openQfAttempt(\''+f.data+'\',\''+esc(f.name)+'\')">✏️ Attempt</button>'+
-        '<a href="'+f.data+'" download="'+esc(f.name)+'" class="btn bp bsm" onclick="event.stopPropagation()">⬇️</a>'+
         '<button class="bm-btn '+(isFileBookmarked(f.__id)?'bm-saved':'')+'" title="Bookmark" onclick="event.stopPropagation();toggleFileBookmark(\''+f.__id+'\',\''+esc(f.name)+'\',\''+esc(f.category||'General')+'\',\''+esc(f.type||'')+'\',this)">'+(isFileBookmarked(f.__id)?'🔖':'🔖')+'</button>'+
         '<button class="bm-btn" title="Notes &amp; Highlights" onclick="event.stopPropagation();openAnnotModal(\''+f.__id+'\',\''+esc(f.name)+'\')">📝</button>'+
         '</div></div>';
@@ -9965,7 +10089,7 @@ function submitQuiz(){
   var timeStr=String(timeMins).padStart(2,'0')+':'+String(timeSecs).padStart(2,'0');
 
   fsAdd('quizscores',{username:CU.username,name:CU.name,quizId:currentQuiz.__id,
-    quizTitle:currentQuiz.title,score:score,total:total,pct:pct,pts:pts,
+    quizTitle:currentQuiz.title,quizCategory:currentQuiz.category||'',score:score,total:total,pct:pct,pts:pts,
     timeTaken:String(timeTaken),answers:JSON.stringify(userAnswers),
     takenAt:new Date().toISOString()}).catch(function(){});
 
@@ -9973,7 +10097,11 @@ function submitQuiz(){
   var newScore=Math.max(0,CU.totalScore+pts-QUIZ_COST),newCount=CU.quizzesTaken+1;
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+CU.id,
     {totalScore:String(newScore),quizzesTaken:String(newCount)})
-    .then(function(){CU.totalScore=newScore;CU.quizzesTaken=newCount;}).catch(function(){});
+    .then(function(){
+      CU.totalScore=newScore;CU.quizzesTaken=newCount;
+      logPoints(CU.username,'spend',QUIZ_COST,'📝 Quiz taken: '+(currentQuiz?currentQuiz.title:''));
+      if(pts>0) logPoints(CU.username,'earn',pts,'🏆 Quiz score: '+pct+'% — '+(currentQuiz?currentQuiz.title:''));
+    }).catch(function(){});
 
   // Referral bonus
   var REFERRAL_BONUS=5;
@@ -10093,8 +10221,9 @@ function submitQuiz(){
 
   html+='<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">';
   html+='<button class="btn bp" style="flex:1;justify-content:center" onclick="backToQuizList()">← Back to Quizzes</button>';
+  html+='<button class="btn bs" style="flex:1;justify-content:center" onclick="printQuizResult()">📄 Save PDF</button>';
   if(wrong+skipped>0){
-    html+='<button class="btn bo" style="flex:1;justify-content:center" id="ai-explain-btn" onclick="loadQuizExplanations()">🤖 AI Explain Wrong Answers</button>';
+    html+='<button class="btn bo" style="width:100%;justify-content:center;margin-top:0" id="ai-explain-btn" onclick="loadQuizExplanations()">🤖 AI Explain Wrong Answers</button>';
   }
   html+='</div>';
   html+='<div id="quiz-ai-explanations" style="margin-top:14px"></div>';
@@ -10110,6 +10239,67 @@ function backToQuizList(){
   document.getElementById('quiz-result-view').style.display='none';
   document.getElementById('quiz-list-view').style.display='';
   loadUQuizzes();loadLeaderboard('u-lb-list');loadUserProfile();
+}
+
+function printQuizResult() {
+  if (!_reviewQuizData) { notify('No result to print','error','⚠️'); return; }
+  var d = _reviewQuizData;
+  var total = d.qs.length;
+  var score = d.qs.filter(function(q,i){ return d.answers[i]===q.correct; }).length;
+  var pct = total ? Math.round(score/total*100) : 0;
+  var wrong = total - score;
+  var color = pct>=70?'#16a34a':pct>=50?'#d97706':'#dc2626';
+  var medal = pct>=90?'🥇':pct>=70?'🥈':pct>=50?'🥉':'📚';
+  var date = new Date().toLocaleDateString([],{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+
+  var qRows = '';
+  d.qs.forEach(function(q, i) {
+    var chosen = d.answers[i] || null;
+    var right = chosen === q.correct;
+    var skipped = !chosen;
+    var status = right ? '✅' : skipped ? '⏭️' : '❌';
+    var opts = ['A','B','C','D'].map(function(o){
+      var val = q['opt'+o]||''; if(!val) return '';
+      var isCorrect = o===q.correct; var isChosen = o===chosen;
+      var style = isCorrect ? 'color:#16a34a;font-weight:700' : isChosen&&!isCorrect ? 'color:#dc2626' : 'color:#6b7280';
+      return '<span style="'+style+'">'+o+'. '+val+(isCorrect?' ✓':'')+(isChosen&&!isCorrect?' ✗':'')+'</span>';
+    }).filter(Boolean).join(' &nbsp;|&nbsp; ');
+    qRows += '<tr style="background:'+(i%2?'#f9fafb':'#fff')+'">'+
+      '<td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;vertical-align:top">'+status+' '+(i+1)+'</td>'+
+      '<td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;font-size:.82rem">'+q.text+'</td>'+
+      '<td style="padding:7px 10px;border-bottom:1px solid #e5e7eb;font-size:.78rem">'+opts+'</td>'+
+    '</tr>';
+  });
+
+  var w = window.open('','_blank','width=900,height=1100');
+  w.document.write('<!DOCTYPE html><html><head><title>'+d.title+' — Result</title>'+
+    '<style>body{font-family:Arial,sans-serif;color:#1e1e2e;padding:30px 40px;max-width:860px;margin:0 auto}'+
+    'h1{font-size:1.4rem;margin-bottom:2px}h2{font-size:1rem;color:#6b7280;margin:0 0 20px}'+
+    '.score{font-size:2.8rem;font-weight:900;color:'+color+';margin:10px 0 2px}'+
+    '.pct{font-size:1.1rem;font-weight:700;color:'+color+'}'+
+    '.stats{display:flex;gap:16px;margin:16px 0;flex-wrap:wrap}'+
+    '.stat{background:#f3f4f6;border-radius:10px;padding:10px 16px;text-align:center;min-width:80px}'+
+    '.stat-val{font-size:1.4rem;font-weight:900}.stat-lbl{font-size:.7rem;color:#6b7280}'+
+    'table{width:100%;border-collapse:collapse;margin-top:16px;font-size:.85rem}'+
+    'th{background:#7c3aed;color:#fff;padding:9px 10px;text-align:left}'+
+    '@media print{.no-print{display:none}}</style></head><body>'+
+    '<div style="display:flex;align-items:center;gap:14px;margin-bottom:6px">'+
+      '<img src="https://babspharm1-lgtm.github.io/BABSPHARM./icon-192.png" width="44" style="border-radius:10px" onerror="this.style.display=\'none\'">'+
+      '<div><h1>'+d.title+'</h1><h2>BABSPHARM Cloud · '+date+'</h2></div>'+
+    '</div>'+
+    '<div class="score">'+medal+' '+score+'/'+total+'</div>'+
+    '<div class="pct">'+pct+'% &nbsp;·&nbsp; '+(CU?CU.name:'Student')+'</div>'+
+    '<div class="stats">'+
+      '<div class="stat"><div class="stat-val" style="color:#16a34a">'+score+'</div><div class="stat-lbl">Correct</div></div>'+
+      '<div class="stat"><div class="stat-val" style="color:#dc2626">'+wrong+'</div><div class="stat-lbl">Wrong</div></div>'+
+      '<div class="stat"><div class="stat-val" style="color:#d97706">'+(total-score-wrong)+'</div><div class="stat-lbl">Skipped</div></div>'+
+      '<div class="stat"><div class="stat-val" style="color:#7c3aed">'+pct+'%</div><div class="stat-lbl">Score</div></div>'+
+    '</div>'+
+    '<div class="no-print" style="margin-bottom:16px"><button onclick="window.print()" style="padding:10px 28px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-weight:700;font-size:.95rem;cursor:pointer">🖨️ Print / Save as PDF</button></div>'+
+    '<table><thead><tr><th style="width:40px">#</th><th>Question</th><th>Options</th></tr></thead><tbody>'+qRows+'</tbody></table>'+
+    '<div style="text-align:center;font-size:.75rem;color:#9ca3af;margin-top:30px;padding-top:12px;border-top:1px solid #e5e7eb">BABSPHARM Cloud · babspharm1-lgtm.github.io/BABSPHARM.</div>'+
+    '</body></html>');
+  w.document.close();
 }
 
 // ══ PERSONAL REPORT CARD ══
@@ -11315,7 +11505,9 @@ function sut(name,btn){
     calc:function(){},
     bookmarks:function(){renderBookmarks('files');},
     mindmap:function(){mmInitTab();},
-    reportcard:loadReportCard
+    reportcard:loadReportCard,
+    goals:loadGoalsTab,
+    formulas:loadStudentFormulas
   };
   if(loaders[name])loaders[name]();
 }
@@ -12777,38 +12969,502 @@ function loadMyPointHistory() {
   var badge = document.getElementById('u-pts-total-badge');
   if (!el) return;
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-  if (badge) badge.textContent = CU.totalScore + ' pts total';
-  Promise.all([fsGet('pointgrants'), fsGet('referralbonuses')]).then(function(res){
-    var now = new Date();
-    var grants = getDocs(res[0])
-      .filter(function(g){ return g.studentId === CU.id || g.studentUsername === CU.username; })
-      .map(function(g){ return {type:'admin_grant',icon:'⚡',label:'Admin Bonus',note:g.note||'Bonus points',pts:Number(g.points||0),at:g.grantedAt,color:'rgba(167,139,250,.15)',tcolor:'var(--accent)'}; });
-    var refs = getDocs(res[1])
-      .filter(function(b){ return b.referrer === CU.username || b.referrerName === CU.name; })
-      .map(function(b){ return {type:'referral',icon:'🔗',label:'Referral Bonus',note:(b.studentName||'Friend')+' completed '+(b.quizTitle||'a quiz'),pts:Number(b.bonus||5),at:b.awardedAt,color:'rgba(74,222,128,.15)',tcolor:'var(--green)'}; });
-    var all = grants.concat(refs).sort(function(a,b){ return new Date(b.at)-new Date(a.at); });
-    if (badge) badge.textContent = CU.totalScore + ' pts total';
+  if (badge) badge.textContent = CU.totalScore + ' pts';
+
+  function iconFor(note){
+    if(!note) return '💎';
+    if(note.indexOf('Registration')>-1) return '🎁';
+    if(note.indexOf('File download')>-1||note.indexOf('📥')>-1) return '📥';
+    if(note.indexOf('Forum')>-1||note.indexOf('💬')>-1) return '💬';
+    if(note.indexOf('Private quiz')>-1||note.indexOf('📋')>-1) return '📋';
+    if(note.indexOf('Quiz score')>-1||note.indexOf('🏆')>-1) return '🏆';
+    if(note.indexOf('Quiz taken')>-1||note.indexOf('📝')>-1) return '📝';
+    if(note.indexOf('Referral')>-1||note.indexOf('🔗')>-1) return '🔗';
+    if(note.indexOf('Admin')>-1||note.indexOf('⚡')>-1) return '⚡';
+    return '💎';
+  }
+
+  Promise.all([
+    fsGetAll('pointslog'),
+    fsGet('pointgrants'),
+    fsGet('referralbonuses')
+  ]).then(function(res){
+    var logs = getDocs(res[0])
+      .filter(function(l){ return l.username === CU.username; })
+      .map(function(l){ return { type:l.type||'earn', pts:Number(l.pts||0), note:l.note||'', at:l.at }; });
+
+    var grants = getDocs(res[1])
+      .filter(function(g){ return g.studentId===CU.id||g.studentUsername===CU.username; })
+      .map(function(g){ return { type:'earn', pts:Number(g.points||0), note:'⚡ Admin bonus: '+(g.note||'Bonus'), at:g.grantedAt }; });
+
+    var refs = getDocs(res[2])
+      .filter(function(b){ return b.referrer===CU.username||b.referrerName===CU.name; })
+      .map(function(b){ return { type:'earn', pts:Number(b.bonus||5), note:'🔗 Referral: '+(b.studentName||'Friend')+' completed '+(b.quizTitle||'a quiz'), at:b.awardedAt }; });
+
+    // Merge — pointslog is source of truth; legacy only fills gaps
+    var logTimes = logs.map(function(l){ return l.at; });
+    var legacyGrants = grants.filter(function(g){ return !logTimes.some(function(t){ return Math.abs(new Date(t)-new Date(g.at))<5000; }); });
+    var legacyRefs   = refs.filter(function(r){ return !logTimes.some(function(t){ return Math.abs(new Date(t)-new Date(r.at))<5000; }); });
+
+    var all = logs.concat(legacyGrants).concat(legacyRefs)
+      .sort(function(a,b){ return new Date(b.at)-new Date(a.at); });
+
+    if (badge) badge.textContent = CU.totalScore + ' pts';
     if (!all.length) {
-      el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);font-size:.8rem">'+
-        '<div style="font-size:2rem;margin-bottom:8px">🏅</div>'+
-        'No points yet — complete referred friend\'s quizzes or earn admin bonuses to see history here.</div>';
+      el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2);font-size:.82rem">'+
+        '<div style="font-size:2.5rem;margin-bottom:10px">🏅</div>'+
+        '<div style="font-weight:700;margin-bottom:6px;color:var(--text1)">No transactions yet</div>'+
+        'Your point history will appear here as you download files, take quizzes, and earn bonuses.</div>';
       return;
     }
-    el.innerHTML = all.map(function(h){
-      var diff = Date.now() - new Date(h.at).getTime();
-      var ago = diff<60000?'just now':diff<3600000?Math.floor(diff/60000)+'m ago':diff<86400000?Math.floor(diff/3600000)+'h ago':Math.floor(diff/86400000)+'d ago';
-      return '<div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:12px;'+
-        'background:'+h.color+';border:1px solid rgba(255,255,255,.09);margin-bottom:8px">'+
-        '<div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0">'+h.icon+'</div>'+
+
+    var totalEarned = all.filter(function(h){ return h.type==='earn'; }).reduce(function(s,h){ return s+h.pts; },0);
+    var totalSpent  = all.filter(function(h){ return h.type==='spend'; }).reduce(function(s,h){ return s+h.pts; },0);
+
+    el.innerHTML =
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">'+
+        '<div style="text-align:center;padding:10px 6px;border-radius:12px;background:rgba(167,139,250,.1);border:1px solid rgba(167,139,250,.2)">'+
+          '<div style="font-family:var(--fh);font-weight:900;font-size:1.1rem;color:var(--accent)">'+CU.totalScore+'</div>'+
+          '<div style="font-size:.62rem;color:var(--text2)">Balance</div></div>'+
+        '<div style="text-align:center;padding:10px 6px;border-radius:12px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.15)">'+
+          '<div style="font-family:var(--fh);font-weight:900;font-size:1.1rem;color:var(--green)">+'+totalEarned+'</div>'+
+          '<div style="font-size:.62rem;color:var(--text2)">Earned</div></div>'+
+        '<div style="text-align:center;padding:10px 6px;border-radius:12px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.15)">'+
+          '<div style="font-family:var(--fh);font-weight:900;font-size:1.1rem;color:var(--red)">-'+totalSpent+'</div>'+
+          '<div style="font-size:.62rem;color:var(--text2)">Spent</div></div>'+
+      '</div>'+
+      all.map(function(h){
+        var isEarn = h.type === 'earn';
+        var bgColor = isEarn ? 'rgba(74,222,128,.1)' : 'rgba(248,113,113,.08)';
+        var bdColor = isEarn ? 'rgba(74,222,128,.18)' : 'rgba(248,113,113,.18)';
+        var tColor  = isEarn ? 'var(--green)' : 'var(--red)';
+        var sign    = isEarn ? '+' : '-';
+        var diff = Date.now() - new Date(h.at).getTime();
+        var ago = diff<60000?'just now':diff<3600000?Math.floor(diff/60000)+'m ago':diff<86400000?Math.floor(diff/3600000)+'h ago':Math.floor(diff/86400000)+'d ago';
+        return '<div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:12px;'+
+          'background:'+bgColor+';border:1px solid '+bdColor+';margin-bottom:7px">'+
+          '<div style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0">'+iconFor(h.note)+'</div>'+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="font-size:.8rem;font-weight:600;color:var(--text1)">'+esc(h.note||'Transaction')+'</div>'+
+            '<div style="font-size:.65rem;color:var(--text2);margin-top:3px">'+ago+'</div>'+
+          '</div>'+
+          '<div style="font-family:var(--fh);font-weight:900;font-size:1rem;color:'+tColor+';flex-shrink:0">'+sign+h.pts+'</div>'+
+        '</div>';
+      }).join('');
+  }).catch(function(e){ console.error(e); el.innerHTML='<div class="empty"><span>⚠️</span>Error loading history</div>'; });
+}
+
+// ══════════════════════════════════════════════════════════
+// 📊 STUDENT: MY QUIZ ATTEMPT HISTORY
+// ══════════════════════════════════════════════════════════
+var _quizAttemptStore = {};
+function loadMyQuizHistory() {
+  var el = document.getElementById('u-quiz-history-list');
+  if (!el) return;
+  el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
+  Promise.all([fsGet('quizscores'), fsGet('quizzes')]).then(function(res) {
+    var scores = getDocs(res[0]).filter(function(s){ return s.username === CU.username; })
+      .sort(function(a,b){ return new Date(b.takenAt)-new Date(a.takenAt); });
+    var quizMap = {};
+    getDocs(res[1]).forEach(function(q){ quizMap[q.__id] = q; });
+
+    if (!scores.length) {
+      el.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text2);font-size:.82rem">'+
+        '<div style="font-size:2rem;margin-bottom:8px">📝</div>'+
+        '<div style="font-weight:700;color:var(--text1);margin-bottom:4px">No attempts yet</div>'+
+        'Complete a quiz to see your history here.</div>';
+      return;
+    }
+
+    // Group by quizId
+    var grouped = {};
+    scores.forEach(function(s) {
+      if (!grouped[s.quizId]) grouped[s.quizId] = [];
+      grouped[s.quizId].push(s);
+    });
+
+    var html = '';
+    Object.keys(grouped).forEach(function(qid) {
+      var attempts = grouped[qid];
+      var quiz = quizMap[qid] || {};
+      var title = attempts[0].quizTitle || quiz.title || 'Unknown Quiz';
+      var best = Math.max.apply(null, attempts.map(function(a){ return Number(a.pct||0); }));
+      var bestColor = best>=70?'var(--green)':best>=50?'var(--yellow)':'var(--red)';
+
+      html += '<div style="border:1px solid var(--cb);border-radius:14px;overflow:hidden;margin-bottom:12px">';
+      // Quiz header
+      html += '<div style="padding:12px 14px;background:rgba(167,139,250,.08);display:flex;align-items:center;justify-content:space-between;gap:10px">'+
         '<div style="flex:1;min-width:0">'+
-          '<div style="font-weight:700;font-size:.82rem;color:'+h.tcolor+'">'+h.label+'</div>'+
-          '<div style="font-size:.72rem;color:var(--text2);margin-top:1px">'+esc(h.note)+'</div>'+
-          '<div style="font-size:.65rem;color:var(--text2);margin-top:2px">'+ago+'</div>'+
+          '<div style="font-weight:800;font-size:.88rem">'+esc(title)+'</div>'+
+          '<div style="font-size:.7rem;color:var(--text2);margin-top:2px">'+attempts.length+' attempt'+(attempts.length>1?'s':'')+' · Best: <span style="color:'+bestColor+';font-weight:700">'+best+'%</span></div>'+
         '</div>'+
-        '<div style="font-family:var(--fh);font-weight:900;font-size:1.1rem;color:'+h.tcolor+';flex-shrink:0">+'+h.pts+'</div>'+
+        '<div style="font-family:var(--fh);font-size:1.3rem;font-weight:900;color:'+bestColor+'">'+best+'%</div>'+
+      '</div>';
+
+      // Individual attempts
+      attempts.forEach(function(a, idx) {
+        var pct = Number(a.pct||0);
+        var pts = Number(a.pts||0);
+        var color = pct>=70?'var(--green)':pct>=50?'var(--yellow)':'var(--red)';
+        var date = a.takenAt ? new Date(a.takenAt).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'}) : '—';
+        var time = a.takenAt ? new Date(a.takenAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : '';
+        var timeTaken = a.timeTaken ? (Math.floor(Number(a.timeTaken)/60)+'m '+( Number(a.timeTaken)%60)+'s') : '—';
+        html += '<div style="padding:10px 14px;border-top:1px solid var(--cb);display:flex;align-items:center;gap:12px;'+(idx%2===1?'background:rgba(255,255,255,.02)':'')+'">'+
+          '<div style="width:36px;height:36px;border-radius:10px;background:rgba(167,139,250,.1);display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:900;font-size:.75rem;color:var(--accent);flex-shrink:0">#'+(idx+1)+'</div>'+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="font-size:.78rem;font-weight:700;color:'+color+'">'+pct+'% &nbsp;·&nbsp; '+a.score+'/'+a.total+'</div>'+
+            '<div style="font-size:.67rem;color:var(--text2);margin-top:2px">'+date+' '+time+' · ⏱ '+timeTaken+'</div>'+
+          '</div>'+
+          '<div style="text-align:right;flex-shrink:0">'+
+            '<div style="font-size:.72rem;color:var(--green);font-weight:700">+'+pts+' pts</div>'+
+            (function(){ var _aid = qid+'-'+idx; _quizAttemptStore[_aid]={title:title,score:Number(a.score||0),total:Number(a.total||0),pct:pct,date:date,time:time,timeTaken:timeTaken,pts:pts}; return '<button class="btn bs bsm" style="margin-top:4px;font-size:.65rem;padding:3px 8px" onclick="pqPrintAttempt(\''+_aid+'\')">📄 PDF</button>'; })()+
+          '</div>'+
+        '</div>';
+      });
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  }).catch(function(){ el.innerHTML='<div class="empty"><span>⚠️</span>Error loading history</div>'; });
+}
+
+// Print a past quiz attempt summary as PDF
+window.pqPrintAttempt = function(jsonStr) {
+  try {
+    var d = _quizAttemptStore[jsonStr] || JSON.parse(jsonStr);
+    var w = window.open('','_blank','width=700,height=900');
+    var color = d.pct>=70?'#16a34a':d.pct>=50?'#d97706':'#dc2626';
+    var medal = d.pct>=90?'🥇':d.pct>=70?'🥈':d.pct>=50?'🥉':'📚';
+    w.document.write('<!DOCTYPE html><html><head><title>Quiz Result — '+d.title+'</title>'+
+      '<style>body{font-family:Arial,sans-serif;max-width:600px;margin:40px auto;color:#1e1e2e;padding:0 20px}'+
+      'h1{font-size:1.3rem;margin-bottom:4px}'+
+      '.score{font-size:3rem;font-weight:900;color:'+color+';text-align:center;margin:20px 0 4px}'+
+      '.pct{font-size:1.2rem;font-weight:700;color:'+color+';text-align:center;margin-bottom:20px}'+
+      'table{width:100%;border-collapse:collapse;margin-top:20px}'+
+      'td{padding:10px 14px;border-bottom:1px solid #e5e7eb;font-size:.9rem}'+
+      'td:first-child{color:#6b7280;width:40%}td:last-child{font-weight:700}'+
+      '.footer{text-align:center;font-size:.75rem;color:#9ca3af;margin-top:30px;padding-top:16px;border-top:1px solid #e5e7eb}'+
+      '@media print{button{display:none}}'+
+      '</style></head><body>'+
+      '<div style="text-align:center;margin-bottom:10px"><img src="https://babspharm1-lgtm.github.io/BABSPHARM./icon-192.png" width="48" style="border-radius:12px" onerror="this.style.display=\'none\'"></div>'+
+      '<h1 style="text-align:center">'+d.title+'</h1>'+
+      '<div class="score">'+medal+' '+d.score+'/'+d.total+'</div>'+
+      '<div class="pct">'+d.pct+'%</div>'+
+      '<table>'+
+      '<tr><td>Student</td><td>'+(window.opener&&window.opener.CU?window.opener.CU.name:CU&&CU.name?CU.name:'—')+'</td></tr>'+
+      '<tr><td>Date</td><td>'+d.date+' '+d.time+'</td></tr>'+
+      '<tr><td>Time Taken</td><td>'+d.timeTaken+'</td></tr>'+
+      '<tr><td>Score</td><td>'+d.score+' / '+d.total+'</td></tr>'+
+      '<tr><td>Percentage</td><td style="color:'+color+'">'+d.pct+'%</td></tr>'+
+      '<tr><td>Points Earned</td><td style="color:#16a34a">+'+d.pts+' pts</td></tr>'+
+      '</table>'+
+      '<div style="text-align:center;margin-top:24px"><button onclick="window.print()" style="padding:10px 28px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:.95rem;cursor:pointer;font-weight:700">🖨️ Print / Save PDF</button></div>'+
+      '<div class="footer">BABSPHARM Cloud · babspharm1-lgtm.github.io/BABSPHARM.</div>'+
+      '</body></html>');
+    w.document.close();
+  } catch(e){ notify('Could not open PDF','error','⚠️'); }
+};
+
+
+// ══════════════════════════════════════════════════════════
+// 📋 FORMULA SHEETS — Admin & Student
+// ══════════════════════════════════════════════════════════
+
+var COURSES_LIST = ['PHY 101','PHY 103','CHM 101','BIO 101','MTH 101','GST 101','PHL 101','SOC 101','EGL 101','General'];
+
+function saveFormulaSheet() {
+  var course = document.getElementById('fs-course').value;
+  var title  = document.getElementById('fs-title').value.trim();
+  var body   = document.getElementById('fs-content').value.trim();
+  var tag    = document.getElementById('fs-tag').value.trim();
+  if (!title) { notify('Enter a title','error','⚠️'); return; }
+  if (!body)  { notify('Enter the formula sheet content','error','⚠️'); return; }
+  var btn = event.target; btn.disabled = true; btn.textContent = 'Saving…';
+  fsAdd('formulas', { course: course, title: title, body: body, tag: tag, createdAt: new Date().toISOString() })
+    .then(function() {
+      notify('Formula sheet saved ✅','success','✅');
+      document.getElementById('fs-title').value = '';
+      document.getElementById('fs-content').value = '';
+      document.getElementById('fs-tag').value = '';
+      loadAdminFormulas();
+      btn.disabled = false; btn.textContent = '💾 Save Formula Sheet';
+    }).catch(function() { notify('Failed to save','error','❌'); btn.disabled = false; btn.textContent = '💾 Save Formula Sheet'; });
+}
+
+function loadAdminFormulas() {
+  var el = document.getElementById('a-formula-list');
+  if (!el) return;
+  el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
+  fsGet('formulas').then(function(res) {
+    var docs = getDocs(res).sort(function(a,b){ return new Date(b.createdAt)-new Date(a.createdAt); });
+    if (!docs.length) { el.innerHTML = '<div class="empty"><span>📋</span>No formula sheets yet</div>'; return; }
+    el.innerHTML = docs.map(function(d) {
+      return '<div style="border:1px solid var(--cb);border-radius:12px;padding:13px 14px;margin-bottom:10px">'+
+        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">'+
+          '<div style="flex:1;min-width:0">'+
+            '<div style="font-weight:800;font-size:.88rem">'+esc(d.title)+'</div>'+
+            '<div style="font-size:.71rem;color:var(--text2);margin-top:3px">'+
+              '<span class="badge '+catBadge(d.course)+'">'+esc(d.course||'General')+'</span>'+
+              (d.tag ? ' &nbsp;🏷️ '+esc(d.tag) : '')+
+            '</div>'+
+          '</div>'+
+          '<button class="btn bd bsm" style="flex-shrink:0" data-fid="'+d.__id+'" onclick="delFormula(this.dataset.fid)">🗑️</button>'+
+        '</div>'+
+        '<pre style="margin-top:10px;font-size:.75rem;white-space:pre-wrap;word-break:break-word;color:var(--text2);background:rgba(0,0,0,.2);padding:10px;border-radius:8px;line-height:1.6;max-height:120px;overflow-y:auto">'+esc(d.body)+'</pre>'+
       '</div>';
     }).join('');
-  }).catch(function(){ el.innerHTML='<div class="empty"><span>⚠️</span>Error loading history</div>'; });
+  }).catch(function(){ el.innerHTML='<div class="empty"><span>⚠️</span>Error loading</div>'; });
+}
+
+function delFormula(id) {
+  if (!confirm('Delete this formula sheet?')) return;
+  fsDel('projects/'+PROJECT+'/databases/(default)/documents/formulas/'+id)
+    .then(function(){ notify('Deleted','warn','🗑️'); loadAdminFormulas(); })
+    .catch(function(){ notify('Failed','error','❌'); });
+}
+
+function loadStudentFormulas() {
+  var filterEl = document.getElementById('u-formula-filters');
+  var listEl   = document.getElementById('u-formula-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
+
+  fsGet('formulas').then(function(res) {
+    var all = getDocs(res).sort(function(a,b){ return new Date(b.createdAt)-new Date(a.createdAt); });
+    if (!all.length) {
+      if (filterEl) filterEl.innerHTML = '';
+      listEl.innerHTML = '<div class="empty"><span>📋</span>No formula sheets posted yet.<br><small style="color:var(--text2)">Check back soon!</small></div>';
+      return;
+    }
+
+    // Build course filter tabs
+    var courses = ['All'];
+    all.forEach(function(d){ if (courses.indexOf(d.course||'General') === -1) courses.push(d.course||'General'); });
+    if (filterEl) {
+      filterEl.innerHTML = courses.map(function(c,i){
+        return '<button class="cat-tab'+(i===0?' on':'')+'" data-c="'+esc(c)+'" onclick="filterFormulas(this,this.dataset.c)" style="font-size:.72rem;padding:5px 12px">'+esc(c)+'</button>';
+      }).join('');
+    }
+
+    window._allFormulas = all;
+    renderFormulaList('All');
+  }).catch(function(){ listEl.innerHTML='<div class="empty"><span>⚠️</span>Error loading</div>'; });
+}
+
+window._allFormulas = [];
+window.filterFormulas = function(btn, course) {
+  document.querySelectorAll('#u-formula-filters .cat-tab').forEach(function(b){ b.classList.remove('on'); });
+  if (btn) btn.classList.add('on');
+  renderFormulaList(course);
+};
+
+function renderFormulaList(course) {
+  var listEl = document.getElementById('u-formula-list');
+  if (!listEl) return;
+  var list = (course === 'All') ? window._allFormulas : window._allFormulas.filter(function(d){ return (d.course||'General') === course; });
+  if (!list.length) { listEl.innerHTML = '<div class="empty"><span>📋</span>No sheets for this course yet</div>'; return; }
+
+  listEl.innerHTML = list.map(function(d) {
+    var id = 'fs-body-'+d.__id;
+    return '<div style="border:1px solid var(--cb);border-radius:14px;overflow:hidden;margin-bottom:12px;background:var(--card)">'+
+      '<div style="padding:13px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer" data-fid="'+id+'" onclick="toggleFormulaBody(this.dataset.fid)">'+
+        '<div style="flex:1;min-width:0">'+
+          '<div style="font-weight:800;font-size:.9rem">'+esc(d.title)+'</div>'+
+          '<div style="font-size:.7rem;color:var(--text2);margin-top:3px">'+
+            '<span class="badge '+catBadge(d.course)+'">'+esc(d.course||'General')+'</span>'+
+            (d.tag ? ' &nbsp;🏷️ <span style="color:var(--accent)">'+esc(d.tag)+'</span>' : '')+
+          '</div>'+
+        '</div>'+
+        '<span style="font-size:.85rem;color:var(--text2)" id="'+id+'-icon">▼</span>'+
+      '</div>'+
+      '<div id="'+id+'" style="display:none;padding:0 14px 14px">'+
+        '<pre style="font-size:.8rem;white-space:pre-wrap;word-break:break-word;color:var(--text1);background:rgba(167,139,250,.06);padding:12px;border-radius:10px;line-height:1.7;border:1px solid rgba(167,139,250,.15)">'+esc(d.body)+'</pre>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+}
+
+window.toggleFormulaBody = function(id) {
+  var el = document.getElementById(id);
+  var icon = document.getElementById(id+'-icon');
+  if (!el) return;
+  var open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  if (icon) icon.textContent = open ? '▼' : '▲';
+};
+
+// ══════════════════════════════════════════════════════════
+// 🎯 SEMESTER GOAL TRACKER
+// ══════════════════════════════════════════════════════════
+
+var GOAL_COURSES = ['PHY 101','PHY 103','CHM 101','BIO 101','MTH 101','GST 101','PHL 101','SOC 101','EGL 101'];
+
+function loadGoalsTab() {
+  renderGoalsForm();
+  loadGoalsProgress();
+}
+
+function renderGoalsForm() {
+  var el = document.getElementById('goals-form-area');
+  if (!el) return;
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem('babspharm_goals_'+( CU?CU.username:''))||'{}'); } catch(e){}
+
+  el.innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">'+
+    GOAL_COURSES.map(function(c) {
+      var val = saved[c] || '';
+      return '<div style="background:rgba(167,139,250,.07);border:1px solid var(--cb);border-radius:12px;padding:11px 13px">'+
+        '<div style="font-weight:800;font-size:.8rem;margin-bottom:6px"><span class="badge '+catBadge(c)+'" style="font-size:.65rem">'+c+'</span></div>'+
+        '<div style="display:flex;align-items:center;gap:6px">'+
+          '<input type="number" min="0" max="100" placeholder="Target %" id="goal-'+c.replace(' ','-')+'" value="'+val+'" '+
+            'style="width:100%;padding:7px 10px;border-radius:8px;border:1px solid var(--cb);background:var(--bg2);color:var(--text1);font-size:.85rem;font-family:var(--fh);font-weight:700"/>'+
+          '<span style="font-size:.8rem;color:var(--text2);flex-shrink:0">%</span>'+
+        '</div>'+
+      '</div>';
+    }).join('')+
+  '</div>'+
+  '<p style="font-size:.72rem;color:var(--text2);padding:8px 12px;background:rgba(167,139,250,.06);border-radius:8px;border-left:3px solid var(--accent)">💡 Set your target score for each course. Your actual quiz performance will be compared here.</p>';
+}
+
+function saveGoals() {
+  if (!CU) { notify('Please log in first','error','⚠️'); return; }
+  var goals = {};
+  GOAL_COURSES.forEach(function(c) {
+    var input = document.getElementById('goal-'+c.replace(' ','-'));
+    if (input && input.value !== '') goals[c] = parseInt(input.value, 10);
+  });
+  localStorage.setItem('babspharm_goals_'+(CU?CU.username:''), JSON.stringify(goals));
+  notify('Goals saved! 🎯','success','🎯');
+  loadGoalsProgress();
+}
+
+function loadGoalsProgress() {
+  var el = document.getElementById('goals-progress-area');
+  if (!el) return;
+  if (!CU) { el.innerHTML = '<div class="empty"><span>🔒</span>Log in to see your progress</div>'; return; }
+  var goals = {};
+  try { goals = JSON.parse(localStorage.getItem('babspharm_goals_'+CU.username)||'{}'); } catch(e){}
+  if (!Object.keys(goals).length) {
+    el.innerHTML = '<div class="empty" style="padding:24px;text-align:center"><span style="font-size:2.5rem">🎯</span><div style="font-weight:700;margin:8px 0 4px">No goals set yet</div><div style="font-size:.78rem;color:var(--text2)">Set your targets above and save to track your progress.</div></div>';
+    return;
+  }
+  el.innerHTML = '<div class="ld">Loading your scores<span class="sp"></span></div>';
+
+  fsGet('quizscores').then(function(res) {
+    var scores = getDocs(res).filter(function(s){ return s.username === CU.username; });
+
+    // Compute best avg per course by matching quiz category
+    var courseScores = {};
+    GOAL_COURSES.forEach(function(c){ courseScores[c] = []; });
+    scores.forEach(function(s) {
+      var cat = s.category || s.quizCategory || '';
+      if (courseScores[cat]) courseScores[cat].push(Number(s.pct||0));
+    });
+
+    var html = '';
+    var goalsSet = Object.keys(goals);
+    if (!goalsSet.length) { el.innerHTML = '<div class="empty"><span>🎯</span>Set goals above first</div>'; return; }
+
+    // Summary banner
+    var met = 0, total = goalsSet.length;
+    goalsSet.forEach(function(c) {
+      var avg = courseScores[c] && courseScores[c].length ? Math.round(courseScores[c].reduce(function(a,b){return a+b;},0)/courseScores[c].length) : null;
+      if (avg !== null && avg >= goals[c]) met++;
+    });
+    var allGood = met === total;
+    html += '<div style="padding:13px 16px;border-radius:12px;background:'+(allGood?'rgba(34,197,94,.1)':'rgba(167,139,250,.08)')+';border:1px solid '+(allGood?'rgba(34,197,94,.3)':'rgba(167,139,250,.2)')+';margin-bottom:14px;display:flex;align-items:center;gap:12px">'+
+      '<div style="font-size:2rem">'+(allGood?'🏆':'🎯')+'</div>'+
+      '<div><div style="font-weight:800;font-size:.9rem">'+(allGood?'All goals on track!':'Keep pushing — you\'re getting there!')+
+      '</div><div style="font-size:.74rem;color:var(--text2);margin-top:2px">'+met+' of '+total+' course goals currently met</div></div></div>';
+
+    // Per-course progress bars
+    goalsSet.forEach(function(c) {
+      var target = goals[c];
+      var arr = courseScores[c] || [];
+      var avg = arr.length ? Math.round(arr.reduce(function(a,b){return a+b;},0)/arr.length) : null;
+      var best = arr.length ? Math.max.apply(null,arr) : null;
+      var hasData = avg !== null;
+      var barPct = hasData ? Math.min(avg, 100) : 0;
+      var targetPct = Math.min(target, 100);
+      var status = !hasData ? 'no-data' : avg >= target ? 'met' : avg >= target*0.8 ? 'close' : 'behind';
+      var statusColor = status==='met'?'var(--green)':status==='close'?'var(--yellow)':'var(--red)';
+      var statusLabel = status==='met'?'✅ Goal Met':status==='close'?'⚡ Almost There':status==='no-data'?'📝 No quizzes yet':'❌ Behind Target';
+
+      html += '<div style="border:1px solid var(--cb);border-radius:14px;padding:13px 14px;margin-bottom:10px">'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'+
+          '<div><span class="badge '+catBadge(c)+'" style="font-size:.68rem">'+c+'</span></div>'+
+          '<div style="font-size:.72rem;color:'+statusColor+';font-weight:700">'+statusLabel+'</div>'+
+        '</div>'+
+        // Progress bar with target marker
+        '<div style="position:relative;height:12px;background:rgba(255,255,255,.07);border-radius:20px;overflow:visible;margin-bottom:8px">'+
+          '<div style="height:100%;width:'+barPct+'%;background:'+(status==='met'?'linear-gradient(90deg,#22c55e,#16a34a)':status==='close'?'linear-gradient(90deg,#fbbf24,#f59e0b)':'linear-gradient(90deg,#a78bfa,#7c3aed)')+';border-radius:20px;transition:width .6s ease"></div>'+
+          // Target marker
+          '<div style="position:absolute;top:-3px;bottom:-3px;left:'+targetPct+'%;width:2px;background:#fff;border-radius:2px;opacity:.7" title="Target: '+target+'%"></div>'+
+          '<div style="position:absolute;top:-18px;left:'+targetPct+'%;transform:translateX(-50%);font-size:.6rem;color:var(--text2);white-space:nowrap">🎯'+target+'%</div>'+
+        '</div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--text2)">'+
+          '<span>Avg score: <strong style="color:'+(hasData?statusColor:'var(--text2)')+'">'+( hasData?avg+'%':'—')+'</strong></span>'+
+          '<span>Best: <strong style="color:var(--accent)">'+( best!==null?best+'%':'—')+'</strong></span>'+
+          '<span>Attempts: <strong>'+arr.length+'</strong></span>'+
+        '</div>'+
+      '</div>';
+    });
+
+    el.innerHTML = html;
+  }).catch(function(){ el.innerHTML='<div class="empty"><span>⚠️</span>Error loading scores</div>'; });
+}
+
+
+// ══════════════════════════════════════════════════════
+// 📊 DASHBOARD PREVIEW CARDS — Goals & Formulas
+// ══════════════════════════════════════════════════════
+function loadDashboardPreviews() {
+  // Goals preview
+  if (CU) {
+    var goals = {};
+    try { goals = JSON.parse(localStorage.getItem('babspharm_goals_'+CU.username)||'{}'); } catch(e){}
+    var goalsCount = Object.keys(goals).length;
+    var gcEl = document.getElementById('gdc-goals-count');
+    if (gcEl) gcEl.textContent = goalsCount ? goalsCount+' courses' : 'None yet';
+
+    if (goalsCount) {
+      fsGet('quizscores').then(function(res) {
+        var scores = getDocs(res).filter(function(s){ return s.username === CU.username; });
+        var courseAvg = {};
+        scores.forEach(function(s) {
+          var c = s.quizCategory||s.category||'';
+          if (!courseAvg[c]) courseAvg[c] = [];
+          courseAvg[c].push(Number(s.pct||0));
+        });
+        var met = 0, bestCourse = '', bestDiff = -999;
+        Object.keys(goals).forEach(function(c) {
+          var arr = courseAvg[c] || [];
+          var avg = arr.length ? Math.round(arr.reduce(function(a,b){return a+b;},0)/arr.length) : null;
+          if (avg !== null && avg >= goals[c]) met++;
+          if (avg !== null) {
+            var diff = avg - goals[c];
+            if (diff > bestDiff) { bestDiff = diff; bestCourse = c; }
+          }
+        });
+        var metEl = document.getElementById('gdc-goals-met');
+        var bestEl = document.getElementById('gdc-goals-best');
+        if (metEl) metEl.textContent = met+' / '+goalsCount;
+        if (bestEl) bestEl.textContent = bestCourse || '—';
+      }).catch(function(){});
+    }
+  }
+
+  // Formulas preview
+  fsGet('formulas').then(function(res) {
+    var docs = getDocs(res);
+    var countEl = document.getElementById('gdc-formula-count');
+    var coursesEl = document.getElementById('gdc-formula-courses');
+    if (countEl) countEl.textContent = docs.length;
+    if (coursesEl) {
+      var courses = [];
+      docs.forEach(function(d){ if (courses.indexOf(d.course||'General')===-1) courses.push(d.course||'General'); });
+      coursesEl.textContent = courses.length ? courses.length+' courses' : '—';
+    }
+  }).catch(function(){});
 }
 
 // ══════════════════════════════════
@@ -12863,6 +13519,7 @@ doRegister=async function(){
           .then(function(){
             sendBrevoWelcomeEmail(email, name);
             window._fbSignOut().catch(function(){});
+            logPoints(un,'earn',50,'🎁 Registration bonus');
             if(refCode){notify('Registered with referral! 🎁 50 bonus points! 🔗','success','✅');}
             else if(mode==='auto'){notify('Registered! 🎁 50 bonus points! You can log in now ⚡','success','✅');}
             else{notify('Registered! 🎁 50 bonus points! Awaiting admin approval ⏳','success','✅');}
@@ -13027,6 +13684,7 @@ function _appendCommentsToPreview(fileId){
 // ══════════════════════════════════════════════
 (function(){
   var QUOTES=[
+    // 🔥 Hustle & Hard Work
     {q:"The secret of getting ahead is getting started.",a:"Mark Twain",e:"🚀"},
     {q:"It always seems impossible until it's done.",a:"Nelson Mandela",e:"💪"},
     {q:"Push yourself, because no one else is going to do it for you.",a:"Unknown",e:"🔥"},
@@ -13037,86 +13695,355 @@ function _appendCommentsToPreview(fileId){
     {q:"Your only limit is your mind.",a:"Unknown",e:"🧠"},
     {q:"The harder you work for something, the greater you'll feel when you achieve it.",a:"Unknown",e:"🏆"},
     {q:"Don't stop when you're tired. Stop when you're done.",a:"Unknown",e:"💊"},
+    {q:"Work hard in silence. Let your results make the noise.",a:"Unknown",e:"🤫"},
+    {q:"The pain of discipline is far less than the pain of regret.",a:"Unknown",e:"⚔️"},
+    {q:"Wake up. Study. Grind. Repeat.",a:"Unknown",e:"🌅"},
+    {q:"The only way to do great work is to love what you do.",a:"Steve Jobs",e:"❤️"},
+    {q:"Success isn't given. It is earned — on the track, on the field, in the classroom.",a:"Unknown",e:"🏅"},
+    {q:"Motivation gets you started. Habit keeps you going.",a:"Jim Ryun",e:"🔄"},
+    {q:"Do something today that your future self will thank you for.",a:"Sean Patrick Flanery",e:"🙏"},
+    {q:"You don't have to be great to start, but you have to start to be great.",a:"Zig Ziglar",e:"✨"},
+    {q:"Champions keep playing until they get it right.",a:"Billie Jean King",e:"🏆"},
+    {q:"There is no substitute for hard work.",a:"Thomas Edison",e:"💡"},
+    // 📚 Study & Learning
     {q:"Knowledge is the greatest gift — pursue it relentlessly.",a:"Unknown",e:"⚗️"},
     {q:"Every expert was once a beginner. Keep going.",a:"Unknown",e:"📚"},
     {q:"Dream big. Study hard. Stay humble.",a:"Unknown",e:"🌙"},
     {q:"Today's preparation determines tomorrow's achievement.",a:"Unknown",e:"🗓️"},
-    {q:"Medicine is not only a science; it is also an art.",a:"Paracelsus",e:"🔬"},
-    {q:"The best way to predict the future is to create it.",a:"Peter Drucker",e:"✨"},
     {q:"An investment in knowledge pays the best interest.",a:"Benjamin Franklin",e:"💡"},
+    {q:"Education is the most powerful weapon you can use to change the world.",a:"Nelson Mandela",e:"🌍"},
+    {q:"The more that you read, the more things you will know.",a:"Dr. Seuss",e:"📖"},
+    {q:"Learning never exhausts the mind.",a:"Leonardo da Vinci",e:"🎨"},
+    {q:"The beautiful thing about learning is that no one can take it away from you.",a:"B.B. King",e:"🌺"},
+    {q:"Real learning begins when you decide to stop making excuses.",a:"Unknown",e:"📝"},
+    {q:"Study not to memorise, but to understand.",a:"Unknown",e:"🔍"},
+    {q:"Every page you read today is a step towards who you will become tomorrow.",a:"Unknown",e:"📗"},
+    {q:"Exam pressure is temporary. Regret of not studying is permanent.",a:"Unknown",e:"⏰"},
+    {q:"The student who stops asking questions has stopped learning.",a:"Unknown",e:"❓"},
+    {q:"Books are the training weights of the mind.",a:"Epictetus",e:"💪"},
+    {q:"Study now so you can live later the life others only dream of.",a:"Unknown",e:"🌠"},
+    {q:"Knowledge shared is knowledge multiplied.",a:"Unknown",e:"✖️"},
+    {q:"It's not that I'm so smart — I just stay with problems longer.",a:"Albert Einstein",e:"🧩"},
+    {q:"The expert in anything was once a beginner who refused to quit.",a:"Unknown",e:"🌱"},
+    {q:"Information is not knowledge. Knowledge is not wisdom. Wisdom is not truth.",a:"Frank Zappa",e:"🧠"},
+    // 🔬 Pharmacy & Medicine
+    {q:"Medicine is not only a science; it is also an art.",a:"Paracelsus",e:"🔬"},
+    {q:"The pharmacist is the last line of defense between a patient and a medication error.",a:"Unknown",e:"💊"},
+    {q:"Every drug you memorise today is a life you may save tomorrow.",a:"Unknown",e:"🩺"},
+    {q:"Pharmacy is the art of preparing, compounding, and dispensing medicines for the well-being of humanity.",a:"Unknown",e:"⚗️"},
+    {q:"The purpose of a pharmacist is not to sell drugs but to protect the patient.",a:"Unknown",e:"🛡️"},
+    {q:"To study pharmacology is to understand the language the body speaks.",a:"Unknown",e:"🧬"},
+    {q:"Precision in pharmacy saves lives. Carelessness costs them.",a:"Unknown",e:"🎯"},
+    {q:"A good pharmacist combines the knowledge of a scientist with the compassion of a healer.",a:"Unknown",e:"❤️"},
+    {q:"Learn the drugs. Learn the doses. Learn the interactions. Lives depend on it.",a:"Unknown",e:"📋"},
+    {q:"The goal of medicine is to cure sometimes, to relieve often, and to comfort always.",a:"Hippocrates",e:"🌿"},
+    {q:"Wherever the art of medicine is loved, there is also a love of humanity.",a:"Hippocrates",e:"🏛️"},
+    {q:"Science and humanity — that is the heart of pharmacy.",a:"Unknown",e:"🔭"},
+    {q:"First, do no harm. Second, understand the mechanism.",a:"Unknown",e:"⚕️"},
+    {q:"Biochemistry is the poetry of biology. Master it.",a:"Unknown",e:"🧪"},
+    {q:"Every molecule you study today is a mystery you'll solve at the bedside tomorrow.",a:"Unknown",e:"🔬"},
+    {q:"Pharmacy is where chemistry meets compassion.",a:"Unknown",e:"💙"},
+    {q:"A pharmacist who stops studying has already started to fail their patients.",a:"Unknown",e:"⚠️"},
+    {q:"Drug therapy is a science — but dosing it right requires wisdom.",a:"Unknown",e:"💊"},
+    {q:"Understand the disease before you understand the drug.",a:"Unknown",e:"🩻"},
+    {q:"Health is wealth. Your knowledge protects that wealth for others.",a:"Unknown",e:"💰"},
+    // 🌱 Growth & Mindset
+    {q:"The best way to predict the future is to create it.",a:"Peter Drucker",e:"✨"},
     {q:"You are braver than you believe and smarter than you think.",a:"A.A. Milne",e:"🦁"},
     {q:"Small steps every day lead to massive results.",a:"Unknown",e:"👣"},
-    {q:"Discipline is choosing between what you want now and what you want most.",a:"Unknown",e:"⚖️"}
+    {q:"Discipline is choosing between what you want now and what you want most.",a:"Unknown",e:"⚖️"},
+    {q:"A diamond is just a piece of coal that handled pressure exceptionally well.",a:"Unknown",e:"💎"},
+    {q:"Growth is painful. Change is painful. But nothing is as painful as being stuck.",a:"Unknown",e:"🌱"},
+    {q:"You grow through what you go through.",a:"Unknown",e:"🌻"},
+    {q:"The mind that opens to a new idea never returns to its original size.",a:"Albert Einstein",e:"🌌"},
+    {q:"Don't be afraid to start over. It is a brand new opportunity to rebuild better.",a:"Unknown",e:"🔁"},
+    {q:"Challenges are what make life interesting. Overcoming them is what makes life meaningful.",a:"Joshua J. Marine",e:"⛰️"},
+    {q:"Fall seven times, stand up eight.",a:"Japanese Proverb",e:"🎋"},
+    {q:"You don't have to be perfect to be amazing.",a:"Unknown",e:"🌈"},
+    {q:"Every setback is a setup for a comeback.",a:"Unknown",e:"↩️"},
+    {q:"Comparison is the thief of joy. Run your own race.",a:"Theodore Roosevelt",e:"🏃"},
+    {q:"Be so good they can't ignore you.",a:"Steve Martin",e:"🌟"},
+    {q:"Talent is cheaper than table salt. What separates the talented individual from the successful one is hard work.",a:"Stephen King",e:"🧂"},
+    {q:"Character is built in the quiet moments when no one is watching.",a:"Unknown",e:"🕯️"},
+    {q:"The strongest steel is forged in the hottest fire.",a:"Unknown",e:"🔥"},
+    {q:"You were born to make an impact, not just an income.",a:"Unknown",e:"💥"},
+    {q:"Don't wait for opportunity. Create it.",a:"Unknown",e:"🚪"},
+    // ⏳ Patience & Perseverance
+    {q:"Rome wasn't built in a day. Neither is a great medical career.",a:"Unknown",e:"🏛️"},
+    {q:"The road is long, but the destination is worth every step.",a:"Unknown",e:"🛤️"},
+    {q:"Patience is not the ability to wait, but how you act while you're waiting.",a:"Joyce Meyer",e:"⌛"},
+    {q:"Success usually comes to those who are too busy to be looking for it.",a:"Henry David Thoreau",e:"🌿"},
+    {q:"The secret to success is to start from scratch and keep on scratching.",a:"Dennis Green",e:"✏️"},
+    {q:"It does not matter how slowly you go as long as you do not stop.",a:"Confucius",e:"🐢"},
+    {q:"Success is the sum of small efforts repeated day in and day out.",a:"Robert Collier",e:"➕"},
+    {q:"The difference between ordinary and extraordinary is that little extra.",a:"Jimmy Johnson",e:"🌠"},
+    {q:"Keep going. Everything you need will come to you at the perfect time.",a:"Unknown",e:"⏳"},
+    {q:"You only fail when you stop trying.",a:"Unknown",e:"🎯"},
+    {q:"Don't judge each day by the harvest you reap, but by the seeds you plant.",a:"Robert Louis Stevenson",e:"🌾"},
+    {q:"Perseverance is not a long race; it is many short races one after another.",a:"Walter Elliot",e:"🏃"},
+    {q:"I am not a product of my circumstances. I am a product of my decisions.",a:"Stephen Covey",e:"🎲"},
+    {q:"Success is not final, failure is not fatal: it is the courage to continue that counts.",a:"Winston Churchill",e:"🦁"},
+    {q:"Through every dark night there is a brighter day.",a:"Tupac Shakur",e:"🌅"},
+    // 🎓 Student Life
+    {q:"Late nights and early mornings build the career of your dreams.",a:"Unknown",e:"🌙"},
+    {q:"Your future patients need you to pay attention today.",a:"Unknown",e:"🏥"},
+    {q:"The exam you fear most is the one you studied least for.",a:"Unknown",e:"📝"},
+    {q:"Tired? Think about why you started.",a:"Unknown",e:"💭"},
+    {q:"Be the student who looks back and says: I gave everything.",a:"Unknown",e:"🎓"},
+    {q:"A year from now you will wish you had started today.",a:"Karen Lamb",e:"📅"},
+    {q:"Don't study to pass. Study to know.",a:"Unknown",e:"🔑"},
+    {q:"You are not behind. You are on your own journey. Keep moving.",a:"Unknown",e:"🗺️"},
+    {q:"The notes you take today are the knowledge you'll use tomorrow.",a:"Unknown",e:"📒"},
+    {q:"One step at a time is all it takes to get you there.",a:"Emily Dickinson",e:"👟"},
+    {q:"Start where you are. Use what you have. Do what you can.",a:"Arthur Ashe",e:"🎾"},
+    {q:"Stop telling yourself it's too hard. Start telling yourself you can do this.",a:"Unknown",e:"💬"},
+    {q:"Consistency beats intensity every single time.",a:"Unknown",e:"🔂"},
+    {q:"Compete against yourself — yesterday's version of you.",a:"Unknown",e:"🪞"},
+    {q:"One day or day one — you decide.",a:"Unknown",e:"🗓️"},
+    {q:"The student who says it cannot be done should not interrupt the one doing it.",a:"Unknown",e:"🚫"},
+    {q:"Sacrifice a few hours now, enjoy a lifetime of freedom later.",a:"Unknown",e:"⏰"},
+    {q:"Your degree is not given — it is earned through blood, sweat, and revision.",a:"Unknown",e:"🎓"},
+    {q:"Every question on that exam was once a concept you could have mastered.",a:"Unknown",e:"💡"},
+    {q:"Smart students work hard. Wise students also rest, eat, and repeat.",a:"Unknown",e:"😴"},
+    // 🌍 Purpose & Legacy
+    {q:"We are what we repeatedly do. Excellence then is not an act, but a habit.",a:"Aristotle",e:"🏺"},
+    {q:"The purpose of life is not to be happy — it is to be useful, to be honourable, to be compassionate.",a:"Ralph Waldo Emerson",e:"🌍"},
+    {q:"Leave the world a little better than you found it.",a:"Robert Baden-Powell",e:"🌿"},
+    {q:"In the end, it's not the years in your life that count. It's the life in your years.",a:"Abraham Lincoln",e:"⌚"},
+    {q:"The greatest use of a life is to spend it on something that will outlast it.",a:"William James",e:"🕊️"},
+    {q:"Don't count the days. Make the days count.",a:"Muhammad Ali",e:"🥊"},
+    {q:"You were made for more than just surviving. Thrive.",a:"Unknown",e:"🦋"},
+    {q:"Somebody once said that in looking back over a life, only two things matter: how lovingly was it lived, how gracefully was it let go.",a:"Unknown",e:"🍂"},
+    {q:"Live as if you were to die tomorrow. Learn as if you were to live forever.",a:"Mahatma Gandhi",e:"🕊️"},
+    {q:"Be the change you wish to see in the world.",a:"Mahatma Gandhi",e:"🌏"},
+    {q:"What you do today can improve all your tomorrows.",a:"Ralph Marston",e:"🌅"},
+    {q:"Your work is going to fill a large part of your life, and the only way to be truly satisfied is to do great work.",a:"Steve Jobs",e:"💼"},
+    {q:"The future belongs to those who believe in the beauty of their dreams.",a:"Eleanor Roosevelt",e:"🌠"},
+    {q:"I am not afraid of storms, for I am learning how to sail my ship.",a:"Louisa May Alcott",e:"⛵"},
+    {q:"It is during our darkest moments that we must focus to see the light.",a:"Aristotle",e:"🕯️"},
+    // 🙏 God Factor — Faith, Scripture & Divine Strength
+    {g:1,q:"With God, all things are possible.",a:"Matthew 19:26",e:"🙏"},
+    {g:1,q:"I can do all things through Christ who strengthens me.",a:"Philippians 4:13",e:"✝️"},
+    {g:1,q:"Cast your burden on the Lord and He will sustain you.",a:"Psalm 55:22",e:"🌿"},
+    {g:1,q:"God has a plan for your life. Trust the process, even when it's hard.",a:"Unknown",e:"🙌"},
+    {g:1,q:"Your breakthrough is closer than your setback. Hold on.",a:"Unknown",e:"🌈"},
+    {g:1,q:"Storms don't last forever. Keep the faith.",a:"Unknown",e:"⛈️"},
+    {g:1,q:"Your best days are still ahead of you.",a:"Unknown",e:"☀️"},
+    {g:1,q:"The same God who created the universe is rooting for you today.",a:"Unknown",e:"✨"},
+    {g:1,q:"Prayer is not a spare wheel you pull out when in trouble. Make it your steering wheel.",a:"Unknown",e:"🎡"},
+    {g:1,q:"Hardships often prepare ordinary people for an extraordinary destiny.",a:"C.S. Lewis",e:"👑"},
+    {g:1,q:"For I know the plans I have for you — plans to prosper you and not to harm you.",a:"Jeremiah 29:11",e:"📖"},
+    {g:1,q:"The Lord is my shepherd; I shall not want.",a:"Psalm 23:1",e:"🐑"},
+    {g:1,q:"Be strong and courageous. Do not be afraid. The Lord your God is with you.",a:"Joshua 1:9",e:"🦁"},
+    {g:1,q:"Trust in the Lord with all your heart and lean not on your own understanding.",a:"Proverbs 3:5",e:"💛"},
+    {g:1,q:"God does not give us a spirit of fear, but of power, love, and a sound mind.",a:"2 Timothy 1:7",e:"🔥"},
+    {g:1,q:"Commit your work to the Lord, and your plans will be established.",a:"Proverbs 16:3",e:"🌟"},
+    {g:1,q:"Those who hope in the Lord will renew their strength. They will soar on wings like eagles.",a:"Isaiah 40:31",e:"🦅"},
+    {g:1,q:"The Lord will fight for you; you need only to be still.",a:"Exodus 14:14",e:"🕊️"},
+    {g:1,q:"Ask and it will be given to you; seek and you will find.",a:"Matthew 7:7",e:"🚪"},
+    {g:1,q:"My God shall supply all your needs according to His riches in glory.",a:"Philippians 4:19",e:"💎"},
+    {g:1,q:"Even when it is dark, God is writing your story in light.",a:"Unknown",e:"✨"},
+    {g:1,q:"God is not done with you yet. Keep going.",a:"Unknown",e:"🛤️"},
+    {g:1,q:"Before you were formed in the womb, God knew you. You are not an accident.",a:"Jeremiah 1:5",e:"🌸"},
+    {g:1,q:"Let God's promises be louder than your fears.",a:"Unknown",e:"📣"},
+    {g:1,q:"A man's steps are directed by the Lord. How then can anyone understand their own way?",a:"Proverbs 20:24",e:"👣"},
+    {g:1,q:"God gave you this exam. He also gave you the strength to pass it.",a:"Unknown",e:"📝"},
+    {g:1,q:"What God has destined for you, no lecturer, no failure, no person can take away.",a:"Unknown",e:"🏆"},
+    {g:1,q:"When you feel like giving up, remember who gave you the dream in the first place.",a:"Unknown",e:"💭"},
+    {g:1,q:"God will not call you to something and then abandon you in the middle of it.",a:"Unknown",e:"🙏"},
+    {g:1,q:"Faith is not knowing what the future holds, but knowing who holds the future.",a:"Unknown",e:"🌅"},
+    {g:1,q:"If God is for us, who can be against us?",a:"Romans 8:31",e:"⚔️"},
+    {g:1,q:"Your story is not over. God writes beautiful endings.",a:"Unknown",e:"📘"},
+    {g:1,q:"The God who parted the Red Sea can open every closed door in your academics.",a:"Unknown",e:"🌊"},
+    {g:1,q:"Pray like it depends on God. Study like it depends on you.",a:"Unknown",e:"📚"},
+    {g:1,q:"God sees your midnight oil. He rewards what men do not see.",a:"Unknown",e:"🕯️"},
+    {g:1,q:"Even the darkest night will end and the sun will rise — God promised.",a:"Unknown",e:"🌄"},
+    {g:1,q:"You carry the anointing of God inside you. Walk like it.",a:"Unknown",e:"👑"},
+    {g:1,q:"What feels like delay is often God's divine redirection.",a:"Unknown",e:"🔄"},
+    {g:1,q:"Nothing in your life is too broken for God to restore.",a:"Unknown",e:"🔧"},
+    {g:1,q:"God's timing is perfect — not early, not late, always right on time.",a:"Unknown",e:"⏰"},
+    {g:1,q:"He who began a good work in you will carry it on to completion.",a:"Philippians 1:6",e:"🏗️"},
+    {g:1,q:"Surrender your worries to God and pick up your pen. He's got the rest.",a:"Unknown",e:"🖊️"},
+    {g:1,q:"The race is not to the swift, nor the battle to the strong. God determines the outcome.",a:"Ecclesiastes 9:11",e:"🏃"},
+    {g:1,q:"God qualifies the called. You are chosen. Walk in that confidence.",a:"Unknown",e:"🌠"},
+    {g:1,q:"Every time you open your textbook and pray first, Heaven takes notice.",a:"Unknown",e:"📖"},
+    {g:1,q:"There is no mountain too high for the God who made the mountain.",a:"Unknown",e:"⛰️"},
+    {g:1,q:"You don't have to figure it all out. Hand it to God and trust His GPS.",a:"Unknown",e:"🗺️"},
+    {g:1,q:"Fear not, for I am with you. I will strengthen you and help you.",a:"Isaiah 41:10",e:"💪"},
+    {g:1,q:"God places the longest battles in the hands of His strongest warriors.",a:"Unknown",e:"⚔️"},
+    {g:1,q:"Your degree is coming. Your breakthrough is coming. Your season is near. Stay faithful.",a:"Unknown",e:"🌻"},
+    {g:1,q:"God is not sleeping on your situation. He is working behind what you cannot see.",a:"Unknown",e:"👁️"},
+    {g:1,q:"Every time you wanted to quit and didn't, God was building something in you.",a:"Unknown",e:"🏗️"},
+    {g:1,q:"You are not studying alone. The Holy Spirit is your best study partner.",a:"Unknown",e:"📖"},
+    {g:1,q:"When the exam feels impossible, remember — nothing is impossible with God.",a:"Luke 1:37",e:"💪"},
+    {g:1,q:"God did not bring you this far to abandon you now. Trust Him completely.",a:"Unknown",e:"🛤️"},
+    {g:1,q:"Your story has God's fingerprints all over it. Don't give up on the next chapter.",a:"Unknown",e:"📘"},
+    {g:1,q:"Weeping may endure for a night, but joy comes in the morning.",a:"Psalm 30:5",e:"🌅"},
+    {g:1,q:"God rewards faithfulness, not just brilliance. Keep showing up.",a:"Unknown",e:"🏅"},
+    {g:1,q:"The anointing on your life is greater than any exam, any failure, any obstacle.",a:"Unknown",e:"🔥"},
+    {g:1,q:"Delight yourself in the Lord, and He will give you the desires of your heart.",a:"Psalm 37:4",e:"❤️"},
+    // 🧪 Science & Curiosity
+    {q:"The important thing is not to stop questioning. Curiosity has its own reason for existing.",a:"Albert Einstein",e:"🔭"},
+    {q:"Science is not only a discipline of reason but, also, one of romance and passion.",a:"Stephen Hawking",e:"🌌"},
+    {q:"Research is to see what everybody else has seen, and to think what nobody else has thought.",a:"Albert Szent-Györgyi",e:"🔬"},
+    {q:"In science, there are no shortcuts to truth.",a:"Karl Popper",e:"🧪"},
+    {q:"The good thing about science is that it's true whether or not you believe in it.",a:"Neil deGrasse Tyson",e:"🌍"},
+    {q:"Biology is the study of complicated things that give the appearance of having been designed for a purpose.",a:"Richard Dawkins",e:"🧬"},
+    {q:"Chemistry is the study of change — and so is your life as a student.",a:"Unknown",e:"⚗️"},
+    {q:"Every drug interaction you learn is a patient's life you could protect.",a:"Unknown",e:"💉"},
+    {q:"Science knows no country because knowledge belongs to humanity.",a:"Louis Pasteur",e:"🌐"},
+    {q:"The human body is a machine that is full of wonder.",a:"Charles Darwin",e:"🫀"},
+    // 🤝 Community & Character
+    {q:"Surround yourself with people who push you to be better.",a:"Unknown",e:"👥"},
+    {q:"Iron sharpens iron. Choose your circle wisely.",a:"Proverbs 27:17",e:"⚔️"},
+    {q:"Teamwork makes the dream work.",a:"John C. Maxwell",e:"🤝"},
+    {q:"Your attitude determines your direction.",a:"Unknown",e:"🧭"},
+    {q:"Integrity is doing the right thing, even when no one is watching.",a:"C.S. Lewis",e:"👁️"},
+    {q:"Be kind. Be honest. Be the reason someone smiles today.",a:"Unknown",e:"😊"},
+    {q:"Success means nothing without someone to share it with.",a:"Unknown",e:"👫"},
+    {q:"The measure of a man is what he does with power.",a:"Plato",e:"⚖️"},
+    {q:"Your reputation is more important than your exam score.",a:"Unknown",e:"🏅"},
+    {q:"Lead by example — especially when the path is hard.",a:"Unknown",e:"🗺️"},
+    // 😊 Positivity & Mental Health
+    {q:"Take care of your body. It's the only place you have to live.",a:"Jim Rohn",e:"🧘"},
+    {q:"Rest is not giving up. Rest is giving your brain time to consolidate what it learned.",a:"Unknown",e:"😴"},
+    {q:"Your mental health matters as much as your GPA.",a:"Unknown",e:"💚"},
+    {q:"Progress, not perfection.",a:"Unknown",e:"📊"},
+    {q:"Be patient with yourself. Self-growth is tender.",a:"Barbara De Angelis",e:"🌸"},
+    {q:"You cannot pour from an empty cup. Take care of yourself first.",a:"Unknown",e:"☕"},
+    {q:"It's okay to not have everything figured out. You're still growing.",a:"Unknown",e:"🌱"},
+    {q:"Breathe. You've survived every hard day so far — this one is no different.",a:"Unknown",e:"🌬️"},
+    {q:"Your value does not decrease based on someone's inability to see your worth.",a:"Unknown",e:"💎"},
+    {q:"You are not your mistakes. You are what you do after them.",a:"Unknown",e:"🔄"}
   ];
 
-  var _motivIdx=null;
+  // Gradient palettes for cards
+  var GRADIENTS=[
+    'linear-gradient(135deg,#667eea,#764ba2)',
+    'linear-gradient(135deg,#f093fb,#f5576c)',
+    'linear-gradient(135deg,#4facfe,#00f2fe)',
+    'linear-gradient(135deg,#43e97b,#38f9d7)',
+    'linear-gradient(135deg,#fa709a,#fee140)',
+    'linear-gradient(135deg,#a18cd1,#fbc2eb)',
+    'linear-gradient(135deg,#ffecd2,#fcb69f)',
+    'linear-gradient(135deg,#ff9a9e,#fecfef)',
+    'linear-gradient(135deg,#a1c4fd,#c2e9fb)',
+    'linear-gradient(135deg,#fd7043,#ff8a65)',
+    'linear-gradient(135deg,#26c6da,#00acc1)',
+    'linear-gradient(135deg,#ab47bc,#7b1fa2)',
+    'linear-gradient(135deg,#66bb6a,#388e3c)',
+    'linear-gradient(135deg,#ef5350,#b71c1c)',
+    'linear-gradient(135deg,#ffa726,#e65100)',
+    'linear-gradient(135deg,#5c6bc0,#283593)',
+    'linear-gradient(135deg,#26a69a,#00695c)',
+    'linear-gradient(135deg,#ec407a,#880e4f)',
+    // ✝️ Divine gold gradients (index 18+) — used for God-factor quotes
+    'linear-gradient(135deg,#f6d365,#fda085)',
+    'linear-gradient(135deg,#ffeaa7,#fdcb6e)',
+    'linear-gradient(135deg,#f9ca24,#f0932b)',
+    'linear-gradient(135deg,#e8d5b7,#c9a85c)',
+    'linear-gradient(135deg,#d4a843,#a0712a)',
+    'linear-gradient(135deg,#fffde7,#ffd54f)',
+  ];
 
-  function _getDayIndex(){
-    // Seed by today's date so the same quote shows all day
+  function _getDaySeed(){
     var d=new Date();
-    var seed=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
-    return seed % QUOTES.length;
+    return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
   }
 
-  function _formatDate(d){
-    var days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    return days[d.getDay()]+', '+months[d.getMonth()]+' '+d.getDate();
-  }
-
-  function _renderDots(current){
-    var el=document.getElementById('motiv-dots');
-    if(!el)return;
-    var html='';
-    for(var i=0;i<5;i++){
-      html+='<span class="motiv-dot'+(i===0?' on':'')+'"></span>';
+  function _pickQuotes(seed, count){
+    // Shuffle deterministically by day seed, pick `count` quotes
+    var arr=QUOTES.slice();
+    var s=seed;
+    for(var i=arr.length-1;i>0;i--){
+      s=(s*1103515245+12345)&0x7fffffff;
+      var j=s%(i+1);
+      var t=arr[i];arr[i]=arr[j];arr[j]=t;
     }
-    el.innerHTML=html;
-    // highlight current dot (wrap into 5 slots)
-    var dots=el.querySelectorAll('.motiv-dot');
-    dots.forEach(function(d,i){d.classList.toggle('on',i===0);});
-    if(dots[current%5])dots[current%5].classList.add('on');
+    return arr.slice(0,count);
   }
 
-  function showMotivation(idx){
-    _motivIdx=((idx % QUOTES.length)+QUOTES.length)%QUOTES.length;
-    var q=QUOTES[_motivIdx];
-    var qEl=document.getElementById('motiv-quote');
-    var aEl=document.getElementById('motiv-author');
-    var eEl=document.getElementById('motiv-emoji');
-    var dEl=document.getElementById('motiv-date');
-    if(!qEl)return;
+  var _currentOffset=0;
+  var CARDS_PER_PAGE=6;
 
-    // Fade out
-    var card=document.getElementById('daily-motivation');
-    if(card){card.style.opacity='0';card.style.transform='translateY(6px)';}
-    setTimeout(function(){
-      if(qEl)qEl.textContent=q.q;
-      if(aEl)aEl.textContent='— '+q.a;
-      if(eEl)eEl.textContent=q.e;
-      if(dEl)dEl.textContent=_formatDate(new Date());
-      _renderDots(_motivIdx);
-      if(card){
-        card.style.transition='opacity .35s ease,transform .35s ease';
-        card.style.opacity='1';card.style.transform='translateY(0)';
-      }
-    },200);
+  function renderMotivGrid(offset){
+    var grid=document.getElementById('motiv-flyer-grid');
+    if(!grid)return;
+    var seed=_getDaySeed()+offset;
+    var picks=_pickQuotes(seed, CARDS_PER_PAGE);
+    var html=picks.map(function(q,i){
+      var isGod=q.g===1;
+      var gradPool=isGod?GRADIENTS.slice(18):GRADIENTS.slice(0,18);
+      var grad=gradPool[(seed+i)%gradPool.length];
+      var godBadge=isGod?'<span style="position:absolute;top:10px;left:10px;font-size:.6rem;font-weight:800;background:rgba(255,255,255,.25);color:#fff;padding:2px 7px;border-radius:20px;letter-spacing:.5px">✝ GOD FACTOR</span>':'';
+      return '<div class="motiv-flyer-card" style="background:'+grad+'" onclick="motivOpenCard('+JSON.stringify(q.q)+','+JSON.stringify(q.a)+','+JSON.stringify(q.e)+')">' +
+        godBadge+
+        '<span class="motiv-flyer-emoji">'+q.e+'</span>'+
+        '<div class="motiv-flyer-body">'+
+          '<div class="motiv-flyer-q">'+q.q+'</div>'+
+          '<div class="motiv-flyer-a">— '+q.a+'</div>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+    // Animate in
+    grid.style.opacity='0';
+    grid.innerHTML=html;
+    setTimeout(function(){ grid.style.transition='opacity .3s ease'; grid.style.opacity='1'; },30);
   }
 
-  window.cycleMotivation=function(){
-    var next=(_motivIdx===null?_getDayIndex():_motivIdx+1);
-    showMotivation(next);
+  window.motivShuffleGrid=function(){
+    _currentOffset+=CARDS_PER_PAGE;
+    renderMotivGrid(_currentOffset);
   };
 
-  // Initialise on DOMContentLoaded
+  window.motivCloseModal=function(){
+    var el=document.getElementById('motiv-modal-overlay');
+    if(el)el.remove();
+  };
+  window.motivOpenCard=function(q,a,e){
+    // Show full quote in a nice modal
+    var existing=document.getElementById('motiv-modal-overlay');
+    if(existing)existing.remove();
+    var ov=document.createElement('div');
+    ov.id='motiv-modal-overlay';
+    ov.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
+    ov.innerHTML='<div style="background:var(--bg2);border-radius:20px;max-width:380px;width:100%;padding:28px 24px;text-align:center;border:1px solid rgba(255,255,255,.1);box-shadow:0 20px 60px rgba(0,0,0,.5);position:relative">'+
+      '<button onclick="motivCloseModal()" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text2)">✕</button>'+
+      '<div style="font-size:3rem;margin-bottom:16px">'+e+'</div>'+
+      '<div style="font-family:var(--fh);font-size:1.05rem;font-weight:800;line-height:1.5;color:var(--text1);margin-bottom:14px">"'+q+'"</div>'+
+      '<div style="font-size:.8rem;color:var(--text2);font-style:italic">— '+a+'</div>'+
+    '</div>';
+    ov.addEventListener('click',function(ev){if(ev.target===ov)ov.remove();});
+    document.body.appendChild(ov);
+  };
+
+  // Auto-shuffle every 20 seconds
+  var _autoShuffle=null;
+  function _startAuto(){
+    _autoShuffle=setInterval(function(){
+      _currentOffset+=CARDS_PER_PAGE;
+      renderMotivGrid(_currentOffset);
+    },20000);
+  }
+
+  // Stop auto on manual shuffle, restart after 40s
+  var _origShuffle=window.motivShuffleGrid;
+  window.motivShuffleGrid=function(){
+    _origShuffle();
+    clearInterval(_autoShuffle);
+    setTimeout(_startAuto,40000);
+  };
+
   function _init(){
-    showMotivation(_getDayIndex());
+    renderMotivGrid(0);
+    _startAuto();
   }
   if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded',_init);
-  } else {
-    _init();
-  }
+  } else { _init(); }
+
+  // Keep cycleMotivation as no-op for backward compat
+  window.cycleMotivation=window.motivShuffleGrid;
 })();
 // ══════════════════════════════════
 // STUDENT PERFORMANCE REPORT
@@ -15461,7 +16388,7 @@ function pqSaveQuiz() {
   }
   var id = 'pq_' + Date.now();
   fsAdd('privatequizzes', { id: id, title: title, desc: desc, questions: JSON.stringify(questions), sections: sections ? JSON.stringify(sections) : '',
-    openTime: openTime || '', closeTime: closeTime || '', showResults: pqShowResultsEnabled ? 'true' : 'false', maxAttempts: (document.getElementById('pq-max-attempts').value.trim()||''),
+    openTime: openTime || '', closeTime: closeTime || '', showResults: pqShowResultsEnabled ? 'true' : 'false', maxAttempts: (document.getElementById('pq-max-attempts').value.trim()||''), duration: (document.getElementById('pq-duration').value.trim()||''), videoUrl: (document.getElementById('pq-video').value.trim()||''),
     createdAt: new Date().toISOString(), createdBy: CU ? CU.username : 'admin' })
     .then(function(res) {
       var docId = res.name ? res.name.split('/').pop() : id;
@@ -15472,6 +16399,8 @@ function pqSaveQuiz() {
       document.getElementById('pq-open-time').value = '';
       document.getElementById('pq-close-time').value = '';
       document.getElementById('pq-max-attempts').value = '';
+      document.getElementById('pq-duration').value = '';
+      document.getElementById('pq-video').value = '';
       document.getElementById('pq-questions-wrap').innerHTML = '';
       pqQuestionCount = 0;
       pqShowResultsEnabled = false;
@@ -15744,7 +16673,10 @@ function pqCheckURLParam() {
         '<div style="font-size:.76rem;color:var(--text2)">@' + esc(CU.username || '') + '</div>' +
       '</div>' +
     '</div>' +
-    '<button class="btn bp" id="pq-start-btn" style="width:100%;justify-content:center">🚀 Start Quiz</button>';
+    (quiz.duration ? '<div style="text-align:center;margin-bottom:8px;padding:7px 12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:10px;font-size:.8rem;color:var(--yellow);font-weight:700">⏱️ Time Limit: '+quiz.duration+' minute'+(quiz.duration==='1'?'':'s')+'</div>' : '')+
+    '<button class="btn bp" id="pq-start-btn" style="width:100%;justify-content:center">🚀 Start Quiz</button>'+
+    '<div id="pq-video-link"></div>'+
+    '';
 
   document.getElementById('pq-start-btn').onclick = pqStartTaking;
   var startBtn = document.getElementById('pq-start-btn');
@@ -15803,6 +16735,14 @@ function pqCheckURLParam() {
     pqTakeData = quiz;
     pqTakeData.__quizId = quizId;
 
+    // Show video link if set
+    var vlink = document.getElementById('pq-video-link');
+    if (vlink) {
+      vlink.innerHTML = quiz.videoUrl
+        ? '<a href="'+esc(quiz.videoUrl)+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;padding:9px;border-radius:10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);color:#f87171;font-size:.8rem;font-weight:700;text-decoration:none">▶ Watch Study Video</a>'
+        : '';
+    }
+
     // ── Max attempts check ──
     var maxAtt = parseInt(quiz.maxAttempts || '0', 10);
     if (maxAtt > 0 && CU && CU.username) {
@@ -15849,6 +16789,23 @@ function pqCheckURLParam() {
 var pqSections = [], pqCompletedSections = [], pqSectionAnswers = [], pqCurrentSectionIdx = 0;
 
 function pqStartTaking() {
+  // ── Deduct 5 points when student starts a private quiz ──
+  if (CU && CU.id && CU.role === 'user') {
+    var _score = Number(CU.totalScore || 0);
+    if (_score < 5) { showInsufficientPoints('take this quiz', 5); return; }
+    var _newScore = Math.max(0, _score - 5);
+    CU.totalScore = _newScore;
+    fsPatch('projects/'+PROJECT+'/databases/(default)/documents/users/'+CU.id,
+      {totalScore: String(_newScore), quizzesTaken: String(Number(CU.quizzesTaken||0)+1)})
+      .then(function(){ CU.quizzesTaken = Number(CU.quizzesTaken||0)+1; logPoints(CU.username,'spend',5,'📋 Private quiz: '+(pqTakeData?pqTakeData.title:'')); })
+      .catch(function(e){
+        console.error('PQ deduct failed:',e);
+        setTimeout(function(){
+          fsPatch('projects/'+PROJECT+'/databases/(default)/documents/users/'+CU.id,
+            {totalScore:String(_newScore)}).catch(function(){});
+        },3000);
+      });
+  }
   // Name comes from the platform login — no separate name entry needed
   var name = (CU && CU.name) ? CU.name : (document.getElementById('pq-taker-name').value.trim());
   if (!name) { notify('Could not determine your name. Please log in first.', 'error', '⚠️'); return; }
@@ -15876,36 +16833,109 @@ function pqStartTaking() {
 
   showCalculator();
   pqRenderLobby();
+
+  // ── Start countdown timer if duration is set ──
+  var dur = parseInt(pqTakeData.duration || '0', 10);
+  if (dur > 0) {
+    pqStartCountdown(dur * 60);
+  }
+}
+
+var _pqCountdownTimer = null;
+var _pqCountdownEl = null;
+
+function pqStartCountdown(totalSecs) {
+  if (_pqCountdownTimer) clearInterval(_pqCountdownTimer);
+  var remaining = totalSecs;
+
+  // Create/show timer bar
+  var existing = document.getElementById('pq-timer-bar');
+  if (existing) existing.remove();
+  var bar = document.createElement('div');
+  bar.id = 'pq-timer-bar';
+  bar.style.cssText = 'position:sticky;top:0;z-index:50;background:linear-gradient(135deg,rgba(167,139,250,.15),rgba(56,189,248,.1));border-bottom:1px solid rgba(167,139,250,.3);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;border-radius:10px';
+  bar.innerHTML = '<span style="font-size:.75rem;color:var(--text2)">⏱️ Time remaining</span><span id="pq-timer-display" style="font-family:var(--fh);font-weight:900;font-size:1.1rem;color:var(--accent)"></span>';
+  var body = document.getElementById('pq-take-questions');
+  if (body) body.parentNode.insertBefore(bar, body);
+  _pqCountdownEl = document.getElementById('pq-timer-display');
+
+  function tick() {
+    if (remaining <= 0) {
+      clearInterval(_pqCountdownTimer);
+      if (_pqCountdownEl) _pqCountdownEl.style.color = 'var(--red)';
+      notify('⏰ Time is up! Submitting your quiz…', 'warn', '⏰');
+      setTimeout(pqSubmitAnswers, 1500);
+      return;
+    }
+    var m = Math.floor(remaining / 60);
+    var s = remaining % 60;
+    var display = m + ':' + (s < 10 ? '0' : '') + s;
+    if (_pqCountdownEl) {
+      _pqCountdownEl.textContent = display;
+      _pqCountdownEl.style.color = remaining <= 60 ? 'var(--red)' : remaining <= 180 ? 'var(--yellow)' : 'var(--accent)';
+    }
+    remaining--;
+  }
+  tick();
+  _pqCountdownTimer = setInterval(tick, 1000);
+}
+
+function pqStopCountdown() {
+  if (_pqCountdownTimer) { clearInterval(_pqCountdownTimer); _pqCountdownTimer = null; }
+  var bar = document.getElementById('pq-timer-bar');
+  if (bar) bar.remove();
 }
 
 function pqRenderLobby() {
   var body = document.getElementById('pq-take-questions');
-  body.innerHTML =
-    '<div style="font-size:.85rem;color:var(--text2);margin-bottom:16px">Select a section to begin. You can do them in any order.</div>'+
-    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:20px">'+
-    pqSections.map(function(sec, i) {
-      var done = pqCompletedSections.indexOf(i) !== -1;
-      var label = secLabel(i);
-      return '<div onclick="'+(done?'':'pqEnterSection('+i+')')+'" style="'+
-        'border-radius:14px;padding:16px 10px;text-align:center;cursor:'+(done?'default':'pointer')+';'+
-        'border:2px solid '+(done?'var(--green)':'var(--accent)')+';'+
-        'background:'+(done?'rgba(74,222,128,.08)':'rgba(167,139,250,.08)')+';'+
-        'transition:all .2s;position:relative;'+
-        (done?'opacity:.75;':'')+'">'+
-        (done?'<div style="position:absolute;top:7px;right:9px;font-size:.7rem;color:var(--green);font-weight:800">✓ Done</div>':'')+
-        '<div style="font-family:var(--fh);font-size:2rem;font-weight:900;color:'+(done?'var(--green)':'var(--accent)')+'">'+label+'</div>'+
-        '<div style="font-size:.72rem;color:var(--text2);margin-top:4px;line-height:1.3">'+esc(sec.name)+'</div>'+
-        '<div style="font-size:.68rem;color:'+(done?'var(--green)':'var(--text2)')+';margin-top:3px">'+sec.questions.length+' Qs</div>'+
-      '</div>';
-    }).join('')+
-    '</div>'+
-    '<div style="font-size:.78rem;color:var(--text2);text-align:center;margin-bottom:14px">'+
-      pqCompletedSections.length+' of '+pqSections.length+' section(s) completed'+
-    '</div>'+
-    (pqCompletedSections.length === pqSections.length ?
-      '<button class="btn bp" style="width:100%;justify-content:center" onclick="pqSubmitAnswers()">✅ Submit Quiz</button>' :
-      ''
-    );
+  var remaining = pqSections.filter(function(s,i){ return pqCompletedSections.indexOf(i)===-1; });
+  var done      = pqSections.filter(function(s,i){ return pqCompletedSections.indexOf(i)!==-1; });
+  var allDone   = pqCompletedSections.length === pqSections.length;
+
+  function secCard(sec, i, isDone) {
+    var label = secLabel(i);
+    return '<div onclick="'+(isDone?'':'pqEnterSection('+i+')')+'" style="'+
+      'display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;'+
+      'border:1.5px solid '+(isDone?'rgba(74,222,128,.35)':'var(--accent)')+';'+
+      'background:'+(isDone?'rgba(74,222,128,.06)':'rgba(167,139,250,.08)')+';'+
+      'cursor:'+(isDone?'default':'pointer')+';margin-bottom:8px;transition:all .2s;">'+
+      '<div style="width:44px;height:44px;border-radius:12px;flex-shrink:0;'+
+        'background:'+(isDone?'rgba(74,222,128,.15)':'rgba(167,139,250,.15)')+';'+
+        'display:flex;align-items:center;justify-content:center;'+
+        'font-family:var(--fh);font-size:1.3rem;font-weight:900;'+
+        'color:'+(isDone?'var(--green)':'var(--accent)')+'">'+label+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-weight:700;font-size:.88rem;color:'+(isDone?'var(--green)':'var(--text1)')+'">'+esc(sec.name)+'</div>'+
+        '<div style="font-size:.7rem;color:var(--text2);margin-top:2px">'+sec.questions.length+' questions</div>'+
+      '</div>'+
+      (isDone
+        ? '<div style="font-size:.8rem;color:var(--green);font-weight:800">✓ Done</div>'
+        : '<div style="font-size:.75rem;color:var(--accent);font-weight:700">Tap to start →</div>'
+      )+
+    '</div>';
+  }
+
+  var html = '';
+
+  if (remaining.length) {
+    html += '<div style="font-size:.72rem;font-weight:800;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">Remaining</div>';
+    pqSections.forEach(function(sec,i){
+      if(pqCompletedSections.indexOf(i)===-1) html += secCard(sec,i,false);
+    });
+  }
+
+  if (done.length) {
+    html += '<div style="font-size:.72rem;font-weight:800;color:var(--green);letter-spacing:.06em;text-transform:uppercase;margin-top:16px;margin-bottom:8px">Done ✓</div>';
+    pqSections.forEach(function(sec,i){
+      if(pqCompletedSections.indexOf(i)!==-1) html += secCard(sec,i,true);
+    });
+  }
+
+  if (allDone) {
+    html += '<button class="btn bp" style="width:100%;justify-content:center;margin-top:12px" onclick="pqSubmitAnswers()">✅ Submit Quiz & Finish</button>';
+  }
+
+  body.innerHTML = html;
 }
 
 window.pqEnterSection = function(idx) {
@@ -15974,38 +17004,14 @@ function pqSubmitSection() {
     return;
   }
 
-  // Auto-advance to next incomplete section
-  var nextIdx = -1;
-  for (var i = pqCurrentSectionIdx + 1; i < pqSections.length; i++) {
-    if (pqCompletedSections.indexOf(i) === -1) { nextIdx = i; break; }
-  }
-  // If no next section found going forward, find first incomplete
-  if (nextIdx === -1) {
-    for (var i = 0; i < pqSections.length; i++) {
-      if (pqCompletedSections.indexOf(i) === -1) { nextIdx = i; break; }
-    }
-  }
-
-  if (nextIdx !== -1) {
-    pqEnterSection(nextIdx);
-  }
+  // Return to lobby so student picks their next section
+  pqRenderLobby();
 }
 
 function pqSubmitAnswers() {
+  pqStopCountdown();
   var name = (CU && CU.name) ? CU.name : (document.getElementById('pq-taker-name').value.trim());
   if (!pqTakeData) return;
-
-  // ── Deduct 5 points for taking a private quiz ──
-  if (CU && CU.id && CU.role === 'user') {
-    if (CU.totalScore < 5) {
-      showInsufficientPoints('take this quiz', 5);
-      return;
-    }
-    var newPqPts = Math.max(0, CU.totalScore - 5);
-    fsPatch('projects/' + PROJECT + '/databases/(default)/documents/users/' + CU.id,
-      { totalScore: String(newPqPts) })
-      .then(function() { CU.totalScore = newPqPts; }).catch(function() {});
-  }
 
   // Flatten all section answers into a single answers map keyed by global question index
   var answers = {};
@@ -16849,10 +17855,9 @@ function pqAIExplainWrong(wrongOnes, quizTitle) {
   for (var b = 0; b < wrongOnes.length; b += BATCH_SIZE) batches.push(wrongOnes.slice(b, b + BATCH_SIZE));
   var batchIdx = 0;
 
-  var sysPrompt = 'You are BABSPHARM AI, a PhD-level academic tutor and exam coach for pharmacy students. ' +
-    'For each wrong answer give ALL of the following sections in this exact pipe-separated format on one block:\n' +
-    'Q[n]: <one sentence why the chosen answer is wrong> | Correct: <one sentence why the right answer is correct> | Key concept: <2-3 sentence deep explanation with relevant symbols, formulas or reactions e.g. H₂O, CO₂, pH=-log[H⁺], PV=nRT> | Fast trick: <a quick shortcut, pattern, elimination strategy or exam hack to identify the right answer in seconds — e.g. process of elimination, unit analysis, keyword spotting, formula shortcut, visual pattern or mnemonic acronym> | Memory tip: <a vivid mnemonic, story, rhyme or acronym to permanently remember the correct answer>\n' +
-    'Separate each question block with ---. Be concise, practical and exam-focused.';
+  var sysPrompt = 'You are BABSPHARM AI, a pharmacy exam tutor. For each wrong answer reply in this exact format:\n' +
+    'Q[n]: <why wrong — max 10 words> | Correct: <why right — max 10 words> | Tip: <one quick memory trick — max 12 words>\n' +
+    'Separate questions with ---. Ultra-concise only. No extra text.';
 
   function buildPrompt(batch, offset) {
     var p = 'Quiz: "' + quizTitle + '" — explain these wrong answers:\n\n';
@@ -16881,13 +17886,13 @@ function pqAIExplainWrong(wrongOnes, quizTitle) {
         .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
         .replace(/Q\d+:/g, function(m){ return '<strong style="color:var(--accent)">' + m + '</strong>'; })
         .replace(/\| Correct:/g, '<br><span style="color:var(--green);font-weight:700">✅ Correct:</span>')
-        .replace(/\| Key concept:/g, '<br><span style="color:var(--a2);font-weight:700">📚 Key concept:</span>')
-        .replace(/\| Fast trick:/g, '<br><span style="color:var(--orange);font-weight:700">⚡ Fast trick:</span>')
-        .replace(/\| Memory tip:/g, '<br><span style="color:var(--yellow);font-weight:700">🧠 Memory tip:</span>')
         .replace(/\| Tip:/g, '<br><span style="color:var(--yellow);font-weight:700">💡 Tip:</span>')
+        .replace(/\| Key concept:/g, '<br><span style="color:var(--a2);font-weight:700">📚</span>')
+        .replace(/\| Fast trick:/g, '<br><span style="color:var(--orange);font-weight:700">⚡</span>')
+        .replace(/\| Memory tip:/g, '<br><span style="color:var(--yellow);font-weight:700">💡</span>')
         .replace(/\n/g, '<br>');
       expEl.style.cssText = 'margin-top:8px;padding:9px 11px;border-radius:9px;background:linear-gradient(135deg,rgba(167,139,250,.1),rgba(56,189,248,.07));border:1px solid rgba(167,139,250,.25);font-size:.76rem;line-height:1.65;color:var(--text);font-style:normal';
-      expEl.innerHTML = '<div style="display:flex;align-items:center;gap:5px;margin-bottom:6px"><span>🤖</span><span style="font-family:var(--fh);font-size:.72rem;font-weight:800;color:var(--accent)">AI Explanation</span><span style="font-size:.65rem;color:var(--text2);margin-left:2px">· concept · ⚡ trick · 🧠 tip</span></div>' + formatted;
+      expEl.innerHTML = '<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px"><span>🤖</span><span style="font-family:var(--fh);font-size:.72rem;font-weight:800;color:var(--accent)">AI Explanation</span></div>' + formatted;
     });
   }
 
