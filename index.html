@@ -11200,7 +11200,56 @@ function startOnlinePanel(){
   onlineRefreshInterval = setInterval(renderOnlineStudents, 30000);
 }
 
-function loadUsers(){
+// ── Users cache to reduce Firestore quota usage ──
+var _usersCache=null,_usersCacheTime=0;
+var USERS_CACHE_TTL=60000; // 60 seconds
+
+function _processUsersRes(res){
+  var approvedEl=document.getElementById('approved-list');
+  if(res&&res.error){
+    if(approvedEl)approvedEl.innerHTML='<div class="empty"><span>⚠️</span>Could not load students.<br><small style="color:var(--red)">'+esc(res.error.message||'Firebase error — check your API key or security rules.')+'</small></div>';
+    notify('Failed to load students: '+(res.error.message||'Firebase error'),'error','⚠️');return;
+  }
+  var users=getDocs(res);
+  var pending=users.filter(function(u){return u.status==='pending';});
+  allStudents=users.filter(function(u){return u.status==='approved'||u.status==='deactivated';});
+  document.getElementById('pending-list').innerHTML=pending.length?
+    pending.map(function(u){
+      return'<div class="pu-item"><div style="display:flex;align-items:center;gap:7px">'+
+        '<div class="pu-av">'+(u.name?u.name[0].toUpperCase():'?')+'</div>'+
+        '<div><div style="font-weight:600;font-size:.83rem">'+esc(u.name)+'</div>'+
+        '<div style="font-size:.69rem;color:var(--text2)">@'+esc(u.username)+' · '+esc(u.level||'')+'</div></div></div>'+
+        '<div style="display:flex;gap:4px">'+
+          '<button class="btn bg2 bsm" onclick="approveUser(\''+u.__id+'\',\''+esc(u.name)+'\')">✅ Approve</button>'+
+          '<button class="btn bd bsm" onclick="rejectUser(\''+u.__id+'\',\''+esc(u.name)+'\')">❌ Reject</button>'+
+        '</div></div>';
+    }).join(''):'<div class="empty"><span>✅</span>No pending requests.</div>';
+  renderStudentList();
+  loadDeviceBlockList();
+  document.getElementById('su').textContent=allStudents.filter(function(u){return u.status==='approved';}).length;
+}
+
+function loadUsers(forceRefresh){
+  loadRegMode();
+  var approvedEl=document.getElementById('approved-list');
+  var now=Date.now();
+  // Use cache if fresh and not a forced refresh
+  if(!forceRefresh&&_usersCache&&(now-_usersCacheTime)<USERS_CACHE_TTL){
+    _processUsersRes(_usersCache);
+    return;
+  }
+  if(approvedEl)approvedEl.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
+  fsGetAll('users').then(function(res){
+    if(!(res&&res.error)){_usersCache=res;_usersCacheTime=Date.now();}
+    _processUsersRes(res);
+  }).catch(function(err){
+    var msg=err&&err.message?err.message:'Network or Firebase error';
+    if(approvedEl)approvedEl.innerHTML='<div class="empty"><span>⚠️</span>Could not load students.<br><small style="color:var(--red)">'+esc(msg)+'</small></div>';
+    notify('Failed to load students: '+msg,'error','⚠️');
+  });
+}
+// ── INTERNAL: old loadUsers body replaced — kept for compatibility ──
+function _loadUsersOLD_UNUSED(){
   loadRegMode();
   var approvedEl=document.getElementById('approved-list');
   if(approvedEl)approvedEl.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
@@ -11226,11 +11275,7 @@ function loadUsers(){
     renderStudentList();
     loadDeviceBlockList();
     document.getElementById('su').textContent=allStudents.filter(function(u){return u.status==='approved';}).length;
-  }).catch(function(err){
-    var msg=err&&err.message?err.message:'Network or Firebase error';
-    if(approvedEl)approvedEl.innerHTML='<div class="empty"><span>⚠️</span>Could not load students.<br><small style="color:var(--red)">'+esc(msg)+'</small></div>';
-    notify('Failed to load students: '+msg,'error','⚠️');
-  });
+  // end _loadUsersOLD_UNUSED — body kept for reference only, never called
 }
 function renderStudentList(){
   var list=allStudents;
@@ -11279,23 +11324,23 @@ function filterStudents(f,btn){
 }
 function approveUser(id,name){
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+id,{status:'approved'})
-    .then(function(){notify(name+' approved!','success','✅');logActivity('approve',name);loadUsers();}).catch(function(){});
+    .then(function(){notify(name+' approved!','success','✅');logActivity('approve',name);_usersCache=null;loadUsers(true);}).catch(function(){});
 }
 function rejectUser(id,name){
   fsDel("projects/"+PROJECT+"/databases/(default)/documents/users/"+id)
-    .then(function(){notify(name+' rejected & removed','warn','❌');logActivity('reject',name);loadUsers();}).catch(function(){});
+    .then(function(){notify(name+' rejected & removed','warn','❌');logActivity('reject',name);_usersCache=null;loadUsers(true);}).catch(function(){});
 }
 function deactivateUser(id,name){
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+id,{status:'deactivated'})
-    .then(function(){notify(name+' deactivated','warn','🚫');logActivity('deactivate',name);loadUsers();}).catch(function(){});
+    .then(function(){notify(name+' deactivated','warn','🚫');logActivity('deactivate',name);_usersCache=null;loadUsers(true);}).catch(function(){});
 }
 function activateUser(id,name){
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+id,{status:'approved'})
-    .then(function(){notify(name+' reactivated!','success','✅');logActivity('activate',name);loadUsers();}).catch(function(){});
+    .then(function(){notify(name+' reactivated!','success','✅');logActivity('activate',name);_usersCache=null;loadUsers(true);}).catch(function(){});
 }
 function banUser(id){
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+id,{status:'banned'})
-    .then(function(){notify('Banned','warn','🚫');loadUsers();}).catch(function(){});
+    .then(function(){notify('Banned','warn','🚫');_usersCache=null;loadUsers(true);}).catch(function(){});
 }
 
 // ══════════════════════════════════════════════════════
@@ -11322,7 +11367,7 @@ function blockStudentDevice(userId,name,deviceFp){
     .then(function(){
       notify('🔒 Device blocked for '+name,'warn','🔒');
       logActivity('device_block',name+' — '+deviceFp.substring(0,16));
-      loadUsers();
+      _usersCache=null;loadUsers(true);
       loadDeviceBlockList();
     }).catch(function(){notify('Failed to block device','error','❌');});
 }
@@ -11342,7 +11387,7 @@ function unblockStudentDevice(userId,name,deviceFp){
     .then(function(){
       notify('🔓 Device unblocked for '+name,'success','🔓');
       logActivity('device_unblock',name);
-      loadUsers();
+      _usersCache=null;loadUsers(true);
       loadDeviceBlockList();
     }).catch(function(){notify('Failed to unblock','error','❌');});
 }
