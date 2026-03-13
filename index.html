@@ -11449,10 +11449,63 @@ function loadLog(){
 // STATS
 // ══════════════════════════════════
 function updateStats(){
-  fsGetAll('files').then(function(r){document.getElementById('sf').textContent=r.documents?r.documents.length:0;}).catch(function(){});
-  fsGetAll('users').then(function(r){document.getElementById('su').textContent=r.documents?getDocs(r).filter(function(u){return u.role!=='admin'&&u.status!=='pending';}).length:0;}).catch(function(){});
-  fsGetAll('quizzes').then(function(r){document.getElementById('sq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
-  fsGetAll('quizscores').then(function(r){document.getElementById('stq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
+  // ── DEBUG BOX ──
+  var dbx=document.getElementById('__debug_box');
+  if(!dbx){
+    dbx=document.createElement('div');
+    dbx.id='__debug_box';
+    dbx.style.cssText='position:fixed;bottom:70px;left:10px;right:10px;z-index:99999;background:#1a1a2e;border:2px solid #a78bfa;border-radius:12px;padding:12px;font-size:.72rem;font-family:monospace;color:#e2e8f0;max-height:50vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.8)';
+    dbx.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong style="color:#a78bfa">🔍 DEBUG INFO</strong><button onclick="document.getElementById('__debug_box').remove()" style="background:#f87171;border:none;color:#fff;border-radius:6px;padding:2px 8px;cursor:pointer;font-size:.7rem">✕ Close</button></div><div id="__debug_lines"></div>';
+    document.body.appendChild(dbx);
+  }
+  function dbLog(msg, color){
+    var el=document.getElementById('__debug_lines');
+    if(!el)return;
+    var line=document.createElement('div');
+    line.style.cssText='padding:3px 0;border-bottom:1px solid rgba(255,255,255,.08);color:'+(color||'#e2e8f0');
+    line.textContent=msg;
+    el.appendChild(line);
+    dbx.scrollTop=dbx.scrollHeight;
+  }
+  dbLog('⏳ Fetching data from Firebase...');
+
+  fsGetAll('files').then(function(r){
+    var count=r.documents?r.documents.length:0;
+    dbLog('📁 Files: '+count+(r.error?' ERROR:'+r.error.message:''), r.error?'#f87171':'#4ade80');
+    document.getElementById('sf').textContent=count;
+  }).catch(function(e){dbLog('📁 Files FAILED: '+e.message,'#f87171');});
+
+  fsGetAll('users').then(function(r){
+    if(r.error){
+      dbLog('👥 Users ERROR: '+r.error.message,'#f87171');
+      dbLog('👥 Firebase code: '+(r.error.code||'unknown'),'#f87171');
+      document.getElementById('su').textContent=0;
+      return;
+    }
+    var rawCount=r.documents?r.documents.length:0;
+    dbLog('👥 Raw users from Firebase: '+rawCount, rawCount>0?'#4ade80':'#fbbf24');
+    var all=getDocs(r);
+    dbLog('👥 After getDocs(): '+all.length, all.length>0?'#4ade80':'#fbbf24');
+    if(all.length>0){
+      var sample=all[0];
+      dbLog('👥 Sample user role="'+sample.role+'" status="'+sample.status+'"','#38bdf8');
+    }
+    var admins=all.filter(function(u){return u.role==='admin';});
+    var pending=all.filter(function(u){return u.status==='pending';});
+    var students=all.filter(function(u){return u.role!=='admin'&&u.status!=='pending';});
+    dbLog('👥 Admins: '+admins.length+' | Pending: '+pending.length+' | Students: '+students.length,'#a78bfa');
+    document.getElementById('su').textContent=students.length;
+  }).catch(function(e){dbLog('👥 Users FAILED: '+e.message,'#f87171');});
+
+  fsGetAll('quizzes').then(function(r){
+    var count=r.documents?r.documents.length:0;
+    dbLog('📝 Quizzes: '+count, r.error?'#f87171':'#4ade80');
+    document.getElementById('sq').textContent=count;
+  }).catch(function(e){dbLog('📝 Quizzes FAILED: '+e.message,'#f87171');});
+
+  fsGetAll('quizscores').then(function(r){
+    document.getElementById('stq').textContent=r.documents?r.documents.length:0;
+  }).catch(function(e){});
 }
 // logActivity defined earlier in HELPERS section
 function loadAdminAll(){
