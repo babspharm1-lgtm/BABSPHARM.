@@ -6785,7 +6785,7 @@ var lastFilesCount=0,lastQuizCount=0,lastAnnCount=0,lastMotivCount=0,lastFlyerCo
 function startNotifPoll(){
   setInterval(function(){
     if(!CU||CU.role==='admin')return;
-    Promise.all([fsGetAll('files'),fsGetAll('quizzes'),fsGet('announcements')]).then(function(results){
+    Promise.all([fsGetAll('files'),fsGetAll('quizzes'),fsGetAll('announcements')]).then(function(results){
       // ── Files ──
       var fc=results[0].documents?results[0].documents.length:0;
       if(lastFilesCount>0&&fc>lastFilesCount){
@@ -7322,7 +7322,7 @@ async function doLogin(){
     if(user.status==='deactivated'){notify('Your account has been deactivated. Contact admin.','error','🚫');return;}
 
     // Check device block
-    fsGet('deviceblocks').then(function(dbRes){
+    fsGetAll('deviceblocks').then(function(dbRes){
       var blocked=getDocs(dbRes).find(function(b){return b.deviceId===deviceFp&&b.active!=='false';});
       if(blocked){notify('🚫 This device has been blocked. Contact admin.','error','🚫');return;}
 
@@ -7525,9 +7525,9 @@ function showDash(role){
     // init notif counts
     fsGetAll('files').then(function(r){lastFilesCount=r.documents?r.documents.length:0;}).catch(function(){});
     fsGetAll('quizzes').then(function(r){lastQuizCount=r.documents?r.documents.length:0;}).catch(function(){});
-    fsGet('announcements').then(function(r){lastAnnCount=r.documents?r.documents.length:0;}).catch(function(){});
-    fsGet('motivations').then(function(r){lastMotivCount=r.documents?r.documents.length:0;}).catch(function(){});
-    fsGet('flyers').then(function(r){lastFlyerCount=r.documents?r.documents.length:0;}).catch(function(){});
+    fsGetAll('announcements').then(function(r){lastAnnCount=r.documents?r.documents.length:0;}).catch(function(){});
+    fsGetAll('motivations').then(function(r){lastMotivCount=r.documents?r.documents.length:0;}).catch(function(){});
+    fsGetAll('flyers').then(function(r){lastFlyerCount=r.documents?r.documents.length:0;}).catch(function(){});
   } else {
     document.getElementById('ad').style.display='';
     document.getElementById('surl').textContent=window.location.href;
@@ -8426,13 +8426,13 @@ function renderAnnList(docs,admin){
 }
 function loadAAnn(){
   var el=document.getElementById('aal');el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('announcements').then(function(res){
+  fsGetAll('announcements').then(function(res){
     el.innerHTML=renderAnnList(getDocs(res).sort(function(a,b){return new Date(b.date)-new Date(a.date);}),true);
   }).catch(function(){el.innerHTML='<div class="empty"><span>⚠️</span>Error</div>';});
 }
 function loadUAnn(){
   var el=document.getElementById('ual');el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('announcements').then(function(res){
+  fsGetAll('announcements').then(function(res){
     var docs=getDocs(res).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
     el.innerHTML=renderAnnList(docs,false);
     setTimeout(function(){docs.forEach(function(a){
@@ -8530,7 +8530,7 @@ function loadMotivAdmin(){
   var el=document.getElementById('motiv-admin-list');if(!el)return;
   el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
   var now=new Date();
-  fsGet('motivations').then(function(res){
+  fsGetAll('motivations').then(function(res){
     var docs=getDocs(res).sort(function(a,b){return new Date(b.postedAt)-new Date(a.postedAt);});
     if(!docs.length){el.innerHTML='<div class="empty"><span>✨</span>No motivations posted yet.</div>';return;}
     el.innerHTML=docs.map(function(m){
@@ -8552,7 +8552,7 @@ function delMotiv(id){
 }
 // Load latest admin motivation onto dashboard card
 function loadAdminMotivation(){
-  fsGet('motivations').then(function(res){
+  fsGetAll('motivations').then(function(res){
     var now=new Date();
     var docs=getDocs(res)
       .filter(function(m){return!m.expiresAt||new Date(m.expiresAt)>=now;})
@@ -8611,7 +8611,7 @@ function loadFlyerAdmin(){
   var el=document.getElementById('flyer-admin-list');if(!el)return;
   el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
   var now=new Date();
-  fsGet('flyers').then(function(res){
+  fsGetAll('flyers').then(function(res){
     var docs=getDocs(res).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
     if(!docs.length){el.innerHTML='<div class="empty"><span>🖼️</span>No flyers uploaded yet.</div>';return;}
     el.innerHTML='<div class="flyer-grid">'+docs.map(function(f){
@@ -8634,7 +8634,7 @@ function delFlyer(id){
 }
 function loadFlyersUser(){
   var now=new Date();
-  fsGet('flyers').then(function(res){
+  fsGetAll('flyers').then(function(res){
     var docs=getDocs(res)
       .filter(function(f){return!f.expiresAt||new Date(f.expiresAt)>=now;})
       .sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
@@ -8688,7 +8688,7 @@ function postForum(){
 }
 function loadForum(){
   var el=document.getElementById('forum-list');el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('forum').then(function(res){
+  fsGetAll('forum').then(function(res){
     var docs=getDocs(res).sort(function(a,b){return new Date(b.postedAt)-new Date(a.postedAt);});
     if(!docs.length){el.innerHTML='<div class="empty"><span>💬</span>No posts yet. Be the first!</div>';return;}
     el.innerHTML=docs.map(function(p){
@@ -8723,7 +8723,7 @@ function loadForum(){
   }).catch(function(){el.innerHTML='<div class="empty"><span>⚠️</span>Error</div>';});
 }
 function reactPost(id,emoji){
-  fsGet('forum').then(function(res){
+  fsGetAll('forum').then(function(res){
     var docs=getDocs(res),post=docs.find(function(p){return p.__id===id;});
     if(!post)return;
     var reactions={};try{reactions=JSON.parse(post.reactions||'{}');}catch(e){}
@@ -8736,7 +8736,7 @@ function replyForum(id,existingRepliesStr){
   var text=inp.value.trim();if(!text)return;
   var replies=[];try{replies=JSON.parse(existingRepliesStr.replace(/&quot;/g,'"'));}catch(e){}
   replies.push({author:CU.name,username:CU.username,text:text,time:new Date().toISOString()});
-  fsGet('forum').then(function(res){
+  fsGetAll('forum').then(function(res){
     var docs=getDocs(res),post=docs.find(function(p){return p.__id===id;});
     if(!post)return;
     fsPatch(post.__path,{replies:JSON.stringify(replies)}).then(function(){notify('Reply posted!','success','✅');loadForum();}).catch(function(){});
@@ -10310,7 +10310,7 @@ function loadReportCard(){
   if(!el)return;
   el.innerHTML='<div class="ld">Loading your report<span class="sp"></span></div>';
   Promise.all([
-    fsGet('quizscores'),
+    fsGetAll('quizscores'),
     fsGetAll('quizzes'),
     fsGetAll('files'),
     fsGetAll('users')
@@ -10634,7 +10634,7 @@ function loadAnalytics(){
   var el=document.getElementById('analytics-content');
   if(!id){el.innerHTML='<div class="empty"><span>📊</span>Select a quiz.</div>';return;}
   el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  Promise.all([fsGetAll('quizzes'),fsGet('quizscores')]).then(function(results){
+  Promise.all([fsGetAll('quizzes'),fsGetAll('quizscores')]).then(function(results){
     var quizzes=getDocs(results[0]),scores=getDocs(results[1]);
     var quiz=quizzes.find(function(q){return q.__id===id;});
     if(!quiz){el.innerHTML='<div class="empty"><span>⚠️</span>Quiz not found.</div>';return;}
@@ -11351,7 +11351,7 @@ function unblockStudentDevice(userId,name,deviceFp){
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+userId,{deviceBlocked:'false',blockedDevice:''})
     .then(function(){
       // Deactivate matching block records
-      return fsGet('deviceblocks').then(function(res){
+      return fsGetAll('deviceblocks').then(function(res){
         var blocks=getDocs(res).filter(function(b){return b.studentId===userId||b.deviceId===deviceFp;});
         return Promise.all(blocks.map(function(b){
           return fsPatch(b.__path,{active:'false',unblockedAt:new Date().toISOString()});
@@ -11386,7 +11386,7 @@ function loadDeviceBlockList(){
   var el=document.getElementById('device-block-list');
   if(!el)return;
   el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('deviceblocks').then(function(res){
+  fsGetAll('deviceblocks').then(function(res){
     var blocks=getDocs(res).sort(function(a,b){return new Date(b.blockedAt)-new Date(a.blockedAt);});
     if(!blocks.length){
       el.innerHTML='<div class="empty"><span>✅</span>No devices blocked yet.</div>';return;
@@ -11450,9 +11450,9 @@ function loadLog(){
 // ══════════════════════════════════
 function updateStats(){
   fsGetAll('files').then(function(r){document.getElementById('sf').textContent=r.documents?r.documents.length:0;}).catch(function(){});
-  fsGetAll('users').then(function(r){document.getElementById('su').textContent=r.documents?getDocs(r).filter(function(u){return u.status==='approved';}).length:0;}).catch(function(){});
+  fsGetAll('users').then(function(r){document.getElementById('su').textContent=r.documents?getDocs(r).filter(function(u){return u.role!=='admin'&&u.status!=='pending';}).length:0;}).catch(function(){});
   fsGetAll('quizzes').then(function(r){document.getElementById('sq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
-  fsGet('quizscores').then(function(r){document.getElementById('stq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
+  fsGetAll('quizscores').then(function(r){document.getElementById('stq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
 }
 // logActivity defined earlier in HELPERS section
 function loadAdminAll(){
@@ -12415,7 +12415,7 @@ function loadUserReferralCard(){
   var el=document.getElementById('user-ref-code');
   if(el)el.textContent=code;
   // Load referral count and bonus points earned
-  Promise.all([fsGetAll('users'),fsGet('referralbonuses')]).then(function(results){
+  Promise.all([fsGetAll('users'),fsGetAll('referralbonuses')]).then(function(results){
     var users=getDocs(results[0]);
     var bonuses=getDocs(results[1]);
     var count=users.filter(function(u){return u.referredBy===code;}).length;
@@ -12451,7 +12451,7 @@ function loadAdminReferrals(){
   if(!listEl)return;
   listEl.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
   signupsEl.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  Promise.all([fsGetAll('users'),fsGet('referralbonuses')]).then(function(results){
+  Promise.all([fsGetAll('users'),fsGetAll('referralbonuses')]).then(function(results){
     var users=getDocs(results[0]);
     var bonuses=getDocs(results[1]);
     // Build referral counts and bonus totals per code
@@ -12543,7 +12543,7 @@ function loadPointsManager() {
 }
 
 function loadPtsStats() {
-  Promise.all([fsGetAll('users'), fsGet('pointgrants'), fsGet('referralbonuses')]).then(function(res) {
+  Promise.all([fsGetAll('users'), fsGetAll('pointgrants'), fsGetAll('referralbonuses')]).then(function(res) {
     var users = getDocs(res[0]);
     var grants = getDocs(res[1]);
     var refBonuses = getDocs(res[2]);
@@ -12695,7 +12695,7 @@ function loadPtsReferrals() {
   var el = document.getElementById('pts-referral-breakdown');
   if (!el) return;
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-  Promise.all([fsGetAll('users'), fsGet('referralbonuses')]).then(function(res) {
+  Promise.all([fsGetAll('users'), fsGetAll('referralbonuses')]).then(function(res) {
     var users = getDocs(res[0]);
     var bonuses = getDocs(res[1]);
     if (!users.length) { el.innerHTML = '<div class="empty"><span>👥</span>No students yet.</div>'; return; }
@@ -12767,7 +12767,7 @@ function loadPtsHistory() {
   var el = document.getElementById('pts-history-list');
   if (!el) return;
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-  Promise.all([fsGet('pointgrants'), fsGet('referralbonuses')]).then(function(res) {
+  Promise.all([fsGetAll('pointgrants'), fsGetAll('referralbonuses')]).then(function(res) {
     var grants = getDocs(res[0]).map(function(g){ return { type:'admin_grant', name:g.studentName, note:g.note||'Admin bonus', pts:Number(g.points||0), at:g.grantedAt }; });
     var refs = getDocs(res[1]).map(function(b){ return { type:'referral', name:b.referrerName||b.referrer, note:(b.studentName||b.student)+' completed '+( b.quizTitle||'a quiz'), pts:Number(b.bonus||5), at:b.awardedAt }; });
     var all = grants.concat(refs).sort(function(a,b){ return new Date(b.at)-new Date(a.at); });
@@ -12963,7 +12963,7 @@ function viewStudentPtsHistory(userId, name) {
     var el = document.getElementById('pts-history-list');
     if (!el) return;
     el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-    Promise.all([fsGet('pointgrants'), fsGet('referralbonuses')]).then(function(res){
+    Promise.all([fsGetAll('pointgrants'), fsGetAll('referralbonuses')]).then(function(res){
       var grants = getDocs(res[0]).filter(function(g){return g.studentId===userId;})
         .map(function(g){return{type:'admin_grant',name:g.studentName,note:g.note||'Admin bonus',pts:Number(g.points||0),at:g.grantedAt};});
       var refs = getDocs(res[1]).filter(function(b){return b.referrer===name||b.referrerName===name;})
@@ -13011,8 +13011,8 @@ function loadMyPointHistory() {
 
   Promise.all([
     fsGetAll('pointslog'),
-    fsGet('pointgrants'),
-    fsGet('referralbonuses')
+    fsGetAll('pointgrants'),
+    fsGetAll('referralbonuses')
   ]).then(function(res){
     var logs = getDocs(res[0])
       .filter(function(l){ return l.username === CU.username; })
@@ -13087,7 +13087,7 @@ function loadMyQuizHistory() {
   var el = document.getElementById('u-quiz-history-list');
   if (!el) return;
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-  Promise.all([fsGet('quizscores'), fsGetAll('quizzes')]).then(function(res) {
+  Promise.all([fsGetAll('quizscores'), fsGetAll('quizzes')]).then(function(res) {
     var scores = getDocs(res[0]).filter(function(s){ return s.username === CU.username; })
       .sort(function(a,b){ return new Date(b.takenAt)-new Date(a.takenAt); });
     var quizMap = {};
@@ -13219,7 +13219,7 @@ function loadAdminFormulas() {
   var el = document.getElementById('a-formula-list');
   if (!el) return;
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-  fsGet('formulas').then(function(res) {
+  fsGetAll('formulas').then(function(res) {
     var docs = getDocs(res).sort(function(a,b){ return new Date(b.createdAt)-new Date(a.createdAt); });
     if (!docs.length) { el.innerHTML = '<div class="empty"><span>📋</span>No formula sheets yet</div>'; return; }
     el.innerHTML = docs.map(function(d) {
@@ -13253,7 +13253,7 @@ function loadStudentFormulas() {
   if (!listEl) return;
   listEl.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
 
-  fsGet('formulas').then(function(res) {
+  fsGetAll('formulas').then(function(res) {
     var all = getDocs(res).sort(function(a,b){ return new Date(b.createdAt)-new Date(a.createdAt); });
     if (!all.length) {
       if (filterEl) filterEl.innerHTML = '';
@@ -13374,7 +13374,7 @@ function loadGoalsProgress() {
   }
   el.innerHTML = '<div class="ld">Loading your scores<span class="sp"></span></div>';
 
-  fsGet('quizscores').then(function(res) {
+  fsGetAll('quizscores').then(function(res) {
     var scores = getDocs(res).filter(function(s){ return s.username === CU.username; });
 
     // Compute best avg per course by matching quiz category
@@ -13452,7 +13452,7 @@ function loadDashboardPreviews() {
     if (gcEl) gcEl.textContent = goalsCount ? goalsCount+' courses' : 'None yet';
 
     if (goalsCount) {
-      fsGet('quizscores').then(function(res) {
+      fsGetAll('quizscores').then(function(res) {
         var scores = getDocs(res).filter(function(s){ return s.username === CU.username; });
         var courseAvg = {};
         scores.forEach(function(s) {
@@ -13479,7 +13479,7 @@ function loadDashboardPreviews() {
   }
 
   // Formulas preview
-  fsGet('formulas').then(function(res) {
+  fsGetAll('formulas').then(function(res) {
     var docs = getDocs(res);
     var countEl = document.getElementById('gdc-formula-count');
     var coursesEl = document.getElementById('gdc-formula-courses');
@@ -14078,7 +14078,7 @@ function loadPerformanceReport(){
   var tbody=document.getElementById('rpt-tbody');
   if(!tbody)return;
   tbody.innerHTML='<tr><td colspan="8" style="padding:20px;text-align:center;color:var(--text2)"><div class="ld">Loading<span class="sp"></span></div></td></tr>';
-  Promise.all([fsGetAll('users'),fsGet('quizscores')]).then(function(results){
+  Promise.all([fsGetAll('users'),fsGetAll('quizscores')]).then(function(results){
     var users=getDocs(results[0]).filter(function(u){return u.status==='approved';});
     var scores=getDocs(results[1]);
     // Build per-user stats
