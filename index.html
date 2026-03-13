@@ -1870,11 +1870,21 @@ body.has-bottom-nav #app{padding-bottom:0;}
 .ai-avatar{font-size:1.3rem;flex-shrink:0;}
 .ai-avatar-user{font-size:1.1rem;}
 .ai-bubble{
-  max-width:78%;padding:10px 14px;border-radius:16px;
-  font-size:.82rem;line-height:1.6;
+  max-width:85%;padding:10px 14px;border-radius:16px;
+  font-size:.82rem;line-height:1.7;
   background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.2);
   color:var(--text);border-bottom-left-radius:4px;
+  word-wrap:break-word;overflow-wrap:break-word;word-break:break-word;
+  white-space:normal;min-width:0;
 }
+.ai-bubble p{margin:0 0 8px 0;}
+.ai-bubble p:last-child{margin-bottom:0;}
+.ai-bubble ul,.ai-bubble ol{padding-left:18px;margin:6px 0;}
+.ai-bubble li{margin-bottom:4px;}
+.ai-bubble strong{color:var(--accent);font-weight:700;}
+.ai-bubble em{opacity:.85;font-style:italic;}
+.ai-bubble br+br{display:block;margin-top:4px;content:'';}
+.ai-bubble code{background:rgba(0,0,0,.25);padding:1px 5px;border-radius:4px;font-size:.78rem;font-family:monospace;}
 .ai-bubble-user{
   background:linear-gradient(135deg,rgba(109,40,217,.5),rgba(167,139,250,.3));
   border-color:rgba(167,139,250,.4);border-bottom-right-radius:4px;
@@ -3015,7 +3025,8 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-           signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+           signOut, onAuthStateChanged, sendPasswordResetEmail,
+           setPersistence, browserLocalStoragePersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
   // SECURITY: Replace these values with your actual Firebase config.
   // Get them from Firebase Console → Project Settings → Your apps → Web app config.
@@ -3032,6 +3043,11 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
 
   var fbApp = initializeApp(firebaseConfig);
   var fbAuth = getAuth(fbApp);
+
+  // Persist login across page refreshes and browser restarts
+  setPersistence(fbAuth, browserLocalStoragePersistence).catch(function(e){
+    console.warn('Auth persistence not set:', e);
+  });
 
   // Expose auth functions to global scope for use by existing code
   window._fbAuth = fbAuth;
@@ -3398,9 +3414,9 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
       </div>
     </div>
     <div class="apk-btns">
-      <div class="apk-btn-android" onclick="triggerInstall()" style="cursor:pointer">
-        📲 Install App<br><span>Android / Desktop</span>
-      </div>
+      <a class="apk-btn-android" href="https://github.com/babspharm1-lgtm/BABSPHARM./releases/download/V1.0/app-debug.apk" download style="cursor:pointer;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        📲 Download APK<br><span>Android — Direct Download</span>
+      </a>
       <div class="apk-btn-ios" onclick="document.getElementById('ios-install-modal').classList.add('open')">
         🍎 iPhone Guide<br><span>Safari → Share → Add</span>
       </div>
@@ -5867,6 +5883,17 @@ D. Rankine</code>
 
   <div class="tp" id="at-security">
 
+    <!-- ── QUIZ CHEAT LOG ── -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="st"><span class="dot"></span>🚨 Quiz Cheat Log</div>
+      <p style="font-size:.78rem;color:var(--text2);margin-bottom:12px">Students flagged for switching tabs or apps during a quiz. 1st offence = warning only. 2nd offence = quiz auto-submitted + banned from retaking.</p>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button class="btn bp bsm" onclick="loadCheatLog()">🔄 Refresh</button>
+        <button class="btn bd bsm" onclick="clearCheatLog()">🗑️ Clear All</button>
+      </div>
+      <div id="cheat-log-list"><div class="ld">Loading<span class="sp"></span></div></div>
+    </div>
+
     <!-- Contact Info Settings -->
     <div class="card" style="max-width:440px;margin-bottom:14px">
       <div class="st"><span class="dot"></span>📞 Contact Info</div>
@@ -6039,7 +6066,7 @@ D. Rankine</code>
         </div>
         <div id="pqr-body"></div>
         <div style="display:flex;gap:8px;margin-top:14px">
-          <button class="btn bp" style="flex:1;justify-content:center" onclick="pqDownloadPDF()">📄 Download PDF</button>
+          <button class="btn bp" id="pq-dl-pdf-btn" style="flex:1;justify-content:center" onclick="pqDownloadPDF()">📄 Download PDF</button>
           <button class="btn bg2" style="flex:1;justify-content:center" onclick="pqShareWA()">📲 Share via WhatsApp</button>
         </div>
       </div>
@@ -6971,6 +6998,40 @@ function aiQuickAsk(prompt){
   if(input){ input.value = prompt + ' '; input.focus(); }
 }
 
+function formatAiText(text){
+  // Escape HTML first
+  var s = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Bold **text** or __text__
+  s = s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  s = s.replace(/__(.+?)__/g,'<strong>$1</strong>');
+  // Italic *text* or _text_
+  s = s.replace(/\*([^*\n]+?)\*/g,'<em>$1</em>');
+  s = s.replace(/_([^_\n]+?)_/g,'<em>$1</em>');
+  // Inline code `code`
+  s = s.replace(/`([^`]+)`/g,'<code>$1</code>');
+  // Split into lines and handle bullets + paragraphs
+  var lines = s.split('\n');
+  var out = '';
+  var inList = false;
+  for(var i=0;i<lines.length;i++){
+    var line = lines[i].trim();
+    var isBullet = /^[-*•]\s+/.test(line) || /^\d+\.\s+/.test(line);
+    if(isBullet){
+      if(!inList){ out+='<ul>'; inList=true; }
+      out+='<li>'+line.replace(/^[-*•]\s+/,'').replace(/^\d+\.\s+/,'')+'</li>';
+    } else {
+      if(inList){ out+='</ul>'; inList=false; }
+      if(line===''){
+        out+='<br>';
+      } else {
+        out+='<p>'+line+'</p>';
+      }
+    }
+  }
+  if(inList) out+='</ul>';
+  return out;
+}
+
 function appendAiMsg(role, text){
   var box = document.getElementById('ai-chat-box');
   if(!box) return;
@@ -6979,7 +7040,7 @@ function appendAiMsg(role, text){
   div.className = 'ai-msg ai-msg-'+(role==='user'?'user':'bot')+' message '+(role==='user'?'student':'ai');
   div.innerHTML = role==='user'
     ? '<div class="ai-bubble ai-bubble-user">'+esc(text)+'</div><span class="ai-avatar ai-avatar-user">👤</span>'
-    : '<span class="ai-avatar">🤖</span><div class="ai-bubble">'+text.replace(/\n/g,'<br>')+'</div>';
+    : '<span class="ai-avatar">🤖</span><div class="ai-bubble">'+formatAiText(text)+'</div>';
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
 }
@@ -11254,6 +11315,7 @@ function sat2(name,btn){
     report:function(){if(typeof loadPerformanceReport==='function')loadPerformanceReport();},
     security:function(){
       loadContactInfo();
+      loadCheatLog();
     },
     banner:function(){},
     chat:function(){
@@ -11355,7 +11417,8 @@ var FEATURES=[
   {key:'feat_chat',    icon:'💌', name:'Private Chat',      desc:'Students can message admin privately'},
   {key:'feat_reg',     icon:'📝', name:'Registration',      desc:'Allow new students to register accounts'},
   {key:'feat_mindmap', icon:'🗺️', name:'Mind Maps',         desc:'AI-powered mind map generator from lecture notes'},
-  {key:'feat_mindmap_premium', icon:'🔒', name:'Mind Maps — Free Access', desc:'ON = all students can edit maps. OFF = view-only for free students'}
+  {key:'feat_mindmap_premium', icon:'🔒', name:'Mind Maps — Free Access', desc:'ON = all students can edit maps. OFF = view-only for free students'},
+  {key:'feat_allow_screenshots', icon:'📸', name:'Allow Screenshots', desc:'ON = students can take screenshots normally. OFF = screenshots are blocked site-wide for students'}
 ];
 var featureStates={};
 
@@ -11449,6 +11512,59 @@ function applyFeatureStates(){
   if(regBtn){
     var regOn=featureStates['feat_reg']!=='off';
     regBtn.style.display=regOn?'':'none';
+  }
+
+  // Screenshot blocking: if feat_allow_screenshots is 'off', block for non-admins
+  applyScreenshotBlock();
+}
+
+function applyScreenshotBlock(){
+  // Only enforce for logged-in non-admin students
+  if(!CU || CU.role === 'admin') return;
+  var screenshotsAllowed = featureStates['feat_allow_screenshots'] !== 'off';
+
+  // Remove old style if exists
+  var oldStyle = document.getElementById('ac-screenshot-block');
+  if(oldStyle) oldStyle.remove();
+
+  if(!screenshotsAllowed){
+    // CSS: prevent selection and apply print protection
+    var style = document.createElement('style');
+    style.id = 'ac-screenshot-block';
+    style.textContent = [
+      'body { -webkit-user-select: none !important; user-select: none !important; }',
+      '@media print { body * { visibility: hidden !important; } body::after { content: "🔒 Screenshots and printing are disabled by your administrator."; visibility: visible; position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 1.5rem; color: #a78bfa; font-weight: 800; text-align: center; } }'
+    ].join('');
+    document.head.appendChild(style);
+
+    // Block PrintScreen / screenshot keys globally
+    if(!window._screenshotBlockListener){
+      window._screenshotBlockListener = function(e){
+        if(e.key === 'PrintScreen' || (e.metaKey && e.shiftKey && (e.key==='3'||e.key==='4'||e.key==='5'||e.key==='s'||e.key==='S'))){
+          e.preventDefault();
+          // Briefly flash screen black to foil screenshot
+          var flash = document.getElementById('ac-screenshot-flash');
+          if(!flash){
+            flash = document.createElement('div');
+            flash.id = 'ac-screenshot-flash';
+            flash.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#000;pointer-events:none;opacity:0;transition:opacity .05s';
+            document.body.appendChild(flash);
+          }
+          flash.style.opacity = '1';
+          setTimeout(function(){ flash.style.opacity = '0'; }, 300);
+          notify('📸 Screenshots are disabled by your administrator.', 'warn', '🔒');
+        }
+      };
+      document.addEventListener('keyup', window._screenshotBlockListener, true);
+    }
+  } else {
+    // Re-enable: remove listeners and styles
+    if(window._screenshotBlockListener){
+      document.removeEventListener('keyup', window._screenshotBlockListener, true);
+      window._screenshotBlockListener = null;
+    }
+    var flash = document.getElementById('ac-screenshot-flash');
+    if(flash) flash.remove();
   }
 }
 
@@ -11835,9 +11951,15 @@ function triggerInstall(){
     document.getElementById('ios-install-modal').classList.add('open');
     document.getElementById('pwa-install-banner').classList.remove('show');
   } else {
-    // Fallback for other browsers
-    document.getElementById('pwa-install-banner').classList.add('show');
-    notify('Use your browser menu to "Add to Home Screen" or "Install"','info','📲');
+    // Fallback — offer direct APK download for Android, banner for others
+    var isAndroid=/android/i.test(navigator.userAgent);
+    if(isAndroid){
+      window.open('https://github.com/babspharm1-lgtm/BABSPHARM./releases/download/V1.0/app-debug.apk','_blank');
+      notify('APK download started! Enable Install from unknown sources if prompted.','success','📲');
+    } else {
+      document.getElementById('pwa-install-banner').classList.add('show');
+      notify('Use your browser menu to Add to Home Screen or Install','info','📲');
+    }
   }
 }
 function pwaInstall(){ triggerInstall(); }
@@ -13082,7 +13204,7 @@ document.addEventListener('DOMContentLoaded',function(){
 // ══════════════════════════════════════════════════
 // SESSION TIMEOUT — 5-minute inactivity warning
 // ══════════════════════════════════════════════════
-var _sessionTimer=null,_countdownTimer=null,_inactivityLimit=5*60*1000,_countdownSecs=60;
+var _sessionTimer=null,_countdownTimer=null,_inactivityLimit=30*60*1000,_countdownSecs=60;
 var _lastActivity=Date.now();
 
 function resetActivityTimer(){_lastActivity=Date.now();}
@@ -15444,6 +15566,8 @@ function pqViewResults(quizId, title) {
   document.getElementById('pqr-title').textContent = '📊 ' + title + ' — Results';
   document.getElementById('pqr-body').innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
   document.getElementById('pq-results-modal').style.display = 'block';
+  var dlBtn = document.getElementById('pq-dl-pdf-btn');
+  if (dlBtn) dlBtn.style.display = (CU && CU.role === 'user') ? 'none' : '';
 
   Promise.all([
     fsGet('privatequizzes').then(function(r){ return getDocs(r).find(function(q){return q.__id===quizId;}); }),
@@ -15496,6 +15620,7 @@ function pqViewResults(quizId, title) {
 }
 
 function pqDownloadPDF() {
+  if (CU && CU.role === 'user') { notify('Download is not available for students.', 'error', '🚫'); return; }
   if (!pqResultsData || !pqResultsData.scored) { notify('No results to download', 'error', '⚠️'); return; }
   var scored = pqResultsData.scored;
   var total = pqResultsData.total;
@@ -15876,14 +16001,21 @@ window.addEventListener('load', function() {
 // ══════════════════════════════════
 // ANTI-CHEAT SYSTEM
 // ══════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// ANTI-CHEAT ENGINE
+// — 1st offence: stern warning overlay with 10-second countdown
+// — 2nd offence: quiz is auto-submitted + student is banned from retaking
+// ══════════════════════════════════════════════════════════════
 var acQuizId = null;
-var acCheatCount = 0;
-var acWarningShown = false;
+var acCheatCount = 0;        // total tab-switch / blur events detected
+var acWarningShown = false;  // true after 1st-offence warning has been shown
+var acBlurCooldown = false;  // debounce: blur + visibilitychange can fire together
 
 function acStartAntiCheat(quizId) {
   acQuizId = quizId;
   acCheatCount = 0;
   acWarningShown = false;
+  acBlurCooldown = false;
 
   // Disable right-click
   document.addEventListener('contextmenu', acBlockEvent, true);
@@ -15891,21 +16023,25 @@ function acStartAntiCheat(quizId) {
   document.addEventListener('copy', acBlockEvent, true);
   document.addEventListener('cut', acBlockEvent, true);
   document.addEventListener('paste', acBlockEvent, true);
-  // Disable keyboard shortcuts (Ctrl+C, Ctrl+A, Ctrl+V, etc.)
+  // Disable keyboard shortcuts (Ctrl+C, Ctrl+A, Ctrl+V, etc.) + PrintScreen
   document.addEventListener('keydown', acBlockKeys, true);
   // Detect tab switch / minimize
   document.addEventListener('visibilitychange', acOnVisibilityChange);
   // Detect window blur (switch app on desktop)
   window.addEventListener('blur', acOnWindowBlur);
 
-  // Disable text selection via CSS
+  // Disable text selection + DevTools shortcut styles during quiz
   var style = document.getElementById('ac-style');
   if (!style) {
     style = document.createElement('style');
     style.id = 'ac-style';
     document.head.appendChild(style);
   }
-  style.textContent = '#quiz-take-view { user-select: none; -webkit-user-select: none; }';
+  style.textContent = [
+    '#quiz-take-view { user-select: none; -webkit-user-select: none; }',
+    /* hide content instantly when tab is hidden, foiling screenshot-on-blur tricks */
+    'body.ac-hidden #quiz-take-view { filter: blur(18px) brightness(.3); pointer-events: none; transition: filter .1s; }'
+  ].join('');
 }
 
 function acStopAntiCheat() {
@@ -15917,6 +16053,7 @@ function acStopAntiCheat() {
   document.removeEventListener('keydown', acBlockKeys, true);
   document.removeEventListener('visibilitychange', acOnVisibilityChange);
   window.removeEventListener('blur', acOnWindowBlur);
+  document.body.classList.remove('ac-hidden');
   var style = document.getElementById('ac-style');
   if (style) style.textContent = '';
 }
@@ -15935,19 +16072,28 @@ function acBlockKeys(e) {
   if (!acQuizId) return;
   var tv = document.getElementById('quiz-take-view');
   if (!tv || tv.style.display === 'none') return;
-  // Block Ctrl/Cmd combos except normal typing
+  // Block Ctrl/Cmd combos
   if (e.ctrlKey || e.metaKey) {
-    var blocked = ['c','a','v','x','u','s','p','f','e','r'];
+    var blocked = ['c','a','v','x','u','s','p','f','e','r','i','j'];
     if (blocked.indexOf(e.key.toLowerCase()) !== -1) {
       e.preventDefault();
       e.stopPropagation();
       notify('⛔ Keyboard shortcuts disabled during quiz!', 'error', '🚫');
     }
   }
-  // Block F12, PrintScreen
-  if (e.key === 'F12' || e.key === 'PrintScreen') {
+  // Block F-keys that could open DevTools or other apps
+  if (['F12','F11','F10','F5','PrintScreen'].indexOf(e.key) !== -1) {
     e.preventDefault();
+    // Flash blur on PrintScreen to foil screenshot
+    if (e.key === 'PrintScreen') {
+      document.body.classList.add('ac-hidden');
+      setTimeout(function(){ document.body.classList.remove('ac-hidden'); }, 600);
+    }
     notify('⛔ Not allowed during quiz!', 'error', '🚫');
+  }
+  // Block Alt+Tab combo hint (Alt key alone)
+  if (e.key === 'Alt' || e.key === 'Meta') {
+    e.preventDefault();
   }
 }
 
@@ -15956,8 +16102,16 @@ function acOnVisibilityChange() {
   var tv = document.getElementById('quiz-take-view');
   if (!tv || tv.style.display === 'none') return;
   if (document.hidden) {
-    acCheatCount++;
-    acHandleCheat();
+    // Blur the quiz content immediately
+    document.body.classList.add('ac-hidden');
+    if (!acBlurCooldown) {
+      acBlurCooldown = true;
+      acCheatCount++;
+      setTimeout(function(){ acBlurCooldown = false; }, 1500);
+      acHandleCheat();
+    }
+  } else {
+    document.body.classList.remove('ac-hidden');
   }
 }
 
@@ -15965,13 +16119,17 @@ function acOnWindowBlur() {
   if (!acQuizId) return;
   var tv = document.getElementById('quiz-take-view');
   if (!tv || tv.style.display === 'none') return;
-  // Small delay to avoid false positives from calculator or alerts
+  document.body.classList.add('ac-hidden');
+  // Delay slightly to avoid false positives (e.g. from our own alert dialogs)
   setTimeout(function() {
-    if (!document.hasFocus() && acQuizId) {
+    if (!document.hasFocus() && acQuizId && !acBlurCooldown) {
+      acBlurCooldown = true;
       acCheatCount++;
+      setTimeout(function(){ acBlurCooldown = false; }, 1500);
       acHandleCheat();
     }
-  }, 500);
+    document.body.classList.remove('ac-hidden');
+  }, 700);
 }
 
 function acHandleCheat() {
@@ -15979,50 +16137,141 @@ function acHandleCheat() {
   var quizId = acQuizId;
   var username = CU ? CU.username : 'unknown';
 
-  // Log cheat attempt to Firestore
+  // Log to Firestore
   fsAdd('cheatlog', {
     username: username,
     name: CU ? CU.name : '',
     quizId: quizId,
     quizTitle: currentQuiz ? currentQuiz.title : '',
-    attempts: String(acCheatCount),
+    offence: String(acCheatCount),
+    finalised: acWarningShown ? 'yes' : 'warning',
     at: new Date().toISOString()
   }).catch(function(){});
 
-  // Show warning overlay and auto-submit
-  var overlay = document.createElement('div');
-  overlay.id = 'ac-cheat-overlay';
-  overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:24px';
-  overlay.innerHTML =
-    '<div style="background:#1a0a2e;border:2px solid var(--red);border-radius:20px;padding:28px 24px;max-width:340px;text-align:center">' +
-      '<div style="font-size:2.5rem;margin-bottom:12px">🚨</div>' +
-      '<div style="font-family:var(--fh);font-weight:800;font-size:1.1rem;color:var(--red);margin-bottom:10px">Quiz Violation Detected!</div>' +
-      '<div style="font-size:.85rem;color:var(--text2);line-height:1.6;margin-bottom:18px">You left the quiz app. Your answers have been auto-submitted and you have been <strong style="color:var(--red)">permanently removed</strong> from this quiz.</div>' +
-      '<div style="font-size:.78rem;color:var(--text2);margin-bottom:18px">This incident has been reported to your instructor.</div>' +
-      '<button class="btn bd" style="width:100%;justify-content:center" onclick="acDismissAndSubmit()">OK — I understand</button>' +
-    '</div>';
-  document.body.appendChild(overlay);
+  if (!acWarningShown) {
+    // ── FIRST OFFENCE: show stern warning, give them 10 s to return ──
+    acWarningShown = true;
+    var countdown = 10;
+    var overlay = document.createElement('div');
+    overlay.id = 'ac-cheat-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.94);display:flex;align-items:center;justify-content:center;padding:24px';
+    overlay.innerHTML =
+      '<div style="background:#1a0a2e;border:2px solid var(--yellow);border-radius:20px;padding:28px 24px;max-width:360px;text-align:center">' +
+        '<div style="font-size:2.5rem;margin-bottom:10px">⚠️</div>' +
+        '<div style="font-family:var(--fh);font-weight:800;font-size:1.1rem;color:var(--yellow);margin-bottom:8px">⚠️ Warning — First Offence</div>' +
+        '<div style="font-size:.85rem;color:var(--text2);line-height:1.6;margin-bottom:14px">You left the quiz window. <strong style="color:var(--yellow)">This is your only warning.</strong> If you switch tabs or apps again, your quiz will be <strong style="color:var(--red)">immediately submitted</strong> and you will be <strong style="color:var(--red)">permanently banned</strong> from retaking it.</div>' +
+        '<div style="font-size:.8rem;color:var(--text2);margin-bottom:16px">This violation has been logged and reported to your instructor.</div>' +
+        '<div id="ac-warn-timer" style="font-family:var(--fh);font-size:2rem;font-weight:900;color:var(--yellow);margin-bottom:16px">10</div>' +
+        '<button class="btn bo" style="width:100%;justify-content:center" onclick="acDismissWarning()">✅ I understand — Return to Quiz</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
 
-  // Ban student from retaking
-  var cheatKey = 'quiz_cheat_' + quizId + '_' + username;
-  try { localStorage.setItem(cheatKey, 'banned'); } catch(e) {}
+    // Countdown
+    var wTimer = setInterval(function() {
+      countdown--;
+      var el = document.getElementById('ac-warn-timer');
+      if (el) el.textContent = countdown;
+      if (countdown <= 0) {
+        clearInterval(wTimer);
+        acDismissWarning();
+      }
+    }, 1000);
+    overlay._wTimer = wTimer;
 
-  // Auto-submit after 4 seconds
-  setTimeout(function() {
-    if (acQuizId) acDismissAndSubmit();
-  }, 4000);
+  } else {
+    // ── SECOND OFFENCE: submit immediately, ban, show final overlay ──
+    var cheatKey = 'quiz_cheat_' + quizId + '_' + username;
+    try { localStorage.setItem(cheatKey, 'banned'); } catch(e) {}
+
+    var overlay = document.createElement('div');
+    overlay.id = 'ac-cheat-overlay';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;padding:24px';
+    overlay.innerHTML =
+      '<div style="background:#1a0a2e;border:2px solid var(--red);border-radius:20px;padding:28px 24px;max-width:360px;text-align:center">' +
+        '<div style="font-size:2.5rem;margin-bottom:10px">🚨</div>' +
+        '<div style="font-family:var(--fh);font-weight:800;font-size:1.1rem;color:var(--red);margin-bottom:8px">Quiz Terminated!</div>' +
+        '<div style="font-size:.85rem;color:var(--text2);line-height:1.6;margin-bottom:14px">You left the quiz again after being warned. Your quiz has been <strong style="color:var(--red)">auto-submitted</strong> and you are <strong style="color:var(--red)">permanently banned</strong> from retaking this quiz.</div>' +
+        '<div style="font-size:.78rem;color:var(--text2);margin-bottom:18px">This incident has been reported to your instructor.</div>' +
+        '<button class="btn bd" style="width:100%;justify-content:center" onclick="acDismissAndSubmit()">OK — I understand</button>' +
+      '</div>';
+    document.body.appendChild(overlay);
+
+    // Auto-dismiss and submit after 5 s
+    setTimeout(function() {
+      if (document.getElementById('ac-cheat-overlay')) acDismissAndSubmit();
+    }, 5000);
+  }
 }
+
+window.acDismissWarning = function() {
+  var overlay = document.getElementById('ac-cheat-overlay');
+  if (overlay) {
+    if (overlay._wTimer) clearInterval(overlay._wTimer);
+    overlay.remove();
+  }
+  // Quiz continues — no submit
+};
 
 window.acDismissAndSubmit = function() {
   var overlay = document.getElementById('ac-cheat-overlay');
-  if (overlay) overlay.remove();
+  if (overlay) {
+    if (overlay._wTimer) clearInterval(overlay._wTimer);
+    overlay.remove();
+  }
   if (currentQuiz) {
-    // Auto-submit whatever they answered so far
     acStopAntiCheat();
     hideCalculator();
     submitQuiz();
   }
 };
+
+// ══════════════════════════════════
+// CHEAT LOG ADMIN VIEWER
+// ══════════════════════════════════
+function loadCheatLog(){
+  var el = document.getElementById('cheat-log-list');
+  if(!el) return;
+  el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
+  fsGet('cheatlog').then(function(res){
+    var docs = getDocs(res);
+    if(!docs.length){
+      el.innerHTML = '<div style="text-align:center;padding:18px;color:var(--text2);font-size:.82rem">✅ No violations recorded</div>';
+      return;
+    }
+    // Sort newest first
+    docs.sort(function(a,b){ return (b.at||'').localeCompare(a.at||''); });
+    el.innerHTML = docs.map(function(d){
+      var isFinal = d.finalised === 'yes';
+      var isWarn  = d.finalised === 'warning';
+      var color   = isFinal ? 'var(--red)' : 'var(--yellow)';
+      var badge   = isFinal ? '🚨 Submitted' : '⚠️ Warning';
+      return '<div style="padding:10px 12px;border-radius:10px;margin-bottom:7px;background:rgba(255,255,255,.04);border:1px solid '+(isFinal?'rgba(248,113,113,.3)':'rgba(251,191,36,.25)')+'">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'+
+          '<span style="font-weight:700;font-size:.84rem">'+esc(d.name||d.username||'Unknown')+'</span>'+
+          '<span style="font-size:.72rem;font-weight:800;color:'+color+'">'+badge+'</span>'+
+        '</div>'+
+        '<div style="font-size:.74rem;color:var(--text2)">@'+esc(d.username||'?')+' · Quiz: '+esc(d.quizTitle||d.quizId||'?')+'</div>'+
+        '<div style="font-size:.7rem;color:var(--text2);margin-top:3px">Offence #'+esc(d.offence||d.attempts||'?')+' · '+new Date(d.at||'').toLocaleString()+'</div>'+
+      '</div>';
+    }).join('');
+  }).catch(function(){
+    el.innerHTML = '<div style="color:var(--red);font-size:.82rem;padding:12px">Failed to load cheat log.</div>';
+  });
+}
+
+function clearCheatLog(){
+  if(!confirm('Clear all cheat log entries? This cannot be undone.')) return;
+  fsGet('cheatlog').then(function(res){
+    var docs = getDocs(res);
+    var promises = docs.map(function(d){
+      return fsDel(d.__path);
+    });
+    Promise.all(promises).then(function(){
+      notify('✅ Cheat log cleared','success','🗑️');
+      loadCheatLog();
+    });
+  }).catch(function(){ notify('Failed to clear log','error','❌'); });
+}
 
 // ══════════════════════════════════
 // CALCULATOR WIDGET
