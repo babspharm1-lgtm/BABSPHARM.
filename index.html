@@ -6049,6 +6049,7 @@ D. Rankine</code>
         <div class="fg" style="margin-bottom:0"><label>⛔ Closes At</label><input type="datetime-local" id="pq-close-time" style="width:100%"/></div>
       </div>
       <p style="font-size:.72rem;color:var(--text2);margin-bottom:12px;padding:8px 10px;background:rgba(167,139,250,.08);border-radius:8px;border-left:3px solid var(--accent)">💡 Students who try to open the link before <strong>Opens At</strong> or after <strong>Closes At</strong> will be blocked. Leave both blank to allow access anytime.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid var(--cb);margin-bottom:12px"><div><div style="font-size:.82rem;font-weight:700">📊 Show Results to Students</div><div style="font-size:.71rem;color:var(--text2);margin-top:2px">If ON, students see their score &amp; correct answers immediately after submitting.</div></div><div id="pq-show-results-toggle" onclick="pqToggleResultsVis()" class="tt" style="cursor:pointer;flex-shrink:0;margin-left:12px" title="Toggle result visibility"></div></div>
       <div id="pq-questions-wrap" style="margin-bottom:12px"></div>
       <button class="btn bs bsm" onclick="pqAddQuestion()" style="margin-bottom:12px;width:100%;justify-content:center">➕ Add Question</button>
       <button class="btn bp" style="width:100%;justify-content:center" onclick="pqSaveQuiz()">💾 Save & Generate Link</button>
@@ -6113,10 +6114,8 @@ D. Rankine</code>
         <div id="pq-take-questions"></div>
         <button class="btn bp" style="width:100%;justify-content:center;margin-top:10px" onclick="pqSubmitAnswers()">✅ Submit Quiz</button>
       </div>
-      <div id="pq-take-done" style="display:none;text-align:center;padding:40px 20px">
-        <div style="font-size:3rem;margin-bottom:16px">🎉</div>
-        <div style="font-family:var(--fh);font-size:1.2rem;font-weight:800;margin-bottom:10px">Submitted Successfully!</div>
-        <div style="color:var(--text2);font-size:.88rem;line-height:1.6">Your answers have been recorded.<br>Your instructor will share the results with everyone.</div>
+      <div id="pq-take-done" style="display:none;padding:24px 16px">
+        <div id="pq-take-done-content"></div>
       </div>
     </div>
   </div>
@@ -15420,7 +15419,7 @@ function pqSaveQuiz() {
   }
   var id = 'pq_' + Date.now();
   fsAdd('privatequizzes', { id: id, title: title, desc: desc, questions: JSON.stringify(questions), sections: sections ? JSON.stringify(sections) : '',
-    openTime: openTime || '', closeTime: closeTime || '',
+    openTime: openTime || '', closeTime: closeTime || '', showResults: pqShowResultsEnabled ? 'true' : 'false',
     createdAt: new Date().toISOString(), createdBy: CU ? CU.username : 'admin' })
     .then(function(res) {
       var docId = res.name ? res.name.split('/').pop() : id;
@@ -15432,6 +15431,10 @@ function pqSaveQuiz() {
       document.getElementById('pq-close-time').value = '';
       document.getElementById('pq-questions-wrap').innerHTML = '';
       pqQuestionCount = 0;
+      pqShowResultsEnabled = false;
+      var tog = document.getElementById('pq-show-results-toggle');
+      if (tog) { tog.style.background = ''; tog.querySelector && (tog.style.setProperty('--tog-on','0')); }
+      pqUpdateResultsToggleUI();
       pqLoadQuizzes();
       setTimeout(function() {
         var msg = '🔗 Quiz Link:\n' + link + '\n\nShare this with your students!';
@@ -15939,6 +15942,7 @@ function pqSubmitAnswers() {
   }).then(function() {
     hideCalculator();
     document.getElementById('pq-take-body').style.display = 'none';
+    pqShowDoneScreen(answers);
     document.getElementById('pq-take-done').style.display = 'block';
   }).catch(function() { notify('Submission failed. Please try again.', 'error', '❌'); });
 }
@@ -16655,6 +16659,179 @@ window.assistResetPassword = function(student) {
     notify('Auto-reset not available. Ask the student to use "Forgot Password" on the login page.','warn','🔑');
   }
 };
+
+
+// ══════════════════════════════════════════════════
+// PRIVATE QUIZ — SHOW RESULTS TOGGLE & DONE SCREEN
+// ══════════════════════════════════════════════════
+var pqShowResultsEnabled = false;
+
+window.pqToggleResultsVis = function() {
+  pqShowResultsEnabled = !pqShowResultsEnabled;
+  pqUpdateResultsToggleUI();
+};
+
+function pqUpdateResultsToggleUI() {
+  var tog = document.getElementById('pq-show-results-toggle');
+  if (!tog) return;
+  if (pqShowResultsEnabled) {
+    tog.style.background = 'linear-gradient(135deg,#4ade80,#15803d)';
+    tog.style.borderColor = '#4ade80';
+    // Move knob to right via inline after-pseudo trick — use a child span instead
+    if (!tog.querySelector('span')) {
+      var knob = document.createElement('span');
+      knob.style.cssText = 'position:absolute;top:3px;left:3px;width:13px;height:13px;border-radius:50%;background:#fff;transition:transform .3s;display:block;';
+      tog.appendChild(knob);
+    }
+    tog.querySelector('span').style.transform = 'translateX(17px)';
+  } else {
+    tog.style.background = '';
+    tog.style.borderColor = '';
+    if (tog.querySelector('span')) tog.querySelector('span').style.transform = 'translateX(0)';
+  }
+}
+
+function pqShowDoneScreen(submittedAnswers) {
+  var el = document.getElementById('pq-take-done-content');
+  if (!el) return;
+  var showRes = pqTakeData && pqTakeData.showResults === 'true';
+
+  if (!showRes) {
+    el.innerHTML =
+      '<div style="text-align:center;padding:20px 0">' +
+        '<div style="font-size:3rem;margin-bottom:16px">🎉</div>' +
+        '<div style="font-family:var(--fh);font-size:1.2rem;font-weight:800;margin-bottom:10px">Submitted Successfully!</div>' +
+        '<div style="color:var(--text2);font-size:.88rem;line-height:1.6">Your answers have been recorded.<br>Your instructor will share the results with everyone.</div>' +
+      '</div>';
+    return;
+  }
+
+  // Build flat question list
+  var allQs = [];
+  (pqSections || []).forEach(function(sec) { (sec.questions || []).forEach(function(q) { allQs.push(q); }); });
+  var total = allQs.length;
+  var correct = 0;
+  var wrongOnes = [];
+
+  var reviewHTML = '';
+  allQs.forEach(function(q, i) {
+    var key = 'q' + i;
+    var given = (submittedAnswers[key] || '').toLowerCase();
+    var expected = (q.correct || q.ans || 'a').toLowerCase();
+    var isRight = given === expected;
+    if (isRight) { correct++; }
+    else { wrongOnes.push({ q: q, i: i, given: given, expected: expected }); }
+    var optLabels = { a: q.optA || q.a || '', b: q.optB || q.b || '', c: q.optC || q.c || '', d: q.optD || q.d || '' };
+    reviewHTML +=
+      '<div id="pq-done-q-' + i + '" style="padding:10px 12px;border-radius:10px;margin-bottom:8px;background:' + (isRight ? 'rgba(74,222,128,.08)' : 'rgba(248,113,113,.08)') + ';border:1px solid ' + (isRight ? 'rgba(74,222,128,.3)' : 'rgba(248,113,113,.3)') + '">' +
+        '<div style="font-size:.8rem;font-weight:700;margin-bottom:5px">' + (i+1) + '. ' + esc(q.text||'') + '</div>' +
+        '<div style="font-size:.75rem;color:var(--text2)">Your answer: <strong style="color:' + (isRight ? 'var(--green)' : 'var(--red)') + '">' + (given ? given.toUpperCase() + ' — ' + esc(optLabels[given]||'') : '(no answer)') + '</strong></div>' +
+        (!isRight ? '<div style="font-size:.75rem;color:var(--green);margin-bottom:6px">Correct: <strong>' + expected.toUpperCase() + ' — ' + esc(optLabels[expected]||'') + '</strong></div>' : '') +
+        (!isRight ? '<div id="pq-ai-exp-' + i + '" style="margin-top:6px;font-size:.76rem;color:var(--text2);font-style:italic">🤖 AI explanation loading…</div>' : '') +
+      '</div>';
+  });
+
+  var pct = total > 0 ? Math.round(correct / total * 100) : 0;
+  var grade = pct >= 70 ? '🟢 Pass' : '🔴 Fail';
+  var scoreColor = pct >= 70 ? 'var(--green)' : 'var(--red)';
+
+  el.innerHTML =
+    '<div style="text-align:center;padding:16px 0 20px">' +
+      '<div style="font-size:2.5rem;margin-bottom:10px">📊</div>' +
+      '<div style="font-family:var(--fh);font-size:1.15rem;font-weight:800;margin-bottom:6px">Quiz Complete!</div>' +
+      '<div style="font-size:2rem;font-weight:900;color:' + scoreColor + ';margin:8px 0">' + pct + '%</div>' +
+      '<div style="font-size:.88rem;color:var(--text2);margin-bottom:4px">' + correct + ' / ' + total + ' correct · ' + grade + '</div>' +
+    '</div>' +
+    '<div style="font-family:var(--fh);font-size:.82rem;font-weight:800;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--cb)">📝 Review</div>' +
+    reviewHTML;
+
+  // Fire AI explanations for wrong answers
+  if (wrongOnes.length > 0) {
+    pqAIExplainWrong(wrongOnes, pqTakeData ? (pqTakeData.title || 'Quiz') : 'Quiz');
+  }
+}
+
+function pqAIExplainWrong(wrongOnes, quizTitle) {
+  if (!GROQ_KEY) {
+    wrongOnes.forEach(function(x) {
+      var el = document.getElementById('pq-ai-exp-' + x.i);
+      if (el) { el.style.display = 'none'; }
+    });
+    return;
+  }
+
+  var BATCH_SIZE = 6;
+  var batches = [];
+  for (var b = 0; b < wrongOnes.length; b += BATCH_SIZE) batches.push(wrongOnes.slice(b, b + BATCH_SIZE));
+  var batchIdx = 0;
+
+  var sysPrompt = 'You are BABSPHARM AI, a PhD-level academic tutor and exam coach for pharmacy students. ' +
+    'For each wrong answer give ALL of the following sections in this exact pipe-separated format on one block:\n' +
+    'Q[n]: <one sentence why the chosen answer is wrong> | Correct: <one sentence why the right answer is correct> | Key concept: <2-3 sentence deep explanation with relevant symbols, formulas or reactions e.g. H₂O, CO₂, pH=-log[H⁺], PV=nRT> | Fast trick: <a quick shortcut, pattern, elimination strategy or exam hack to identify the right answer in seconds — e.g. process of elimination, unit analysis, keyword spotting, formula shortcut, visual pattern or mnemonic acronym> | Memory tip: <a vivid mnemonic, story, rhyme or acronym to permanently remember the correct answer>\n' +
+    'Separate each question block with ---. Be concise, practical and exam-focused.';
+
+  function buildPrompt(batch, offset) {
+    var p = 'Quiz: "' + quizTitle + '" — explain these wrong answers:\n\n';
+    batch.forEach(function(x, idx) {
+      var q = x.q;
+      var optLabels = { a: q.optA||q.a||'', b: q.optB||q.b||'', c: q.optC||q.c||'', d: q.optD||q.d||'' };
+      p += 'Q' + (offset + idx + 1) + ': ' + q.text + '\n';
+      ['a','b','c','d'].forEach(function(o){ if(optLabels[o]) p += '  ' + o.toUpperCase() + '. ' + optLabels[o] + '\n'; });
+      p += '  Student chose: ' + (x.given ? x.given.toUpperCase() + ' — ' + (optLabels[x.given]||'') : '(skipped)') + '\n';
+      p += '  Correct: ' + x.expected.toUpperCase() + ' — ' + (optLabels[x.expected]||'') + '\n\n';
+    });
+    return p;
+  }
+
+  function applyExplanations(batch, replyText) {
+    // Split by --- separators
+    var parts = replyText.split(/\n?---\n?/);
+    batch.forEach(function(x, idx) {
+      var expEl = document.getElementById('pq-ai-exp-' + x.i);
+      if (!expEl) return;
+      var raw = (parts[idx] || '').trim();
+      if (!raw) { expEl.style.display = 'none'; return; }
+      // Format: bold Q[n], highlight sections
+      var formatted = raw
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+        .replace(/Q\d+:/g, function(m){ return '<strong style="color:var(--accent)">' + m + '</strong>'; })
+        .replace(/\| Correct:/g, '<br><span style="color:var(--green);font-weight:700">✅ Correct:</span>')
+        .replace(/\| Key concept:/g, '<br><span style="color:var(--a2);font-weight:700">📚 Key concept:</span>')
+        .replace(/\| Fast trick:/g, '<br><span style="color:var(--orange);font-weight:700">⚡ Fast trick:</span>')
+        .replace(/\| Memory tip:/g, '<br><span style="color:var(--yellow);font-weight:700">🧠 Memory tip:</span>')
+        .replace(/\| Tip:/g, '<br><span style="color:var(--yellow);font-weight:700">💡 Tip:</span>')
+        .replace(/\n/g, '<br>');
+      expEl.style.cssText = 'margin-top:8px;padding:9px 11px;border-radius:9px;background:linear-gradient(135deg,rgba(167,139,250,.1),rgba(56,189,248,.07));border:1px solid rgba(167,139,250,.25);font-size:.76rem;line-height:1.65;color:var(--text);font-style:normal';
+      expEl.innerHTML = '<div style="display:flex;align-items:center;gap:5px;margin-bottom:6px"><span>🤖</span><span style="font-family:var(--fh);font-size:.72rem;font-weight:800;color:var(--accent)">AI Explanation</span><span style="font-size:.65rem;color:var(--text2);margin-left:2px">· concept · ⚡ trick · 🧠 tip</span></div>' + formatted;
+    });
+  }
+
+  function runBatch() {
+    if (batchIdx >= batches.length) return;
+    var batch = batches[batchIdx];
+    var offset = batchIdx * BATCH_SIZE;
+    _groqCall(GROQ_KEY,
+      [{ role: 'system', content: sysPrompt }, { role: 'user', content: buildPrompt(batch, offset) }],
+      function(reply) {
+        applyExplanations(batch, reply || '');
+        batchIdx++;
+        runBatch();
+      },
+      function() {
+        // On error just hide the loading placeholders for this batch
+        batch.forEach(function(x) {
+          var el = document.getElementById('pq-ai-exp-' + x.i);
+          if (el) el.style.display = 'none';
+        });
+        batchIdx++;
+        runBatch();
+      }
+    );
+  }
+  runBatch();
+}
+
 
 
 </script>
