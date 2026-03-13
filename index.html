@@ -15269,43 +15269,6 @@ function pqAIExtract() {
   }
 }
 
-window.pqAILoadIntoForm = function(sectionsEncoded) {
-  try {
-    var sections = JSON.parse(decodeURIComponent(sectionsEncoded));
-    // Clear existing questions
-    document.getElementById('pq-questions-wrap').innerHTML = '';
-    pqQuestionCount = 0;
-
-    sections.forEach(function(sec, si) {
-      // Add a section divider label
-      var divider = document.createElement('div');
-      divider.style.cssText = 'font-size:.75rem;font-weight:800;color:var(--accent);padding:10px 0 4px;border-top:' + (si > 0 ? '1px solid rgba(167,139,250,.2)' : 'none') + ';margin-top:' + (si > 0 ? '8px' : '0');
-      divider.textContent = '📂 ' + sec.name;
-      document.getElementById('pq-questions-wrap').appendChild(divider);
-
-      (sec.questions || []).forEach(function(q) {
-        pqAddQuestion();
-        var n = pqQuestionCount;
-        var setVal = function(id, val) { var el = document.getElementById(id); if (el) el.value = val || ''; };
-        setVal('pq-q-' + n + '-text', q.text);
-        setVal('pq-q-' + n + '-a', q.optA);
-        setVal('pq-q-' + n + '-b', q.optB);
-        setVal('pq-q-' + n + '-c', q.optC);
-        setVal('pq-q-' + n + '-d', q.optD);
-        setVal('pq-q-' + n + '-ans', (q.correct || 'a').toLowerCase());
-      });
-    });
-
-    notify('✅ ' + sections.length + ' section(s) loaded into form! Fill in the title and save.', 'success', '📥');
-    document.getElementById('pqai-preview').innerHTML = '<div style="font-size:.78rem;color:var(--green);padding:8px;text-align:center">✅ Questions loaded! Scroll down to review, add title and save.</div>';
-    // Scroll to title field
-    document.getElementById('pq-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    document.getElementById('pq-title').focus();
-  } catch(e) {
-    notify('Failed to load questions: ' + e.message, 'error', '❌');
-  }
-};
-
 function pqAILoadIntoForm(sections) {
   if (!sections || !sections.length) { notify('No questions to load', 'error', '⚠️'); return; }
   // Clear existing questions
