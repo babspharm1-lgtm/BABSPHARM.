@@ -3408,8 +3408,8 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
       </div>
     </div>
     <div class="apk-btns">
-      <a class="apk-btn-android" href="https://github.com/babspharm1-lgtm/BABSPHARM./releases/download/V1.0/app-debug.apk" download style="cursor:pointer;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        📲 Download APK<br><span>Android — Direct Download</span>
+      <a class="apk-btn-android" href="javascript:void(0)" onclick="triggerInstall()" style="cursor:pointer;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        📲 Install App<br><span>Android · APK Direct Download</span>
       </a>
       <div class="apk-btn-ios" onclick="document.getElementById('ios-install-modal').classList.add('open')">
         🍎 iPhone Guide<br><span>Safari → Share → Add</span>
@@ -6043,6 +6043,10 @@ D. Rankine</code>
         <div class="fg" style="margin-bottom:0"><label>⛔ Closes At</label><input type="datetime-local" id="pq-close-time" style="width:100%"/></div>
       </div>
       <p style="font-size:.72rem;color:var(--text2);margin-bottom:12px;padding:8px 10px;background:rgba(167,139,250,.08);border-radius:8px;border-left:3px solid var(--accent)">💡 Students who try to open the link before <strong>Opens At</strong> or after <strong>Closes At</strong> will be blocked. Leave both blank to allow access anytime.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="fg" style="margin-bottom:0"><label>🔁 Max Attempts</label><input type="number" id="pq-max-attempts" min="1" max="99" placeholder="Unlimited" style="width:100%"/></div>
+        <div class="fg" style="margin-bottom:0;display:flex;flex-direction:column;justify-content:flex-end"><label style="font-size:.7rem;color:var(--text2)">Leave blank = unlimited retakes</label></div>
+      </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,.05);border-radius:10px;border:1px solid var(--cb);margin-bottom:12px"><div><div style="font-size:.82rem;font-weight:700">📊 Show Results to Students</div><div style="font-size:.71rem;color:var(--text2);margin-top:2px">If ON, students see their score &amp; correct answers immediately after submitting.</div></div><div id="pq-show-results-toggle" onclick="pqToggleResultsVis()" class="tt" style="cursor:pointer;flex-shrink:0;margin-left:12px" title="Toggle result visibility"></div></div>
       <div id="pq-questions-wrap" style="margin-bottom:12px"></div>
       <button class="btn bs bsm" onclick="pqAddQuestion()" style="margin-bottom:12px;width:100%;justify-content:center">➕ Add Question</button>
@@ -11953,14 +11957,22 @@ window.addEventListener('beforeinstallprompt',function(e){
   },2000);
 });
 // Central install trigger — works for Android/Chrome & iOS
+var APK_DOWNLOAD_URL = 'https://github.com/babspharm1-lgtm/BABSPHARM./releases/download/V1.0/app-debug.apk';
 function triggerInstall(){
   var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isAndroid=/android/i.test(navigator.userAgent);
   var isStandalone=window.navigator.standalone||window.matchMedia('(display-mode: standalone)').matches;
   if(isStandalone){notify('App is already installed!','success','✅');return;}
   if(pwaInstallPrompt){
+    // Native PWA install prompt available
     pwaInstallPrompt.prompt();
     pwaInstallPrompt.userChoice.then(function(c){
-      if(c.outcome==='accepted'){notify('App installing… 🎉','success','📲');}
+      if(c.outcome==='accepted'){
+        notify('App installing… 🎉','success','📲');
+      } else {
+        // User dismissed PWA prompt — fall back to APK on Android
+        if(isAndroid){ _doApkDownload(); }
+      }
       pwaInstallPrompt=null;
       var tbBtn=document.getElementById('tb-install-btn');
       if(tbBtn)tbBtn.classList.remove('show');
@@ -11969,17 +11981,24 @@ function triggerInstall(){
   } else if(isIOS){
     document.getElementById('ios-install-modal').classList.add('open');
     document.getElementById('pwa-install-banner').classList.remove('show');
+  } else if(isAndroid){
+    // Android but no PWA prompt — go straight to APK
+    _doApkDownload();
   } else {
-    // Fallback — offer direct APK download for Android, banner for others
-    var isAndroid=/android/i.test(navigator.userAgent);
-    if(isAndroid){
-      window.open('https://github.com/babspharm1-lgtm/BABSPHARM./releases/download/V1.0/app-debug.apk','_blank');
-      notify('APK download started! Enable Install from unknown sources if prompted.','success','📲');
-    } else {
-      document.getElementById('pwa-install-banner').classList.add('show');
-      notify('Use your browser menu to Add to Home Screen or Install','info','📲');
-    }
+    // Desktop or other — show instructions
+    notify('Open your browser menu and choose "Install App" or "Add to Home Screen"','info','📲');
   }
+}
+function _doApkDownload(){
+  // Create a hidden anchor and click it to trigger download
+  var a = document.createElement('a');
+  a.href = APK_DOWNLOAD_URL;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){ document.body.removeChild(a); }, 500);
+  notify('APK downloading… After install, allow "Install from unknown sources" if prompted.','success','📲');
 }
 function pwaInstall(){ triggerInstall(); }
 function pwaDismiss(){
@@ -15442,7 +15461,7 @@ function pqSaveQuiz() {
   }
   var id = 'pq_' + Date.now();
   fsAdd('privatequizzes', { id: id, title: title, desc: desc, questions: JSON.stringify(questions), sections: sections ? JSON.stringify(sections) : '',
-    openTime: openTime || '', closeTime: closeTime || '', showResults: pqShowResultsEnabled ? 'true' : 'false',
+    openTime: openTime || '', closeTime: closeTime || '', showResults: pqShowResultsEnabled ? 'true' : 'false', maxAttempts: (document.getElementById('pq-max-attempts').value.trim()||''),
     createdAt: new Date().toISOString(), createdBy: CU ? CU.username : 'admin' })
     .then(function(res) {
       var docId = res.name ? res.name.split('/').pop() : id;
@@ -15452,6 +15471,7 @@ function pqSaveQuiz() {
       document.getElementById('pq-desc').value = '';
       document.getElementById('pq-open-time').value = '';
       document.getElementById('pq-close-time').value = '';
+      document.getElementById('pq-max-attempts').value = '';
       document.getElementById('pq-questions-wrap').innerHTML = '';
       pqQuestionCount = 0;
       pqShowResultsEnabled = false;
@@ -15490,7 +15510,7 @@ function pqLoadQuizzes() {
         '<div style="display:flex;justify-content:space-between;width:100%;align-items:center">' +
           '<div>' +
             '<div style="font-weight:700;font-size:.88rem">' + esc(q.title) + '</div>' +
-            '<div style="font-size:.72rem;color:var(--text2)">' + qs.length + ' questions · ' + (q.createdAt?q.createdAt.substring(0,10):'') + '</div>' +
+            '<div style="font-size:.72rem;color:var(--text2)">' + qs.length + ' questions · ' + (q.createdAt?q.createdAt.substring(0,10):'') + (q.maxAttempts ? ' · 🔁 ' + q.maxAttempts + ' attempt' + (q.maxAttempts=='1'?'':'s') : ' · 🔁 Unlimited') + '</div>' +
             timeInfo +
           '</div>' +
           '<div style="display:flex;gap:5px">' +
@@ -15782,6 +15802,38 @@ function pqCheckURLParam() {
 
     pqTakeData = quiz;
     pqTakeData.__quizId = quizId;
+
+    // ── Max attempts check ──
+    var maxAtt = parseInt(quiz.maxAttempts || '0', 10);
+    if (maxAtt > 0 && CU && CU.username) {
+      fsGetAll('pqresults_' + quizId).then(function(res) {
+        var results = getDocs(res);
+        var myAttempts = results.filter(function(r){ return r.name === CU.name || r.username === CU.username; }).length;
+        var startBtn3 = document.getElementById('pq-start-btn');
+        if (myAttempts >= maxAtt) {
+          if (startBtn3) {
+            startBtn3.disabled = true;
+            startBtn3.style.background = 'rgba(248,113,113,.2)';
+            startBtn3.style.color = 'var(--red)';
+            startBtn3.innerHTML = '🚫 Max attempts reached (' + myAttempts + '/' + maxAtt + ')';
+          }
+          // Show attempt info
+          var attDiv = document.createElement('div');
+          attDiv.style.cssText = 'background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:10px;padding:10px 14px;font-size:.8rem;color:var(--red);text-align:center;margin-top:10px';
+          attDiv.innerHTML = '⛔ You have used all <strong>' + maxAtt + '</strong> allowed attempt' + (maxAtt===1?'':'s') + ' for this quiz.';
+          var nc = document.getElementById('pq-name-card');
+          if (nc) nc.appendChild(attDiv);
+        } else if (myAttempts > 0) {
+          // Show remaining attempts
+          var attInfo = document.createElement('div');
+          attInfo.style.cssText = 'background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:8px 12px;font-size:.76rem;color:var(--yellow);text-align:center;margin-top:8px';
+          attInfo.innerHTML = '🔁 Attempt <strong>' + (myAttempts+1) + '</strong> of <strong>' + maxAtt + '</strong>';
+          var nc2 = document.getElementById('pq-name-card');
+          if (nc2) nc2.appendChild(attInfo);
+        }
+      }).catch(function(){});
+    }
+
   }).catch(function() {
     document.getElementById('pq-name-card').innerHTML =
       '<div style="text-align:center;padding:30px">' +
@@ -15914,21 +15966,29 @@ function pqSubmitSection() {
 
   if (pqCompletedSections.indexOf(pqCurrentSectionIdx) === -1) pqCompletedSections.push(pqCurrentSectionIdx);
 
-  var body = document.getElementById('pq-take-questions');
-  var answered = Object.keys(answers).length;
   var allDone = pqCompletedSections.length === pqSections.length;
 
-  body.innerHTML =
-    '<div class="card" style="text-align:center;padding:24px 16px">'+
-    '<div style="font-size:2rem;margin-bottom:8px">✅</div>'+
-    '<div style="font-family:var(--fh);font-size:1.1rem;font-weight:800;color:var(--green)">Section '+label+' Submitted!</div>'+
-    '<div style="font-size:.82rem;color:var(--text2);margin:8px 0">'+answered+'/'+qs.length+' questions answered</div>'+
-    '<div style="font-size:.78rem;color:var(--text2);margin-bottom:18px">'+pqCompletedSections.length+' of '+pqSections.length+' section(s) done</div>'+
-    (allDone ?
-      '<button class="btn bp" style="width:100%;justify-content:center" onclick="pqSubmitAnswers()">✅ Submit Quiz & Finish</button>' :
-      '<button class="btn bp" style="width:100%;justify-content:center" onclick="pqRenderLobby()">◀ Back to Sections</button>'
-    )+
-    '</div>';
+  // If all sections done, go straight to final submit
+  if (allDone) {
+    pqSubmitAnswers();
+    return;
+  }
+
+  // Auto-advance to next incomplete section
+  var nextIdx = -1;
+  for (var i = pqCurrentSectionIdx + 1; i < pqSections.length; i++) {
+    if (pqCompletedSections.indexOf(i) === -1) { nextIdx = i; break; }
+  }
+  // If no next section found going forward, find first incomplete
+  if (nextIdx === -1) {
+    for (var i = 0; i < pqSections.length; i++) {
+      if (pqCompletedSections.indexOf(i) === -1) { nextIdx = i; break; }
+    }
+  }
+
+  if (nextIdx !== -1) {
+    pqEnterSection(nextIdx);
+  }
 }
 
 function pqSubmitAnswers() {
@@ -15960,6 +16020,7 @@ function pqSubmitAnswers() {
 
   fsAdd('pqresults_' + pqTakeData.__quizId, {
     name: name,
+    username: (CU && CU.username) ? CU.username : '',
     answers: JSON.stringify(answers),
     submittedAt: new Date().toISOString()
   }).then(function() {
