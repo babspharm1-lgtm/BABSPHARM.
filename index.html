@@ -16660,39 +16660,40 @@ function pqCheckURLParam() {
   var nameInput = document.getElementById('pq-taker-name');
   if (nameInput) nameInput.value = CU.name;
 
-  // Show a "ready to start" card with their name
+  // Show a loading state while quiz data is fetched
   var nameCard = document.getElementById('pq-name-card');
   nameCard.innerHTML =
-    '<div class="st"><span class="dot"></span>✅ Logged in as</div>' +
-    '<div style="display:flex;align-items:center;gap:12px;margin:12px 0 16px">' +
-      '<div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--a2));display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:1.1rem;color:#fff;flex-shrink:0">' +
-        (CU.name ? CU.name[0].toUpperCase() : '?') +
-      '</div>' +
-      '<div>' +
-        '<div style="font-weight:700;font-size:.95rem">' + esc(CU.name) + '</div>' +
-        '<div style="font-size:.76rem;color:var(--text2)">@' + esc(CU.username || '') + '</div>' +
-      '</div>' +
-    '</div>' +
-    (quiz.duration ? '<div style="text-align:center;margin-bottom:8px;padding:7px 12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:10px;font-size:.8rem;color:var(--yellow);font-weight:700">⏱️ Time Limit: '+quiz.duration+' minute'+(quiz.duration==='1'?'':'s')+'</div>' : '')+
-    '<button class="btn bp" id="pq-start-btn" style="width:100%;justify-content:center">🚀 Start Quiz</button>'+
-    '<div id="pq-video-link"></div>'+
-    '';
-
-  document.getElementById('pq-start-btn').onclick = pqStartTaking;
-  var startBtn = document.getElementById('pq-start-btn');
-  if (startBtn) { startBtn.disabled = true; startBtn.textContent = '⏳ Loading quiz...'; }
+    '<div style="text-align:center;padding:30px">' +
+      '<div style="font-size:1.5rem;margin-bottom:10px">⏳</div>' +
+      '<div style="font-size:.88rem;color:var(--text2)">Loading quiz…</div>' +
+    '</div>';
 
   fsGet('privatequizzes').then(function(res) {
-    // Re-enable start button after data loads
-    var startBtn2 = document.getElementById('pq-start-btn');
-    if (startBtn2) { startBtn2.disabled = false; startBtn2.innerHTML = '🚀 Start Quiz'; }
-
     var quizzes = getDocs(res);
     var quiz = quizzes.find(function(q){ return q.__id === quizId; });
     if (!quiz) {
       document.getElementById('pq-name-card').innerHTML = '<div style="text-align:center;padding:30px"><div style="font-size:2rem">😕</div><div style="font-weight:700;margin-top:10px">Quiz not found</div><div style="color:var(--text2);font-size:.85rem;margin-top:6px">This quiz link may be invalid or expired.</div></div>';
       return;
     }
+
+    // Now render the "ready to start" card — quiz is defined here
+    nameCard.innerHTML =
+      '<div class="st"><span class="dot"></span>✅ Logged in as</div>' +
+      '<div style="display:flex;align-items:center;gap:12px;margin:12px 0 16px">' +
+        '<div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--a2));display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:1.1rem;color:#fff;flex-shrink:0">' +
+          (CU.name ? CU.name[0].toUpperCase() : '?') +
+        '</div>' +
+        '<div>' +
+          '<div style="font-weight:700;font-size:.95rem">' + esc(CU.name) + '</div>' +
+          '<div style="font-size:.76rem;color:var(--text2)">@' + esc(CU.username || '') + '</div>' +
+        '</div>' +
+      '</div>' +
+      (quiz.duration ? '<div style="text-align:center;margin-bottom:8px;padding:7px 12px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:10px;font-size:.8rem;color:var(--yellow);font-weight:700">⏱️ Time Limit: '+quiz.duration+' minute'+(quiz.duration==='1'?'':'s')+'</div>' : '')+
+      '<button class="btn bp" id="pq-start-btn" style="width:100%;justify-content:center">🚀 Start Quiz</button>'+
+      '<div id="pq-video-link"></div>'+
+      '';
+
+    document.getElementById('pq-start-btn').onclick = pqStartTaking;
 
     // ── Time window check ──
     var now = new Date();
