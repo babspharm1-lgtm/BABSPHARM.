@@ -3022,50 +3022,44 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
 }
 </style>
 <!-- Firebase Auth SDK -->
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-           signOut, onAuthStateChanged, sendPasswordResetEmail,
-           setPersistence, browserLocalStoragePersistence } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-
-  // SECURITY: Replace these values with your actual Firebase config.
-  // Get them from Firebase Console → Project Settings → Your apps → Web app config.
-  // Restrict this API key to your domain in Google Cloud Console.
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script>
   var firebaseConfig = {
     apiKey: "AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8",
     authDomain: "babspharmcloud.firebaseapp.com",
     projectId: "babspharmcloud",
     storageBucket: "babspharmcloud.appspot.com",
     messagingSenderId: "385674572482",
-    appId: "1:385674572482:web:a427125e649fef011b815b",
-    measurementId: "G-ZM6EX0MWZL"
+    appId: "1:385674572482:web:a427125e649fef011b815b"
   };
-
-  var fbApp = initializeApp(firebaseConfig);
-  var fbAuth = getAuth(fbApp);
-
-  // Persist login across page refreshes and browser restarts
-  setPersistence(fbAuth, browserLocalStoragePersistence).catch(function(e){
-    console.warn('Auth persistence not set:', e);
-  });
-
-  // Expose auth functions to global scope for use by existing code
-  window._fbAuth = fbAuth;
-  window._fbSignIn = function(email, password) {
-    return signInWithEmailAndPassword(fbAuth, email, password);
-  };
-  window._fbSignUp = function(email, password) {
-    return createUserWithEmailAndPassword(fbAuth, email, password);
-  };
-  window._fbSignOut = function() {
-    return signOut(fbAuth);
-  };
-  window._fbOnAuthStateChanged = function(cb) {
-    return onAuthStateChanged(fbAuth, cb);
-  };
-  window._fbSendPasswordReset = function(email) {
-    return sendPasswordResetEmail(fbAuth, email);
-  };
+  function _initFirebase() {
+    try {
+      if (typeof firebase === 'undefined') throw new Error('firebase not loaded');
+      var fbApp = firebase.initializeApp(firebaseConfig);
+      var fbAuth = firebase.auth(fbApp);
+      fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(e){ console.warn('Persistence:', e); });
+      window._fbAuth = fbAuth;
+      window._fbSignIn   = function(email, pw){ return fbAuth.signInWithEmailAndPassword(email, pw); };
+      window._fbSignUp   = function(email, pw){ return fbAuth.createUserWithEmailAndPassword(email, pw); };
+      window._fbSignOut  = function(){ return fbAuth.signOut(); };
+      window._fbOnAuthStateChanged = function(cb){ return fbAuth.onAuthStateChanged(cb); };
+      window._fbSendPasswordReset  = function(email){ return fbAuth.sendPasswordResetEmail(email); };
+      window._fbAuthReady = true;
+      window.dispatchEvent(new Event('fbAuthReady'));
+      if(window._fbAuthQueue && window._fbAuthQueue.length){
+        window._fbAuthQueue.forEach(function(fn){ try{ fn(); }catch(e){} });
+        window._fbAuthQueue = [];
+      }
+    } catch(e) {
+      console.error('Firebase init failed:', e);
+    }
+  }
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', _initFirebase);
+  } else {
+    _initFirebase();
+  }
 </script>
 </head>
 <body data-theme="dark">
@@ -6126,6 +6120,22 @@ D. Rankine</code>
 // ══════════════════════════════════
 // FIREBASE REST
 // ══════════════════════════════════
+
+// ── Wait for Firebase Auth to be ready ──
+function _waitForAuth() {
+  if(window._fbAuthReady) return Promise.resolve(true);
+  // Show "connecting" message only if auth takes more than 600ms
+  var notifyTimer = setTimeout(function(){
+    notify('Connecting to auth server…','warn','⏳');
+  }, 600);
+  return new Promise(function(resolve) {
+    var timer = setTimeout(function() { clearTimeout(notifyTimer); resolve(false); }, 20000);
+    window.addEventListener('fbAuthReady', function() {
+      clearTimeout(timer); clearTimeout(notifyTimer); resolve(true);
+    }, { once: true });
+  });
+}
+
 // SECURITY: Firebase config is set in the Firebase Auth module above.
 // The REST API uses the same project and key.
 var _cfg = { project: 'babspharmcloud', key: 'AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8' };
@@ -6775,8 +6785,8 @@ async function doRegister(){
   // SECURITY: Create Firebase Auth account first, then store profile in Firestore.
   // Passwords are never stored in Firestore — Firebase Auth handles them securely.
   if(!window._fbSignUp){
-    var _w=0; await new Promise(function(r){var iv=setInterval(function(){_w+=200;if(window._fbSignUp||_w>=8000){clearInterval(iv);r();}},200);});
-    if(!window._fbSignUp){notify('Auth unavailable. Check your internet and refresh.','error','❌');return;}
+    var _authOk = await _waitForAuth();
+    if(!_authOk || !window._fbSignUp){notify('Auth unavailable. Check your internet and refresh.','error','❌');return;}
   }
 
   // Check username availability first
@@ -7173,8 +7183,8 @@ async function doLogin(){
   var deviceFp=getDeviceFingerprint();
 
   if(!window._fbSignIn){
-    var _w=0; await new Promise(function(r){var iv=setInterval(function(){_w+=200;if(window._fbSignIn||_w>=8000){clearInterval(iv);r();}},200);});
-    if(!window._fbSignIn){notify('Auth unavailable. Check your internet and refresh.','error','❌');return;}
+    var _authOk = await _waitForAuth();
+    if(!_authOk || !window._fbSignIn){notify('Auth unavailable. Check your internet and refresh.','error','❌');return;}
   }
 
   // Look up the user's email by username first
@@ -7246,18 +7256,8 @@ async function doAdminLogin(){
 
   // Wait up to 8 seconds for Firebase Auth module to finish loading
   if(!window._fbSignIn){
-    notify('Connecting to auth server…','warn','⏳');
-    var waited = 0;
-    await new Promise(function(resolve){
-      var iv = setInterval(function(){
-        waited += 200;
-        if(window._fbSignIn || waited >= 8000){
-          clearInterval(iv);
-          resolve();
-        }
-      }, 200);
-    });
-    if(!window._fbSignIn){notify('Auth unavailable. Check your internet and refresh.','error','❌');return;}
+    var _authOk = await _waitForAuth();
+    if(!_authOk || !window._fbSignIn){notify('Auth unavailable. Check your internet and refresh.','error','❌');return;}
   }
 
   // SECURITY: Admin login now uses Firebase Authentication.
@@ -12806,8 +12806,8 @@ doRegister=async function(){
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){notify('Please enter a valid email address','error','📧');return;}
   if(pw.length<6){notify('Password must be at least 6 characters','error','⚠️');return;}
   if(!window._fbSignUp){
-    var _w=0; await new Promise(function(r){var iv=setInterval(function(){_w+=200;if(window._fbSignUp||_w>=8000){clearInterval(iv);r();}},200);});
-    if(!window._fbSignUp){notify('Auth unavailable. Check your internet and refresh.','error','❌');return;}
+    var _authOk = await _waitForAuth();
+    if(!_authOk || !window._fbSignUp){notify('Auth unavailable. Check your internet and refresh.','error','❌');return;}
   }
 
   var deviceFp = getDeviceFingerprint();
