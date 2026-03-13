@@ -15323,10 +15323,7 @@ function pqSubmitAnswers() {
     answers['q'+i] = sel ? sel.value : '';
   });
 
-  var unanswered = questions.filter(function(q,i){ return !answers['q'+i]; }).length;
-  if (unanswered > 0) {
-    if (!confirm('You have ' + unanswered + ' unanswered question(s). Submit anyway?')) return;
-  }
+  // Unanswered = 0 marks, no warning shown
 
   fsAdd('pqresults_' + pqTakeData.__quizId, {
     name: name,
