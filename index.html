@@ -17793,6 +17793,7 @@ function pqShowDoneScreen(submittedAnswers) {
         '<div style="font-size:3rem;margin-bottom:16px">🎉</div>' +
         '<div style="font-family:var(--fh);font-size:1.2rem;font-weight:800;margin-bottom:10px">Submitted Successfully!</div>' +
         '<div style="color:var(--text2);font-size:.88rem;line-height:1.6">Your answers have been recorded.<br>Your instructor will share the results with everyone.</div>' +
+        '<button class="btn bp" style="width:100%;justify-content:center;margin-top:18px" onclick="pqExitToSite()">🏠 Go to Dashboard & Explore Site</button>' +
       '</div>';
     return;
   }
@@ -17834,7 +17835,8 @@ function pqShowDoneScreen(submittedAnswers) {
       '<div style="font-size:.88rem;color:var(--text2);margin-bottom:4px">' + correct + ' / ' + total + ' correct · ' + grade + '</div>' +
     '</div>' +
     '<div style="font-family:var(--fh);font-size:.82rem;font-weight:800;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--cb)">📝 Review</div>' +
-    reviewHTML;
+    reviewHTML +
+    '<div style="margin-top:18px"><button class="btn bp" style="width:100%;justify-content:center" onclick="pqExitToSite()">🏠 Back to Dashboard & Explore Site</button></div>';
 
   // Fire AI explanations for wrong answers
   if (wrongOnes.length > 0) {
@@ -17921,6 +17923,27 @@ function pqAIExplainWrong(wrongOnes, quizTitle) {
   }
   runBatch();
 }
+
+// ══════════════════════════════════
+// EXIT PRIVATE QUIZ → EXPLORE SITE
+// ══════════════════════════════════
+window.pqExitToSite = function() {
+  // Hide the full-screen quiz overlay
+  var overlay = document.getElementById('pq-take-overlay');
+  if (overlay) overlay.style.display = 'none';
+  // Clean the URL so the quiz doesn't re-open on refresh
+  try { history.replaceState({}, '', window.location.pathname); } catch(e) {}
+  // If the user dashboard is already rendered and visible, just scroll to top
+  var ud = document.getElementById('ud');
+  if (ud && ud.style.display !== 'none') {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+  // Otherwise trigger the full dashboard load
+  if (CU && CU.role === 'user') {
+    showDash('user');
+  }
+};
 
 
 
