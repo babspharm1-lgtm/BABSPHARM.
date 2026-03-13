@@ -2084,6 +2084,83 @@ textarea.mm-notes::placeholder{color:rgba(176,168,216,.35);}
 .mm-tr-tab:hover{background:rgba(255,255,255,.13);color:#fff;}
 .mm-tr-tab.on{background:linear-gradient(135deg,var(--accent),#6d28d9);color:#fff;border-color:transparent;box-shadow:0 4px 14px rgba(109,40,217,.4);}
 
+
+/* ══ ADMIN ASSIST MODE BANNER ══ */
+#assist-banner{
+  position:fixed;top:0;left:0;right:0;z-index:99999;
+  background:linear-gradient(135deg,#b45309,#d97706);
+  color:#fff;padding:10px 16px;
+  display:none;align-items:center;justify-content:space-between;gap:10px;
+  box-shadow:0 4px 20px rgba(217,119,6,.6);
+  font-family:var(--fh);
+}
+#assist-banner.show{display:flex;}
+.assist-info{display:flex;align-items:center;gap:10px;flex:1;min-width:0;}
+.assist-avatar{width:34px;height:34px;border-radius:50%;
+  background:rgba(255,255,255,.25);display:flex;align-items:center;
+  justify-content:center;font-size:1.1rem;flex-shrink:0;}
+.assist-label{font-size:.8rem;opacity:.85;letter-spacing:.2px;}
+.assist-name{font-size:.95rem;font-weight:800;}
+.assist-exit{background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.4);
+  color:#fff;padding:7px 16px;border-radius:10px;font-family:var(--fh);
+  font-size:.8rem;font-weight:800;cursor:pointer;white-space:nowrap;
+  transition:all .2s;}
+.assist-exit:hover{background:rgba(255,255,255,.35);}
+/* ══ ADMIN ASSIST STUDENT MODAL ══ */
+#assist-modal{
+  position:fixed;inset:0;z-index:9998;
+  background:rgba(0,0,0,.88);
+  display:none;align-items:flex-start;justify-content:center;
+  padding:54px 8px 8px;overflow-y:auto;
+}
+#assist-modal.open{display:flex;}
+#assist-modal-inner{
+  background:var(--bg1);border:1.5px solid rgba(251,146,60,.4);
+  border-radius:20px;width:100%;max-width:680px;
+  padding:0 0 20px;overflow:hidden;
+  box-shadow:0 16px 60px rgba(0,0,0,.7);
+}
+.assist-modal-head{
+  background:linear-gradient(135deg,rgba(251,146,60,.25),rgba(217,119,6,.15));
+  padding:16px 20px;border-bottom:1px solid rgba(251,146,60,.25);
+  display:flex;align-items:center;gap:12px;
+}
+.assist-modal-avatar{
+  width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(135deg,#fb923c,#c2410c);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.5rem;font-weight:800;color:#fff;flex-shrink:0;
+}
+.assist-modal-title{font-family:var(--fh);font-size:1.1rem;font-weight:800;}
+.assist-modal-sub{font-size:.76rem;color:var(--text2);margin-top:2px;}
+.assist-modal-body{padding:16px 20px;}
+.assist-section{margin-bottom:18px;}
+.assist-section-title{
+  font-family:var(--fh);font-size:.82rem;font-weight:800;
+  color:var(--text2);letter-spacing:.5px;text-transform:uppercase;
+  margin-bottom:9px;display:flex;align-items:center;gap:6px;
+}
+.assist-section-title::before{content:'';display:block;width:3px;height:14px;
+  background:linear-gradient(180deg,var(--accent),var(--a2));border-radius:2px;}
+.assist-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.assist-stat{background:rgba(255,255,255,.05);border:1px solid var(--cb);
+  border-radius:11px;padding:10px 12px;text-align:center;}
+.assist-stat-val{font-family:var(--fh);font-size:1.2rem;font-weight:800;color:var(--accent);}
+.assist-stat-lbl{font-size:.67rem;color:var(--text2);margin-top:2px;}
+.assist-action-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.assist-action{background:rgba(255,255,255,.05);border:1px solid var(--cb);
+  border-radius:11px;padding:11px 14px;cursor:pointer;transition:all var(--tr);text-align:center;}
+.assist-action:hover{background:rgba(167,139,250,.1);border-color:var(--accent);transform:translateY(-1px);}
+.assist-action-icon{font-size:1.5rem;margin-bottom:4px;}
+.assist-action-name{font-size:.8rem;font-weight:700;}
+.assist-action-desc{font-size:.68rem;color:var(--text2);margin-top:2px;}
+.assist-info-row{display:flex;align-items:center;justify-content:space-between;
+  padding:8px 12px;border-radius:9px;background:rgba(255,255,255,.04);
+  border:1px solid var(--cb);margin-bottom:6px;font-size:.8rem;}
+.assist-info-key{color:var(--text2);font-size:.74rem;}
+.assist-info-val{font-weight:600;max-width:60%;text-align:right;word-break:break-all;}
+.assist-note-box{background:rgba(251,146,60,.08);border:1px solid rgba(251,146,60,.25);
+  border-radius:10px;padding:10px 13px;font-size:.75rem;color:var(--text2);line-height:1.55;margin-top:14px;}
 </style>
 <style id="bp-v3">
 /*
@@ -2938,7 +3015,7 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
 <script type="module">
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-           signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+           signOut, onAuthStateChanged, sendPasswordResetEmail } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
   // SECURITY: Replace these values with your actual Firebase config.
   // Get them from Firebase Console → Project Settings → Your apps → Web app config.
@@ -2969,6 +3046,9 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
   };
   window._fbOnAuthStateChanged = function(cb) {
     return onAuthStateChanged(fbAuth, cb);
+  };
+  window._fbSendPasswordReset = function(email) {
+    return sendPasswordResetEmail(fbAuth, email);
   };
 </script>
 </head>
@@ -3030,6 +3110,18 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
     <button class="tt" onclick="toggleTheme()"></button>
     <button class="btn bs bsm" id="lob" style="display:none" onclick="doLogout()">🚪 Logout</button>
   </div>
+</div>
+
+<!-- ══ ADMIN ASSIST MODE BANNER ══ -->
+<div id="assist-banner">
+  <div class="assist-info">
+    <div class="assist-avatar">👤</div>
+    <div>
+      <div class="assist-label">🔧 ADMIN ASSIST MODE — Viewing portal as:</div>
+      <div class="assist-name" id="assist-banner-name">Student</div>
+    </div>
+  </div>
+  <button class="assist-exit" onclick="exitAssistMode()">🛡️ Exit Assist Mode</button>
 </div>
 
 <div id="app">
@@ -3335,7 +3427,7 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
     <div class="atabs">
       <button class="atab on" id="tbl" onclick="sat('login')" role="tab" aria-selected="true" aria-controls="lf">🔑 Login</button>
       <button class="atab" id="tbr" onclick="sat('register')" role="tab" aria-selected="false" aria-controls="rf">📝 Register</button>
-      <button class="atab" id="tba" onclick="sat('admin')" role="tab" aria-selected="false" aria-controls="af">🛡️ Admin</button>
+      <button class="atab" id="tba" onclick="sat('admin')" role="tab" aria-selected="false" aria-controls="af" style="display:none">🛡️ Admin</button>
     </div>
     <div id="lf">
       <div class="fg"><label>Username</label><input type="text" id="lun" placeholder="Username" onkeydown="if(event.key==='Enter')doLogin()"/></div>
@@ -3391,6 +3483,8 @@ body:not(.app-mode) #app { padding-top: 0 !important; }
       </div>
       <div class="ca-note">Admin is available Mon – Sat · 8 AM – 8 PM</div>
     </div>
+    <!-- Hidden admin access link - invisible to visitors -->
+    <a id="secret-admin-link" onclick="var t=document.getElementById('tba');if(t){t.style.display='';t.click();}return false;" href="#" style="display:block;height:18px;opacity:0;cursor:default;user-select:none;" aria-hidden="true" tabindex="-1">&nbsp;</a>
   </div>
 </div>
 
@@ -5119,6 +5213,45 @@ D. Rankine</code>
   </div>
 
   <div class="tp" id="at-users">
+    <!-- ══ ADMIN CREATE ACCOUNT ══ -->
+    <div class="card" style="margin-bottom:12px;border-color:rgba(167,139,250,.35)">
+      <div class="st"><span class="dot"></span>➕ Create Account for Student</div>
+      <p style="font-size:.76rem;color:var(--text2);margin-bottom:14px;padding:8px 10px;background:rgba(167,139,250,.08);border-radius:8px;border-left:3px solid var(--accent)">
+        👮 Admin-created accounts bypass the one-device restriction and are approved instantly.
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="fg" style="margin:0">
+          <label>Full Name</label>
+          <input type="text" id="ac-name" placeholder="e.g. John Doe"/>
+        </div>
+        <div class="fg" style="margin:0">
+          <label>Username</label>
+          <input type="text" id="ac-username" placeholder="e.g. johndoe"/>
+        </div>
+        <div class="fg" style="margin:0">
+          <label>Email</label>
+          <input type="email" id="ac-email" placeholder="student@email.com"/>
+        </div>
+        <div class="fg" style="margin:0">
+          <label>Password</label>
+          <input type="password" id="ac-password" placeholder="Min 6 characters"/>
+        </div>
+        <div class="fg" style="margin:0">
+          <label>Level</label>
+          <select id="ac-level">
+            <option value="100">100 Level</option>
+            <option value="200">200 Level</option>
+            <option value="300">300 Level</option>
+            <option value="400">400 Level</option>
+            <option value="500">500 Level</option>
+          </select>
+        </div>
+        <div class="fg" style="margin:0;display:flex;align-items:flex-end">
+          <button class="btn bg2" style="width:100%;justify-content:center" onclick="adminCreateAccount()">➕ Create Account</button>
+        </div>
+      </div>
+      <div id="ac-status" style="display:none;margin-top:10px;padding:9px 12px;border-radius:9px;font-size:.8rem"></div>
+    </div>
     <!-- ══ ONLINE STUDENTS ══ -->
     <div class="card" style="margin-bottom:12px">
       <div class="st"><span class="dot"></span>🟢 Online Students</div>
@@ -5937,10 +6070,14 @@ D. Rankine</code>
         <div style="font-family:var(--fh);font-size:1.3rem;font-weight:800;background:linear-gradient(90deg,var(--accent),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">BABSPHARM Cloud</div>
       </div>
       <div class="card" style="margin-bottom:14px" id="pq-name-card">
-        <div class="st"><span class="dot"></span>📝 Enter Your Details</div>
-        <div class="fg"><label>Your Full Name</label><input type="text" id="pq-taker-name" placeholder="e.g. John Adebayo"/></div>
-        <button class="btn bp" style="width:100%;justify-content:center" onclick="pqStartTaking()">🚀 Start Quiz</button>
+        <!-- Content injected dynamically by pqCheckURLParam based on auth state -->
+        <div id="pq-auth-check" style="text-align:center;padding:24px 16px">
+          <div style="font-size:1.8rem;margin-bottom:10px">⏳</div>
+          <div style="font-size:.85rem;color:var(--text2)">Loading quiz...</div>
+        </div>
       </div>
+      <!-- Hidden input kept for legacy compatibility — value set from CU.name -->
+      <input type="hidden" id="pq-taker-name" value=""/>
       <div id="pq-take-body" style="display:none">
         <div class="card" style="margin-bottom:10px;padding:12px 14px">
           <div style="font-family:var(--fh);font-weight:800;font-size:1rem" id="pq-take-title"></div>
@@ -6568,6 +6705,7 @@ function showLoginFromLanding(){
 function sat(tab){
   ['login','register','admin'].forEach(function(t){
     var btn=document.getElementById(t==='login'?'tbl':t==='register'?'tbr':'tba');
+    if(!btn) return;
     var isActive=t===tab;
     btn.classList.toggle('on',isActive);
     btn.setAttribute('aria-selected',isActive?'true':'false');
@@ -6576,6 +6714,29 @@ function sat(tab){
   document.getElementById('rf').style.display=tab==='register'?'':'none';
   document.getElementById('af').style.display=tab==='admin'?'':'none';
 }
+
+// ── Secret trigger: tap the logo 5 times quickly to reveal admin tab ──
+(function(){
+  var tapCount = 0, tapTimer = null;
+  document.addEventListener('DOMContentLoaded', function(){
+    var logo = document.querySelector('.logo');
+    if(!logo) return;
+    logo.addEventListener('click', function(){
+      tapCount++;
+      clearTimeout(tapTimer);
+      tapTimer = setTimeout(function(){ tapCount = 0; }, 1500);
+      if(tapCount >= 5){
+        tapCount = 0;
+        clearTimeout(tapTimer);
+        var tba = document.getElementById('tba');
+        if(tba){
+          tba.style.display = '';
+          tba.click();
+        }
+      }
+    });
+  });
+})();
 function doRegister(){
   var name=document.getElementById('rname').value.trim(),un=document.getElementById('run').value.trim().toLowerCase();
   var pw=document.getElementById('rpw').value.trim(),level=document.getElementById('rlevel').value;
@@ -7156,6 +7317,8 @@ function showDash(role){
     loadAndApplyContactInfo(); // apply admin's real WhatsApp/email to contact buttons
     startOnlineTracking(); // track student online status
     handleDeepLink(); // handle ?quiz= or ?file= deep links
+    // Re-check for private quiz link now that the user is logged in
+    setTimeout(pqCheckURLParam, 600);
     // Show browser notification prompt after a short delay on first login
     setTimeout(checkNotifPrompt, 1500);
     // init notif counts
@@ -7457,14 +7620,77 @@ function uploadFiles(files){
   uploadFilesTo(files, catEl ? catEl.value : 'General');
 }
 
+// ══════════════════════════════════════════════════════
+// POINTS ECONOMY — helpers shared across quiz/download/forum
+// ══════════════════════════════════════════════════════
+
+// Cached admin WhatsApp number (populated by loadAndApplyContactInfo)
+var _adminWaCache = '';
+
+// Patch applyContactInfo to also cache the WA number
+(function(){
+  var _origApply = applyContactInfo;
+  applyContactInfo = function(wa, em) {
+    _origApply(wa, em);
+    if (wa) _adminWaCache = wa;
+  };
+})();
+
+function showInsufficientPoints(action, cost) {
+  var waNum = _adminWaCache || ((document.querySelector('.ca-whatsapp')||{}).href||'').replace('https://wa.me/','') || '';
+  var waMsg = encodeURIComponent('Hi, I need more points on BABSPHARM Cloud to ' + action + '. My username is @' + (CU&&CU.username||'unknown') + '. Please help. 🙏');
+  var waHref = waNum ? 'https://wa.me/' + waNum + '?text=' + waMsg : '#';
+
+  var old = document.getElementById('insuf-pts-modal');
+  if (old) old.remove();
+
+  var modal = document.createElement('div');
+  modal.id = 'insuf-pts-modal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)';
+  modal.innerHTML =
+    '<div style="background:linear-gradient(145deg,#1a0a2e,#2b0f55);border:1.5px solid rgba(248,113,113,.45);border-radius:20px;padding:28px 22px;max-width:320px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.7)">' +
+      '<div style="font-size:2.8rem;margin-bottom:10px">💸</div>' +
+      '<div style="font-family:var(--fh);font-weight:800;font-size:1.05rem;color:var(--red);margin-bottom:8px">Insufficient Points</div>' +
+      '<div style="font-size:.84rem;color:var(--text2);line-height:1.65;margin-bottom:6px">' +
+        'You need <strong style="color:var(--yellow)">' + cost + ' pts</strong> to ' + action + ', but your balance is only <strong style="color:var(--red)">' + (CU&&CU.totalScore||0) + ' pts</strong>.' +
+      '</div>' +
+      '<div style="font-size:.8rem;color:var(--text2);line-height:1.6;margin-bottom:20px">' +
+        'Contact your instructor to top up your points balance.' +
+      '</div>' +
+      (waNum
+        ? '<a href="' + waHref + '" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border-radius:12px;background:linear-gradient(135deg,#25d366,#128c7e);color:#fff;font-family:var(--fh);font-weight:800;font-size:.88rem;text-decoration:none;margin-bottom:10px">💬 Message Admin on WhatsApp</a>'
+        : '') +
+      '<button onclick="document.getElementById(\'insuf-pts-modal\').remove()" style="width:100%;padding:10px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid var(--cb);color:var(--text);font-family:var(--fh);font-weight:700;font-size:.85rem;cursor:pointer">✕ Close</button>' +
+    '</div>';
+
+  document.body.appendChild(modal);
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+}
+
+// ── Download: 6-point deduction interceptor (capture phase) ──
+document.addEventListener('click', function(e) {
+  var a = e.target.closest('a[download]');
+  if (!a) return;
+  if (!CU || CU.role !== 'user') return; // admins download free
+
+  var DOWNLOAD_COST = 6;
+  if (CU.totalScore < DOWNLOAD_COST) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    showInsufficientPoints('download this file', DOWNLOAD_COST);
+    return;
+  }
+
+  // Deduct points and let the download proceed
+  var newDlPts = Math.max(0, CU.totalScore - DOWNLOAD_COST);
+  fsPatch('projects/' + PROJECT + '/databases/(default)/documents/users/' + CU.id,
+    { totalScore: String(newDlPts) })
+    .then(function() { CU.totalScore = newDlPts; })
+    .catch(function() {});
+}, true);
+
 function canPreview(type,name){ return true; }
 function openPreview(data,name,type){
-  // Deduct 1 point for viewing a file
-  if(CU&&CU.id&&CU.role==='user'){
-    var newPts=Math.max(0,CU.totalScore-1);
-    fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+CU.id,
-      {totalScore:String(newPts)}).then(function(){CU.totalScore=newPts;}).catch(function(){});
-  }
   var overlay=document.getElementById('prev-overlay');
   var body=document.getElementById('prev-body');
   var dl=document.getElementById('prev-dl');
@@ -8240,6 +8466,13 @@ function postForum(){
   var text=document.getElementById('forum-text').value.trim();
   var cat=document.getElementById('forum-cat').value;
   if(!text){notify('Write something first','error','⚠️');return;}
+  // ── Points guard: require at least 3 points to post ──
+  if(CU&&CU.role==='user'){
+    if(CU.totalScore<3){showInsufficientPoints('post in the forum',3);return;}
+    var newForumPts=Math.max(0,CU.totalScore-3);
+    fsPatch('projects/'+PROJECT+'/databases/(default)/documents/users/'+CU.id,
+      {totalScore:String(newForumPts)}).then(function(){CU.totalScore=newForumPts;}).catch(function(){});
+  }
   fsAdd('forum',{text:text,category:cat,author:CU.name,username:CU.username,
     postedAt:new Date().toISOString(),replies:'',reactions:''})
     .then(function(){document.getElementById('forum-text').value='';notify('Posted!','success','✅');loadForum();})
@@ -9363,6 +9596,9 @@ function filterQuizByCat(btn,cat){
 var currentQuiz=null,userAnswers={},quizTimer=null,quizTimerPerQ=null,perQTimeLeft=0,quizStartTime=null;
 var currentSections=[],currentSectionIdx=0,sectionAnswers=[],quizTotalScore=0,quizTotalQs=0;
 
+// Section label helper: 0→A, 1→B, 2→C ...
+function secLabel(i){ return String.fromCharCode(65+i); }
+
 function startQuiz(id){
   // Check if student is banned from this quiz
   var cheatKey = 'quiz_cheat_' + id + '_' + (CU ? CU.username : '');
@@ -9386,7 +9622,6 @@ function startQuiz(id){
     if(!sections.length){
       var allQs=[];try{allQs=JSON.parse(quiz.questions||'[]');}catch(e){}
       if(allQs.length){
-        // Split into groups of 5
         for(var i=0;i<allQs.length;i+=5){
           sections.push({name:'Section '+(Math.floor(i/5)+1),questions:allQs.slice(i,i+5)});
         }
@@ -9401,9 +9636,53 @@ function startQuiz(id){
     document.getElementById('quiz-list-view').style.display='none';
     document.getElementById('quiz-result-view').style.display='none';
     document.getElementById('quiz-take-view').style.display='';
-    renderSection();
+    renderSectionLobby();
   });
 }
+
+function renderSectionLobby(){
+  var tv=document.getElementById('quiz-take-view');
+  var doneCount=sectionAnswers.filter(function(a){return Object.keys(a).length>0;}).length;
+  // Count truly submitted sections (we track via completedSections array)
+  if(!window.completedSections) window.completedSections=[];
+
+  tv.innerHTML=
+    '<div class="card">'+
+    '<div style="font-family:var(--fh);font-size:1rem;font-weight:800;margin-bottom:4px">'+esc(currentQuiz.title)+'</div>'+
+    '<div style="font-size:.78rem;color:var(--text2);margin-bottom:16px">Select a section to begin. You can do them in any order.</div>'+
+    // Section cards grid
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:20px">'+
+    currentSections.map(function(sec,i){
+      var done=window.completedSections.indexOf(i)!==-1;
+      var label=secLabel(i);
+      return '<div onclick="'+(done?'':'enterSection('+i+')')+'" style="'+
+        'border-radius:14px;padding:16px 10px;text-align:center;cursor:'+(done?'default':'pointer')+';'+
+        'border:2px solid '+(done?'var(--green)':'var(--accent)')+';'+
+        'background:'+(done?'rgba(74,222,128,.08)':'rgba(167,139,250,.08)')+';'+
+        'transition:all .2s;position:relative;'+
+        (done?'opacity:.75;':'')+'">'+
+        (done?'<div style="position:absolute;top:7px;right:9px;font-size:.7rem;color:var(--green);font-weight:800">✓ Done</div>':'')+
+        '<div style="font-family:var(--fh);font-size:2rem;font-weight:900;color:'+(done?'var(--green)':'var(--accent)')+'">'+label+'</div>'+
+        '<div style="font-size:.72rem;color:var(--text2);margin-top:4px;line-height:1.3">'+esc(sec.name)+'</div>'+
+        '<div style="font-size:.68rem;color:'+(done?'var(--green)':'var(--text2)')+';margin-top:3px">'+sec.questions.length+' Qs</div>'+
+      '</div>';
+    }).join('')+
+    '</div>'+
+    // Progress summary
+    '<div style="font-size:.78rem;color:var(--text2);text-align:center;margin-bottom:14px">'+
+      window.completedSections.length+' of '+currentSections.length+' section(s) completed'+
+    '</div>'+
+    (window.completedSections.length===currentSections.length?
+      '<button class="btn bp" style="width:100%;justify-content:center" onclick="finishAllSections()">🏁 Submit & See Results</button>':
+      '<button class="btn bs" style="width:100%;justify-content:center" onclick="cancelQuiz()">✕ Cancel Quiz</button>'
+    )+
+    '</div>';
+}
+
+window.enterSection=function(idx){
+  currentSectionIdx=idx;
+  renderSection();
+};
 
 function renderSection(){
   if(currentSectionIdx>=currentSections.length){finishAllSections();return;}
@@ -9536,13 +9815,14 @@ function submitSection(){
         '</div>'+
       '</div>';
     }).join('')+
-    '</div>'+
-    (isLast?
-      '<button class="btn bp" style="width:100%;justify-content:center" onclick="finishAllSections()">🏁 See Final Results</button>':
-      '<div style="font-size:.8rem;color:var(--text2);margin-bottom:12px">'+
-        (currentSections.length-currentSectionIdx-1)+' section(s) remaining'+
-      '</div>'+
-      '<button class="btn bp" style="width:100%;justify-content:center" onclick="goNextSection()">▶ Next Section: '+esc(currentSections[currentSectionIdx+1]?currentSections[currentSectionIdx+1].name:'')+'</button>'
+    '</div>';
+    // Track this section as completed
+    if(!window.completedSections) window.completedSections=[];
+    if(window.completedSections.indexOf(currentSectionIdx)===-1) window.completedSections.push(currentSectionIdx);
+    var allDone=window.completedSections.length===currentSections.length;
+    html+=(isLast||allDone?
+      '<button class="btn bp" style="width:100%;justify-content:center;margin-top:8px" onclick="finishAllSections()">🏁 See Final Results</button>':
+      '<button class="btn bp" style="width:100%;justify-content:center;margin-top:8px" onclick="renderSectionLobby()">◀ Back to Sections</button>'
     )+
     '</div>';
 }
@@ -9567,7 +9847,7 @@ function cancelQuiz(){
   acStopAntiCheat();
   hideCalculator();
   currentQuiz=null;userAnswers={};quizStartTime=null;
-  currentSections=[];currentSectionIdx=0;sectionAnswers=[];
+  currentSections=[];currentSectionIdx=0;sectionAnswers=[];window.completedSections=[];
   document.getElementById('quiz-take-view').style.display='none';
   document.getElementById('quiz-list-view').style.display='';
 }
@@ -9577,6 +9857,11 @@ function submitQuiz(){
   if(quizTimerPerQ){clearInterval(quizTimerPerQ);quizTimerPerQ=null;}
   acStopAntiCheat();
   hideCalculator();
+  // ── Insufficient points guard ──
+  if(CU&&CU.role==='user'&&CU.totalScore<5){
+    showInsufficientPoints('take this quiz',5);
+    return;
+  }
   // Build flat userAnswers from all sections for scoring & review
   userAnswers={};
   var allQs=[];
@@ -9600,7 +9885,7 @@ function submitQuiz(){
     timeTaken:String(timeTaken),answers:JSON.stringify(userAnswers),
     takenAt:new Date().toISOString()}).catch(function(){});
 
-  var QUIZ_COST=8;
+  var QUIZ_COST=5;
   var newScore=Math.max(0,CU.totalScore+pts-QUIZ_COST),newCount=CU.quizzesTaken+1;
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+CU.id,
     {totalScore:String(newScore),quizzesTaken:String(newCount)})
@@ -10698,6 +10983,7 @@ function renderStudentList(){
           '</div>'+
         '</div>'+
         '<div style="display:flex;gap:4px;flex-shrink:0;flex-wrap:wrap">'+
+          '<button class="btn bp bsm" onclick="adminAssistStudent(\''+u.__id+'\',\''+esc(u.name)+'\',\''+esc(u.username)+'\')" title="View portal as this student">🔧 Assist</button>'+
           (isActive&&!isDeviceBlocked
             ?'<button class="btn bo bsm" onclick="deactivateUser(\''+u.__id+'\',\''+esc(u.name)+'\')">🚫 Deactivate</button>'
             :(!isDeviceBlocked?'<button class="btn bg2 bsm" onclick="activateUser(\''+u.__id+'\',\''+esc(u.name)+'\')">✅ Activate</button>':''))+
@@ -12366,7 +12652,7 @@ function loadMyPointHistory() {
 }
 
 // ══════════════════════════════════
-// PATCH: doRegister — add referral (FIXED: uses Firebase Auth like original)
+// PATCH: doRegister — one-account-per-device + referral support
 // ══════════════════════════════════
 var _origDoRegister=doRegister;
 doRegister=function(){
@@ -12380,9 +12666,20 @@ doRegister=function(){
   if(pw.length<6){notify('Password must be at least 6 characters','error','⚠️');return;}
   if(!window._fbSignUp){notify('Auth not ready. Please refresh.','error','❌');return;}
 
-  // Check username availability first
+  var deviceFp = getDeviceFingerprint();
+
+  // ── ONE ACCOUNT PER DEVICE CHECK ──
   fsGet('users').then(function(res){
-    if(getDocs(res).some(function(u){return u.username===un;})){notify('Username taken','error','⚠️');return;}
+    var allUsers = getDocs(res);
+    // Block if this device already has a registered account
+    var existingDevice = allUsers.find(function(u){
+      return u.registrationDeviceFp && u.registrationDeviceFp === deviceFp;
+    });
+    if(existingDevice){
+      notify('🚫 An account already exists on this device. Only one account per device is allowed. Contact admin if you need help.','error','📱');
+      return;
+    }
+    if(allUsers.some(function(u){return u.username===un;})){notify('Username taken','error','⚠️');return;}
 
     // Determine reg mode
     fsGet('settings').then(function(sRes){
@@ -12394,11 +12691,12 @@ doRegister=function(){
       // Create Firebase Auth account FIRST (so login works via Firebase Auth)
       window._fbSignUp(email, pw).then(function(cred){
         var uid=cred.user.uid;
-        // Store profile in Firestore (NO password stored — Firebase Auth handles auth)
+        // Store profile + device fingerprint in Firestore
         fsAdd('users',{uid:uid,name:name,username:un,level:level,email:email,
           status:initialStatus,role:'user',
           joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',
-          totalScore:'50',quizzesTaken:'0',referredBy:refCode||''})
+          totalScore:'50',quizzesTaken:'0',referredBy:refCode||'',
+          registrationDeviceFp:deviceFp})
           .then(function(){
             sendBrevoWelcomeEmail(email, name);
             window._fbSignOut().catch(function(){});
@@ -12422,7 +12720,8 @@ doRegister=function(){
         fsAdd('users',{uid:uid,name:name,username:un,level:level,email:email,
           status:'pending',role:'user',
           joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',
-          totalScore:'50',quizzesTaken:'0',referredBy:refCode||''})
+          totalScore:'50',quizzesTaken:'0',referredBy:refCode||'',
+          registrationDeviceFp:deviceFp})
           .then(function(){
             sendBrevoWelcomeEmail(email, name);
             window._fbSignOut().catch(function(){});
@@ -14848,6 +15147,42 @@ function pqAIExtract() {
   }
 }
 
+window.pqAILoadIntoForm = function(sectionsEncoded) {
+  try {
+    var sections = JSON.parse(decodeURIComponent(sectionsEncoded));
+    // Clear existing questions
+    document.getElementById('pq-questions-wrap').innerHTML = '';
+    pqQuestionCount = 0;
+
+    sections.forEach(function(sec, si) {
+      // Add a section divider label
+      var divider = document.createElement('div');
+      divider.style.cssText = 'font-size:.75rem;font-weight:800;color:var(--accent);padding:10px 0 4px;border-top:' + (si > 0 ? '1px solid rgba(167,139,250,.2)' : 'none') + ';margin-top:' + (si > 0 ? '8px' : '0');
+      divider.textContent = '📂 ' + sec.name;
+      document.getElementById('pq-questions-wrap').appendChild(divider);
+
+      (sec.questions || []).forEach(function(q) {
+        pqAddQuestion();
+        var n = pqQuestionCount;
+        var setVal = function(id, val) { var el = document.getElementById(id); if (el) el.value = val || ''; };
+        setVal('pq-q-' + n + '-text', q.text);
+        setVal('pq-q-' + n + '-a', q.optA);
+        setVal('pq-q-' + n + '-b', q.optB);
+        setVal('pq-q-' + n + '-c', q.optC);
+        setVal('pq-q-' + n + '-d', q.optD);
+        setVal('pq-q-' + n + '-ans', (q.correct || 'a').toLowerCase());
+      });
+    });
+
+    notify('✅ ' + sections.length + ' section(s) loaded into form! Fill in the title and save.', 'success', '📥');
+    document.getElementById('pqai-preview').innerHTML = '<div style="font-size:.78rem;color:var(--green);padding:8px;text-align:center">✅ Questions loaded! Scroll down to review, add title and save.</div>';
+    // Scroll to title field
+    document.getElementById('pq-title').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('pq-title').focus();
+  } catch(e) {
+    notify('Failed to load questions: ' + e.message, 'error', '❌');
+  }
+};
 
 function pqAILoadIntoForm(sections) {
   if (!sections || !sections.length) { notify('No questions to load', 'error', '⚠️'); return; }
@@ -14855,8 +15190,16 @@ function pqAILoadIntoForm(sections) {
   var wrap = document.getElementById('pq-questions-wrap');
   if (wrap) wrap.innerHTML = '';
   pqQuestionCount = 0;
-  // Flatten all questions from all sections and inject into the form
-  sections.forEach(function(sec) {
+  // Inject questions grouped by section, with a visible section header
+  sections.forEach(function(sec, si) {
+    if (!sec.questions || !sec.questions.length) return;
+    // Section header carries data-section-name so pqGetQuestions can reconstruct sections
+    var header = document.createElement('div');
+    header.className = 'pq-section-header';
+    header.setAttribute('data-section-name', sec.name || ('Section ' + (si + 1)));
+    header.style.cssText = 'font-size:.75rem;font-weight:800;color:var(--accent);padding:10px 0 4px;' + (si > 0 ? 'border-top:1px solid rgba(167,139,250,.2);margin-top:8px;' : '');
+    header.textContent = '\u{1F4C2} ' + (sec.name || ('Section ' + (si + 1)));
+    wrap.appendChild(header);
     (sec.questions || []).forEach(function(q) {
       if (!q.text || !q.text.trim()) return;
       pqQuestionCount++;
@@ -14868,7 +15211,7 @@ function pqAILoadIntoForm(sections) {
       var correct = (q.correct || q.ans || 'a').toLowerCase();
       div.innerHTML =
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
-          '<div style="font-weight:700;font-size:.83rem">Question ' + pqQuestionCount + (sec.name ? ' <span style="font-weight:400;color:var(--text2);font-size:.72rem">— ' + esc(sec.name) + '</span>' : '') + '</div>' +
+          '<div style="font-weight:700;font-size:.83rem">Question ' + pqQuestionCount + '</div>' +
           '<button class="btn bd bsm" onclick="document.getElementById(\'' + qid + '-wrap\').remove()">🗑️</button>' +
         '</div>' +
         '<div class="fg" style="margin-bottom:8px"><input type="text" id="' + qid + '-text" placeholder="Question text..." style="width:100%" value="' + esc(q.text||'') + '"/></div>' +
@@ -14944,19 +15287,54 @@ function pqGetQuestions() {
   return qs;
 }
 
+function pqGetSections() {
+  // Reconstruct sections from pq-section-header dividers + question cards
+  var wrap = document.getElementById('pq-questions-wrap');
+  if (!wrap) return null;
+  var headers = wrap.querySelectorAll('.pq-section-header');
+  if (!headers.length) return null; // no section headers — use flat mode
+  var sections = [];
+  headers.forEach(function(hdr, hi) {
+    var secName = hdr.getAttribute('data-section-name') || ('Section ' + (hi + 1));
+    var questions = [];
+    // Collect all question cards between this header and the next
+    var node = hdr.nextSibling;
+    var nextHdr = headers[hi + 1] || null;
+    while (node) {
+      if (node === nextHdr) break;
+      if (node.nodeType === 1 && node.id && node.id.endsWith('-wrap')) {
+        var base = node.id.replace('-wrap','');
+        var text = document.getElementById(base+'-text');
+        var a = document.getElementById(base+'-a');
+        var b = document.getElementById(base+'-b');
+        var c = document.getElementById(base+'-c');
+        var d = document.getElementById(base+'-d');
+        var ans = document.getElementById(base+'-ans');
+        if (text && text.value.trim()) {
+          questions.push({ text: text.value.trim(), a: (a&&a.value)||'', b: (b&&b.value)||'', c: (c&&c.value)||'', d: (d&&d.value)||'', ans: ans?ans.value:'a' });
+        }
+      }
+      node = node.nextSibling;
+    }
+    if (questions.length) sections.push({ name: secName, questions: questions });
+  });
+  return sections.length ? sections : null;
+}
+
 function pqSaveQuiz() {
   var title = document.getElementById('pq-title').value.trim();
   var desc = document.getElementById('pq-desc').value.trim();
   var openTime = document.getElementById('pq-open-time').value;
   var closeTime = document.getElementById('pq-close-time').value;
   var questions = pqGetQuestions();
+  var sections = pqGetSections(); // may be null if no section headers
   if (!title) { notify('Enter a quiz title', 'error', '⚠️'); return; }
   if (questions.length === 0) { notify('Add at least one question', 'error', '⚠️'); return; }
   if (openTime && closeTime && new Date(openTime) >= new Date(closeTime)) {
     notify('Close time must be after open time', 'error', '⚠️'); return;
   }
   var id = 'pq_' + Date.now();
-  fsAdd('privatequizzes', { id: id, title: title, desc: desc, questions: JSON.stringify(questions),
+  fsAdd('privatequizzes', { id: id, title: title, desc: desc, questions: JSON.stringify(questions), sections: sections ? JSON.stringify(sections) : '',
     openTime: openTime || '', closeTime: closeTime || '',
     createdAt: new Date().toISOString(), createdBy: CU ? CU.username : 'admin' })
     .then(function(res) {
@@ -15171,21 +15549,76 @@ function pqShareWA() {
 // ── QUIZ TAKING (public, via URL param) ──
 var pqTakeData = null;
 
+function pqShowAuthPrompt() {
+  // User is not logged in — show login/register prompt inside the quiz overlay
+  var nameCard = document.getElementById('pq-name-card');
+  nameCard.innerHTML =
+    '<div style="text-align:center;padding:10px 0 6px">' +
+      '<div style="font-size:2.2rem;margin-bottom:10px">🔐</div>' +
+      '<div style="font-family:var(--fh);font-weight:800;font-size:1rem;margin-bottom:8px">Login Required</div>' +
+      '<div style="font-size:.84rem;color:var(--text2);line-height:1.6;margin-bottom:20px">' +
+        'You need a <strong style="color:var(--accent)">BABSPHARM Cloud account</strong> to take this quiz.<br>' +
+        'Log in with your existing account, or create one first.' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+        '<button class="btn bp" style="width:100%;justify-content:center" onclick="pqGoToLogin()">🔑 Login</button>' +
+        '<button class="btn bs" style="width:100%;justify-content:center" onclick="pqGoToRegister()">📝 Register</button>' +
+      '</div>' +
+      '<div style="font-size:.74rem;color:var(--text2);margin-top:14px;opacity:.8">' +
+        'Your quiz link is saved — you\'ll be taken straight to the quiz after logging in.' +
+      '</div>' +
+    '</div>';
+}
+
+window.pqGoToLogin = function() {
+  document.getElementById('pq-take-overlay').style.display = 'none';
+  sat('login');
+};
+
+window.pqGoToRegister = function() {
+  document.getElementById('pq-take-overlay').style.display = 'none';
+  sat('register');
+};
+
 function pqCheckURLParam() {
   var params = new URLSearchParams(window.location.search);
   var quizId = params.get('pquiz');
   if (!quizId) return;
   var takeOverlay = document.getElementById('pq-take-overlay');
-  var nameCard = document.getElementById('pq-name-card');
   takeOverlay.style.display = 'block';
 
-  // Disable Start button and show loading hint while fetching quiz data
-  var startBtn = nameCard.querySelector('button.btn.bp');
+  // ── Auth gate: user must be logged into the platform ──
+  if (!CU || !CU.name) {
+    pqShowAuthPrompt();
+    return;
+  }
+
+  // User is logged in — auto-fill their platform name
+  var nameInput = document.getElementById('pq-taker-name');
+  if (nameInput) nameInput.value = CU.name;
+
+  // Show a "ready to start" card with their name
+  var nameCard = document.getElementById('pq-name-card');
+  nameCard.innerHTML =
+    '<div class="st"><span class="dot"></span>✅ Logged in as</div>' +
+    '<div style="display:flex;align-items:center;gap:12px;margin:12px 0 16px">' +
+      '<div style="width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--a2));display:flex;align-items:center;justify-content:center;font-family:var(--fh);font-weight:800;font-size:1.1rem;color:#fff;flex-shrink:0">' +
+        (CU.name ? CU.name[0].toUpperCase() : '?') +
+      '</div>' +
+      '<div>' +
+        '<div style="font-weight:700;font-size:.95rem">' + esc(CU.name) + '</div>' +
+        '<div style="font-size:.76rem;color:var(--text2)">@' + esc(CU.username || '') + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<button class="btn bp" id="pq-start-btn" style="width:100%;justify-content:center">🚀 Start Quiz</button>';
+
+  document.getElementById('pq-start-btn').onclick = pqStartTaking;
+  var startBtn = document.getElementById('pq-start-btn');
   if (startBtn) { startBtn.disabled = true; startBtn.textContent = '⏳ Loading quiz...'; }
 
   fsGet('privatequizzes').then(function(res) {
     // Re-enable start button after data loads
-    var startBtn2 = document.getElementById('pq-name-card').querySelector('button.btn.bp');
+    var startBtn2 = document.getElementById('pq-start-btn');
     if (startBtn2) { startBtn2.disabled = false; startBtn2.innerHTML = '🚀 Start Quiz'; }
 
     var quizzes = getDocs(res);
@@ -15246,54 +15679,177 @@ function pqCheckURLParam() {
   });
 }
 
+// Private quiz section state
+var pqSections = [], pqCompletedSections = [], pqSectionAnswers = [], pqCurrentSectionIdx = 0;
+
 function pqStartTaking() {
-  var name = document.getElementById('pq-taker-name').value.trim();
-  if (!name) { notify('Please enter your name', 'error', '⚠️'); return; }
+  // Name comes from the platform login — no separate name entry needed
+  var name = (CU && CU.name) ? CU.name : (document.getElementById('pq-taker-name').value.trim());
+  if (!name) { notify('Could not determine your name. Please log in first.', 'error', '⚠️'); return; }
+  // Keep the hidden input in sync for submit
+  var nameInput = document.getElementById('pq-taker-name');
+  if (nameInput) nameInput.value = name;
   if (!pqTakeData) { notify('Quiz not loaded. Please refresh.', 'error', '❌'); return; }
   var questions = [];
   try { questions = JSON.parse(pqTakeData.questions||'[]'); } catch(e) {}
   if (!questions.length) { notify('This quiz has no questions.', 'error', '⚠️'); return; }
+
+  // Parse sections
+  pqSections = [];
+  try { pqSections = JSON.parse(pqTakeData.sections||'[]'); } catch(e) {}
+  // Fallback: single section from flat questions
+  if (!pqSections.length) pqSections = [{ name: 'Section A', questions: questions }];
+  pqCompletedSections = [];
+  pqSectionAnswers = pqSections.map(function(){ return {}; });
+  pqCurrentSectionIdx = 0;
 
   document.getElementById('pq-name-card').style.display = 'none';
   document.getElementById('pq-take-body').style.display = 'block';
   document.getElementById('pq-take-title').textContent = pqTakeData.title;
   document.getElementById('pq-take-desc').textContent = pqTakeData.desc || '';
 
-  var html = '';
-  questions.forEach(function(q, i) {
-    html += '<div class="card" style="margin-bottom:10px;padding:12px 14px">' +
-      '<div style="font-weight:700;font-size:.88rem;margin-bottom:10px">'+(i+1)+'. '+esc(q.text)+'</div>';
-    ['a','b','c','d'].forEach(function(opt) {
-      if (!q[opt]) return;
-      html += '<label style="display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;margin-bottom:5px;background:rgba(255,255,255,.05);border:1px solid var(--cb)">' +
-        '<input type="radio" name="pq_q'+i+'" value="'+opt+'" style="accent-color:var(--accent)"/> ' +
-        '<span style="font-size:.85rem"><strong>'+opt.toUpperCase()+'.</strong> '+esc(q[opt])+'</span>' +
-      '</label>';
+  showCalculator();
+  pqRenderLobby();
+}
+
+function pqRenderLobby() {
+  var body = document.getElementById('pq-take-questions');
+  body.innerHTML =
+    '<div style="font-size:.85rem;color:var(--text2);margin-bottom:16px">Select a section to begin. You can do them in any order.</div>'+
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:20px">'+
+    pqSections.map(function(sec, i) {
+      var done = pqCompletedSections.indexOf(i) !== -1;
+      var label = secLabel(i);
+      return '<div onclick="'+(done?'':'pqEnterSection('+i+')')+'" style="'+
+        'border-radius:14px;padding:16px 10px;text-align:center;cursor:'+(done?'default':'pointer')+';'+
+        'border:2px solid '+(done?'var(--green)':'var(--accent)')+';'+
+        'background:'+(done?'rgba(74,222,128,.08)':'rgba(167,139,250,.08)')+';'+
+        'transition:all .2s;position:relative;'+
+        (done?'opacity:.75;':'')+'">'+
+        (done?'<div style="position:absolute;top:7px;right:9px;font-size:.7rem;color:var(--green);font-weight:800">✓ Done</div>':'')+
+        '<div style="font-family:var(--fh);font-size:2rem;font-weight:900;color:'+(done?'var(--green)':'var(--accent)')+'">'+label+'</div>'+
+        '<div style="font-size:.72rem;color:var(--text2);margin-top:4px;line-height:1.3">'+esc(sec.name)+'</div>'+
+        '<div style="font-size:.68rem;color:'+(done?'var(--green)':'var(--text2)')+';margin-top:3px">'+sec.questions.length+' Qs</div>'+
+      '</div>';
+    }).join('')+
+    '</div>'+
+    '<div style="font-size:.78rem;color:var(--text2);text-align:center;margin-bottom:14px">'+
+      pqCompletedSections.length+' of '+pqSections.length+' section(s) completed'+
+    '</div>'+
+    (pqCompletedSections.length === pqSections.length ?
+      '<button class="btn bp" style="width:100%;justify-content:center" onclick="pqSubmitAnswers()">✅ Submit Quiz</button>' :
+      ''
+    );
+}
+
+window.pqEnterSection = function(idx) {
+  pqCurrentSectionIdx = idx;
+  pqRenderSection();
+};
+
+function pqRenderSection() {
+  var sec = pqSections[pqCurrentSectionIdx];
+  var qs = sec.questions;
+  var answers = pqSectionAnswers[pqCurrentSectionIdx];
+  var label = secLabel(pqCurrentSectionIdx);
+  var body = document.getElementById('pq-take-questions');
+
+  function renderPQSec() {
+    var html = '<div style="font-family:var(--fh);font-size:.85rem;font-weight:800;color:var(--accent);margin-bottom:4px">Section '+label+' — '+esc(sec.name)+'</div>'+
+      '<div style="font-size:.72rem;color:var(--text2);margin-bottom:12px">'+Object.keys(answers).length+'/'+qs.length+' answered</div>';
+    qs.forEach(function(q, i) {
+      var sel = answers[i];
+      html += '<div class="card" style="margin-bottom:10px;padding:12px 14px" id="pqsi-'+i+'">' +
+        '<div style="font-weight:700;font-size:.88rem;margin-bottom:10px">'+(i+1)+'. '+esc(q.text)+'</div>';
+      ['a','b','c','d'].forEach(function(opt) {
+        if (!q[opt]) return;
+        var isSel = sel === opt;
+        html += '<div onclick="pqPickAns('+i+',\''+opt+'\')" style="'+
+          'display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;cursor:pointer;margin-bottom:5px;'+
+          'background:'+(isSel?'rgba(167,139,250,.18)':'rgba(255,255,255,.05)')+';'+
+          'border:1px solid '+(isSel?'var(--accent)':'var(--cb)')+'">'+
+          '<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(isSel?'var(--accent)':'var(--cb)')+';'+
+            'background:'+(isSel?'var(--accent)':'transparent')+';display:flex;align-items:center;justify-content:center;'+
+            'font-size:.7rem;font-weight:800;color:'+(isSel?'#fff':'var(--text2)')+'">'+opt.toUpperCase()+'</div>'+
+          '<span style="font-size:.85rem">'+esc(q[opt])+'</span>'+
+        '</div>';
+      });
+      html += '</div>';
     });
-    html += '</div>';
-  });
-  document.getElementById('pq-take-questions').innerHTML = html;
+    html += '<div style="display:flex;gap:8px;margin-top:14px">'+
+      '<button class="btn bs" style="flex:0 0 auto" onclick="pqRenderLobby()">◀ Back</button>'+
+      '<button class="btn bp" style="flex:1;justify-content:center" onclick="pqSubmitSection()">✅ Submit Section '+label+'</button>'+
+    '</div>';
+    body.innerHTML = html;
+  }
+
+  renderPQSec();
+}
+
+window.pqPickAns = function(qi, opt) {
+  pqSectionAnswers[pqCurrentSectionIdx][qi] = opt;
+  // Re-render this section in place
+  pqRenderSection();
+};
+
+function pqSubmitSection() {
+  var sec = pqSections[pqCurrentSectionIdx];
+  var qs = sec.questions;
+  var answers = pqSectionAnswers[pqCurrentSectionIdx];
+  var label = secLabel(pqCurrentSectionIdx);
+
+  if (pqCompletedSections.indexOf(pqCurrentSectionIdx) === -1) pqCompletedSections.push(pqCurrentSectionIdx);
+
+  var body = document.getElementById('pq-take-questions');
+  var answered = Object.keys(answers).length;
+  var allDone = pqCompletedSections.length === pqSections.length;
+
+  body.innerHTML =
+    '<div class="card" style="text-align:center;padding:24px 16px">'+
+    '<div style="font-size:2rem;margin-bottom:8px">✅</div>'+
+    '<div style="font-family:var(--fh);font-size:1.1rem;font-weight:800;color:var(--green)">Section '+label+' Submitted!</div>'+
+    '<div style="font-size:.82rem;color:var(--text2);margin:8px 0">'+answered+'/'+qs.length+' questions answered</div>'+
+    '<div style="font-size:.78rem;color:var(--text2);margin-bottom:18px">'+pqCompletedSections.length+' of '+pqSections.length+' section(s) done</div>'+
+    (allDone ?
+      '<button class="btn bp" style="width:100%;justify-content:center" onclick="pqSubmitAnswers()">✅ Submit Quiz & Finish</button>' :
+      '<button class="btn bp" style="width:100%;justify-content:center" onclick="pqRenderLobby()">◀ Back to Sections</button>'
+    )+
+    '</div>';
 }
 
 function pqSubmitAnswers() {
-  var name = document.getElementById('pq-taker-name').value.trim();
+  var name = (CU && CU.name) ? CU.name : (document.getElementById('pq-taker-name').value.trim());
   if (!pqTakeData) return;
-  var questions = [];
-  try { questions = JSON.parse(pqTakeData.questions||'[]'); } catch(e) {}
 
+  // ── Deduct 5 points for taking a private quiz ──
+  if (CU && CU.id && CU.role === 'user') {
+    if (CU.totalScore < 5) {
+      showInsufficientPoints('take this quiz', 5);
+      return;
+    }
+    var newPqPts = Math.max(0, CU.totalScore - 5);
+    fsPatch('projects/' + PROJECT + '/databases/(default)/documents/users/' + CU.id,
+      { totalScore: String(newPqPts) })
+      .then(function() { CU.totalScore = newPqPts; }).catch(function() {});
+  }
+
+  // Flatten all section answers into a single answers map keyed by global question index
   var answers = {};
-  questions.forEach(function(q, i) {
-    var sel = document.querySelector('input[name="pq_q'+i+'"]:checked');
-    answers['q'+i] = sel ? sel.value : '';
+  var globalIdx = 0;
+  pqSections.forEach(function(sec, si) {
+    var secAnswers = pqSectionAnswers[si] || {};
+    sec.questions.forEach(function(q, qi) {
+      answers['q' + globalIdx] = secAnswers[qi] || '';
+      globalIdx++;
+    });
   });
-
-  // Unanswered = 0 marks, no warning shown
 
   fsAdd('pqresults_' + pqTakeData.__quizId, {
     name: name,
     answers: JSON.stringify(answers),
     submittedAt: new Date().toISOString()
   }).then(function() {
+    hideCalculator();
     document.getElementById('pq-take-body').style.display = 'none';
     document.getElementById('pq-take-done').style.display = 'block';
   }).catch(function() { notify('Submission failed. Please try again.', 'error', '❌'); });
@@ -15560,6 +16116,334 @@ window.calcPress = function(key) {
 
   display.textContent = calcCurrent;
 };
+
+// ══════════════════════════════════
+// ADMIN CREATE ACCOUNT (bypasses one-per-device)
+// ══════════════════════════════════
+window.adminCreateAccount = function(){
+  var name     = (document.getElementById('ac-name')    ||{}).value||'';
+  var un       = (document.getElementById('ac-username') ||{}).value||'';
+  var email    = (document.getElementById('ac-email')   ||{}).value||'';
+  var pw       = (document.getElementById('ac-password')||{}).value||'';
+  var level    = (document.getElementById('ac-level')   ||{}).value||'100';
+  var statusEl = document.getElementById('ac-status');
+  name=name.trim(); un=un.trim().toLowerCase(); email=email.trim().toLowerCase(); pw=pw.trim();
+
+  function setStatus(msg, type){
+    if(!statusEl) return;
+    statusEl.style.display='block';
+    statusEl.style.background = type==='success'?'rgba(74,222,128,.15)':type==='error'?'rgba(248,113,113,.15)':'rgba(251,191,36,.12)';
+    statusEl.style.color = type==='success'?'var(--green)':type==='error'?'var(--red)':'var(--yellow)';
+    statusEl.style.border = '1px solid '+(type==='success'?'rgba(74,222,128,.3)':type==='error'?'rgba(248,113,113,.3)':'rgba(251,191,36,.25)');
+    statusEl.textContent = msg;
+  }
+
+  if(!name||!un||!email||!pw){ setStatus('⚠️ Fill in all fields.','error'); return; }
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ setStatus('⚠️ Enter a valid email address.','error'); return; }
+  if(pw.length<6){ setStatus('⚠️ Password must be at least 6 characters.','error'); return; }
+  if(!window._fbSignUp){ setStatus('❌ Auth not ready. Refresh the page.','error'); return; }
+
+  setStatus('⏳ Checking username…','warn');
+
+  fsGet('users').then(function(res){
+    var allUsers = getDocs(res);
+    if(allUsers.some(function(u){ return u.username===un; })){
+      setStatus('⚠️ Username "'+un+'" is already taken. Choose another.','error'); return;
+    }
+
+    setStatus('⏳ Creating Firebase Auth account…','warn');
+    window._fbSignUp(email, pw).then(function(cred){
+      var uid = cred.user.uid;
+      // Admin-created: status approved, no registrationDeviceFp set (device-free)
+      fsAdd('users',{
+        uid:uid, name:name, username:un, level:level, email:email,
+        status:'approved', role:'user',
+        joinedAt:new Date().toISOString(), bio:'', phone:'', badges:'',
+        totalScore:'50', quizzesTaken:'0', referredBy:'',
+        createdByAdmin:'true', registrationDeviceFp:''
+      }).then(function(){
+        sendBrevoWelcomeEmail(email, name);
+        window._fbSignOut().catch(function(){});
+        setStatus('✅ Account created for '+name+' (@'+un+'). They can now log in!','success');
+        logActivity('admin_create_account', name+' / @'+un+' / '+email);
+        // Clear fields
+        ['ac-name','ac-username','ac-email','ac-password'].forEach(function(id){
+          var el=document.getElementById(id); if(el) el.value='';
+        });
+        // Reload student lists
+        if(typeof loadStudents==='function') setTimeout(loadStudents, 600);
+      }).catch(function(){ setStatus('❌ Profile save failed. Try again.','error'); });
+    }).catch(function(err){
+      var msg='❌ Registration failed';
+      if(err.code==='auth/email-already-in-use') msg='⚠️ This email is already registered.';
+      else if(err.code==='auth/invalid-email') msg='⚠️ Invalid email address.';
+      else if(err.code==='auth/weak-password') msg='⚠️ Password too weak (min 6 chars).';
+      setStatus(msg,'error');
+    });
+  }).catch(function(){ setStatus('❌ Failed to reach database. Check connection.','error'); });
+};
+
+
+
+// ══════════════════════════════════
+// ADMIN ASSIST MODE — view portal as a student
+// ══════════════════════════════════
+var _assistAdminState = null; // stores admin CU while in assist mode
+
+window.adminAssistStudent = function(userId, name, username) {
+  // Fetch the full student record from Firestore
+  fsGet('users').then(function(res){
+    var users = getDocs(res);
+    var student = users.find(function(u){ return u.__id === userId || u.username === username; });
+    if(!student){ notify('Student not found.','error','❌'); return; }
+
+    // Open the assist info modal first
+    openAssistModal(student);
+  }).catch(function(){ notify('Failed to load student data.','error','❌'); });
+};
+
+function openAssistModal(student) {
+  // Remove old modal if any
+  var old = document.getElementById('assist-modal');
+  if(old) old.remove();
+
+  var badges = (student.badges||'').split('||').filter(function(b){return b.trim();});
+  var joinDate = student.joinedAt ? new Date(student.joinedAt).toLocaleDateString() : '—';
+  var email = student.email || '—';
+  var level = student.level || '—';
+  var score = Number(student.totalScore||0);
+  var quizzes = student.quizzesTaken || '0';
+  var initials = student.name ? student.name[0].toUpperCase() : '?';
+
+  var modal = document.createElement('div');
+  modal.id = 'assist-modal';
+  modal.className = 'open';
+  modal.innerHTML =
+    '<div id="assist-modal-inner">'+
+      '<div class="assist-modal-head">'+
+        '<div class="assist-modal-avatar">'+initials+'</div>'+
+        '<div>'+
+          '<div class="assist-modal-title">'+esc(student.name)+'</div>'+
+          '<div class="assist-modal-sub">@'+esc(student.username)+' · '+esc(level)+'</div>'+
+        '</div>'+
+        '<button class="btn bs bsm" style="margin-left:auto" onclick="closeAssistModal()">✕ Close</button>'+
+      '</div>'+
+      '<div class="assist-modal-body">'+
+
+        // Stats
+        '<div class="assist-stat-grid">'+
+          '<div class="assist-stat"><div class="assist-stat-val">'+score+'</div><div class="assist-stat-lbl">Total Points</div></div>'+
+          '<div class="assist-stat"><div class="assist-stat-val">'+quizzes+'</div><div class="assist-stat-lbl">Quizzes Taken</div></div>'+
+          '<div class="assist-stat"><div class="assist-stat-val">'+(badges.length||0)+'</div><div class="assist-stat-lbl">Badges</div></div>'+
+        '</div>'+
+
+        // Account info
+        '<div class="assist-section">'+
+          '<div class="assist-section-title">Account Info</div>'+
+          '<div class="assist-info-row"><span class="assist-info-key">Email</span><span class="assist-info-val">'+esc(email)+'</span></div>'+
+          '<div class="assist-info-row"><span class="assist-info-key">Level</span><span class="assist-info-val">'+esc(level)+'</span></div>'+
+          '<div class="assist-info-row"><span class="assist-info-key">Status</span><span class="assist-info-val">'+esc(student.status||'—')+'</span></div>'+
+          '<div class="assist-info-row"><span class="assist-info-key">Joined</span><span class="assist-info-val">'+esc(joinDate)+'</span></div>'+
+          (badges.length?'<div class="assist-info-row"><span class="assist-info-key">Badges</span><span class="assist-info-val">'+badges.map(esc).join(' ')+'</span></div>':'')+
+          (student.bio?'<div class="assist-info-row"><span class="assist-info-key">Bio</span><span class="assist-info-val">'+esc(student.bio)+'</span></div>':'')+
+        '</div>'+
+
+        // Quick actions
+        '<div class="assist-section">'+
+          '<div class="assist-section-title">Quick Actions</div>'+
+          '<div class="assist-action-grid">'+
+            '<div class="assist-action" onclick="assistLaunchPortal('+JSON.stringify(student)+')">'+
+              '<div class="assist-action-icon">🖥️</div>'+
+              '<div class="assist-action-name">Open Full Portal</div>'+
+              '<div class="assist-action-desc">Browse as this student — files, quizzes, profile & more</div>'+
+            '</div>'+
+            '<div class="assist-action" onclick="assistOpenSection('+JSON.stringify(student)+',"files")">'+
+              '<div class="assist-action-icon">📁</div>'+
+              '<div class="assist-action-name">Check Their Files</div>'+
+              '<div class="assist-action-desc">See available course materials for their level</div>'+
+            '</div>'+
+            '<div class="assist-action" onclick="assistOpenSection('+JSON.stringify(student)+',"quizzes")">'+
+              '<div class="assist-action-icon">📝</div>'+
+              '<div class="assist-action-name">View Quizzes</div>'+
+              '<div class="assist-action-desc">See quizzes they can access and their results</div>'+
+            '</div>'+
+            '<div class="assist-action" onclick="assistOpenSection('+JSON.stringify(student)+',"profile")">'+
+              '<div class="assist-action-icon">👤</div>'+
+              '<div class="assist-action-name">View Profile</div>'+
+              '<div class="assist-action-desc">Check their full profile, score & badges</div>'+
+            '</div>'+
+            '<div class="assist-action" onclick="assistAdjustPoints('+JSON.stringify({__id:student.__id,name:student.name,totalScore:student.totalScore})+')">'+
+              '<div class="assist-action-icon">🏅</div>'+
+              '<div class="assist-action-name">Adjust Points</div>'+
+              '<div class="assist-action-desc">Manually set or add their point balance</div>'+
+            '</div>'+
+            '<div class="assist-action" onclick="assistResetPassword('+JSON.stringify({email:student.email,name:student.name})+')">'+
+              '<div class="assist-action-icon">🔑</div>'+
+              '<div class="assist-action-name">Reset Password</div>'+
+              '<div class="assist-action-desc">Send password reset email to their inbox</div>'+
+            '</div>'+
+          '</div>'+
+        '</div>'+
+
+        '<div class="assist-note-box">'+
+          '🔒 <strong>Audit note:</strong> Entering assist mode is logged. All actions you take while viewing a student\'s portal are performed with your admin account — no actual account switching occurs. Students\' data is read-only unless you use the quick actions above.'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+
+  modal.addEventListener('click', function(e){ if(e.target === modal) closeAssistModal(); });
+  document.body.appendChild(modal);
+}
+
+window.closeAssistModal = function() {
+  var m = document.getElementById('assist-modal');
+  if(m) m.remove();
+};
+
+// ── Launch full student portal view ──
+window.assistLaunchPortal = function(student, section) {
+  closeAssistModal();
+
+  // Save admin state
+  _assistAdminState = {
+    CU: JSON.parse(JSON.stringify(CU)),
+    chatPoll: chatPoll,
+    convPoll: convPoll,
+    activeConv: activeConv
+  };
+
+  // Stop admin polls, start fresh as student
+  stopPolls();
+
+  // Set CU to student data
+  CU = {
+    name: student.name,
+    username: student.username,
+    role: 'user',
+    id: student.__id,
+    level: student.level,
+    email: student.email,
+    totalScore: student.totalScore,
+    status: student.status,
+    badges: student.badges,
+    bio: student.bio,
+    _assistMode: true,
+    _assistedByAdmin: _assistAdminState.CU.username || 'Admin'
+  };
+
+  // Show the assist banner
+  var banner = document.getElementById('assist-banner');
+  var bannerName = document.getElementById('assist-banner-name');
+  if(banner){ banner.classList.add('show'); }
+  if(bannerName){ bannerName.textContent = student.name + ' (@' + student.username + ')'; }
+
+  // Push topbar down to make room for banner
+  var topbar = document.getElementById('topbar');
+  if(topbar) topbar.style.top = '44px';
+  var app = document.getElementById('app');
+  if(app) app.style.paddingTop = '110px';
+
+  // Show user dashboard
+  document.getElementById('ad').style.display = 'none';
+  document.getElementById('ud').style.display = '';
+  document.getElementById('lob').style.display = '';
+  document.getElementById('wm').textContent = student.name + ' 👤 (Assist)';
+  document.getElementById('bell-wrap').style.display = 'none';
+
+  // Load student data
+  loadBanner(); loadUserProfile(); loadRainCoursesForStudent(); loadUFiles();
+  loadUAnn(); loadUQuizzes(); loadForum(); loadGroups(); loadNotes();
+  loadExams('u-exams-list'); loadLeaderboard('u-lb-list'); loadFeaturesForUser();
+  loadAndApplyContactInfo();
+
+  // Navigate to requested section if any
+  if(section) setTimeout(function(){ showSec(section); }, 700);
+
+  logActivity('assist_mode_enter', student.name + ' / @' + student.username);
+  notify('🔧 Assist mode active — viewing portal as ' + student.name,'warn','🔧');
+};
+
+window.assistOpenSection = function(student, section) {
+  assistLaunchPortal(student, section);
+};
+
+// ── Exit assist mode, restore admin ──
+window.exitAssistMode = function() {
+  if(!_assistAdminState){ doLogout(); return; }
+
+  var saved = _assistAdminState;
+  _assistAdminState = null;
+
+  // Restore CU
+  CU = saved.CU;
+  stopPolls();
+
+  // Hide assist banner, restore topbar position
+  var banner = document.getElementById('assist-banner');
+  if(banner) banner.classList.remove('show');
+  var topbar = document.getElementById('topbar');
+  if(topbar) topbar.style.top = '';
+  var app = document.getElementById('app');
+  if(app) app.style.paddingTop = '';
+
+  // Show admin dashboard again
+  document.getElementById('ud').style.display = 'none';
+  document.getElementById('ad').style.display = '';
+  document.getElementById('wm').textContent = CU.name + ' 🛡️';
+  document.getElementById('bell-wrap').style.display = 'none';
+
+  // Reload admin data
+  loadAdminAll();
+  logActivity('assist_mode_exit', '');
+  notify('🛡️ Returned to admin panel','success','🛡️');
+
+  // Navigate back to Students tab
+  setTimeout(function(){
+    var studentsBtn = document.querySelector('.admin-nav-grid .anb[onclick*="users"]');
+    if(studentsBtn) studentsBtn.click();
+  }, 400);
+};
+
+// ── Adjust student points directly ──
+window.assistAdjustPoints = function(student) {
+  closeAssistModal();
+  var current = Number(student.totalScore || 0);
+  var action = prompt('Adjust points for ' + student.name + '.\n\nCurrent: ' + current + ' pts\n\nEnter a number to SET their points to, or +N / -N to add/subtract.\nExamples: "200", "+50", "-30"');
+  if(action === null) return;
+  action = action.trim();
+  var newScore;
+  if(action.startsWith('+')) { newScore = current + parseInt(action.slice(1),10); }
+  else if(action.startsWith('-')) { newScore = current - parseInt(action.slice(1),10); }
+  else { newScore = parseInt(action,10); }
+  if(isNaN(newScore)){ notify('Invalid number entered.','error','⚠️'); return; }
+  newScore = Math.max(0, newScore);
+  fsPatch('projects/'+PROJECT+'/databases/(default)/documents/users/'+student.__id, {totalScore: String(newScore)})
+    .then(function(){
+      notify('✅ Points updated to ' + newScore + ' for ' + student.name,'success','🏅');
+      logActivity('assist_adjust_points', student.name + ' → ' + newScore + ' pts');
+      loadUsers();
+    }).catch(function(){ notify('Failed to update points.','error','❌'); });
+};
+
+// ── Send password reset email ──
+window.assistResetPassword = function(student) {
+  closeAssistModal();
+  if(!student.email){ notify('No email on file for this student.','error','📧'); return; }
+  if(!confirm('Send password reset email to ' + student.email + '?')) return;
+  if(!window._fbAuth){ notify('Auth not ready.','error','❌'); return; }
+  // Use Firebase sendPasswordResetEmail via the exposed global helper
+  if(window._fbSendPasswordReset){
+    window._fbSendPasswordReset(student.email)
+      .then(function(){
+        notify('✅ Password reset email sent to ' + student.email,'success','📧');
+        logActivity('assist_reset_password', student.name + ' / ' + student.email);
+      }).catch(function(err){ notify('Failed: ' + (err.message||'Unknown error'),'error','❌'); });
+  } else {
+    // Fallback — tell admin to share the reset link manually
+    notify('Auto-reset not available. Ask the student to use "Forgot Password" on the login page.','warn','🔑');
+  }
+};
+
 
 </script>
 
