@@ -6378,7 +6378,7 @@ function saveBrevoSettings(){
   var sender=(document.getElementById('admin-brevo-sender-input').value||'').trim().toLowerCase();
   if(!key||!key.startsWith('xkeysib-')){_brevoStatus('❌ Invalid key — must start with xkeysib-','error');return;}
   if(!sender||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sender)){_brevoStatus('❌ Please enter a valid sender email','error');return;}
-  fsGetAll('settings').then(function(res){
+  fsGet('settings').then(function(res){
     var docs=getDocs(res);
     var ek=docs.find(function(d){return d.key==='brevo_api_key';});
     var es=docs.find(function(d){return d.key==='brevo_sender_email';});
@@ -6395,7 +6395,7 @@ function saveBrevoSettings(){
 
 function removeBrevoSettings(){
   if(!confirm('Remove Brevo settings? Welcome emails will stop being sent.'))return;
-  fsGetAll('settings').then(function(res){
+  fsGet('settings').then(function(res){
     var docs=getDocs(res);
     var tasks=[];
     ['brevo_api_key','brevo_sender_email','brevo_triggers'].forEach(function(k){
@@ -6413,7 +6413,7 @@ function removeBrevoSettings(){
 }
 
 function loadBrevoSettingsToPanel(){
-  fsGetAll('settings').then(function(res){
+  fsGet('settings').then(function(res){
     var docs=getDocs(res);
     var keyDoc=docs.find(function(d){return d.key==='brevo_api_key';});
     var senderDoc=docs.find(function(d){return d.key==='brevo_sender_email';});
@@ -6457,7 +6457,7 @@ function saveBrevoTriggers(){
   });
   BREVO_TRIGGERS=obj;
   var val=JSON.stringify(obj);
-  fsGetAll('settings').then(function(res){
+  fsGet('settings').then(function(res){
     var docs=getDocs(res);
     var existing=docs.find(function(d){return d.key==='brevo_triggers';});
     var p=existing?fsPatch(existing.__path,{value:val}):fsAdd('settings',{key:'brevo_triggers',value:val});
@@ -6606,87 +6606,27 @@ async function askGroq(prompt, systemPrompt){
   if(data.error) throw new Error(data.error.message);
   return data.choices[0].message.content;
 }
-// ══════════════════════════════════════════════════
-// SMART CACHE SYSTEM — reduces Firebase reads by 90%
-// Uses localStorage so cache survives page refresh
-// ══════════════════════════════════════════════════
-var CACHE_TTL = {
-  users:      10 * 60 * 1000,  // 10 minutes
-  files:      15 * 60 * 1000,  // 15 minutes
-  quizzes:    15 * 60 * 1000,  // 15 minutes
-  quizfiles:  15 * 60 * 1000,  // 15 minutes
-  quizscores: 10 * 60 * 1000,  // 10 minutes
-  announcements: 10 * 60 * 1000,
-  motivations:   10 * 60 * 1000,
-  flyers:        10 * 60 * 1000,
-  forum:         5  * 60 * 1000,
-  formulas:      20 * 60 * 1000,
-  pointgrants:   10 * 60 * 1000,
-  referralbonuses: 10 * 60 * 1000,
-  deviceblocks:  10 * 60 * 1000,
-  settings:      30 * 60 * 1000,  // 30 minutes — rarely changes
-};
-var _memCache = {}; // in-memory layer (fastest)
-
-function cacheGet(col) {
-  // 1. Check memory cache first
-  var mc = _memCache[col];
-  if (mc && (Date.now() - mc.t) < CACHE_TTL[col]) return mc.data;
-  // 2. Check localStorage
-  try {
-    var raw = localStorage.getItem('bpcache_' + col);
-    if (raw) {
-      var parsed = JSON.parse(raw);
-      if (parsed && (Date.now() - parsed.t) < CACHE_TTL[col]) {
-        _memCache[col] = parsed; // warm memory cache
-        return parsed.data;
-      }
-    }
-  } catch(e) {}
-  return null;
-}
-
-function cacheSet(col, data) {
-  var entry = { t: Date.now(), data: data };
-  _memCache[col] = entry;
-  try {
-    // Only cache if reasonably sized (skip huge collections)
-    var str = JSON.stringify(entry);
-    if (str.length < 1500000) localStorage.setItem('bpcache_' + col, str);
-  } catch(e) {
-    // localStorage full — just use memory cache
-    try { localStorage.removeItem('bpcache_' + col); } catch(e2) {}
-  }
-}
-
-function cacheClear(col) {
-  delete _memCache[col];
-  try { localStorage.removeItem('bpcache_' + col); } catch(e) {}
-}
-
-function cacheClearAll() {
-  _memCache = {};
-  try {
-    Object.keys(localStorage).filter(function(k){ return k.startsWith('bpcache_'); })
-      .forEach(function(k){ localStorage.removeItem(k); });
-  } catch(e) {}
-}
-
-
-
-// ── Users cache (kept for backward compat with loadUsers forceRefresh logic) ──
-var _usersCache=null,_usersCacheTime=0;
-var USERS_CACHE_TTL=10*60*1000; // 10 minutes
-
 var BASE="https://firestore.googleapis.com/v1/projects/"+PROJECT+"/databases/(default)/documents";
 function fsGet(col){return fetch(BASE+"/"+col+"?key="+KEY+"&pageSize=500").then(function(r){return r.json();});}
 // fsGetAll — cursor-based pagination for unbounded collections (chat, activitylog, visitors)
 // Fetches pages of 500 until exhausted, resolves with merged {documents:[...]}
 function fsGetAll(col, forceRefresh){
-  // Check cache first (unless forced refresh)
-  if(!forceRefresh && typeof cacheGet==='function'){
-    var cached=cacheGet(col);
-    if(cached) return Promise.resolve(cached);
+  // Check localStorage cache first (skip if forceRefresh)
+  if(!forceRefresh){
+    try{
+      var raw=localStorage.getItem('bpcache_'+col);
+      if(raw){
+        var parsed=JSON.parse(raw);
+        var ttl={'users':600000,'files':900000,'quizzes':900000,'quizfiles':900000,
+                 'quizscores':600000,'announcements':600000,'motivations':600000,
+                 'flyers':600000,'forum':300000,'formulas':1200000,
+                 'pointgrants':600000,'referralbonuses':600000,'deviceblocks':600000,
+                 'settings':1800000};
+        if(parsed&&parsed.d&&parsed.d.length>0&&(Date.now()-parsed.t)<(ttl[col]||600000)){
+          return Promise.resolve({documents:parsed.d});
+        }
+      }
+    }catch(e){}
   }
   var allDocs=[];
   function page(token){
@@ -6694,16 +6634,15 @@ function fsGetAll(col, forceRefresh){
     return fetch(url).then(function(r){return r.json();}).then(function(res){
       if(res.documents&&res.documents.length)allDocs=allDocs.concat(res.documents);
       if(res.nextPageToken) return page(res.nextPageToken);
-      var result={documents:allDocs};
-      // Only cache if we actually got data (never cache empty/quota-exceeded responses)
-      if(!res.error && allDocs.length > 0 && typeof cacheSet==='function') cacheSet(col, result);
-      return result;
+      // Only cache if we got real data (never cache quota-exceeded empty responses)
+      if(!res.error&&allDocs.length>0){
+        try{localStorage.setItem('bpcache_'+col,JSON.stringify({t:Date.now(),d:allDocs}));}catch(e){}
+      }
+      return {documents:allDocs};
     });
   }
   return page(null);
 }
-// fsGetCached — uses smart cache, falls back to fsGetAll
-// [duplicate fsGetAll removed]
 function fsAdd(col,fields){
   return fetch(BASE+"/"+col+"?key="+KEY,{method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({fields:toFS(fields)})}).then(function(r){return r.json();});
@@ -7001,7 +6940,7 @@ async function doRegister(){
     window._fbSignUp(email, pw).then(function(cred){
       var uid = cred.user.uid;
       // Check reg mode
-      fsGetAll('settings').then(function(sRes){
+      fsGet('settings').then(function(sRes){
         var settings=getDocs(sRes);
         var modeSetting=settings.find(function(d){return d.key==='regmode';});
         var mode=modeSetting?modeSetting.value:'manual';
@@ -7635,7 +7574,8 @@ function showDash(role){
       var firstAllowed = document.querySelector('.admin-nav-grid .anb:not([style*="none"])');
       if(firstAllowed) firstAllowed.click();
     }
-    cacheClearAll(); // Clear any stale cached data from previous sessions
+    // Clear any stale cached data from previous sessions
+    try{Object.keys(localStorage).filter(function(k){return k.startsWith('bpcache_');}).forEach(function(k){localStorage.removeItem(k);});}catch(e){}
     loadAdminAll();
   }
 }
@@ -8248,12 +8188,7 @@ function loadUFiles(){
   checkNotifPrompt();
   loadRainCoursesForStudent();
   fsGetAll('files').then(function(res){
-    var docs=getDocs(res);
-    if(!docs.length){ fsGetAll('files',true).then(function(r2){
-      allUFiles=getDocs(r2).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
-      renderUFiles(allUFiles); updateCourseCovers(allUFiles);
-    }).catch(function(){}); return; }
-    allUFiles=docs.sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
+    allUFiles=getDocs(res).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
     var tabsEl=document.getElementById('ucat-tabs');
     tabsEl.innerHTML=CATS.map(function(c,i){return'<button class="cat-tab'+(i===0?' on':'')+'" onclick="filterByCat(this,\''+c+'\')">'+esc(c)+'</button>';}).join('');
     renderUFiles(allUFiles);
@@ -10913,7 +10848,7 @@ function backToConvs(){
   activeConv=null;stopPolls();
   document.getElementById('conv-view').style.display='';
   document.getElementById('chat-view').style.display='none';
-  loadConvList();convPoll=setInterval(loadConvList,30000);
+  loadConvList();convPoll=setInterval(loadConvList,8000);
 }
 function renderAdminChat(){
   if(!activeConv)return;
@@ -11048,7 +10983,7 @@ async function deleteMessage(collection, msgId){
 // ══════════════════════════════════
 var regModeCache=null;
 function loadRegMode(cb){
-  fsGetAll('settings').then(function(res){
+  fsGet('settings').then(function(res){
     var docs=getDocs(res);
     var s=docs.find(function(d){return d.key==='regmode';});
     regModeCache=s?s.value:'manual';
@@ -11081,7 +11016,7 @@ function updateRegModeUI(){
 // CONTACT INFO SETTINGS
 // ══════════════════════════════════
 function loadContactInfo(){
-  fsGetAll('settings').then(function(res){
+  fsGet('settings').then(function(res){
     var docs=getDocs(res);
     var wa=docs.find(function(d){return d.key==='contact_whatsapp';});
     var em=docs.find(function(d){return d.key==='contact_email';});
@@ -11096,7 +11031,7 @@ function saveContactInfo(){
   var em=(document.getElementById('sec-email').value||'').trim();
   if(!wa&&!em){notify('Enter at least one contact detail','warn','⚠️');return;}
   if(em&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){notify('Invalid email address','error','❌');return;}
-  fsGetAll('settings').then(function(res){
+  fsGet('settings').then(function(res){
     var docs=getDocs(res);
     var saves=[];
     var exWa=docs.find(function(d){return d.key==='contact_whatsapp';});
@@ -11117,7 +11052,7 @@ function applyContactInfo(wa,em){
   if(emBtn&&em)emBtn.href='mailto:'+em;
 }
 function loadAndApplyContactInfo(){
-  fsGetAll('settings').then(function(res){
+  fsGet('settings').then(function(res){
     var docs=getDocs(res);
     var wa=(docs.find(function(d){return d.key==='contact_whatsapp';})||{}).value||'';
     var em=(docs.find(function(d){return d.key==='contact_email';})||{}).value||'';
@@ -11147,7 +11082,7 @@ function saveAdminGroqKey(){
   if(!val||!val.startsWith('gsk_')){
     _adminKeyStatus('❌ Invalid key — must start with gsk_','error');return;
   }
-  fsGetAll('settings').then(function(res){
+  fsGet('settings').then(function(res){
     var docs=getDocs(res);
     var existing=docs.find(function(d){return d.key==='groq_api_key';});
     var p=existing?fsPatch(existing.__path,{value:val}):fsAdd('settings',{key:'groq_api_key',value:val});
@@ -11162,7 +11097,7 @@ function saveAdminGroqKey(){
 }
 function removeAdminGroqKey(){
   if(!confirm('Remove the shared Groq key? Students will need to enter their own key.'))return;
-  fsGetAll('settings').then(function(res){
+  fsGet('settings').then(function(res){
     var docs=getDocs(res);
     var existing=docs.find(function(d){return d.key==='groq_api_key';});
     if(!existing){_adminKeyStatus('ℹ️ No shared key was set.','warn');return;}
@@ -11175,7 +11110,7 @@ function removeAdminGroqKey(){
   });
 }
 function loadAdminGroqKeyToPanel(){
-  fsGetAll('settings').then(function(res){
+  fsGet('settings').then(function(res){
     var docs=getDocs(res);
     var keyDoc=docs.find(function(d){return d.key==='groq_api_key';});
     var inp=document.getElementById('admin-groq-key-input');
@@ -11190,7 +11125,7 @@ function loadAdminGroqKeyToPanel(){
 
 function toggleRegMode(){
   var newMode=regModeCache==='auto'?'manual':'auto';
-  fsGetAll('settings').then(function(res){
+  fsGet('settings').then(function(res){
     var docs=getDocs(res);
     var existing=docs.find(function(d){return d.key==='regmode';});
     var promise=existing
@@ -11288,22 +11223,15 @@ function startOnlineTracking(){
 function startOnlinePanel(){
   renderOnlineStudents();
   if(onlineRefreshInterval) clearInterval(onlineRefreshInterval);
-  onlineRefreshInterval = setInterval(renderOnlineStudents, 300000);
+  onlineRefreshInterval = setInterval(renderOnlineStudents, 30000);
 }
+
+// ── Users cache to reduce Firestore quota usage ──
+var _usersCache=null,_usersCacheTime=0;
+var USERS_CACHE_TTL=60000; // 60 seconds
 
 function _processUsersRes(res){
   var approvedEl=document.getElementById('approved-list');
-  // If empty result, force a fresh fetch from Firebase
-  if(res && !res.error && (!res.documents || res.documents.length === 0)){
-    fsGetAll('users', true).then(function(fresh){
-      if(fresh && fresh.documents && fresh.documents.length > 0){
-        _processUsersRes(fresh);
-      } else {
-        if(approvedEl) approvedEl.innerHTML='<div class="empty"><span>👥</span>No students found.</div>';
-      }
-    }).catch(function(){});
-    return;
-  }
   if(res&&res.error){
     if(approvedEl)approvedEl.innerHTML='<div class="empty"><span>⚠️</span>Could not load students.<br><small style="color:var(--red)">'+esc(res.error.message||'Firebase error — check your API key or security rules.')+'</small></div>';
     notify('Failed to load students: '+(res.error.message||'Firebase error'),'error','⚠️');return;
@@ -11331,19 +11259,14 @@ function loadUsers(forceRefresh){
   loadRegMode();
   var approvedEl=document.getElementById('approved-list');
   var now=Date.now();
-  // 1. Use memory cache first
+  // Use cache if fresh and not a forced refresh
   if(!forceRefresh&&_usersCache&&(now-_usersCacheTime)<USERS_CACHE_TTL){
     _processUsersRes(_usersCache);
     return;
   }
-  // 2. Use localStorage smart cache
-  if(!forceRefresh){
-    var cached=cacheGet('users');
-    if(cached){_usersCache=cached;_usersCacheTime=Date.now();_processUsersRes(cached);return;}
-  }
   if(approvedEl)approvedEl.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
   fsGetAll('users').then(function(res){
-    if(!(res&&res.error)){_usersCache=res;_usersCacheTime=Date.now();cacheSet('users',res);}
+    if(!(res&&res.error)){_usersCache=res;_usersCacheTime=Date.now();}
     _processUsersRes(res);
   }).catch(function(err){
     var msg=err&&err.message?err.message:'Network or Firebase error';
@@ -11399,19 +11322,19 @@ function filterStudents(f,btn){
 }
 function approveUser(id,name){
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+id,{status:'approved'})
-    .then(function(){notify(name+' approved!','success','✅');logActivity('approve',name);_usersCache=null;cacheClear('users');loadUsers(true);}).catch(function(){});
+    .then(function(){notify(name+' approved!','success','✅');logActivity('approve',name);_usersCache=null;loadUsers(true);}).catch(function(){});
 }
 function rejectUser(id,name){
   fsDel("projects/"+PROJECT+"/databases/(default)/documents/users/"+id)
-    .then(function(){notify(name+' rejected & removed','warn','❌');logActivity('reject',name);_usersCache=null;cacheClear('users');loadUsers(true);}).catch(function(){});
+    .then(function(){notify(name+' rejected & removed','warn','❌');logActivity('reject',name);_usersCache=null;loadUsers(true);}).catch(function(){});
 }
 function deactivateUser(id,name){
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+id,{status:'deactivated'})
-    .then(function(){notify(name+' deactivated','warn','🚫');logActivity('deactivate',name);_usersCache=null;cacheClear('users');loadUsers(true);}).catch(function(){});
+    .then(function(){notify(name+' deactivated','warn','🚫');logActivity('deactivate',name);_usersCache=null;loadUsers(true);}).catch(function(){});
 }
 function activateUser(id,name){
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+id,{status:'approved'})
-    .then(function(){notify(name+' reactivated!','success','✅');logActivity('activate',name);_usersCache=null;cacheClear('users');loadUsers(true);}).catch(function(){});
+    .then(function(){notify(name+' reactivated!','success','✅');logActivity('activate',name);_usersCache=null;loadUsers(true);}).catch(function(){});
 }
 function banUser(id){
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+id,{status:'banned'})
@@ -11550,33 +11473,10 @@ function loadLog(){
 // STATS
 // ══════════════════════════════════
 function updateStats(){
-  // Fetch with auto-retry: if result is 0, force-refresh from Firebase ignoring cache
-  function statFetch(col, elId, transform){
-    fsGetAll(col).then(function(r){
-      var val = transform ? transform(r) : (r.documents ? r.documents.length : 0);
-      if(val === 0){
-        // Result is zero — could be stale cache; retry directly from Firebase
-        fsGetAll(col, true).then(function(r2){
-          var val2 = transform ? transform(r2) : (r2.documents ? r2.documents.length : 0);
-          document.getElementById(elId).textContent = val2;
-        }).catch(function(){});
-      } else {
-        document.getElementById(elId).textContent = val;
-      }
-    }).catch(function(){
-      // On error, try direct Firebase fetch
-      fsGetAll(col, true).then(function(r2){
-        var val2 = transform ? transform(r2) : (r2.documents ? r2.documents.length : 0);
-        document.getElementById(elId).textContent = val2;
-      }).catch(function(){});
-    });
-  }
-  statFetch('files', 'sf');
-  statFetch('users', 'su', function(r){
-    return r.documents ? getDocs(r).filter(function(u){return u.role!=='admin'&&u.status!=='pending';}).length : 0;
-  });
-  statFetch('quizzes', 'sq');
-  statFetch('quizscores', 'stq');
+  fsGetAll('files').then(function(r){document.getElementById('sf').textContent=r.documents?r.documents.length:0;}).catch(function(){});
+  fsGetAll('users').then(function(r){document.getElementById('su').textContent=r.documents?getDocs(r).filter(function(u){return u.role!=='admin'&&u.status!=='pending';}).length:0;}).catch(function(){});
+  fsGetAll('quizzes').then(function(r){document.getElementById('sq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
+  fsGetAll('quizscores').then(function(r){document.getElementById('stq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
 }
 // logActivity defined earlier in HELPERS section
 function loadAdminAll(){
@@ -11589,7 +11489,7 @@ function loadAdminAll(){
   loadBlastHistory();
   // Reload Brevo settings now that admin is authenticated
   reloadBrevoSettingsAuthenticated();
-  convPoll=setInterval(loadConvList,30000);
+  convPoll=setInterval(loadConvList,8000);
 }
 
 function reloadBrevoSettingsAuthenticated(){
@@ -11679,7 +11579,7 @@ function sat2(name,btn){
     chat:function(){
       document.getElementById('conv-view').style.display='';
       document.getElementById('chat-view').style.display='none';
-      activeConv=null;loadConvList();convPoll=setInterval(loadConvList,30000);
+      activeConv=null;loadConvList();convPoll=setInterval(loadConvList,8000);
     },
     subadmins:function(){ loadSubAdmins(); },
     raining:function(){ loadRainCourses(); }
@@ -13650,7 +13550,7 @@ doRegister=async function(){
     if(allUsers.some(function(u){return u.username===un;})){notify('Username taken','error','⚠️');return;}
 
     // Determine reg mode
-    fsGetAll('settings').then(function(sRes){
+    fsGet('settings').then(function(sRes){
       var settings=getDocs(sRes);
       var modeSetting=settings.find(function(d){return d.key==='regmode';});
       var mode=modeSetting?modeSetting.value:'manual';
