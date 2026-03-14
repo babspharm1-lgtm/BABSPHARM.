@@ -5397,7 +5397,10 @@ D. Rankine</code>
     </div>
     <!-- Pending / Approved -->
     <div class="card" style="margin-bottom:12px">
-      <div class="st"><span class="dot"></span>Pending Approvals</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+        <div class="st" style="margin-bottom:0"><span class="dot"></span>Pending Approvals</div>
+        <button class="btn bp bsm" style="background:linear-gradient(135deg,#4ade80,#16a34a);box-shadow:0 4px 12px rgba(22,163,74,.4)" onclick="approveAllPending()">✅ Approve All</button>
+      </div>
       <div id="pending-list"><div class="ld">Loading<span class="sp"></span></div></div>
       <div class="div"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
@@ -11330,6 +11333,31 @@ function filterStudents(f,btn){
   if(btn){btn.classList.remove('bs');btn.classList.add('bp');}
   renderStudentList();
 }
+function approveAllPending(){
+  var items=document.querySelectorAll('#pending-list .pu-item');
+  if(!items.length){notify('No pending students to approve','warn','⚠️');return;}
+  if(!confirm('Approve ALL pending students? ('+items.length+' students)'))return;
+  // Get all pending users from allStudents isn't right — fetch fresh
+  fsGetAll('users',true).then(function(res){
+    var pending=getDocs(res).filter(function(u){return u.status==='pending';});
+    if(!pending.length){notify('No pending students found','warn','⚠️');return;}
+    notify('Approving '+pending.length+' students...','info','⏳');
+    var done=0;
+    pending.forEach(function(u){
+      fsPatch('projects/'+PROJECT+'/databases/(default)/documents/users/'+u.__id,{status:'approved'})
+        .then(function(){
+          done++;
+          logActivity('approve',u.name);
+          if(done===pending.length){
+            notify('✅ All '+done+' students approved!','success','✅');
+            _usersCache=null;
+            loadUsers(true);
+          }
+        }).catch(function(){notify('Failed to approve '+u.name,'error','❌');});
+    });
+  }).catch(function(){notify('Could not fetch students','error','❌');});
+}
+
 function approveUser(id,name){
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+id,{status:'approved'})
     .then(function(){notify(name+' approved!','success','✅');logActivity('approve',name);_usersCache=null;loadUsers(true);}).catch(function(){});
