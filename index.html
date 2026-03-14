@@ -3193,6 +3193,7 @@ body:not(.app-mode) #session-timeout-modal { display: none !important; }
       <li><span class="lp-check">✔</span> Practice CBT Exams</li>
       <li><span class="lp-check">✔</span> Unlock Premium Study Materials</li>
       <li><span class="lp-fire">🔥</span> Compete on Student Leaderboards</li>
+      <li><span class="lp-fire">📲</span> Install as App — works offline, loads faster!</li>
     </ul>
     <div class="lp-hero-btns">
       <button class="lp-btn-primary lp-btn-lg" onclick="showLoginFromLanding()">Get Started</button>
@@ -7559,18 +7560,35 @@ function showDash(role){
   if(role==='user'){
     document.getElementById('ud').style.display='';
     document.getElementById('uwh').textContent='Welcome, '+CU.name+'! 👋';
-  // Show data-saving tip once per session
+  // Show install prompt after login
+  setTimeout(function(){
+    var isInstalled=window.navigator.standalone||window.matchMedia('(display-mode: standalone)').matches;
+    if(!isInstalled){
+      var dismissed=localStorage.getItem('pwa-dismissed-at');
+      var recentlyDismissed=dismissed&&(Date.now()-parseInt(dismissed))<43200000;
+      if(!recentlyDismissed){
+        document.getElementById('pwa-install-banner').classList.add('show');
+      }
+    }
+  },2000);
+  // Tip once per session
   if(!sessionStorage.getItem('tip_shown')){
     sessionStorage.setItem('tip_shown','1');
     setTimeout(function(){
-      notify('💡 Tip: No need to refresh — new content loads automatically!','info','💡');
-    }, 3000);
+      var isInstalled=window.navigator.standalone||window.matchMedia('(display-mode: standalone)').matches;
+      if(isInstalled){
+        notify('✅ Running as installed app — faster & saves your data!','success','📲');
+      } else {
+        notify('📲 Install BABSPHARM Cloud as an app for faster access & zero data waste!','info','📲');
+      }
+    }, 5000);
   }
     // Always show semester cards fresh on login — no hub pre-opened
     document.querySelectorAll('.sem-hub').forEach(function(h){h.classList.remove('active');});
     var sbar=document.getElementById('sem-selector-bar');
     if(sbar)sbar.style.display='';
     try{localStorage.removeItem('bp_last_sem');}catch(e){}
+    checkSavedDeepLink(); // follow any saved quiz/file deep link
     loadBanner();loadUserProfile();loadRainCoursesForStudent();loadUFiles();loadUAnn();loadUQuizzes();
     setTimeout(loadDashboardPreviews, 400);
     loadForum();loadGroups();loadNotes();loadExams('u-exams-list');loadLeaderboard('u-lb-list');
@@ -11717,37 +11735,92 @@ function handleDeepLink(){
   var quizId=params.get('quiz');
   var fileId=params.get('files');
   var quizFileId=params.get('quizfiles');
+
   if(quizId){
+    // Save for after login if not logged in yet
+    try{sessionStorage.setItem('bp_deeplink',JSON.stringify({type:'quiz',id:quizId}));}catch(e){}
     setTimeout(function(){
       if(CU&&CU.role==='user'){
-        sat('quizzes');
+        sut('quiz', document.querySelector('#ud .tb[onclick*=\'quiz\']'));
         setTimeout(function(){startQuiz(quizId);},800);
+        try{sessionStorage.removeItem('bp_deeplink');}catch(e){}
       }
     },600);
     try{history.replaceState({},'',window.location.pathname);}catch(e){}
+
   } else if(fileId){
+    try{sessionStorage.setItem('bp_deeplink',JSON.stringify({type:'file',id:fileId}));}catch(e){}
     setTimeout(function(){
       if(CU&&CU.role==='user'){
         fsGetAll('files').then(function(res){
           var file=getDocs(res).find(function(f){return f.__id===fileId;});
-          if(file){sat('files');setTimeout(function(){openPreview(file.data,file.name,file.type||'');},600);}
-          else{notify('File not found or no longer available','warn','⚠️');}
+          if(file){
+            sut('files', document.querySelector('#ud .tb[onclick*=\'files\']'));
+            setTimeout(function(){openPreview(file.data,file.name,file.type||'');},600);
+            try{sessionStorage.removeItem('bp_deeplink');}catch(e){}
+          } else {notify('File not found or no longer available','warn','⚠️');}
         }).catch(function(){});
       }
     },600);
     try{history.replaceState({},'',window.location.pathname);}catch(e){}
+
   } else if(quizFileId){
+    try{sessionStorage.setItem('bp_deeplink',JSON.stringify({type:'quizfile',id:quizFileId}));}catch(e){}
     setTimeout(function(){
       if(CU&&CU.role==='user'){
         fsGetAll('quizfiles').then(function(res){
           var file=getDocs(res).find(function(f){return f.__id===quizFileId;});
-          if(file){sat('quizzes');setTimeout(function(){openPreview(file.data,file.name,file.type||'');},600);}
-          else{notify('Quiz file not found','warn','⚠️');}
+          if(file){
+            sut('quiz', document.querySelector('#ud .tb[onclick*=\'quiz\']'));
+            setTimeout(function(){openPreview(file.data,file.name,file.type||'');},600);
+            try{sessionStorage.removeItem('bp_deeplink');}catch(e){}
+          } else {notify('Quiz file not found','warn','⚠️');}
         }).catch(function(){});
       }
     },600);
     try{history.replaceState({},'',window.location.pathname);}catch(e){}
   }
+}
+
+// After login, check if there's a saved deep link to follow
+function checkSavedDeepLink(){
+  var saved=null;
+  try{saved=JSON.parse(sessionStorage.getItem('bp_deeplink')||'null');}catch(e){}
+  if(!saved||!CU||CU.role!=='user') return;
+  setTimeout(function(){
+    if(saved.type==='quiz'){
+      notify('🎯 Taking you to your quiz...','info','📝');
+      sut('quiz', document.querySelector('#ud .tb[onclick*=\'quiz\']'));
+      setTimeout(function(){startQuiz(saved.id);},1000);
+      // After quiz, show install prompt if not installed
+      setTimeout(function(){
+        var isInstalled=window.navigator.standalone||window.matchMedia('(display-mode: standalone)').matches;
+        if(!isInstalled){
+          var dismissed=localStorage.getItem('pwa-dismissed-at');
+          if(!dismissed) document.getElementById('pwa-install-banner').classList.add('show');
+        }
+      },3000);
+    } else if(saved.type==='file'){
+      fsGetAll('files').then(function(res){
+        var file=getDocs(res).find(function(f){return f.__id===saved.id;});
+        if(file){
+          notify('📁 Taking you to your file...','info','📁');
+          sut('files', document.querySelector('#ud .tb[onclick*=\'files\']'));
+          setTimeout(function(){openPreview(file.data,file.name,file.type||'');},600);
+        }
+      }).catch(function(){});
+    } else if(saved.type==='quizfile'){
+      fsGetAll('quizfiles').then(function(res){
+        var file=getDocs(res).find(function(f){return f.__id===saved.id;});
+        if(file){
+          notify('📝 Taking you to your quiz...','info','📝');
+          sut('quiz', document.querySelector('#ud .tb[onclick*=\'quiz\']'));
+          setTimeout(function(){openPreview(file.data,file.name,file.type||'');},600);
+        }
+      }).catch(function(){});
+    }
+    try{sessionStorage.removeItem('bp_deeplink');}catch(e){}
+  }, 1200);
 }
 
 // ══════════════════════════════════
@@ -12172,6 +12245,47 @@ document.addEventListener('DOMContentLoaded', function(){
     var remEl=document.getElementById('remember-me');
     if(remEl)remEl.checked=true;
   }
+  // ── SHOW QUIZ TEASER ON LANDING IF DEEP LINK ──
+  var _params=new URLSearchParams(window.location.search);
+  var _quizParam=_params.get('quiz');
+  if(_quizParam){
+    // Store it and show a prompt to login
+    try{sessionStorage.setItem('bp_deeplink',JSON.stringify({type:'quiz',id:_quizParam}));}catch(e){}
+    setTimeout(function(){
+      // Show a banner telling them to login to take the quiz
+      // Fetch quiz title to show in the invite
+    fsGetAll('quizzes').then(function(res){
+      var quizzes=getDocs(res);
+      var quiz=quizzes.find(function(q){return q.__id===_quizParam;});
+      var quizTitle=quiz?quiz.title:'a Quiz';
+      var banner=document.createElement('div');
+      banner.id='quiz-invite-banner';
+      banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#7c3aed,#4f46e5);padding:16px;text-align:center;color:#fff;font-family:var(--fh);box-shadow:0 4px 20px rgba(109,40,217,.6)';
+      banner.innerHTML=
+        '<div style="font-size:.75rem;opacity:.85;margin-bottom:4px">📝 QUIZ INVITATION</div>'+
+        '<div style="font-size:1rem;font-weight:800;margin-bottom:10px">'+esc(quizTitle)+'</div>'+
+        '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'+
+          '<button onclick="showLoginFromLanding()" style="background:#fff;color:#7c3aed;border:none;border-radius:10px;padding:8px 20px;font-weight:800;cursor:pointer;font-family:var(--fh);font-size:.88rem">🔑 Login to Start</button>'+
+          '<button onclick="sat(&quot;register&quot;);showLoginFromLanding()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:8px 20px;color:#fff;font-weight:800;cursor:pointer;font-family:var(--fh);font-size:.88rem">📝 Register First</button>'+
+        '</div>'+
+        '<div style="font-size:.7rem;opacity:.7;margin-top:8px">Install the app for the best experience 📲</div>';
+      document.body.appendChild(banner);
+    }).catch(function(){
+      // Fallback if Firebase not available
+      var banner=document.createElement('div');
+      banner.id='quiz-invite-banner';
+      banner.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#7c3aed,#4f46e5);padding:16px;text-align:center;color:#fff;font-family:var(--fh);box-shadow:0 4px 20px rgba(109,40,217,.6)';
+      banner.innerHTML=
+        '<div style="font-size:.75rem;opacity:.85;margin-bottom:4px">📝 QUIZ INVITATION</div>'+
+        '<div style="font-size:.88rem;font-weight:700;margin-bottom:10px">You have been invited to take a quiz!</div>'+
+        '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'+
+          '<button onclick="showLoginFromLanding()" style="background:#fff;color:#7c3aed;border:none;border-radius:10px;padding:8px 20px;font-weight:800;cursor:pointer;font-family:var(--fh)">🔑 Login to Start</button>'+
+          '<button onclick="sat(&quot;register&quot;);showLoginFromLanding()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);border-radius:10px;padding:8px 20px;color:#fff;font-weight:800;cursor:pointer;font-family:var(--fh)">📝 Register First</button>'+
+        '</div>';
+      document.body.appendChild(banner);
+    });
+    },500);
+  }
   // ── AUTO-RESTORE SESSION ON REFRESH ──
   // Use Firebase Auth to check if user is still signed in
   _waitForAuth().then(function(){
@@ -12280,14 +12394,18 @@ function landingGo(tab){
 // PWA INSTALL PROMPT
 // Inject PWA manifest as inline blob — no manifest.json file needed
 (function(){
+  var baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
   var manifest = {
     name: 'BABSPHARM Cloud',
     short_name: 'BABSPHARM',
     start_url: window.location.pathname || '/',
+    scope: window.location.pathname.replace(/\/[^\/]*$/, '/') || '/',
     display: 'standalone',
     background_color: '#0a0919',
     theme_color: '#7c3aed',
     description: 'Your Ultimate Learning Platform',
+    handle_links: 'preferred',
+    launch_handler: { client_mode: 'navigate-existing' },
     icons: [
       { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%237c3aed'/%3E%3Ctext x='96' y='130' font-size='110' text-anchor='middle'%3E⚗️%3C/text%3E%3C/svg%3E", sizes: '192x192', type: 'image/svg+xml' },
       { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%237c3aed'/%3E%3Ctext x='256' y='360' font-size='300' text-anchor='middle'%3E⚗️%3C/text%3E%3C/svg%3E", sizes: '512x512', type: 'image/svg+xml' }
@@ -12299,6 +12417,30 @@ function landingGo(tab){
   if(link) link.href = url;
 })();
 
+// Handle links opened in installed PWA app
+if ('launchQueue' in window) {
+  window.launchQueue.setConsumer(function(launchParams) {
+    if(!launchParams.targetURL) return;
+    var url = new URL(launchParams.targetURL);
+    var quizId = url.searchParams.get('quiz');
+    var fileId = url.searchParams.get('files');
+    var quizFileId = url.searchParams.get('quizfiles');
+    if(quizId){
+      try{sessionStorage.setItem('bp_deeplink',JSON.stringify({type:'quiz',id:quizId}));}catch(e){}
+      if(CU && CU.role==='user'){
+        setTimeout(function(){
+          sut('quiz', document.querySelector('#ud .tb[onclick*=\'quiz\']'));
+          setTimeout(function(){startQuiz(quizId);},800);
+        },500);
+      }
+    } else if(fileId){
+      try{sessionStorage.setItem('bp_deeplink',JSON.stringify({type:'file',id:fileId}));}catch(e){}
+    } else if(quizFileId){
+      try{sessionStorage.setItem('bp_deeplink',JSON.stringify({type:'quizfile',id:quizFileId}));}catch(e){}
+    }
+  });
+}
+
 var pwaInstallPrompt=null;
 window.addEventListener('beforeinstallprompt',function(e){
   e.preventDefault();
@@ -12309,11 +12451,11 @@ window.addEventListener('beforeinstallprompt',function(e){
   // Show banner after 2s if user is logged in and not recently dismissed
   setTimeout(function(){
     var dismissed=localStorage.getItem('pwa-dismissed-at');
-    var recentlyDismissed=dismissed&&(Date.now()-parseInt(dismissed))<86400000;
-    if(CU&&!recentlyDismissed){
+    var recentlyDismissed=dismissed&&(Date.now()-parseInt(dismissed))<43200000; // 12 hours
+    if(!recentlyDismissed){
       document.getElementById('pwa-install-banner').classList.add('show');
     }
-  },2000);
+  },1500);
 });
 // Central install trigger — works for Android/Chrome & iOS
 var APK_DOWNLOAD_URL = 'https://github.com/babspharm1-lgtm/BABSPHARM./releases/download/V1.0/app-debug.apk';
@@ -12362,6 +12504,7 @@ function _doApkDownload(){
 function pwaInstall(){ triggerInstall(); }
 function pwaDismiss(){
   localStorage.setItem('pwa-dismissed-at', Date.now().toString());
+  notify('You can install anytime from the Install button in the menu 📲','info','📲');
   document.getElementById('pwa-install-banner').classList.remove('show');
 }
 window.addEventListener('appinstalled',function(){
