@@ -7329,9 +7329,36 @@ async function doLogin(){
     if(!_authOk || !window._fbSignIn){notify('Auth unavailable. Check your internet and refresh.','error','❌');return;}
   }
 
-  // Look up the user's email by username first
-  fsGetAll('users').then(function(res){
-    var users=getDocs(res);
+  // Look up user by username — try cache first so login works even during quota limits
+  function _doSignIn(user){
+    window._fbSignIn(user.email, pw).then(function(cred){
+      try{sessionStorage.removeItem('bp_rl');}catch(e){}
+      CU={name:user.name,username:user.username,role:'user',id:user.__id,
+        uid:cred.user.uid,level:user.level||'',bio:user.bio||'',
+        phone:user.phone||'',badges:user.badges||'',
+        totalScore:Number(user.totalScore||0),quizzesTaken:Number(user.quizzesTaken||0),
+        deviceFp:deviceFp};
+      if(rememberMe){
+        try{localStorage.setItem('bp_remembered',JSON.stringify({username:un}));}catch(e){}
+      } else {
+        try{localStorage.removeItem('bp_remembered');}catch(e){}
+      }
+      fsPatch('projects/'+PROJECT+'/databases/(default)/documents/users/'+user.__id,
+        {lastDeviceFp:deviceFp,lastLoginAt:new Date().toISOString()}).catch(function(){});
+      fsAdd('visitors',{name:user.name,username:user.username,
+        time:new Date().toISOString(),deviceFp:deviceFp}).catch(function(){});
+      logActivity('login','');showDash('user');startSessionTimer();
+    }).catch(function(err){
+      rl.count=(rl.count||0)+1;
+      rl.until=rl.count>=5?Date.now()+15*60000:0;
+      try{sessionStorage.setItem('bp_rl',JSON.stringify(rl));}catch(e){}
+      var msg=rl.count>=5?'Too many attempts — wait 15 min.':'Wrong credentials';
+      if(err.code==='auth/too-many-requests') msg='Too many attempts. Try again later.';
+      notify(msg,'error','🔒');
+    });
+  }
+
+  function _findAndLogin(users){
     var user=users.find(function(u){return u.username===un;});
     if(!user){
       rl.count=(rl.count||0)+1;
@@ -7342,55 +7369,38 @@ async function doLogin(){
     if(user.status==='pending'){notify('Account pending approval ⏳','warn','⏳');return;}
     if(user.status==='banned'){notify('Account banned 🚫','error','🚫');return;}
     if(user.status==='deactivated'){notify('Your account has been deactivated. Contact admin.','error','🚫');return;}
+    _doSignIn(user);
+  }
 
-    // Check device block
-    fsGetAll('deviceblocks').then(function(dbRes){
-      var blocked=getDocs(dbRes).find(function(b){return b.deviceId===deviceFp&&b.active!=='false';});
-      if(blocked){notify('🚫 This device has been blocked. Contact admin.','error','🚫');return;}
+  // 1. Try localStorage cache first (works even when Firebase quota exceeded)
+  var _cachedUsersRaw=null;
+  try{var _cr=localStorage.getItem('bpcache_users');if(_cr){var _cp=JSON.parse(_cr);if(_cp&&_cp.d&&_cp.d.length>0)_cachedUsersRaw=_cp.d;}}catch(e){}
 
-      // SECURITY: Sign in via Firebase Auth — password never touches Firestore
-      window._fbSignIn(user.email, pw).then(function(cred){
-        try{sessionStorage.removeItem('bp_rl');}catch(e){}
-        CU={name:user.name,username:user.username,role:'user',id:user.__id,
-          uid:cred.user.uid,level:user.level||'',bio:user.bio||'',
-          phone:user.phone||'',badges:user.badges||'',
-          totalScore:Number(user.totalScore||0),quizzesTaken:Number(user.quizzesTaken||0),
-          deviceFp:deviceFp};
-        if(rememberMe){
-          try{localStorage.setItem('bp_remembered',JSON.stringify({username:un}));}catch(e){}
-        } else {
-          try{localStorage.removeItem('bp_remembered');}catch(e){}
-        }
-        fsPatch('projects/'+PROJECT+'/databases/(default)/documents/users/'+user.__id,
-          {lastDeviceFp:deviceFp,lastLoginAt:new Date().toISOString()}).catch(function(){});
-        fsAdd('visitors',{name:user.name,username:user.username,
-          time:new Date().toISOString(),deviceFp:deviceFp}).catch(function(){});
-        logActivity('login','');showDash('user');startSessionTimer();
-      }).catch(function(err){
-        rl.count=(rl.count||0)+1;
-        rl.until=rl.count>=5?Date.now()+15*60000:0;
-        try{sessionStorage.setItem('bp_rl',JSON.stringify(rl));}catch(e){}
-        var msg=rl.count>=5?'Too many attempts — wait 15 min.':'Wrong credentials';
-        if(err.code==='auth/too-many-requests') msg='Too many attempts. Try again later.';
-        notify(msg,'error','🔒');
-      });
-    }).catch(function(){
-      // If deviceblocks collection doesn't exist yet, proceed
-      window._fbSignIn(user.email, pw).then(function(cred){
-        try{sessionStorage.removeItem('bp_rl');}catch(e){}
-        CU={name:user.name,username:user.username,role:'user',id:user.__id,
-          uid:cred.user.uid,level:user.level||'',bio:user.bio||'',
-          phone:user.phone||'',badges:user.badges||'',
-          totalScore:Number(user.totalScore||0),quizzesTaken:Number(user.quizzesTaken||0),
-          deviceFp:deviceFp};
-        fsPatch('projects/'+PROJECT+'/databases/(default)/documents/users/'+user.__id,
-          {lastDeviceFp:deviceFp,lastLoginAt:new Date().toISOString()}).catch(function(){});
-        logActivity('login','');showDash('user');startSessionTimer();
-      }).catch(function(){
-        notify('Wrong credentials','error','🔒');
-      });
-    });
-  }).catch(function(){notify('Login error. Try again.','error','❌');});
+  if(_cachedUsersRaw){
+    // Parse cached raw Firestore docs
+    var _cachedUsers=_cachedUsersRaw.map(function(doc){
+      if(!doc||!doc.fields)return null;
+      var obj={__id:doc.name?doc.name.split('/').pop():'',__path:doc.name||''};
+      Object.keys(doc.fields).forEach(function(k){var f=doc.fields[k];obj[k]=f.stringValue!==undefined?f.stringValue:f.integerValue!==undefined?Number(f.integerValue):f.booleanValue!==undefined?f.booleanValue:'';});
+      return obj;
+    }).filter(Boolean);
+    var _cachedUser=_cachedUsers.find(function(u){return u.username===un;});
+    if(_cachedUser){
+      // Found in cache — sign in directly without a Firestore read
+      if(_cachedUser.status==='pending'){notify('Account pending approval ⏳','warn','⏳');return;}
+      if(_cachedUser.status==='banned'){notify('Account banned 🚫','error','🚫');return;}
+      if(_cachedUser.status==='deactivated'){notify('Your account has been deactivated. Contact admin.','error','🚫');return;}
+      _doSignIn(_cachedUser);
+      return;
+    }
+  }
+
+  // 2. Cache miss — fetch from Firebase
+  fsGetAll('users').then(function(res){
+    var users=getDocs(res);
+    if(!users.length){notify('Server busy or quota exceeded. Please wait a few minutes and try again.','error','⏳');return;}
+    _findAndLogin(users);
+  }).catch(function(){notify('Login error. Check your connection.','error','❌');});
 }
 async function doAdminLogin(){
   var pw = document.getElementById('apw').value.trim();
