@@ -6378,7 +6378,7 @@ function saveBrevoSettings(){
   var sender=(document.getElementById('admin-brevo-sender-input').value||'').trim().toLowerCase();
   if(!key||!key.startsWith('xkeysib-')){_brevoStatus('❌ Invalid key — must start with xkeysib-','error');return;}
   if(!sender||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sender)){_brevoStatus('❌ Please enter a valid sender email','error');return;}
-  fsGetCached('settings').then(function(res){
+  fsGetAll('settings').then(function(res){
     var docs=getDocs(res);
     var ek=docs.find(function(d){return d.key==='brevo_api_key';});
     var es=docs.find(function(d){return d.key==='brevo_sender_email';});
@@ -6395,7 +6395,7 @@ function saveBrevoSettings(){
 
 function removeBrevoSettings(){
   if(!confirm('Remove Brevo settings? Welcome emails will stop being sent.'))return;
-  fsGetCached('settings').then(function(res){
+  fsGetAll('settings').then(function(res){
     var docs=getDocs(res);
     var tasks=[];
     ['brevo_api_key','brevo_sender_email','brevo_triggers'].forEach(function(k){
@@ -6413,7 +6413,7 @@ function removeBrevoSettings(){
 }
 
 function loadBrevoSettingsToPanel(){
-  fsGetCached('settings').then(function(res){
+  fsGetAll('settings').then(function(res){
     var docs=getDocs(res);
     var keyDoc=docs.find(function(d){return d.key==='brevo_api_key';});
     var senderDoc=docs.find(function(d){return d.key==='brevo_sender_email';});
@@ -6457,7 +6457,7 @@ function saveBrevoTriggers(){
   });
   BREVO_TRIGGERS=obj;
   var val=JSON.stringify(obj);
-  fsGetCached('settings').then(function(res){
+  fsGetAll('settings').then(function(res){
     var docs=getDocs(res);
     var existing=docs.find(function(d){return d.key==='brevo_triggers';});
     var p=existing?fsPatch(existing.__path,{value:val}):fsAdd('settings',{key:'brevo_triggers',value:val});
@@ -6606,20 +6606,113 @@ async function askGroq(prompt, systemPrompt){
   if(data.error) throw new Error(data.error.message);
   return data.choices[0].message.content;
 }
+// ══════════════════════════════════════════════════
+// SMART CACHE SYSTEM — reduces Firebase reads by 90%
+// Uses localStorage so cache survives page refresh
+// ══════════════════════════════════════════════════
+var CACHE_TTL = {
+  users:      10 * 60 * 1000,  // 10 minutes
+  files:      15 * 60 * 1000,  // 15 minutes
+  quizzes:    15 * 60 * 1000,  // 15 minutes
+  quizfiles:  15 * 60 * 1000,  // 15 minutes
+  quizscores: 10 * 60 * 1000,  // 10 minutes
+  announcements: 10 * 60 * 1000,
+  motivations:   10 * 60 * 1000,
+  flyers:        10 * 60 * 1000,
+  forum:         5  * 60 * 1000,
+  formulas:      20 * 60 * 1000,
+  pointgrants:   10 * 60 * 1000,
+  referralbonuses: 10 * 60 * 1000,
+  deviceblocks:  10 * 60 * 1000,
+  settings:      30 * 60 * 1000,  // 30 minutes — rarely changes
+};
+var _memCache = {}; // in-memory layer (fastest)
+
+function cacheGet(col) {
+  // 1. Check memory cache first
+  var mc = _memCache[col];
+  if (mc && (Date.now() - mc.t) < CACHE_TTL[col]) return mc.data;
+  // 2. Check localStorage
+  try {
+    var raw = localStorage.getItem('bpcache_' + col);
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      if (parsed && (Date.now() - parsed.t) < CACHE_TTL[col]) {
+        _memCache[col] = parsed; // warm memory cache
+        return parsed.data;
+      }
+    }
+  } catch(e) {}
+  return null;
+}
+
+function cacheSet(col, data) {
+  var entry = { t: Date.now(), data: data };
+  _memCache[col] = entry;
+  try {
+    // Only cache if reasonably sized (skip huge collections)
+    var str = JSON.stringify(entry);
+    if (str.length < 1500000) localStorage.setItem('bpcache_' + col, str);
+  } catch(e) {
+    // localStorage full — just use memory cache
+    try { localStorage.removeItem('bpcache_' + col); } catch(e2) {}
+  }
+}
+
+function cacheClear(col) {
+  delete _memCache[col];
+  try { localStorage.removeItem('bpcache_' + col); } catch(e) {}
+}
+
+function cacheClearAll() {
+  _memCache = {};
+  try {
+    Object.keys(localStorage).filter(function(k){ return k.startsWith('bpcache_'); })
+      .forEach(function(k){ localStorage.removeItem(k); });
+  } catch(e) {}
+}
+
+
+
+// ── Users cache (kept for backward compat with loadUsers forceRefresh logic) ──
+var _usersCache=null,_usersCacheTime=0;
+var USERS_CACHE_TTL=10*60*1000; // 10 minutes
+
+function _processUsersRes(res){
+
 var BASE="https://firestore.googleapis.com/v1/projects/"+PROJECT+"/databases/(default)/documents";
 function fsGet(col){return fetch(BASE+"/"+col+"?key="+KEY+"&pageSize=500").then(function(r){return r.json();});}
 // fsGetAll — cursor-based pagination for unbounded collections (chat, activitylog, visitors)
 // Fetches pages of 500 until exhausted, resolves with merged {documents:[...]}
-function fsGetAll(col){
+function fsGetAll(col, forceRefresh){
+  // Check cache first (unless forced refresh)
+  if(!forceRefresh && typeof cacheGet==='function'){
+    var cached=cacheGet(col);
+    if(cached) return Promise.resolve(cached);
+  }
   var allDocs=[];
   function page(token){
     var url=BASE+'/'+col+'?key='+KEY+'&pageSize=500'+(token?'&pageToken='+encodeURIComponent(token):'');
     return fetch(url).then(function(r){return r.json();}).then(function(res){
       if(res.documents&&res.documents.length)allDocs=allDocs.concat(res.documents);
-      return res.nextPageToken?page(res.nextPageToken):{documents:allDocs};
+      if(res.nextPageToken) return page(res.nextPageToken);
+      var result={documents:allDocs};
+      if(!res.error && typeof cacheSet==='function') cacheSet(col, result);
+      return result;
     });
   }
   return page(null);
+}
+// fsGetCached — uses smart cache, falls back to fsGetAll
+function fsGetAll(col, forceRefresh) {
+  if (!forceRefresh) {
+    var cached = cacheGet(col);
+    if (cached) return Promise.resolve(cached);
+  }
+  return fsGetAll(col).then(function(res) {
+    if (res && !res.error) cacheSet(col, res);
+    return res;
+  });
 }
 function fsAdd(col,fields){
   return fetch(BASE+"/"+col+"?key="+KEY,{method:"POST",headers:{"Content-Type":"application/json"},
@@ -6785,7 +6878,7 @@ var lastFilesCount=0,lastQuizCount=0,lastAnnCount=0,lastMotivCount=0,lastFlyerCo
 function startNotifPoll(){
   setInterval(function(){
     if(!CU||CU.role==='admin')return;
-    Promise.all([fsGetCached('files'),fsGetCached('quizzes'),fsGetCached('announcements')]).then(function(results){
+    Promise.all([fsGetAll('files'),fsGetAll('quizzes'),fsGetAll('announcements')]).then(function(results){
       // ── Files ──
       var fc=results[0].documents?results[0].documents.length:0;
       if(lastFilesCount>0&&fc>lastFilesCount){
@@ -6918,7 +7011,7 @@ async function doRegister(){
     window._fbSignUp(email, pw).then(function(cred){
       var uid = cred.user.uid;
       // Check reg mode
-      fsGetCached('settings').then(function(sRes){
+      fsGetAll('settings').then(function(sRes){
         var settings=getDocs(sRes);
         var modeSetting=settings.find(function(d){return d.key==='regmode';});
         var mode=modeSetting?modeSetting.value:'manual';
@@ -7322,7 +7415,7 @@ async function doLogin(){
     if(user.status==='deactivated'){notify('Your account has been deactivated. Contact admin.','error','🚫');return;}
 
     // Check device block
-    fsGetCached('deviceblocks').then(function(dbRes){
+    fsGetAll('deviceblocks').then(function(dbRes){
       var blocked=getDocs(dbRes).find(function(b){return b.deviceId===deviceFp&&b.active!=='false';});
       if(blocked){notify('🚫 This device has been blocked. Contact admin.','error','🚫');return;}
 
@@ -7523,11 +7616,11 @@ function showDash(role){
     // Show browser notification prompt after a short delay on first login
     setTimeout(checkNotifPrompt, 1500);
     // init notif counts
-    fsGetCached('files').then(function(r){lastFilesCount=r.documents?r.documents.length:0;}).catch(function(){});
-    fsGetCached('quizzes').then(function(r){lastQuizCount=r.documents?r.documents.length:0;}).catch(function(){});
-    fsGetCached('announcements').then(function(r){lastAnnCount=r.documents?r.documents.length:0;}).catch(function(){});
-    fsGetCached('motivations').then(function(r){lastMotivCount=r.documents?r.documents.length:0;}).catch(function(){});
-    fsGetCached('flyers').then(function(r){lastFlyerCount=r.documents?r.documents.length:0;}).catch(function(){});
+    fsGetAll('files').then(function(r){lastFilesCount=r.documents?r.documents.length:0;}).catch(function(){});
+    fsGetAll('quizzes').then(function(r){lastQuizCount=r.documents?r.documents.length:0;}).catch(function(){});
+    fsGetAll('announcements').then(function(r){lastAnnCount=r.documents?r.documents.length:0;}).catch(function(){});
+    fsGetAll('motivations').then(function(r){lastMotivCount=r.documents?r.documents.length:0;}).catch(function(){});
+    fsGetAll('flyers').then(function(r){lastFlyerCount=r.documents?r.documents.length:0;}).catch(function(){});
   } else {
     document.getElementById('ad').style.display='';
     document.getElementById('surl').textContent=window.location.href;
@@ -8105,7 +8198,7 @@ function renderFileDocs(docs,admin){
 function loadAFiles(){
   var el=document.getElementById('afl');
   if(el)el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGetCached('files').then(function(res){
+  fsGetAll('files').then(function(res){
     allAFiles=getDocs(res).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
     // Update global search tabs
     var tabsEl=document.getElementById('acat-tabs');
@@ -8163,7 +8256,7 @@ function loadUFiles(){
   el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
   checkNotifPrompt();
   loadRainCoursesForStudent();
-  fsGetCached('files').then(function(res){
+  fsGetAll('files').then(function(res){
     allUFiles=getDocs(res).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
     var tabsEl=document.getElementById('ucat-tabs');
     tabsEl.innerHTML=CATS.map(function(c,i){return'<button class="cat-tab'+(i===0?' on':'')+'" onclick="filterByCat(this,\''+c+'\')">'+esc(c)+'</button>';}).join('');
@@ -8426,13 +8519,13 @@ function renderAnnList(docs,admin){
 }
 function loadAAnn(){
   var el=document.getElementById('aal');el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGetCached('announcements').then(function(res){
+  fsGetAll('announcements').then(function(res){
     el.innerHTML=renderAnnList(getDocs(res).sort(function(a,b){return new Date(b.date)-new Date(a.date);}),true);
   }).catch(function(){el.innerHTML='<div class="empty"><span>⚠️</span>Error</div>';});
 }
 function loadUAnn(){
   var el=document.getElementById('ual');el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGetCached('announcements').then(function(res){
+  fsGetAll('announcements').then(function(res){
     var docs=getDocs(res).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
     el.innerHTML=renderAnnList(docs,false);
     setTimeout(function(){docs.forEach(function(a){
@@ -8530,7 +8623,7 @@ function loadMotivAdmin(){
   var el=document.getElementById('motiv-admin-list');if(!el)return;
   el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
   var now=new Date();
-  fsGetCached('motivations').then(function(res){
+  fsGetAll('motivations').then(function(res){
     var docs=getDocs(res).sort(function(a,b){return new Date(b.postedAt)-new Date(a.postedAt);});
     if(!docs.length){el.innerHTML='<div class="empty"><span>✨</span>No motivations posted yet.</div>';return;}
     el.innerHTML=docs.map(function(m){
@@ -8552,7 +8645,7 @@ function delMotiv(id){
 }
 // Load latest admin motivation onto dashboard card
 function loadAdminMotivation(){
-  fsGetCached('motivations').then(function(res){
+  fsGetAll('motivations').then(function(res){
     var now=new Date();
     var docs=getDocs(res)
       .filter(function(m){return!m.expiresAt||new Date(m.expiresAt)>=now;})
@@ -8611,7 +8704,7 @@ function loadFlyerAdmin(){
   var el=document.getElementById('flyer-admin-list');if(!el)return;
   el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
   var now=new Date();
-  fsGetCached('flyers').then(function(res){
+  fsGetAll('flyers').then(function(res){
     var docs=getDocs(res).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
     if(!docs.length){el.innerHTML='<div class="empty"><span>🖼️</span>No flyers uploaded yet.</div>';return;}
     el.innerHTML='<div class="flyer-grid">'+docs.map(function(f){
@@ -8634,7 +8727,7 @@ function delFlyer(id){
 }
 function loadFlyersUser(){
   var now=new Date();
-  fsGetCached('flyers').then(function(res){
+  fsGetAll('flyers').then(function(res){
     var docs=getDocs(res)
       .filter(function(f){return!f.expiresAt||new Date(f.expiresAt)>=now;})
       .sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
@@ -8688,7 +8781,7 @@ function postForum(){
 }
 function loadForum(){
   var el=document.getElementById('forum-list');el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGetCached('forum').then(function(res){
+  fsGetAll('forum').then(function(res){
     var docs=getDocs(res).sort(function(a,b){return new Date(b.postedAt)-new Date(a.postedAt);});
     if(!docs.length){el.innerHTML='<div class="empty"><span>💬</span>No posts yet. Be the first!</div>';return;}
     el.innerHTML=docs.map(function(p){
@@ -8723,7 +8816,7 @@ function loadForum(){
   }).catch(function(){el.innerHTML='<div class="empty"><span>⚠️</span>Error</div>';});
 }
 function reactPost(id,emoji){
-  fsGetCached('forum').then(function(res){
+  fsGetAll('forum').then(function(res){
     var docs=getDocs(res),post=docs.find(function(p){return p.__id===id;});
     if(!post)return;
     var reactions={};try{reactions=JSON.parse(post.reactions||'{}');}catch(e){}
@@ -8736,7 +8829,7 @@ function replyForum(id,existingRepliesStr){
   var text=inp.value.trim();if(!text)return;
   var replies=[];try{replies=JSON.parse(existingRepliesStr.replace(/&quot;/g,'"'));}catch(e){}
   replies.push({author:CU.name,username:CU.username,text:text,time:new Date().toISOString()});
-  fsGetCached('forum').then(function(res){
+  fsGetAll('forum').then(function(res){
     var docs=getDocs(res),post=docs.find(function(p){return p.__id===id;});
     if(!post)return;
     fsPatch(post.__path,{replies:JSON.stringify(replies)}).then(function(){notify('Reply posted!','success','✅');loadForum();}).catch(function(){});
@@ -9614,7 +9707,7 @@ var activeAQuizFileCat='All';
 
 function loadAdminQuizzes(){
   var el=document.getElementById('aql');el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGetCached('quizzes').then(function(res){
+  fsGetAll('quizzes').then(function(res){
     allAQuizzes=getDocs(res).sort(function(a,b){return new Date(b.createdAt)-new Date(a.createdAt);});
     renderAQuizList();
   }).catch(function(){el.innerHTML='<div class="empty"><span>⚠️</span>Error</div>';});
@@ -9687,7 +9780,7 @@ function uploadQuizFileTo(files, cat){
 function loadAQuizFiles(){
   var el=document.getElementById('aqfl');if(!el)return;
   el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGetCached('quizfiles').then(function(res){
+  fsGetAll('quizfiles').then(function(res){
     allAQuizFiles=getDocs(res).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
     renderAQuizFiles();
   }).catch(function(){el.innerHTML='<div class="empty"><span>⚠️</span>Error loading files</div>';});
@@ -9723,7 +9816,7 @@ function delQuizFile(id){
 
 function toggleQuiz(id,current){
   var newStatus=current==='yes'?'no':'yes';
-  fsGetCached('quizzes').then(function(res){
+  fsGetAll('quizzes').then(function(res){
     var q=getDocs(res).find(function(q){return q.__id===id;});if(!q)return;
     fsPatch(q.__path,{active:newStatus}).then(function(){notify(newStatus==='yes'?'Quiz activated!':'Quiz paused','info','📝');loadAdminQuizzes();}).catch(function(){});
   });
@@ -9737,13 +9830,13 @@ var activeUQuizCat='All';
 function loadUQuizzes(){
   var el=document.getElementById('uql');el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
   // Load interactive quizzes
-  fsGetCached('quizzes').then(function(res){
+  fsGetAll('quizzes').then(function(res){
     allUQuizzes=getDocs(res).filter(function(q){return q.active==='yes';})
       .sort(function(a,b){return new Date(b.createdAt)-new Date(a.createdAt);});
     renderUQuizList();
   }).catch(function(){el.innerHTML='<div class="empty"><span>⚠️</span>Error</div>';});
   // Load quiz files
-  fsGetCached('quizfiles').then(function(res){
+  fsGetAll('quizfiles').then(function(res){
     allUQuizFiles=getDocs(res).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
     renderUQuizFiles();
   }).catch(function(){});
@@ -9818,7 +9911,7 @@ function startQuiz(id){
     notify('⛔ You were removed from this quiz for switching apps. You cannot retake it.', 'error', '🚫');
     return;
   }
-  fsGetCached('quizzes').then(function(res){
+  fsGetAll('quizzes').then(function(res){
     var quiz=getDocs(res).find(function(q){return q.__id===id;});
     if(!quiz){notify('Not found','error','❌');return;}
     currentQuiz=quiz;
@@ -10310,9 +10403,9 @@ function loadReportCard(){
   if(!el)return;
   el.innerHTML='<div class="ld">Loading your report<span class="sp"></span></div>';
   Promise.all([
-    fsGetCached('quizscores'),
-    fsGetCached('quizzes'),
-    fsGetCached('files'),
+    fsGetAll('quizscores'),
+    fsGetAll('quizzes'),
+    fsGetAll('files'),
     fsGetAll('users')
   ]).then(function(results){
     var allScores=getDocs(results[0]);
@@ -10622,7 +10715,7 @@ function loadQuizExplanations(){
 // ══════════════════════════════════
 function loadAnalyticsQuizSelect(){
   var sel=document.getElementById('analytics-quiz-sel');if(!sel)return;
-  fsGetCached('quizzes').then(function(res){
+  fsGetAll('quizzes').then(function(res){
     var docs=getDocs(res);
     sel.innerHTML='<option value="">— Select a quiz —</option>'+docs.map(function(q){
       return'<option value="'+q.__id+'">'+esc(q.title)+'</option>';
@@ -10634,7 +10727,7 @@ function loadAnalytics(){
   var el=document.getElementById('analytics-content');
   if(!id){el.innerHTML='<div class="empty"><span>📊</span>Select a quiz.</div>';return;}
   el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  Promise.all([fsGetCached('quizzes'),fsGetCached('quizscores')]).then(function(results){
+  Promise.all([fsGetAll('quizzes'),fsGetAll('quizscores')]).then(function(results){
     var quizzes=getDocs(results[0]),scores=getDocs(results[1]);
     var quiz=quizzes.find(function(q){return q.__id===id;});
     if(!quiz){el.innerHTML='<div class="empty"><span>⚠️</span>Quiz not found.</div>';return;}
@@ -10959,7 +11052,7 @@ async function deleteMessage(collection, msgId){
 // ══════════════════════════════════
 var regModeCache=null;
 function loadRegMode(cb){
-  fsGetCached('settings').then(function(res){
+  fsGetAll('settings').then(function(res){
     var docs=getDocs(res);
     var s=docs.find(function(d){return d.key==='regmode';});
     regModeCache=s?s.value:'manual';
@@ -10992,7 +11085,7 @@ function updateRegModeUI(){
 // CONTACT INFO SETTINGS
 // ══════════════════════════════════
 function loadContactInfo(){
-  fsGetCached('settings').then(function(res){
+  fsGetAll('settings').then(function(res){
     var docs=getDocs(res);
     var wa=docs.find(function(d){return d.key==='contact_whatsapp';});
     var em=docs.find(function(d){return d.key==='contact_email';});
@@ -11007,7 +11100,7 @@ function saveContactInfo(){
   var em=(document.getElementById('sec-email').value||'').trim();
   if(!wa&&!em){notify('Enter at least one contact detail','warn','⚠️');return;}
   if(em&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)){notify('Invalid email address','error','❌');return;}
-  fsGetCached('settings').then(function(res){
+  fsGetAll('settings').then(function(res){
     var docs=getDocs(res);
     var saves=[];
     var exWa=docs.find(function(d){return d.key==='contact_whatsapp';});
@@ -11028,7 +11121,7 @@ function applyContactInfo(wa,em){
   if(emBtn&&em)emBtn.href='mailto:'+em;
 }
 function loadAndApplyContactInfo(){
-  fsGetCached('settings').then(function(res){
+  fsGetAll('settings').then(function(res){
     var docs=getDocs(res);
     var wa=(docs.find(function(d){return d.key==='contact_whatsapp';})||{}).value||'';
     var em=(docs.find(function(d){return d.key==='contact_email';})||{}).value||'';
@@ -11058,7 +11151,7 @@ function saveAdminGroqKey(){
   if(!val||!val.startsWith('gsk_')){
     _adminKeyStatus('❌ Invalid key — must start with gsk_','error');return;
   }
-  fsGetCached('settings').then(function(res){
+  fsGetAll('settings').then(function(res){
     var docs=getDocs(res);
     var existing=docs.find(function(d){return d.key==='groq_api_key';});
     var p=existing?fsPatch(existing.__path,{value:val}):fsAdd('settings',{key:'groq_api_key',value:val});
@@ -11073,7 +11166,7 @@ function saveAdminGroqKey(){
 }
 function removeAdminGroqKey(){
   if(!confirm('Remove the shared Groq key? Students will need to enter their own key.'))return;
-  fsGetCached('settings').then(function(res){
+  fsGetAll('settings').then(function(res){
     var docs=getDocs(res);
     var existing=docs.find(function(d){return d.key==='groq_api_key';});
     if(!existing){_adminKeyStatus('ℹ️ No shared key was set.','warn');return;}
@@ -11086,7 +11179,7 @@ function removeAdminGroqKey(){
   });
 }
 function loadAdminGroqKeyToPanel(){
-  fsGetCached('settings').then(function(res){
+  fsGetAll('settings').then(function(res){
     var docs=getDocs(res);
     var keyDoc=docs.find(function(d){return d.key==='groq_api_key';});
     var inp=document.getElementById('admin-groq-key-input');
@@ -11101,7 +11194,7 @@ function loadAdminGroqKeyToPanel(){
 
 function toggleRegMode(){
   var newMode=regModeCache==='auto'?'manual':'auto';
-  fsGetCached('settings').then(function(res){
+  fsGetAll('settings').then(function(res){
     var docs=getDocs(res);
     var existing=docs.find(function(d){return d.key==='regmode';});
     var promise=existing
@@ -11202,89 +11295,6 @@ function startOnlinePanel(){
   onlineRefreshInterval = setInterval(renderOnlineStudents, 300000);
 }
 
-// ══════════════════════════════════════════════════
-// SMART CACHE SYSTEM — reduces Firebase reads by 90%
-// Uses localStorage so cache survives page refresh
-// ══════════════════════════════════════════════════
-var CACHE_TTL = {
-  users:      10 * 60 * 1000,  // 10 minutes
-  files:      15 * 60 * 1000,  // 15 minutes
-  quizzes:    15 * 60 * 1000,  // 15 minutes
-  quizfiles:  15 * 60 * 1000,  // 15 minutes
-  quizscores: 10 * 60 * 1000,  // 10 minutes
-  announcements: 10 * 60 * 1000,
-  motivations:   10 * 60 * 1000,
-  flyers:        10 * 60 * 1000,
-  forum:         5  * 60 * 1000,
-  formulas:      20 * 60 * 1000,
-  pointgrants:   10 * 60 * 1000,
-  referralbonuses: 10 * 60 * 1000,
-  deviceblocks:  10 * 60 * 1000,
-  settings:      30 * 60 * 1000,  // 30 minutes — rarely changes
-};
-var _memCache = {}; // in-memory layer (fastest)
-
-function cacheGet(col) {
-  // 1. Check memory cache first
-  var mc = _memCache[col];
-  if (mc && (Date.now() - mc.t) < CACHE_TTL[col]) return mc.data;
-  // 2. Check localStorage
-  try {
-    var raw = localStorage.getItem('bpcache_' + col);
-    if (raw) {
-      var parsed = JSON.parse(raw);
-      if (parsed && (Date.now() - parsed.t) < CACHE_TTL[col]) {
-        _memCache[col] = parsed; // warm memory cache
-        return parsed.data;
-      }
-    }
-  } catch(e) {}
-  return null;
-}
-
-function cacheSet(col, data) {
-  var entry = { t: Date.now(), data: data };
-  _memCache[col] = entry;
-  try {
-    // Only cache if reasonably sized (skip huge collections)
-    var str = JSON.stringify(entry);
-    if (str.length < 1500000) localStorage.setItem('bpcache_' + col, str);
-  } catch(e) {
-    // localStorage full — just use memory cache
-    try { localStorage.removeItem('bpcache_' + col); } catch(e2) {}
-  }
-}
-
-function cacheClear(col) {
-  delete _memCache[col];
-  try { localStorage.removeItem('bpcache_' + col); } catch(e) {}
-}
-
-function cacheClearAll() {
-  _memCache = {};
-  try {
-    Object.keys(localStorage).filter(function(k){ return k.startsWith('bpcache_'); })
-      .forEach(function(k){ localStorage.removeItem(k); });
-  } catch(e) {}
-}
-
-// Cached fetch — drop-in replacement aware of TTL
-function fsGetCached(col, forceRefresh) {
-  if (!forceRefresh) {
-    var cached = cacheGet(col);
-    if (cached) return Promise.resolve(cached);
-  }
-  return fsGetAll(col).then(function(res) {
-    if (res && !res.error) cacheSet(col, res);
-    return res;
-  });
-}
-
-// ── Users cache (kept for backward compat with loadUsers forceRefresh logic) ──
-var _usersCache=null,_usersCacheTime=0;
-var USERS_CACHE_TTL=10*60*1000; // 10 minutes
-
-function _processUsersRes(res){
   var approvedEl=document.getElementById('approved-list');
   if(res&&res.error){
     if(approvedEl)approvedEl.innerHTML='<div class="empty"><span>⚠️</span>Could not load students.<br><small style="color:var(--red)">'+esc(res.error.message||'Firebase error — check your API key or security rules.')+'</small></div>';
@@ -11434,7 +11444,7 @@ function unblockStudentDevice(userId,name,deviceFp){
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+userId,{deviceBlocked:'false',blockedDevice:''})
     .then(function(){
       // Deactivate matching block records
-      return fsGetCached('deviceblocks').then(function(res){
+      return fsGetAll('deviceblocks').then(function(res){
         var blocks=getDocs(res).filter(function(b){return b.studentId===userId||b.deviceId===deviceFp;});
         return Promise.all(blocks.map(function(b){
           return fsPatch(b.__path,{active:'false',unblockedAt:new Date().toISOString()});
@@ -11469,7 +11479,7 @@ function loadDeviceBlockList(){
   var el=document.getElementById('device-block-list');
   if(!el)return;
   el.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGetCached('deviceblocks').then(function(res){
+  fsGetAll('deviceblocks').then(function(res){
     var blocks=getDocs(res).sort(function(a,b){return new Date(b.blockedAt)-new Date(a.blockedAt);});
     if(!blocks.length){
       el.innerHTML='<div class="empty"><span>✅</span>No devices blocked yet.</div>';return;
@@ -11533,10 +11543,10 @@ function loadLog(){
 // ══════════════════════════════════
 function updateStats(){
   // Use cached data — no extra Firebase reads for stats
-  fsGetCached('files').then(function(r){document.getElementById('sf').textContent=r.documents?r.documents.length:0;}).catch(function(){});
-  fsGetCached('users').then(function(r){document.getElementById('su').textContent=r.documents?getDocs(r).filter(function(u){return u.role!=='admin'&&u.status!=='pending';}).length:0;}).catch(function(){});
-  fsGetCached('quizzes').then(function(r){document.getElementById('sq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
-  fsGetCached('quizscores').then(function(r){document.getElementById('stq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
+  fsGetAll('files').then(function(r){document.getElementById('sf').textContent=r.documents?r.documents.length:0;}).catch(function(){});
+  fsGetAll('users').then(function(r){document.getElementById('su').textContent=r.documents?getDocs(r).filter(function(u){return u.role!=='admin'&&u.status!=='pending';}).length:0;}).catch(function(){});
+  fsGetAll('quizzes').then(function(r){document.getElementById('sq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
+  fsGetAll('quizscores').then(function(r){document.getElementById('stq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
 }
 // logActivity defined earlier in HELPERS section
 function loadAdminAll(){
@@ -11698,7 +11708,7 @@ function handleDeepLink(){
   } else if(fileId){
     setTimeout(function(){
       if(CU&&CU.role==='user'){
-        fsGetCached('files').then(function(res){
+        fsGetAll('files').then(function(res){
           var file=getDocs(res).find(function(f){return f.__id===fileId;});
           if(file){sat('files');setTimeout(function(){openPreview(file.data,file.name,file.type||'');},600);}
           else{notify('File not found or no longer available','warn','⚠️');}
@@ -11709,7 +11719,7 @@ function handleDeepLink(){
   } else if(quizFileId){
     setTimeout(function(){
       if(CU&&CU.role==='user'){
-        fsGetCached('quizfiles').then(function(res){
+        fsGetAll('quizfiles').then(function(res){
           var file=getDocs(res).find(function(f){return f.__id===quizFileId;});
           if(file){sat('quizzes');setTimeout(function(){openPreview(file.data,file.name,file.type||'');},600);}
           else{notify('Quiz file not found','warn','⚠️');}
@@ -12499,7 +12509,7 @@ function loadUserReferralCard(){
   var el=document.getElementById('user-ref-code');
   if(el)el.textContent=code;
   // Load referral count and bonus points earned
-  Promise.all([fsGetAll('users'),fsGetCached('referralbonuses')]).then(function(results){
+  Promise.all([fsGetAll('users'),fsGetAll('referralbonuses')]).then(function(results){
     var users=getDocs(results[0]);
     var bonuses=getDocs(results[1]);
     var count=users.filter(function(u){return u.referredBy===code;}).length;
@@ -12535,7 +12545,7 @@ function loadAdminReferrals(){
   if(!listEl)return;
   listEl.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
   signupsEl.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  Promise.all([fsGetAll('users'),fsGetCached('referralbonuses')]).then(function(results){
+  Promise.all([fsGetAll('users'),fsGetAll('referralbonuses')]).then(function(results){
     var users=getDocs(results[0]);
     var bonuses=getDocs(results[1]);
     // Build referral counts and bonus totals per code
@@ -12627,7 +12637,7 @@ function loadPointsManager() {
 }
 
 function loadPtsStats() {
-  Promise.all([fsGetAll('users'), fsGetCached('pointgrants'), fsGetCached('referralbonuses')]).then(function(res) {
+  Promise.all([fsGetAll('users'), fsGetAll('pointgrants'), fsGetAll('referralbonuses')]).then(function(res) {
     var users = getDocs(res[0]);
     var grants = getDocs(res[1]);
     var refBonuses = getDocs(res[2]);
@@ -12779,7 +12789,7 @@ function loadPtsReferrals() {
   var el = document.getElementById('pts-referral-breakdown');
   if (!el) return;
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-  Promise.all([fsGetAll('users'), fsGetCached('referralbonuses')]).then(function(res) {
+  Promise.all([fsGetAll('users'), fsGetAll('referralbonuses')]).then(function(res) {
     var users = getDocs(res[0]);
     var bonuses = getDocs(res[1]);
     if (!users.length) { el.innerHTML = '<div class="empty"><span>👥</span>No students yet.</div>'; return; }
@@ -12851,7 +12861,7 @@ function loadPtsHistory() {
   var el = document.getElementById('pts-history-list');
   if (!el) return;
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-  Promise.all([fsGetCached('pointgrants'), fsGetCached('referralbonuses')]).then(function(res) {
+  Promise.all([fsGetAll('pointgrants'), fsGetAll('referralbonuses')]).then(function(res) {
     var grants = getDocs(res[0]).map(function(g){ return { type:'admin_grant', name:g.studentName, note:g.note||'Admin bonus', pts:Number(g.points||0), at:g.grantedAt }; });
     var refs = getDocs(res[1]).map(function(b){ return { type:'referral', name:b.referrerName||b.referrer, note:(b.studentName||b.student)+' completed '+( b.quizTitle||'a quiz'), pts:Number(b.bonus||5), at:b.awardedAt }; });
     var all = grants.concat(refs).sort(function(a,b){ return new Date(b.at)-new Date(a.at); });
@@ -13047,7 +13057,7 @@ function viewStudentPtsHistory(userId, name) {
     var el = document.getElementById('pts-history-list');
     if (!el) return;
     el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-    Promise.all([fsGetCached('pointgrants'), fsGetCached('referralbonuses')]).then(function(res){
+    Promise.all([fsGetAll('pointgrants'), fsGetAll('referralbonuses')]).then(function(res){
       var grants = getDocs(res[0]).filter(function(g){return g.studentId===userId;})
         .map(function(g){return{type:'admin_grant',name:g.studentName,note:g.note||'Admin bonus',pts:Number(g.points||0),at:g.grantedAt};});
       var refs = getDocs(res[1]).filter(function(b){return b.referrer===name||b.referrerName===name;})
@@ -13095,8 +13105,8 @@ function loadMyPointHistory() {
 
   Promise.all([
     fsGetAll('pointslog'),
-    fsGetCached('pointgrants'),
-    fsGetCached('referralbonuses')
+    fsGetAll('pointgrants'),
+    fsGetAll('referralbonuses')
   ]).then(function(res){
     var logs = getDocs(res[0])
       .filter(function(l){ return l.username === CU.username; })
@@ -13171,7 +13181,7 @@ function loadMyQuizHistory() {
   var el = document.getElementById('u-quiz-history-list');
   if (!el) return;
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-  Promise.all([fsGetCached('quizscores'), fsGetCached('quizzes')]).then(function(res) {
+  Promise.all([fsGetAll('quizscores'), fsGetAll('quizzes')]).then(function(res) {
     var scores = getDocs(res[0]).filter(function(s){ return s.username === CU.username; })
       .sort(function(a,b){ return new Date(b.takenAt)-new Date(a.takenAt); });
     var quizMap = {};
@@ -13303,7 +13313,7 @@ function loadAdminFormulas() {
   var el = document.getElementById('a-formula-list');
   if (!el) return;
   el.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
-  fsGetCached('formulas').then(function(res) {
+  fsGetAll('formulas').then(function(res) {
     var docs = getDocs(res).sort(function(a,b){ return new Date(b.createdAt)-new Date(a.createdAt); });
     if (!docs.length) { el.innerHTML = '<div class="empty"><span>📋</span>No formula sheets yet</div>'; return; }
     el.innerHTML = docs.map(function(d) {
@@ -13337,7 +13347,7 @@ function loadStudentFormulas() {
   if (!listEl) return;
   listEl.innerHTML = '<div class="ld">Loading<span class="sp"></span></div>';
 
-  fsGetCached('formulas').then(function(res) {
+  fsGetAll('formulas').then(function(res) {
     var all = getDocs(res).sort(function(a,b){ return new Date(b.createdAt)-new Date(a.createdAt); });
     if (!all.length) {
       if (filterEl) filterEl.innerHTML = '';
@@ -13458,7 +13468,7 @@ function loadGoalsProgress() {
   }
   el.innerHTML = '<div class="ld">Loading your scores<span class="sp"></span></div>';
 
-  fsGetCached('quizscores').then(function(res) {
+  fsGetAll('quizscores').then(function(res) {
     var scores = getDocs(res).filter(function(s){ return s.username === CU.username; });
 
     // Compute best avg per course by matching quiz category
@@ -13536,7 +13546,7 @@ function loadDashboardPreviews() {
     if (gcEl) gcEl.textContent = goalsCount ? goalsCount+' courses' : 'None yet';
 
     if (goalsCount) {
-      fsGetCached('quizscores').then(function(res) {
+      fsGetAll('quizscores').then(function(res) {
         var scores = getDocs(res).filter(function(s){ return s.username === CU.username; });
         var courseAvg = {};
         scores.forEach(function(s) {
@@ -13563,7 +13573,7 @@ function loadDashboardPreviews() {
   }
 
   // Formulas preview
-  fsGetCached('formulas').then(function(res) {
+  fsGetAll('formulas').then(function(res) {
     var docs = getDocs(res);
     var countEl = document.getElementById('gdc-formula-count');
     var coursesEl = document.getElementById('gdc-formula-courses');
@@ -13610,7 +13620,7 @@ doRegister=async function(){
     if(allUsers.some(function(u){return u.username===un;})){notify('Username taken','error','⚠️');return;}
 
     // Determine reg mode
-    fsGetCached('settings').then(function(sRes){
+    fsGetAll('settings').then(function(sRes){
       var settings=getDocs(sRes);
       var modeSetting=settings.find(function(d){return d.key==='regmode';});
       var mode=modeSetting?modeSetting.value:'manual';
@@ -14162,7 +14172,7 @@ function loadPerformanceReport(){
   var tbody=document.getElementById('rpt-tbody');
   if(!tbody)return;
   tbody.innerHTML='<tr><td colspan="8" style="padding:20px;text-align:center;color:var(--text2)"><div class="ld">Loading<span class="sp"></span></div></td></tr>';
-  Promise.all([fsGetAll('users'),fsGetCached('quizscores')]).then(function(results){
+  Promise.all([fsGetAll('users'),fsGetAll('quizscores')]).then(function(results){
     var users=getDocs(results[0]).filter(function(u){return u.status==='approved';});
     var scores=getDocs(results[1]);
     // Build per-user stats
