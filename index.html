@@ -5412,6 +5412,13 @@ D. Rankine</code>
           <button class="btn bs bsm" id="sf-blocked" onclick="filterStudents('blocked',this)">&#x1F6AB; Device Blocked</button>
         </div>
       </div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap">
+        <button class="btn bs bsm" onclick="selectAllStudentsBulk()">☑️ Select All</button>
+        <button class="btn bs bsm" onclick="deselectAllStudentsBulk()">⬜ Deselect All</button>
+        <button class="btn bd bsm" onclick="deleteSelectedStudents()">🗑️ Delete Selected</button>
+      </div>
+      <div style="display:none"><!-- placeholder to keep structure -->
+      </div>
       <div id="approved-list"><div class="ld">Loading<span class="sp"></span></div></div>
     </div>
 
@@ -6620,11 +6627,11 @@ function fsGetAll(col, forceRefresh){
       var raw=localStorage.getItem('bpcache_'+col);
       if(raw){
         var parsed=JSON.parse(raw);
-        var ttl={'users':600000,'files':900000,'quizzes':900000,'quizfiles':900000,
-                 'quizscores':600000,'announcements':600000,'motivations':600000,
-                 'flyers':600000,'forum':300000,'formulas':1200000,
-                 'pointgrants':600000,'referralbonuses':600000,'deviceblocks':600000,
-                 'settings':1800000};
+        var ttl={'users':1800000,'files':1800000,'quizzes':1800000,'quizfiles':1800000,
+                 'quizscores':1800000,'announcements':1800000,'motivations':1800000,
+                 'flyers':1800000,'forum':600000,'formulas':3600000,
+                 'pointgrants':1800000,'referralbonuses':1800000,'deviceblocks':1800000,
+                 'settings':3600000};
         if(parsed&&parsed.d&&parsed.d.length>0&&(Date.now()-parsed.t)<(ttl[col]||600000)){
           return Promise.resolve({documents:parsed.d});
         }
@@ -7338,9 +7345,16 @@ async function doLogin(){
       try{sessionStorage.removeItem('bp_rl');}catch(e){}
       CU={name:user.name,username:user.username,role:'user',id:user.__id,
         uid:cred.user.uid,level:user.level||'',bio:user.bio||'',
-        phone:user.phone||'',badges:user.badges||'',
+        phone:user.phone||'',badges:user.badges||'',email:user.email||'',
         totalScore:Number(user.totalScore||0),quizzesTaken:Number(user.quizzesTaken||0),
         deviceFp:deviceFp};
+      // Save session so refresh restores login automatically
+      try{localStorage.setItem('bp_session',JSON.stringify({
+        name:user.name,username:user.username,role:'user',id:user.__id,
+        level:user.level||'',bio:user.bio||'',phone:user.phone||'',
+        badges:user.badges||'',email:user.email||'',
+        totalScore:Number(user.totalScore||0),quizzesTaken:Number(user.quizzesTaken||0)
+      }));}catch(e){}
       if(rememberMe){
         try{localStorage.setItem('bp_remembered',JSON.stringify({username:un}));}catch(e){}
       } else {
@@ -7433,6 +7447,9 @@ async function doAdminLogin(){
       try{sessionStorage.removeItem('bp_admin_rl');}catch(e){}
       CU={name:'Admin',username:'admin',role:'admin',permissions:'all',
           uid:cred.user.uid};
+      try{localStorage.setItem('bp_session',JSON.stringify({
+        name:'Admin',username:'admin',role:'admin',permissions:'all',uid:cred.user.uid
+      }));}catch(e){}
       showDash('admin');
     } else {
       window._fbSignOut().catch(function(){});
@@ -7517,6 +7534,7 @@ function doLogout(){
   // SECURITY: Sign out of Firebase Auth so the session token is invalidated
   if(window._fbSignOut) window._fbSignOut().catch(function(){});
   CU=null;stopPolls();activeConv=null;
+  try{localStorage.removeItem('bp_session');}catch(e){}
   if(quizTimer){clearInterval(quizTimer);quizTimer=null;}
   stopSessionTimer();
   localNotifs=[];lastFilesCount=0;lastQuizCount=0;lastAnnCount=0;lastMotivCount=0;lastFlyerCount=0;
@@ -7541,6 +7559,13 @@ function showDash(role){
   if(role==='user'){
     document.getElementById('ud').style.display='';
     document.getElementById('uwh').textContent='Welcome, '+CU.name+'! 👋';
+  // Show data-saving tip once per session
+  if(!sessionStorage.getItem('tip_shown')){
+    sessionStorage.setItem('tip_shown','1');
+    setTimeout(function(){
+      notify('💡 Tip: No need to refresh — new content loads automatically!','info','💡');
+    }, 3000);
+  }
     // Always show semester cards fresh on login — no hub pre-opened
     document.querySelectorAll('.sem-hub').forEach(function(h){h.classList.remove('active');});
     var sbar=document.getElementById('sem-selector-bar');
@@ -7550,14 +7575,12 @@ function showDash(role){
     setTimeout(loadDashboardPreviews, 400);
     loadForum();loadGroups();loadNotes();loadExams('u-exams-list');loadLeaderboard('u-lb-list');
     startUserChatPoll();startNotifPoll();loadFeaturesForUser();
-    loadAndApplyContactInfo(); // apply admin's real WhatsApp/email to contact buttons
-    startOnlineTracking(); // track student online status
-    handleDeepLink(); // handle ?quiz= or ?file= deep links
-    // Re-check for private quiz link now that the user is logged in
+    loadAndApplyContactInfo();
+    startOnlineTracking();
+    handleDeepLink();
     setTimeout(pqCheckURLParam, 600);
-    // Show browser notification prompt after a short delay on first login
     setTimeout(checkNotifPrompt, 1500);
-    // init notif counts
+    // Use cache for notification counts — no extra reads on refresh
     fsGetAll('files').then(function(r){lastFilesCount=r.documents?r.documents.length:0;}).catch(function(){});
     fsGetAll('quizzes').then(function(r){lastQuizCount=r.documents?r.documents.length:0;}).catch(function(){});
     fsGetAll('announcements').then(function(r){lastAnnCount=r.documents?r.documents.length:0;}).catch(function(){});
@@ -11300,6 +11323,7 @@ function renderStudentList(){
       var isDeviceBlocked=u.deviceBlocked==='true';
       var fp=u.lastDeviceFp||'';
       return'<div class="pu-item" style="flex-wrap:wrap;gap:7px;'+(isDeviceBlocked?'border-left:3px solid var(--red)':'')+'">'+
+        '<input type="checkbox" class="student-bulk-check" value="'+u.__id+'" style="width:16px;height:16px;accent-color:var(--red);flex-shrink:0;margin-top:2px"/>'+
         '<div style="display:flex;align-items:center;gap:7px;flex:1;min-width:0">'+
           '<div class="pu-av" style="background:linear-gradient(135deg,'+(isDeviceBlocked?'#7f1d1d,#450a0a':isActive?'var(--green),#16a34a':'#64748b,#475569')+')">'+(u.name?u.name[0].toUpperCase():'?')+'</div>'+
           '<div style="min-width:0">'+
@@ -11323,6 +11347,7 @@ function renderStudentList(){
           (isDeviceBlocked
             ?'<button class="btn bg2 bsm" onclick="unblockStudentDevice(\''+u.__id+'\',\''+esc(u.name)+'\',\''+esc(fp)+'\')">🔓 Unblock</button>'
             :'')+
+          '<button class="btn bd bsm" onclick="deleteStudent(\''+u.__id+'\',\''+esc(u.name)+'\')">🗑️ Delete</button>'+
         '</div>'+
       '</div>';
     }).join(''):'<div class="empty"><span>👥</span>No students in this view.</div>';
@@ -11337,24 +11362,22 @@ function approveAllPending(){
   var items=document.querySelectorAll('#pending-list .pu-item');
   if(!items.length){notify('No pending students to approve','warn','⚠️');return;}
   if(!confirm('Approve ALL pending students? ('+items.length+' students)'))return;
-  // Get all pending users from allStudents isn't right — fetch fresh
-  fsGetAll('users',true).then(function(res){
+  // Use already-loaded users data — no extra Firebase read
+  fsGetAll('users').then(function(res){
     var pending=getDocs(res).filter(function(u){return u.status==='pending';});
     if(!pending.length){notify('No pending students found','warn','⚠️');return;}
     notify('Approving '+pending.length+' students...','info','⏳');
     var done=0;
-    pending.forEach(function(u){
-      fsPatch('projects/'+PROJECT+'/databases/(default)/documents/users/'+u.__id,{status:'approved'})
-        .then(function(){
-          done++;
-          logActivity('approve',u.name);
-          if(done===pending.length){
-            notify('✅ All '+done+' students approved!','success','✅');
-            _usersCache=null;
-            loadUsers(true);
-          }
-        }).catch(function(){notify('Failed to approve '+u.name,'error','❌');});
-    });
+    // Approve all in parallel — only ONE reload at the end
+    Promise.all(pending.map(function(u){
+      return fsPatch('projects/'+PROJECT+'/databases/(default)/documents/users/'+u.__id,{status:'approved'});
+    })).then(function(){
+      // Clear cache and reload once
+      try{localStorage.removeItem('bpcache_users');}catch(e){}
+      _usersCache=null;
+      notify('✅ All '+pending.length+' students approved!','success','✅');
+      loadUsers(true);
+    }).catch(function(){notify('Some approvals may have failed. Refresh to check.','warn','⚠️');});
   }).catch(function(){notify('Could not fetch students','error','❌');});
 }
 
@@ -11364,7 +11387,39 @@ function approveUser(id,name){
 }
 function rejectUser(id,name){
   fsDel("projects/"+PROJECT+"/databases/(default)/documents/users/"+id)
-    .then(function(){notify(name+' rejected & removed','warn','❌');logActivity('reject',name);_usersCache=null;loadUsers(true);}).catch(function(){});
+    .then(function(){notify(name+' rejected & removed','warn','❌');logActivity('reject',name);_usersCache=null;cacheClear('users');loadUsers(true);}).catch(function(){});
+}
+function selectAllStudentsBulk(){
+  document.querySelectorAll('.student-bulk-check').forEach(function(c){c.checked=true;});
+}
+function deselectAllStudentsBulk(){
+  document.querySelectorAll('.student-bulk-check').forEach(function(c){c.checked=false;});
+}
+function deleteSelectedStudents(){
+  var selected=Array.from(document.querySelectorAll('.student-bulk-check:checked')).map(function(c){return c.value;});
+  if(!selected.length){notify('Select at least one student to delete','warn','⚠️');return;}
+  if(!confirm('Permanently delete '+selected.length+' selected student(s)? This cannot be undone.'))return;
+  notify('Deleting '+selected.length+' students...','info','⏳');
+  Promise.all(selected.map(function(id){
+    return fsDel('projects/'+PROJECT+'/databases/(default)/documents/users/'+id);
+  })).then(function(){
+    notify('✅ '+selected.length+' student(s) deleted','success','🗑️');
+    logActivity('bulk_delete',selected.length+' students deleted');
+    try{localStorage.removeItem('bpcache_users');}catch(e){}
+    _usersCache=null;
+    loadUsers(true);
+  }).catch(function(){notify('Some deletions may have failed','warn','⚠️');});
+}
+function deleteStudent(id,name){
+  if(!confirm('Delete '+name+' permanently? This cannot be undone.'))return;
+  fsDel("projects/"+PROJECT+"/databases/(default)/documents/users/"+id)
+    .then(function(){
+      notify(name+' deleted','warn','🗑️');
+      logActivity('delete_user',name);
+      try{localStorage.removeItem('bpcache_users');}catch(e){}
+      _usersCache=null;
+      loadUsers(true);
+    }).catch(function(){notify('Failed to delete '+name,'error','❌');});
 }
 function deactivateUser(id,name){
   fsPatch("projects/"+PROJECT+"/databases/(default)/documents/users/"+id,{status:'deactivated'})
@@ -11518,16 +11573,13 @@ function updateStats(){
 }
 // logActivity defined earlier in HELPERS section
 function loadAdminAll(){
-  loadAFiles();loadAAnn();loadAdminQuizzes();loadAnalyticsQuizSelect();
-  loadLeaderboard('a-lb-list');loadConvList();loadUsers(true);loadLog();
-  loadExams('a-exams-list');loadBulkStudents();updateStats();
+  // Lazy load — only load stats + first tab on login
+  // Other tabs load on-demand when clicked to save Firebase reads
+  updateStats();
+  loadAFiles();
   loadAndApplyContactInfo();
   loadAdminGroqKeyToPanel();
-  loadBrevoSettingsToPanel();
-  loadBlastHistory();
-  // Reload Brevo settings now that admin is authenticated
   reloadBrevoSettingsAuthenticated();
-  convPoll=setInterval(loadConvList,8000);
 }
 
 function reloadBrevoSettingsAuthenticated(){
@@ -11617,7 +11669,7 @@ function sat2(name,btn){
     chat:function(){
       document.getElementById('conv-view').style.display='';
       document.getElementById('chat-view').style.display='none';
-      activeConv=null;loadConvList();convPoll=setInterval(loadConvList,8000);
+      activeConv=null;loadConvList();convPoll=setInterval(loadConvList,30000);
     },
     subadmins:function(){ loadSubAdmins(); },
     raining:function(){ loadRainCourses(); }
@@ -12103,7 +12155,7 @@ function positionLandingBtns(){
 }
 // Position on load and on resize
 document.addEventListener('DOMContentLoaded', function(){
-  // ── Apply landing-mode to remove topbar padding when landing page is shown ──
+  // ── Apply landing-mode ──
   var appEl = document.getElementById('app');
   var lpEl  = document.getElementById('landing-page');
   if(appEl && lpEl && lpEl.style.display !== 'none') {
@@ -12112,7 +12164,7 @@ document.addEventListener('DOMContentLoaded', function(){
   // ── Restore saved theme ──
   var savedTheme=null;try{savedTheme=localStorage.getItem('bp_theme');}catch(e){}
   if(savedTheme==='light'||savedTheme==='dark')document.body.setAttribute('data-theme',savedTheme);
-  // ── Restore remembered username (never auto-fill password for security) ──
+  // ── Restore remembered username ──
   var rem=null;try{rem=JSON.parse(localStorage.getItem('bp_remembered')||'null');}catch(e){}
   if(rem&&rem.username){
     var lunEl=document.getElementById('lun');
@@ -12120,6 +12172,34 @@ document.addEventListener('DOMContentLoaded', function(){
     var remEl=document.getElementById('remember-me');
     if(remEl)remEl.checked=true;
   }
+  // ── AUTO-RESTORE SESSION ON REFRESH ──
+  // Use Firebase Auth to check if user is still signed in
+  _waitForAuth().then(function(){
+    if(!window._fbOnAuthStateChanged) return;
+    window._fbOnAuthStateChanged(function(firebaseUser){
+      if(firebaseUser && !CU){
+        // Firebase says user is logged in — restore from saved session
+        var saved=null;
+        try{saved=JSON.parse(localStorage.getItem('bp_session')||'null');}catch(e){}
+        if(saved && saved.role){
+          CU=saved;
+          CU.uid=firebaseUser.uid;
+          if(saved.role==='admin'){
+            showDash('admin');
+          } else {
+            var fp=getDeviceFingerprint();
+            CU.deviceFp=fp;
+            showDash('user');
+            startSessionTimer();
+          }
+        }
+      } else if(!firebaseUser && CU){
+        // Firebase signed out — clear session
+        try{localStorage.removeItem('bp_session');}catch(e){}
+        CU=null;
+      }
+    });
+  });
   // Load saved API key for admin — use built-in GROQ_KEY as default
   var savedKey=localStorage.getItem('babspharm_apikey')||GROQ_KEY||'';
   if(savedKey){
@@ -17651,17 +17731,17 @@ function openAssistModal(student) {
               '<div class="assist-action-name">Open Full Portal</div>'+
               '<div class="assist-action-desc">Browse as this student — files, quizzes, profile & more</div>'+
             '</div>'+
-            '<div class="assist-action" onclick="assistOpenSection('+JSON.stringify(student)+',"files")">'+
+            '<div class="assist-action" onclick="assistOpenSection('+JSON.stringify(student)+',\'files\')">'+
               '<div class="assist-action-icon">📁</div>'+
               '<div class="assist-action-name">Check Their Files</div>'+
               '<div class="assist-action-desc">See available course materials for their level</div>'+
             '</div>'+
-            '<div class="assist-action" onclick="assistOpenSection('+JSON.stringify(student)+',"quizzes")">'+
+            '<div class="assist-action" onclick="assistOpenSection('+JSON.stringify(student)+',\'quiz\')">'+
               '<div class="assist-action-icon">📝</div>'+
               '<div class="assist-action-name">View Quizzes</div>'+
               '<div class="assist-action-desc">See quizzes they can access and their results</div>'+
             '</div>'+
-            '<div class="assist-action" onclick="assistOpenSection('+JSON.stringify(student)+',"profile")">'+
+            '<div class="assist-action" onclick="assistOpenSection('+JSON.stringify(student)+',\'profile\')">'+
               '<div class="assist-action-icon">👤</div>'+
               '<div class="assist-action-name">View Profile</div>'+
               '<div class="assist-action-desc">Check their full profile, score & badges</div>'+
@@ -17744,14 +17824,28 @@ window.assistLaunchPortal = function(student, section) {
   document.getElementById('wm').textContent = student.name + ' 👤 (Assist)';
   document.getElementById('bell-wrap').style.display = 'none';
 
-  // Load student data
-  loadBanner(); loadUserProfile(); loadRainCoursesForStudent(); loadUFiles();
-  loadUAnn(); loadUQuizzes(); loadForum(); loadGroups(); loadNotes();
-  loadExams('u-exams-list'); loadLeaderboard('u-lb-list'); loadFeaturesForUser();
+  // Load student data — same as showDash('user')
+  loadFeaturesForUser(); // must load first so features/tabs are enabled
+  loadBanner();
+  loadUserProfile();
+  loadRainCoursesForStudent();
+  loadUFiles();
+  loadUAnn();
+  loadUQuizzes();
+  loadForum();
+  loadGroups();
+  loadNotes();
+  loadExams('u-exams-list');
+  loadLeaderboard('u-lb-list');
   loadAndApplyContactInfo();
+  startNotifPoll();
+  // init notif counts
+  fsGetAll('files').then(function(r){lastFilesCount=r.documents?r.documents.length:0;}).catch(function(){});
+  fsGetAll('quizzes').then(function(r){lastQuizCount=r.documents?r.documents.length:0;}).catch(function(){});
+  fsGetAll('announcements').then(function(r){lastAnnCount=r.documents?r.documents.length:0;}).catch(function(){});
 
   // Navigate to requested section if any
-  if(section) setTimeout(function(){ showSec(section); }, 700);
+  if(section) setTimeout(function(){ showSec(section); }, 800);
 
   logActivity('assist_mode_enter', student.name + ' / @' + student.username);
   notify('🔧 Assist mode active — viewing portal as ' + student.name,'warn','🔧');
