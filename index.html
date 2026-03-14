@@ -6678,8 +6678,6 @@ function cacheClearAll() {
 var _usersCache=null,_usersCacheTime=0;
 var USERS_CACHE_TTL=10*60*1000; // 10 minutes
 
-function _processUsersRes(res){
-
 var BASE="https://firestore.googleapis.com/v1/projects/"+PROJECT+"/databases/(default)/documents";
 function fsGet(col){return fetch(BASE+"/"+col+"?key="+KEY+"&pageSize=500").then(function(r){return r.json();});}
 // fsGetAll — cursor-based pagination for unbounded collections (chat, activitylog, visitors)
@@ -6697,23 +6695,15 @@ function fsGetAll(col, forceRefresh){
       if(res.documents&&res.documents.length)allDocs=allDocs.concat(res.documents);
       if(res.nextPageToken) return page(res.nextPageToken);
       var result={documents:allDocs};
-      if(!res.error && typeof cacheSet==='function') cacheSet(col, result);
+      // Only cache if we actually got data (never cache empty/quota-exceeded responses)
+      if(!res.error && allDocs.length > 0 && typeof cacheSet==='function') cacheSet(col, result);
       return result;
     });
   }
   return page(null);
 }
 // fsGetCached — uses smart cache, falls back to fsGetAll
-function fsGetAll(col, forceRefresh) {
-  if (!forceRefresh) {
-    var cached = cacheGet(col);
-    if (cached) return Promise.resolve(cached);
-  }
-  return fsGetAll(col).then(function(res) {
-    if (res && !res.error) cacheSet(col, res);
-    return res;
-  });
-}
+// [duplicate fsGetAll removed]
 function fsAdd(col,fields){
   return fetch(BASE+"/"+col+"?key="+KEY,{method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({fields:toFS(fields)})}).then(function(r){return r.json();});
@@ -7645,6 +7635,7 @@ function showDash(role){
       var firstAllowed = document.querySelector('.admin-nav-grid .anb:not([style*="none"])');
       if(firstAllowed) firstAllowed.click();
     }
+    cacheClearAll(); // Clear any stale cached data from previous sessions
     loadAdminAll();
   }
 }
@@ -8257,7 +8248,12 @@ function loadUFiles(){
   checkNotifPrompt();
   loadRainCoursesForStudent();
   fsGetAll('files').then(function(res){
-    allUFiles=getDocs(res).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
+    var docs=getDocs(res);
+    if(!docs.length){ fsGetAll('files',true).then(function(r2){
+      allUFiles=getDocs(r2).sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
+      renderUFiles(allUFiles); updateCourseCovers(allUFiles);
+    }).catch(function(){}); return; }
+    allUFiles=docs.sort(function(a,b){return new Date(b.uploadedAt)-new Date(a.uploadedAt);});
     var tabsEl=document.getElementById('ucat-tabs');
     tabsEl.innerHTML=CATS.map(function(c,i){return'<button class="cat-tab'+(i===0?' on':'')+'" onclick="filterByCat(this,\''+c+'\')">'+esc(c)+'</button>';}).join('');
     renderUFiles(allUFiles);
@@ -11295,7 +11291,19 @@ function startOnlinePanel(){
   onlineRefreshInterval = setInterval(renderOnlineStudents, 300000);
 }
 
+function _processUsersRes(res){
   var approvedEl=document.getElementById('approved-list');
+  // If empty result, force a fresh fetch from Firebase
+  if(res && !res.error && (!res.documents || res.documents.length === 0)){
+    fsGetAll('users', true).then(function(fresh){
+      if(fresh && fresh.documents && fresh.documents.length > 0){
+        _processUsersRes(fresh);
+      } else {
+        if(approvedEl) approvedEl.innerHTML='<div class="empty"><span>👥</span>No students found.</div>';
+      }
+    }).catch(function(){});
+    return;
+  }
   if(res&&res.error){
     if(approvedEl)approvedEl.innerHTML='<div class="empty"><span>⚠️</span>Could not load students.<br><small style="color:var(--red)">'+esc(res.error.message||'Firebase error — check your API key or security rules.')+'</small></div>';
     notify('Failed to load students: '+(res.error.message||'Firebase error'),'error','⚠️');return;
@@ -11542,11 +11550,33 @@ function loadLog(){
 // STATS
 // ══════════════════════════════════
 function updateStats(){
-  // Use cached data — no extra Firebase reads for stats
-  fsGetAll('files').then(function(r){document.getElementById('sf').textContent=r.documents?r.documents.length:0;}).catch(function(){});
-  fsGetAll('users').then(function(r){document.getElementById('su').textContent=r.documents?getDocs(r).filter(function(u){return u.role!=='admin'&&u.status!=='pending';}).length:0;}).catch(function(){});
-  fsGetAll('quizzes').then(function(r){document.getElementById('sq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
-  fsGetAll('quizscores').then(function(r){document.getElementById('stq').textContent=r.documents?r.documents.length:0;}).catch(function(){});
+  // Fetch with auto-retry: if result is 0, force-refresh from Firebase ignoring cache
+  function statFetch(col, elId, transform){
+    fsGetAll(col).then(function(r){
+      var val = transform ? transform(r) : (r.documents ? r.documents.length : 0);
+      if(val === 0){
+        // Result is zero — could be stale cache; retry directly from Firebase
+        fsGetAll(col, true).then(function(r2){
+          var val2 = transform ? transform(r2) : (r2.documents ? r2.documents.length : 0);
+          document.getElementById(elId).textContent = val2;
+        }).catch(function(){});
+      } else {
+        document.getElementById(elId).textContent = val;
+      }
+    }).catch(function(){
+      // On error, try direct Firebase fetch
+      fsGetAll(col, true).then(function(r2){
+        var val2 = transform ? transform(r2) : (r2.documents ? r2.documents.length : 0);
+        document.getElementById(elId).textContent = val2;
+      }).catch(function(){});
+    });
+  }
+  statFetch('files', 'sf');
+  statFetch('users', 'su', function(r){
+    return r.documents ? getDocs(r).filter(function(u){return u.role!=='admin'&&u.status!=='pending';}).length : 0;
+  });
+  statFetch('quizzes', 'sq');
+  statFetch('quizscores', 'stq');
 }
 // logActivity defined earlier in HELPERS section
 function loadAdminAll(){
