@@ -11491,7 +11491,7 @@ function updateStats(){
 // logActivity defined earlier in HELPERS section
 function loadAdminAll(){
   loadAFiles();loadAAnn();loadAdminQuizzes();loadAnalyticsQuizSelect();
-  loadLeaderboard('a-lb-list');loadConvList();loadUsers();loadLog();
+  loadLeaderboard('a-lb-list');loadConvList();loadUsers(true);loadLog();
   loadExams('a-exams-list');loadBulkStudents();updateStats();
   loadAndApplyContactInfo();
   loadAdminGroqKeyToPanel();
@@ -11574,7 +11574,7 @@ function sat2(name,btn){
     analytics:function(){loadAnalyticsQuizSelect();},
     exams:function(){loadExams('a-exams-list');},
     lb:function(){loadLeaderboard('a-lb-list');},
-    users:function(){loadUsers();startOnlinePanel();},badges:function(){},log:loadLog,bulk:loadBulkStudents,
+    users:function(){loadUsers(true);startOnlinePanel();},badges:function(){},log:loadLog,bulk:loadBulkStudents,
     site:function(){loadFeatureControls();setTimeout(renderThemeSwatches,50);},
     motivation:loadMotivAdmin,
     flyers:loadFlyerAdmin,
