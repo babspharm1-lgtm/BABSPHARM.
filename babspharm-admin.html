@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BABSPHARM CLOUD — Admin Dashboard</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Georgia','Times New Roman',serif;background:#0a0e1a;color:#f0ede6;min-height:100vh;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-thumb{background:rgba(240,192,64,0.3);border-radius:3px}
+#login-screen{position:fixed;inset:0;background:#0a0e1a;display:flex;align-items:center;justify-content:center;padding:20px;z-index:100;}
+.login-box{background:linear-gradient(160deg,#0f1629,#0a0e1a);border:1px solid rgba(240,192,64,0.3);border-radius:22px;padding:32px 28px;max-width:380px;width:100%;text-align:center;box-shadow:0 0 60px rgba(240,192,64,0.1);}
+.login-logo{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#f0c040,#e8830a);margin:0 auto 18px;display:flex;align-items:center;justify-content:center;font-size:28px;box-shadow:0 0 24px rgba(240,192,64,0.4);}
+.login-title{font-size:20px;font-weight:700;color:#f0c040;margin-bottom:4px;}
+.login-sub{font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:22px;}
+.login-input{width:100%;padding:12px 16px;border-radius:11px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:#f0ede6;font-size:14px;font-family:Georgia,serif;outline:none;margin-bottom:12px;transition:border-color 0.2s;}
+.login-input:focus{border-color:rgba(240,192,64,0.5);}
+.login-btn{width:100%;padding:13px;border-radius:11px;border:none;background:linear-gradient(135deg,#f0c040,#e8830a);color:#0a0e1a;font-size:15px;font-weight:700;cursor:pointer;font-family:Georgia,serif;}
+.login-err{color:#e74c3c;font-size:12px;margin-top:8px;display:none;}
+#dashboard{display:none;min-height:100vh;}
+#dash-header{background:rgba(10,14,26,0.97);border-bottom:1px solid rgba(255,255,255,0.08);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10;}
+#dash-logo{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#f0c040,#e8830a);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+#dash-title{font-size:15px;font-weight:700;background:linear-gradient(90deg,#f0c040,#f5e090);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+#dash-sub{font-size:10px;color:rgba(255,255,255,0.35);letter-spacing:1px;}
+.hbtn{padding:7px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-family:Georgia,serif;transition:all 0.2s;}
+.refresh-btn{border:1px solid rgba(240,192,64,0.3);background:rgba(240,192,64,0.08);color:#f0c040;}
+.logout-btn{border:1px solid rgba(231,76,60,0.3);background:rgba(231,76,60,0.08);color:#e74c3c;}
+.online-dot{width:7px;height:7px;border-radius:50%;background:#2ecc71;animation:pulse 2s infinite;flex-shrink:0;}
+#dash-body{padding:16px;max-width:900px;margin:0 auto;}
+.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:18px;}
+.stat-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:16px;animation:fadeIn 0.4s ease;}
+.stat-card.gold{border-color:rgba(240,192,64,0.3);background:rgba(240,192,64,0.06);}
+.stat-card.green{border-color:rgba(46,204,113,0.3);background:rgba(46,204,113,0.06);}
+.stat-label{font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:0.8px;margin-bottom:6px;}
+.stat-value{font-size:26px;font-weight:700;color:#f0c040;}
+.stat-card.green .stat-value{color:#2ecc71;}
+.stat-sub{font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px;}
+.section{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:16px;margin-bottom:16px;animation:fadeIn 0.4s ease;}
+.section-title{font-size:14px;color:#f0c040;font-weight:700;margin-bottom:14px;}
+.section-subtitle{font-size:11px;color:rgba(255,255,255,0.35);margin-left:6px;font-weight:400;}
+.pay-table{width:100%;font-size:12px;border-collapse:collapse;}
+.pay-table th{padding:8px 10px;text-align:left;color:rgba(255,255,255,0.4);border-bottom:1px solid rgba(255,255,255,0.08);font-weight:600;font-size:11px;}
+.pay-table td{padding:9px 10px;border-bottom:1px solid rgba(255,255,255,0.06);vertical-align:top;line-height:1.5;}
+.pay-table tr:last-child td{border-bottom:none;}
+.pay-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+.pay-badge.paid{background:rgba(46,204,113,0.2);color:#2ecc71;border:1px solid rgba(46,204,113,0.3);}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;}
+.topic-bar-row{margin-bottom:10px;}
+.topic-bar-label{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
+.topic-bar-track{height:8px;background:rgba(255,255,255,0.07);border-radius:4px;overflow:hidden;}
+.topic-bar-fill{height:100%;background:linear-gradient(90deg,#f0c040,#e8830a);border-radius:4px;transition:width 0.8s ease;}
+.daily-chart{display:flex;align-items:flex-end;gap:6px;height:90px;padding:0 2px;}
+.daily-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.daily-bar{width:100%;background:linear-gradient(180deg,#f0c040,rgba(240,192,64,0.4));border-radius:3px 3px 0 0;transition:height 0.6s ease;min-height:3px;}
+.daily-bar.today{background:linear-gradient(180deg,#2ecc71,rgba(46,204,113,0.4));}
+.daily-label{font-size:9px;color:rgba(255,255,255,0.35);text-align:center;}
+.daily-val{font-size:9px;color:#f0c040;font-weight:700;}
+.gift-input{width:100%;padding:10px 13px;border-radius:9px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:#f0ede6;font-size:13px;font-family:Georgia,serif;outline:none;margin-bottom:8px;transition:border-color 0.2s;}
+.gift-input:focus{border-color:rgba(240,192,64,0.5);}
+.gift-btn{width:100%;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,#f0c040,#e8830a);color:#0a0e1a;font-size:14px;font-weight:700;cursor:pointer;font-family:Georgia,serif;margin-bottom:8px;}
+.revoke-btn{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);color:#e74c3c;font-size:13px;cursor:pointer;font-family:Georgia,serif;}
+.msg-box{padding:10px 12px;border-radius:8px;font-size:12px;margin-top:6px;display:none;line-height:1.5;}
+.msg-box.success{background:rgba(46,204,113,0.15);border:1px solid rgba(46,204,113,0.3);color:#2ecc71;}
+.msg-box.error{background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.3);color:#e74c3c;}
+#user-search{width:100%;padding:9px 13px;border-radius:9px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:#f0ede6;font-size:13px;font-family:Georgia,serif;outline:none;margin-bottom:12px;}
+.user-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);margin-bottom:7px;}
+.user-av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#1a3a6b,#0d2a4a);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#f0c040;flex-shrink:0;}
+.user-av.premium{background:linear-gradient(135deg,#1a6b3a,#0d4a28);}
+.user-av.gifted{background:linear-gradient(135deg,#6b4a1a,#4a2e0d);}
+.user-info{flex:1;min-width:0;}
+.user-email{font-size:12px;color:#f0ede6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-meta{font-size:10px;color:rgba(255,255,255,0.35);margin-top:2px;}
+.user-stats{text-align:right;flex-shrink:0;}
+.user-q{font-size:14px;font-weight:700;color:#f0c040;}
+.user-qlabel{font-size:10px;color:rgba(255,255,255,0.35);}
+.spinner{width:28px;height:28px;border:3px solid rgba(240,192,64,0.2);border-top-color:#f0c040;border-radius:50%;animation:spin 0.8s linear infinite;margin:20px auto;}
+.loading-msg{text-align:center;padding:30px;}
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">∑</div>
+    <div class="login-title">Admin Dashboard</div>
+    <div class="login-sub">BABSPHARM CLOUD • MTH 101</div>
+    <input class="login-input" type="password" id="admin-pass" placeholder="Enter admin password"/>
+    <button class="login-btn" onclick="doLogin()">🔐 Login</button>
+    <div class="login-err" id="login-err">Wrong password. Try again.</div>
+  </div>
+</div>
+
+<div id="dashboard">
+  <div id="dash-header">
+    <div id="dash-logo">∑</div>
+    <div>
+      <div id="dash-title">BABSPHARM CLOUD ADMIN</div>
+      <div id="dash-sub">MTH 101 • REAL-TIME DASHBOARD</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px;margin-left:auto;">
+      <div class="online-dot"></div>
+      <span style="font-size:10px;color:rgba(255,255,255,0.3);margin-right:6px;">Live</span>
+    </div>
+    <button class="hbtn refresh-btn" onclick="loadAll()">🔄 Refresh</button>
+    <button class="hbtn logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+
+  <div id="dash-body">
+    <div class="stats-row">
+      <div class="stat-card gold">
+        <div class="stat-label">TOTAL USERS</div>
+        <div class="stat-value" id="s-users">—</div>
+        <div class="stat-sub" id="s-prem-sub">Loading...</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">TOTAL REVENUE</div>
+        <div class="stat-value" id="s-rev">—</div>
+        <div class="stat-sub" id="s-rev-sub">Loading...</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">QUESTIONS TODAY</div>
+        <div class="stat-value" id="s-qtoday" style="color:#f5e090;">—</div>
+        <div class="stat-sub">questions asked today</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">ACTIVE TODAY</div>
+        <div class="stat-value" id="s-active" style="color:#3498db;">—</div>
+        <div class="stat-sub">unique sessions today</div>
+      </div>
+    </div>
+
+    <!-- PLAN BREAKDOWN -->
+    <div class="section" style="margin-bottom:16px;">
+      <div class="section-title">💎 Plan Breakdown</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div style="background:rgba(240,192,64,0.07);border:1px solid rgba(240,192,64,0.2);border-radius:12px;padding:14px;text-align:center;">
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">BASIC · ₦1,500</div>
+          <div style="font-size:24px;font-weight:700;color:#f0c040;" id="p-basic">—</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);">100 q/month</div>
+        </div>
+        <div style="background:rgba(46,204,113,0.07);border:1px solid rgba(46,204,113,0.2);border-radius:12px;padding:14px;text-align:center;">
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">STANDARD · ₦2,000</div>
+          <div style="font-size:24px;font-weight:700;color:#2ecc71;" id="p-standard">—</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);">150 q/month</div>
+        </div>
+        <div style="background:rgba(52,152,219,0.07);border:1px solid rgba(52,152,219,0.2);border-radius:12px;padding:14px;text-align:center;">
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:6px;">UNLIMITED · ₦3,000</div>
+          <div style="font-size:24px;font-weight:700;color:#3498db;" id="p-unlimited">—</div>
+          <div style="font-size:10px;color:rgba(255,255,255,0.35);">200 q/month</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">💳 Recent Payments <span class="section-subtitle" id="pay-count"></span></div>
+      <div id="payments-list"><div class="loading-msg"><div class="spinner"></div></div></div>
+    </div>
+
+    <div class="two-col">
+      <div class="section" style="margin-bottom:0;">
+        <div class="section-title">📊 Topics Students Ask Most</div>
+        <div id="topics-chart"><div class="loading-msg"><div class="spinner"></div></div></div>
+      </div>
+      <div class="section" style="margin-bottom:0;">
+        <div class="section-title">📅 Questions — Last 7 Days</div>
+        <div id="daily-chart"><div class="loading-msg"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top:16px;">
+      <div class="section-title">🎁 Gift & Manage Premium Access</div>
+      <div class="two-col" style="margin-bottom:0;">
+        <div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;line-height:1.6;">Give a student free premium. They tap "Claim gift" in the app and enter their email.</div>
+          <input class="gift-input" id="gift-name" type="text" placeholder="Student full name"/>
+          <input class="gift-input" id="gift-email" type="email" placeholder="Student email address"/>
+          <input class="gift-input" id="gift-note" type="text" placeholder="Note (e.g. scholarship, dept rep)"/>
+          <button class="gift-btn" onclick="giftPremium()">🎁 Give Free Premium</button>
+          <div class="msg-box" id="gift-msg"></div>
+        </div>
+        <div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;line-height:1.6;">Revoke a student's gifted premium access.</div>
+          <input class="gift-input" id="revoke-email" type="email" placeholder="Student email to revoke"/>
+          <button class="revoke-btn" onclick="revokePremium()">🚫 Revoke Access</button>
+          <div class="msg-box" id="revoke-msg"></div>
+          <div style="margin-top:14px;padding:12px;border-radius:10px;background:rgba(240,192,64,0.07);border:1px solid rgba(240,192,64,0.15);">
+            <div style="font-size:11px;color:rgba(255,255,255,0.55);line-height:1.8;">
+              <strong style="color:#f0c040;">Admin tip:</strong><br/>
+              • Gift = free premium for a specific email<br/>
+              • Student opens app → Paywall → "Claim gift" → enters email<br/>
+              • Premium unlocks instantly for them<br/>
+              • Revoke anytime from here
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">👥 Registered Students <span class="section-subtitle" id="user-count-label"></span></div>
+      <input id="user-search" placeholder="🔍 Search by name, email or matric number..." oninput="filterUsers(this.value)"/>
+      <div id="users-list"><div class="loading-msg"><div class="spinner"></div></div></div>
+    </div>
+
+    <div style="text-align:center;padding:20px;font-size:11px;color:rgba(255,255,255,0.2);">
+      BABSPHARM CLOUD Admin • Powered by Firebase Firestore
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PASSWORD = "BABSPHARM@2026";
+
+firebase.initializeApp({
+  apiKey:"AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8",
+  authDomain:"babspharmcloud.firebaseapp.com",
+  projectId:"babspharmcloud",
+  storageBucket:"babspharmcloud.firebasestorage.app",
+  messagingSenderId:"385674572482",
+  appId:"1:385674572482:web:a427125e649fef011b815b"
+});
+const db = firebase.firestore();
+
+function doLogin(){
+  if(document.getElementById('admin-pass').value===ADMIN_PASSWORD){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('dashboard').style.display='block';
+    loadAll();
+  }else{
+    var e=document.getElementById('login-err');
+    e.style.display='block';
+    document.getElementById('admin-pass').value='';
+    setTimeout(function(){e.style.display='none';},3000);
+  }
+}
+function doLogout(){
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('admin-pass').value='';
+}
+document.getElementById('admin-pass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+
+var allUsers=[];
+
+async function loadAll(){
+  document.querySelector('.refresh-btn').textContent='⏳ Loading...';
+  await Promise.all([loadStats(),loadPayments(),loadTopics(),loadDailyChart(),loadUsers()]);
+  document.querySelector('.refresh-btn').textContent='🔄 Refresh';
+}
+
+async function loadStats(){
+  try{
+    var today=new Date().toISOString().split('T')[0];
+    var usersSnap=await db.collection('mth101_accounts').get();
+    var total=usersSnap.size, premium=0, plans={basic:0,standard:0,unlimited:0};
+    usersSnap.forEach(function(d){
+      var ud=d.data();
+      if(ud.isPremium){ premium++; if(ud.plan&&plans[ud.plan]!==undefined) plans[ud.plan]++; else if(ud.giftedPremium) plans.basic++; else plans.standard++; }
+    });
+    document.getElementById('s-users').textContent=total;
+    document.getElementById('s-prem-sub').textContent=premium+' premium • '+total+' registered';
+    document.getElementById('p-basic').textContent=plans.basic;
+    document.getElementById('p-standard').textContent=plans.standard;
+    document.getElementById('p-unlimited').textContent=plans.unlimited;
+
+    var paySnap=await db.collection('mth101_payments').get();
+    var rev=0;
+    paySnap.forEach(function(d){rev+=(d.data().amount||1000);});
+    document.getElementById('s-rev').textContent='₦'+rev.toLocaleString();
+    document.getElementById('s-rev-sub').textContent=paySnap.size+' transactions';
+
+    var todayDoc=await db.collection('mth101_activity').doc(today).get();
+    if(todayDoc.exists){
+      var td=todayDoc.data();
+      document.getElementById('s-qtoday').textContent=td.questionsCount||0;
+      document.getElementById('s-active').textContent=td.activeUsers||0;
+    }else{
+      document.getElementById('s-qtoday').textContent='0';
+      document.getElementById('s-active').textContent='0';
+    }
+  }catch(e){console.error(e);}
+}
+
+async function loadPayments(){
+  try{
+    var snap=await db.collection('mth101_payments').orderBy('date','desc').limit(30).get();
+    document.getElementById('pay-count').textContent='('+snap.size+' total)';
+    if(snap.empty){
+      document.getElementById('payments-list').innerHTML='<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:13px;">No payments yet. Share the app and start earning! 🚀</div>';
+      return;
+    }
+    var html='<div style="overflow-x:auto;"><table class="pay-table"><thead><tr><th>Name</th><th>Email</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead><tbody>';
+    snap.forEach(function(doc){
+      var d=doc.data();
+      var dt=d.date?new Date(d.date).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';
+      var amt=d.amount?'₦'+Number(d.amount).toLocaleString():'₦1,000';
+      html+='<tr><td style="font-weight:600;">'+(d.name||'—')+'</td><td style="color:rgba(255,255,255,0.6);font-size:11px;">'+(d.email||'—')+'</td><td><strong style="color:#2ecc71;">'+amt+'</strong></td><td style="font-size:11px;color:rgba(255,255,255,0.5);">'+dt+'</td><td><span class="pay-badge paid">PAID</span></td></tr>';
+    });
+    html+='</tbody></table></div>';
+    document.getElementById('payments-list').innerHTML=html;
+  }catch(e){document.getElementById('payments-list').innerHTML='<div style="color:#e74c3c;font-size:12px;padding:10px;">Error: '+e.message+'</div>';}
+}
+
+async function loadTopics(){
+  try{
+    var snap=await db.collection('mth101_topics').orderBy('count','desc').limit(10).get();
+    if(snap.empty){document.getElementById('topics-chart').innerHTML='<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:12px;">No topic data yet.</div>';return;}
+    var topics=[];
+    snap.forEach(function(d){topics.push(d.data());});
+    var max=topics[0].count||1;
+    var html='';
+    topics.forEach(function(t){
+      var pct=Math.round((t.count/max)*100);
+      html+='<div class="topic-bar-row"><div class="topic-bar-label"><span style="color:#f0ede6;font-size:12px;">'+(t.name||'?')+'</span><span style="color:#f0c040;font-weight:700;font-size:12px;">'+(t.count||0)+'</span></div><div class="topic-bar-track"><div class="topic-bar-fill" style="width:'+pct+'%;"></div></div></div>';
+    });
+    document.getElementById('topics-chart').innerHTML=html;
+  }catch(e){document.getElementById('topics-chart').innerHTML='<div style="color:rgba(255,255,255,0.3);font-size:12px;padding:10px;">No data yet.</div>';}
+}
+
+async function loadDailyChart(){
+  try{
+    var days=[];
+    var today=new Date();
+    for(var i=6;i>=0;i--){var d=new Date(today);d.setDate(d.getDate()-i);days.push({key:d.toISOString().split('T')[0],label:i===0?'Today':d.toLocaleDateString('en',{weekday:'short'}),isToday:i===0});}
+    var counts={},max=0;
+    for(var j=0;j<days.length;j++){
+      var doc=await db.collection('mth101_activity').doc(days[j].key).get();
+      var c=doc.exists?(doc.data().questionsCount||0):0;
+      counts[days[j].key]=c;
+      if(c>max)max=c;
+    }
+    if(max===0)max=1;
+    var html='<div class="daily-chart">';
+    days.forEach(function(day){
+      var c=counts[day.key]||0;
+      var h=Math.max(4,Math.round((c/max)*85));
+      html+='<div class="daily-bar-wrap"><div class="daily-val">'+(c>0?c:'')+'</div><div class="daily-bar'+(day.isToday?' today':'')+'" style="height:'+h+'px;"></div><div class="daily-label">'+day.label+'</div></div>';
+    });
+    html+='</div>';
+    document.getElementById('daily-chart').innerHTML=html;
+  }catch(e){document.getElementById('daily-chart').innerHTML='<div style="color:rgba(255,255,255,0.3);font-size:12px;padding:10px;">No data yet.</div>';}
+}
+
+async function loadUsers(){
+  try{
+    // Load from accounts (registered users)
+    var snap=await db.collection('mth101_accounts').orderBy('registeredAt','desc').limit(100).get();
+    allUsers=[];
+    snap.forEach(function(d){allUsers.push(d.data());});
+    document.getElementById('user-count-label').textContent='('+allUsers.length+' registered)';
+    renderUsers(allUsers);
+  }catch(e){
+    // fallback to old collection
+    try{
+      var snap2=await db.collection('mth101_users').orderBy('lastSeen','desc').limit(50).get();
+      allUsers=[];
+      snap2.forEach(function(d){allUsers.push(d.data());});
+      document.getElementById('user-count-label').textContent='('+allUsers.length+' shown)';
+      renderUsers(allUsers);
+    }catch(e2){
+      document.getElementById('users-list').innerHTML='<div style="color:rgba(255,255,255,0.3);font-size:12px;padding:10px;">Could not load users.</div>';
+    }
+  }
+}
+
+function renderUsers(users){
+  if(!users.length){document.getElementById('users-list').innerHTML='<div style="text-align:center;padding:20px;color:rgba(255,255,255,0.3);font-size:13px;">No registered students yet.</div>';return;}
+  var html='';
+  users.forEach(function(u){
+    var av=u.name?u.name[0].toUpperCase():u.email?u.email[0].toUpperCase():'?';
+    var cls=u.giftedPremium?'gifted':u.isPremium?'premium':'';
+    var regDate=u.registeredAt?new Date(u.registeredAt).toLocaleDateString('en-NG',{day:'numeric',month:'short',year:'numeric'}):(u.lastSeen?new Date(u.lastSeen).toLocaleDateString('en-NG',{day:'numeric',month:'short'}):'—');
+    var badge=u.isPremium?(u.giftedPremium?'🎁 Gifted':'⭐ '+(u.plan||'Premium')):'';
+    html+='<div class="user-row">';
+    html+='<div class="user-av '+cls+'">'+av+'</div>';
+    html+='<div class="user-info">';
+    html+='<div class="user-email" style="font-weight:600;">'+(u.name||'Anonymous')+'</div>';
+    html+='<div class="user-meta">'+(u.email||'')+(u.matric?' • '+u.matric:'')+'</div>';
+    html+='<div class="user-meta">'+(badge?badge+' • ':'')+'Joined: '+regDate+(u.phone?' • '+u.phone:'')+'</div>';
+    html+='</div>';
+    html+='<div class="user-stats"><div class="user-q">'+(u.questionsUsed||u.questionsCount||0)+'</div><div class="user-qlabel">questions</div></div>';
+    html+='</div>';
+  });
+  document.getElementById('users-list').innerHTML=html;
+}
+
+function filterUsers(q){
+  if(!q.trim()){renderUsers(allUsers);return;}
+  var f=allUsers.filter(function(u){return((u.email||'')+(u.name||'')+(u.matric||'')+(u.phone||'')).toLowerCase().includes(q.toLowerCase());});
+  renderUsers(f);
+}
+
+async function giftPremium(){
+  var name=document.getElementById('gift-name').value.trim();
+  var email=document.getElementById('gift-email').value.trim();
+  var note=document.getElementById('gift-note').value.trim();
+  var msg=document.getElementById('gift-msg');
+  if(!email){showMsg(msg,'Please enter the student email.','error');return;}
+  var key=email.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  try{
+    await db.collection('mth101_gifted').doc(key).set({email:email,name:name||'Student',note:note||'Admin gift',active:true,giftedAt:new Date().toISOString(),giftedBy:'admin'});
+    // Also update accounts if exists
+    try{
+      var accSnap=await db.collection('mth101_accounts').where('email','==',email).limit(1).get();
+      if(!accSnap.empty){ await accSnap.docs[0].ref.update({isPremium:true,giftedPremium:true,plan:'gifted'}); }
+    }catch(e2){}
+    showMsg(msg,'Premium gifted to '+email+'! They can claim it from the app.','success');
+    document.getElementById('gift-name').value='';
+    document.getElementById('gift-email').value='';
+    document.getElementById('gift-note').value='';
+    loadStats();
+  }catch(e){showMsg(msg,'Error: '+e.message,'error');}
+}
+
+async function revokePremium(){
+  var email=document.getElementById('revoke-email').value.trim();
+  var msg=document.getElementById('revoke-msg');
+  if(!email){showMsg(msg,'Please enter the student email.','error');return;}
+  var key=email.toLowerCase().replace(/[^a-z0-9]/g,'_');
+  try{
+    await db.collection('mth101_gifted').doc(key).set({active:false},{merge:true});
+    showMsg(msg,'Premium revoked for '+email,'success');
+    document.getElementById('revoke-email').value='';
+  }catch(e){showMsg(msg,'Error: '+e.message,'error');}
+}
+
+function showMsg(el,text,type){
+  el.textContent=text;el.className='msg-box '+type;el.style.display='block';
+  setTimeout(function(){el.style.display='none';},5000);
+}
+</script>
+</body>
+</html>
