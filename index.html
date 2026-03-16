@@ -6676,13 +6676,19 @@ function fsGetAll(col, forceRefresh){
 }
 function fsAdd(col,fields){
   return fetch(BASE+"/"+col+"?key="+KEY,{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({fields:toFS(fields)})}).then(function(r){return r.json();});
+    body:JSON.stringify({fields:toFS(fields)})}).then(function(r){return r.json();}).then(function(data){
+      if(data && data.error){throw new Error(data.error.message||'Firestore write error');}
+      return data;
+    });
 }
 function fsPatch(path,fields){
   var mask=Object.keys(fields).map(function(k){return"updateMask.fieldPaths="+k;}).join("&");
   return fetch("https://firestore.googleapis.com/v1/"+path+"?key="+KEY+"&"+mask,{
     method:"PATCH",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({fields:toFS(fields)})}).then(function(r){return r.json();});
+    body:JSON.stringify({fields:toFS(fields)})}).then(function(r){return r.json();}).then(function(data){
+      if(data && data.error){throw new Error(data.error.message||'Firestore patch error');}
+      return data;
+    });
 }
 function fsDel(path){return fetch("https://firestore.googleapis.com/v1/"+path+"?key="+KEY,{method:"DELETE"});}
 function toFS(obj){
@@ -6992,7 +6998,7 @@ async function doRegister(){
             }
             sat('login');
           })
-          .catch(function(){notify('Profile save failed. Try again.','error','❌');});
+          .catch(function(err){var msg=err&&err.message?err.message:'Unknown error';notify('Profile save failed: '+msg,'error','❌');console.error('fsAdd users error:',err);});
       }).catch(function(){
         // fallback: auto-approve
         fsAdd('users',{uid:uid,name:name,username:un,level:level,email:email,
@@ -13852,7 +13858,7 @@ doRegister=async function(){
           else{notify('Registered! 🎁 50 bonus points! You can log in now ⚡','success','✅');}
           sat('login');
         })
-        .catch(function(){notify('Profile save failed. Try again.','error','❌');});
+        .catch(function(err){var msg=err&&err.message?err.message:'Unknown error';notify('Profile save failed: '+msg,'error','❌');console.error('fsAdd users error:',err);});
     }).catch(function(err){
       var msg='Registration failed';
       if(err.code==='auth/email-already-in-use') msg='This email is already registered. Please log in.';
