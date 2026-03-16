@@ -3509,7 +3509,7 @@ body:not(.app-mode) #session-timeout-modal { display: none !important; }
         </div>
       </div>
       <button class="btn bp" style="width:100%;justify-content:center" onclick="doRegister()">📝 Register</button>
-      <p style="font-size:.72rem;color:var(--text2);margin-top:8px;text-align:center">⏳ Awaiting admin approval.</p>
+      <p style="font-size:.72rem;color:var(--green);margin-top:8px;text-align:center">✅ Register and log in instantly!</p>
     </div>
     <div id="af" style="display:none">
       <div class="fg"><label>Admin Password</label><input type="password" id="apw" placeholder="Admin password" onkeydown="if(event.key==='Enter')doAdminLogin()"/></div>
@@ -6752,6 +6752,9 @@ function notify(msg,type,icon){
 }
 function logActivity(action,detail){
   fsAdd('activitylog',{action:action,detail:detail||'',by:CU?CU.username:'system',time:new Date().toISOString()}).catch(function(){});
+}
+function logPoints(username, type, pts, note){
+  fsAdd('pointslog',{username:username||'',type:type||'earn',pts:String(pts||0),note:note||'',at:new Date().toISOString()}).catch(function(){});
 }
 function stopPolls(){if(chatPoll){clearInterval(chatPoll);chatPoll=null;}if(convPoll){clearInterval(convPoll);convPoll=null;}}
 function toggleTheme(){
