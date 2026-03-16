@@ -6272,52 +6272,62 @@ var PROJECT = _cfg.project;
 var KEY = _cfg.key;
 var GROQ_KEY=localStorage.getItem('babspharm_apikey')||'';
 // Load admin-set key from Firebase on startup (overrides local key if found)
-(function loadAdminGroqKeyOnStartup(){
-  fetch("https://firestore.googleapis.com/v1/projects/babspharmcloud/databases/(default)/documents/settings?key="+KEY+"&pageSize=500")
-    .then(function(r){return r.json();})
-    .then(function(res){
-      var docs=(res.documents||[]).map(function(d){
-        var fields=d.fields||{};
-        var obj={__path:d.name};
-        Object.keys(fields).forEach(function(k){
-          obj[k]=fields[k].stringValue||fields[k].integerValue||fields[k].booleanValue||'';
-        });
-        return obj;
-      });
-      var keyDoc=docs.find(function(d){return d.key==='groq_api_key';});
-      if(keyDoc&&keyDoc.value&&keyDoc.value.startsWith('gsk_')){
-        GROQ_KEY=keyDoc.value;
-        localStorage.setItem('babspharm_apikey',GROQ_KEY);
-        // Hide the per-student key modal if it's showing
-        var modal=document.getElementById('apikey-modal');
-        if(modal) modal.style.display='none';
-      }
-    }).catch(function(){});
-})();
-// GROQ_MODEL is defined below with the full model list
-
 // ══ BREVO EMAIL SYSTEM ══
 var BREVO_API_KEY = '';
 var BREVO_SENDER_EMAIL = '';
 var BREVO_TRIGGERS = {new_file:true, new_quiz:true, new_announcement:true, new_exam:true};
 
-(function loadBrevoSettingsOnStartup(){
+// Single shared startup settings fetch (replaces 2 separate fetches — saves 1 read per page load)
+(function loadStartupSettings(){
+  // Try localStorage cache first (TTL: 1 hour)
+  try{
+    var raw=localStorage.getItem('bpcache_settings');
+    if(raw){
+      var parsed=JSON.parse(raw);
+      if(parsed&&parsed.d&&parsed.d.length>0&&(Date.now()-parsed.t)<3600000){
+        _applyStartupSettings(parsed.d.map(function(d){
+          var fields=d.fields||{};
+          var obj={__path:d.name};
+          Object.keys(fields).forEach(function(k){obj[k]=fields[k].stringValue||fields[k].integerValue||fields[k].booleanValue||'';});
+          return obj;
+        }));
+        return;
+      }
+    }
+  }catch(e){}
   fetch("https://firestore.googleapis.com/v1/projects/babspharmcloud/databases/(default)/documents/settings?key="+KEY+"&pageSize=500")
     .then(function(r){return r.json();})
     .then(function(res){
-      var docs=(res.documents||[]).map(function(d){
+      var rawDocs=res.documents||[];
+      // Cache the raw documents for reuse by fsGet('settings') calls
+      if(rawDocs.length>0){
+        try{localStorage.setItem('bpcache_settings',JSON.stringify({t:Date.now(),d:rawDocs}));}catch(e){}
+      }
+      var docs=rawDocs.map(function(d){
         var fields=d.fields||{};
         var obj={__path:d.name};
         Object.keys(fields).forEach(function(k){obj[k]=fields[k].stringValue||fields[k].integerValue||fields[k].booleanValue||'';});
         return obj;
       });
-      var keyDoc=docs.find(function(d){return d.key==='brevo_api_key';});
-      var senderDoc=docs.find(function(d){return d.key==='brevo_sender_email';});
-      var trigDoc=docs.find(function(d){return d.key==='brevo_triggers';});
-      if(keyDoc&&keyDoc.value) BREVO_API_KEY=keyDoc.value;
-      if(senderDoc&&senderDoc.value) BREVO_SENDER_EMAIL=senderDoc.value;
-      if(trigDoc&&trigDoc.value){try{BREVO_TRIGGERS=JSON.parse(trigDoc.value);}catch(e){}}
+      _applyStartupSettings(docs);
     }).catch(function(){});
+  function _applyStartupSettings(docs){
+    // Groq API key
+    var keyDoc=docs.find(function(d){return d.key==='groq_api_key';});
+    if(keyDoc&&keyDoc.value&&keyDoc.value.startsWith('gsk_')){
+      GROQ_KEY=keyDoc.value;
+      localStorage.setItem('babspharm_apikey',GROQ_KEY);
+      var modal=document.getElementById('apikey-modal');
+      if(modal) modal.style.display='none';
+    }
+    // Brevo settings
+    var keyDoc2=docs.find(function(d){return d.key==='brevo_api_key';});
+    var senderDoc=docs.find(function(d){return d.key==='brevo_sender_email';});
+    var trigDoc=docs.find(function(d){return d.key==='brevo_triggers';});
+    if(keyDoc2&&keyDoc2.value) BREVO_API_KEY=keyDoc2.value;
+    if(senderDoc&&senderDoc.value) BREVO_SENDER_EMAIL=senderDoc.value;
+    if(trigDoc&&trigDoc.value){try{BREVO_TRIGGERS=JSON.parse(trigDoc.value);}catch(e){}}
+  }
 })();
 
 function _brevoSendEmail(toEmail, toName, subject, htmlContent){
@@ -6618,7 +6628,17 @@ async function askGroq(prompt, systemPrompt){
   return data.choices[0].message.content;
 }
 var BASE="https://firestore.googleapis.com/v1/projects/"+PROJECT+"/databases/(default)/documents";
-function fsGet(col){return fetch(BASE+"/"+col+"?key="+KEY+"&pageSize=500").then(function(r){return r.json();});}
+// fsGet TTL map
+var _fsGetTTL={"settings":3600000,"rain_courses":3600000,"banner":300000,"groups":600000,"notes":600000,"exams":1800000};
+function fsGet(col){
+  var isTopLevel=col.indexOf("/")===-1;
+  var ttl=_fsGetTTL[col];
+  if(isTopLevel&&ttl){try{var raw=localStorage.getItem("bpcache_"+col);if(raw){var parsed=JSON.parse(raw);if(parsed&&parsed.d&&(Date.now()-parsed.t)<ttl){return Promise.resolve(parsed.d);}}}catch(e){}}
+  return fetch(BASE+"/"+col+"?key="+KEY+"&pageSize=500").then(function(r){return r.json();}).then(function(res){
+    if(isTopLevel&&ttl&&!res.error){try{localStorage.setItem("bpcache_"+col,JSON.stringify({t:Date.now(),d:res}));}catch(e){}}
+    return res;
+  });
+}
 // fsGetAll — cursor-based pagination for unbounded collections (chat, activitylog, visitors)
 // Fetches pages of 500 until exhausted, resolves with merged {documents:[...]}
 function fsGetAll(col, forceRefresh){
@@ -6954,8 +6974,8 @@ async function doRegister(){
       fsGet('settings').then(function(sRes){
         var settings=getDocs(sRes);
         var modeSetting=settings.find(function(d){return d.key==='regmode';});
-        var mode=modeSetting?modeSetting.value:'manual';
-        var initialStatus=mode==='auto'?'approved':'pending';
+        var mode=modeSetting?modeSetting.value:'auto';
+        var initialStatus='approved'; // Always auto-approve on registration
         // Store profile in Firestore (NO password stored here)
         fsAdd('users',{uid:uid,name:name,username:un,level:level,email:email,
           status:initialStatus,role:'user',
@@ -6968,21 +6988,21 @@ async function doRegister(){
             if(mode==='auto'){
               notify('Registered! 🎁 50 bonus points added! You can log in now ⚡','success','✅'); logPoints(un,'earn',50,'🎁 Registration bonus');
             } else {
-              notify('Registered! 🎁 50 bonus points added! Awaiting admin approval ⏳','success','✅');
+              notify('Registered! 🎁 50 bonus points added! You can log in now ⚡','success','✅'); logPoints(un,'earn',50,'🎁 Registration bonus');
             }
             sat('login');
           })
           .catch(function(){notify('Profile save failed. Try again.','error','❌');});
       }).catch(function(){
-        // fallback: manual approval mode
+        // fallback: auto-approve
         fsAdd('users',{uid:uid,name:name,username:un,level:level,email:email,
-          status:'pending',role:'user',
+          status:'approved',role:'user',
           joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',
           totalScore:'50',quizzesTaken:'0'})
           .then(function(){
             sendBrevoWelcomeEmail(email, name);
             window._fbSignOut().catch(function(){});
-            notify('Registered! 🎁 50 bonus points added! Awaiting admin approval ⏳','success','✅');
+            notify('Registered! 🎁 50 bonus points added! You can log in now ⚡','success','✅'); logPoints(un,'earn',50,'🎁 Registration bonus');
             sat('login');
           })
           .catch(function(){notify('Failed','error','❌');});
@@ -11603,6 +11623,11 @@ function loadAdminAll(){
 function reloadBrevoSettingsAuthenticated(){
   // Re-fetch settings using Firebase Auth token so Firestore rules allow access
   if(!window._fbAuth || !window._fbAuth.currentUser) return;
+  // Skip if settings were already cached in the last 30 minutes
+  try{
+    var raw=localStorage.getItem('bpcache_settings');
+    if(raw){var parsed=JSON.parse(raw);if(parsed&&parsed.d&&(Date.now()-parsed.t)<1800000)return;}
+  }catch(e){}
   window._fbAuth.currentUser.getIdToken().then(function(token){
     fetch("https://firestore.googleapis.com/v1/projects/babspharmcloud/databases/(default)/documents/settings?pageSize=500",{
       headers:{'Authorization':'Bearer '+token}
