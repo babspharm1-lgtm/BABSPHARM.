@@ -9885,8 +9885,7 @@ function renderUQuizFiles(){
         '<div class="fn" title="'+esc(f.name)+'">'+esc(f.name)+'</div>'+
         '<div class="fm">'+fsz(f.size||0)+' <span class="badge '+catBadge(f.category)+'">'+esc(f.category||'General')+'</span></div></div></div>'+
         '<div class="fa">'+
-        '<button class="btn bs bsm" onclick="event.stopPropagation();openPreview(\''+f.data+'\',\''+esc(f.name)+'\',\''+esc(f.type||'')+'\')">👁 View</button>'+
-        '<button class="btn bp bsm" style="background:linear-gradient(135deg,#a78bfa,#6d28d9)" onclick="event.stopPropagation();openQfAttempt(\''+f.data+'\',\''+esc(f.name)+'\')">✏️ Attempt</button>'+
+                '<button class="btn bp bsm" style="background:linear-gradient(135deg,#a78bfa,#6d28d9)" onclick="event.stopPropagation();openQfAttempt(\''+f.data+'\',\''+esc(f.name)+'\')">✏️ Attempt</button>'+
         '<button class="bm-btn '+(isFileBookmarked(f.__id)?'bm-saved':'')+'" title="Bookmark" onclick="event.stopPropagation();toggleFileBookmark(\''+f.__id+'\',\''+esc(f.name)+'\',\''+esc(f.category||'General')+'\',\''+esc(f.type||'')+'\',this)">'+(isFileBookmarked(f.__id)?'🔖':'🔖')+'</button>'+
         '<button class="bm-btn" title="Notes &amp; Highlights" onclick="event.stopPropagation();openAnnotModal(\''+f.__id+'\',\''+esc(f.name)+'\')">📝</button>'+
         '</div></div>';
@@ -15777,10 +15776,14 @@ function deleteSubAdmin(id, name){
     document.getElementById('qf-gen-btn').disabled=false;
     document.getElementById('qf-gen-status').style.display='none';
     document.getElementById('qf-attempt-timer').style.display='none';
+    // Hide PDF half - open directly into quiz
+    document.getElementById('qf-pdf-half').style.display='none';
+    var qh=document.getElementById('qf-quiz-half');
+    qh.style.width='100%'; qh.style.maxWidth='520px'; qh.style.margin='0 auto';
     document.getElementById('qf-attempt-overlay').classList.add('open');
     document.body.style.overflow='hidden';
-    // Render PDF
-    qfRenderPdf(fileData);
+    // Auto-trigger quiz generation immediately
+    setTimeout(function(){ qfGenerateQuiz(); }, 80);
   };
 
   window.closeQfAttempt=function(){
@@ -15788,6 +15791,10 @@ function deleteSubAdmin(id, name){
     document.body.style.overflow='';
     if(_qfTimer){clearInterval(_qfTimer);_qfTimer=null;}
     if(_qfPdf){_qfPdf.destroy().catch(function(){});_qfPdf=null;}
+    // Reset PDF half visibility for next open
+    document.getElementById('qf-pdf-half').style.display='';
+    var qh=document.getElementById('qf-quiz-half');
+    qh.style.width=''; qh.style.maxWidth=''; qh.style.margin='';
   };
 
   function qfRenderPdf(data){
