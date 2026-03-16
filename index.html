@@ -15784,7 +15784,7 @@ function deleteSubAdmin(id, name){
     document.body.style.overflow='hidden';
 
     // Detect HTML quiz file and parse questions directly
-    var isHtml = fileName && (fileName.toLowerCase().endsWith('.html') || fileName.toLowerCase().endsWith('.htm'))
+    var isHtml = (fileName && (fileName.toLowerCase().endsWith('.html') || fileName.toLowerCase().endsWith('.htm')))
                  || (fileData && fileData.startsWith('data:text/html'));
     if(isHtml){
       try{
@@ -15796,10 +15796,18 @@ function deleteSubAdmin(id, name){
           qfRenderQuestions();
           return;
         }
-      }catch(e){}
-      // Fallback: render HTML file in an iframe inside the quiz half
-      var qh2 = document.getElementById('qf-quiz-half');
-      qh2.innerHTML = '<iframe src="'+fileData+'" style="width:100%;height:90vh;border:none;border-radius:12px;background:#fff;"></iframe>';
+        // Fallback: render the raw HTML in an iframe using srcdoc (data: URLs are blocked by browsers)
+        var qh2 = document.getElementById('qf-quiz-half');
+        var iframe = document.createElement('iframe');
+        iframe.setAttribute('srcdoc', htmlStr);
+        iframe.style.cssText = 'width:100%;height:90vh;border:none;border-radius:12px;background:#fff;';
+        qh2.innerHTML = '';
+        qh2.appendChild(iframe);
+      }catch(e){
+        // Last resort: show a clear error message
+        var qh2 = document.getElementById('qf-quiz-half');
+        qh2.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text2)"><div style="font-size:2.5rem;margin-bottom:12px">⚠️</div><div style="font-weight:700;margin-bottom:6px">Could not load quiz file</div><div style="font-size:.82rem">The HTML file could not be parsed. Please check the file format.</div></div>';
+      }
       return;
     }
     // Non-HTML: use AI generator
