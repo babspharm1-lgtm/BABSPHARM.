@@ -15770,7 +15770,7 @@ function deleteSubAdmin(id, name){
     _qfFileData=fileData; _qfFileName=fileName;
     _qfQuestions=[]; _qfAnswers={}; _qfPage=1;
     document.getElementById('qf-attempt-title').textContent=fileName;
-    document.getElementById('qf-gen-area').style.display='block';
+    document.getElementById('qf-gen-area').style.display='none';
     document.getElementById('qf-questions-wrap').style.display='none';
     document.getElementById('qf-result-wrap').style.display='none';
     document.getElementById('qf-gen-btn').disabled=false;
@@ -15782,9 +15782,93 @@ function deleteSubAdmin(id, name){
     qh.style.width='100%'; qh.style.maxWidth='520px'; qh.style.margin='0 auto';
     document.getElementById('qf-attempt-overlay').classList.add('open');
     document.body.style.overflow='hidden';
-    // Auto-trigger quiz generation immediately
+
+    // Detect HTML quiz file and parse questions directly
+    var isHtml = fileName && (fileName.toLowerCase().endsWith('.html') || fileName.toLowerCase().endsWith('.htm'))
+                 || (fileData && fileData.startsWith('data:text/html'));
+    if(isHtml){
+      try{
+        var b64 = fileData.split(',')[1] || '';
+        var htmlStr = decodeURIComponent(escape(atob(b64)));
+        var qs = qfParseHtmlQuiz(htmlStr);
+        if(qs && qs.length){
+          _qfQuestions = qs; _qfAnswers = {};
+          qfRenderQuestions();
+          return;
+        }
+      }catch(e){}
+      // Fallback: render HTML file in an iframe inside the quiz half
+      var qh2 = document.getElementById('qf-quiz-half');
+      qh2.innerHTML = '<iframe src="'+fileData+'" style="width:100%;height:90vh;border:none;border-radius:12px;background:#fff;"></iframe>';
+      return;
+    }
+    // Non-HTML: use AI generator
+    document.getElementById('qf-gen-area').style.display='block';
     setTimeout(function(){ qfGenerateQuiz(); }, 80);
   };
+
+  // Parse questions from uploaded HTML quiz files
+  function qfParseHtmlQuiz(htmlStr){
+    var parser = new DOMParser();
+    var doc = parser.parseFromString(htmlStr, 'text/html');
+    var qs = [];
+
+    // Strategy 1: look for JSON embedded in a <script> tag (e.g. var questions=[...])
+    var scripts = doc.querySelectorAll('script');
+    for(var s=0; s<scripts.length; s++){
+      var src = scripts[s].textContent || '';
+      var m = src.match(/(?:var|let|const)\s+questions\s*=\s*(\[[\s\S]*?\]);/);
+      if(!m) m = src.match(/questions\s*=\s*(\[[\s\S]*?\])\s*[;,
+]/);
+      if(m){
+        try{
+          var parsed = JSON.parse(m[1]);
+          if(Array.isArray(parsed) && parsed.length) return qfNormaliseQs(parsed);
+        }catch(e){}
+      }
+    }
+
+    // Strategy 2: scan DOM for question blocks
+    // Common patterns: <li>, <div class="question">, <p> with options A-D
+    var blocks = doc.querySelectorAll('.question, [class*="question"], [class*="quiz-q"], [class*="mcq"]');
+    if(!blocks.length) blocks = doc.querySelectorAll('li');
+    if(!blocks.length) blocks = doc.querySelectorAll('p');
+
+    blocks.forEach(function(block){
+      var text = block.innerText || block.textContent || '';
+      // Look for option lines like "A. ...", "B) ...", "(A) ..."
+      var optRe = /^[\s]*([A-D])[.\)\s]+(.+)$/m;
+      var lines = text.split(/\n|<br>/);
+      var qText='', opts={}, ans='';
+      lines.forEach(function(line){
+        line = line.trim();
+        var om = line.match(/^([A-D])[.)\s]+(.+)$/i);
+        if(om){ opts[om[1].toLowerCase()] = om[2].trim(); }
+        else if(line.match(/answer[:\s]+([A-D])/i)){
+          var am = line.match(/answer[:\s]+([A-D])/i);
+          if(am) ans = am[1].toUpperCase();
+        } else if(line && !qText && line.length > 5){ qText = line; }
+      });
+      if(qText && Object.keys(opts).length >= 2){
+        qs.push({q: qText, a: opts.a||'', b: opts.b||'', c: opts.c||'', d: opts.d||'', ans: ans||'A'});
+      }
+    });
+
+    return qs.length ? qs : null;
+  }
+
+  function qfNormaliseQs(arr){
+    return arr.map(function(q){
+      return {
+        q: q.q || q.question || q.text || q.stem || '',
+        a: q.a || q.optA || q.option_a || q.A || '',
+        b: q.b || q.optB || q.option_b || q.B || '',
+        c: q.c || q.optC || q.option_c || q.C || '',
+        d: q.d || q.optD || q.option_d || q.D || '',
+        ans: (q.ans || q.answer || q.correct || q.correctAnswer || 'A').toString().toUpperCase().charAt(0)
+      };
+    }).filter(function(q){ return q.q; });
+  }
 
   window.closeQfAttempt=function(){
     document.getElementById('qf-attempt-overlay').classList.remove('open');
