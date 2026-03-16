@@ -6349,7 +6349,7 @@ function sendBrevoWelcomeEmail(toEmail, toName){
     '<div style="font-family:Arial,sans-serif;background:#0f0c29;padding:32px;border-radius:16px;max-width:480px;margin:0 auto">'+
     '<h1 style="background:linear-gradient(90deg,#a78bfa,#38bdf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-size:1.6rem;margin-bottom:8px">⚗️ BABSPHARM Cloud</h1>'+
     '<p style="color:#b0a8d8;font-size:.95rem;margin-bottom:16px">Hi <strong style="color:#f8f7ff">'+toName+'</strong>, welcome aboard!</p>'+
-    '<p style="color:#b0a8d8;font-size:.9rem;line-height:1.6">Your account is being reviewed. Once approved you\'ll have access to study materials, past questions, quizzes, forums and more.</p>'+
+    '<p style="color:#b0a8d8;font-size:.9rem;line-height:1.6">Your account is ready! You now have instant access to study materials, past questions, quizzes, forums and more.</p>'+
     '<div style="margin:24px 0;padding:16px;background:rgba(167,139,250,.12);border-left:4px solid #a78bfa;border-radius:8px">'+
     '<p style="color:#f8f7ff;font-size:.88rem;margin:0">📚 Study hard. 🏆 Quiz often. 🚀 Aim higher.</p>'+
     '<p style="color:#b0a8d8;font-size:.82rem;margin-top:8px">🎁 You\'ve been given <strong style="color:#4ade80">50 bonus points</strong> to get started!</p></div>'+
@@ -7381,8 +7381,11 @@ async function doLogin(){
       } else {
         try{localStorage.removeItem('bp_remembered');}catch(e){}
       }
+      // Auto-approve any legacy pending accounts on login
+      var patchData={lastDeviceFp:deviceFp,lastLoginAt:new Date().toISOString()};
+      if(user.status==='pending') patchData.status='approved';
       fsPatch('projects/'+PROJECT+'/databases/(default)/documents/users/'+user.__id,
-        {lastDeviceFp:deviceFp,lastLoginAt:new Date().toISOString()}).catch(function(){});
+        patchData).catch(function(){});
       fsAdd('visitors',{name:user.name,username:user.username,
         time:new Date().toISOString(),deviceFp:deviceFp}).catch(function(){});
       logActivity('login','');showDash('user');startSessionTimer();
@@ -7404,7 +7407,6 @@ async function doLogin(){
       try{sessionStorage.setItem('bp_rl',JSON.stringify(rl));}catch(e){}
       notify(rl.count>=5?'Too many attempts — wait 15 min.':'Wrong credentials','error','🔒');return;
     }
-    if(user.status==='pending'){notify('Account pending approval ⏳','warn','⏳');return;}
     if(user.status==='banned'){notify('Account banned 🚫','error','🚫');return;}
     if(user.status==='deactivated'){notify('Your account has been deactivated. Contact admin.','error','🚫');return;}
     _doSignIn(user);
@@ -7425,7 +7427,6 @@ async function doLogin(){
     var _cachedUser=_cachedUsers.find(function(u){return u.username===un;});
     if(_cachedUser){
       // Found in cache — sign in directly without a Firestore read
-      if(_cachedUser.status==='pending'){notify('Account pending approval ⏳','warn','⏳');return;}
       if(_cachedUser.status==='banned'){notify('Account banned 🚫','error','🚫');return;}
       if(_cachedUser.status==='deactivated'){notify('Your account has been deactivated. Contact admin.','error','🚫');return;}
       _doSignIn(_cachedUser);
@@ -13834,60 +13835,30 @@ doRegister=async function(){
     }
     if(allUsers.some(function(u){return u.username===un;})){notify('Username taken','error','⚠️');return;}
 
-    // Determine reg mode
-    fsGet('settings').then(function(sRes){
-      var settings=getDocs(sRes);
-      var modeSetting=settings.find(function(d){return d.key==='regmode';});
-      var mode=modeSetting?modeSetting.value:'manual';
-      var initialStatus=mode==='auto'?'approved':'pending';
-
-      // Create Firebase Auth account FIRST (so login works via Firebase Auth)
-      window._fbSignUp(email, pw).then(function(cred){
-        var uid=cred.user.uid;
-        // Store profile + device fingerprint in Firestore
-        fsAdd('users',{uid:uid,name:name,username:un,level:level,email:email,
-          status:initialStatus,role:'user',
-          joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',
-          totalScore:'50',quizzesTaken:'0',referredBy:refCode||'',
-          registrationDeviceFp:deviceFp})
-          .then(function(){
-            sendBrevoWelcomeEmail(email, name);
-            window._fbSignOut().catch(function(){});
-            logPoints(un,'earn',50,'🎁 Registration bonus');
-            if(refCode){notify('Registered with referral! 🎁 50 bonus points! 🔗','success','✅');}
-            else if(mode==='auto'){notify('Registered! 🎁 50 bonus points! You can log in now ⚡','success','✅');}
-            else{notify('Registered! 🎁 50 bonus points! Awaiting admin approval ⏳','success','✅');}
-            sat('login');
-          })
-          .catch(function(){notify('Profile save failed. Try again.','error','❌');});
-      }).catch(function(err){
-        var msg='Registration failed';
-        if(err.code==='auth/email-already-in-use') msg='This email is already registered. Please log in.';
-        else if(err.code==='auth/invalid-email') msg='Invalid email address.';
-        else if(err.code==='auth/weak-password') msg='Password too weak. Use at least 6 characters.';
-        notify(msg,'error','❌');
-      });
-    }).catch(function(){
-      // Fallback: manual mode, still use Firebase Auth
-      window._fbSignUp(email, pw).then(function(cred){
-        var uid=cred.user.uid;
-        fsAdd('users',{uid:uid,name:name,username:un,level:level,email:email,
-          status:'pending',role:'user',
-          joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',
-          totalScore:'50',quizzesTaken:'0',referredBy:refCode||'',
-          registrationDeviceFp:deviceFp})
-          .then(function(){
-            sendBrevoWelcomeEmail(email, name);
-            window._fbSignOut().catch(function(){});
-            notify('Registered! 🎁 50 bonus points! Awaiting admin approval ⏳','success','✅');
-            sat('login');
-          })
-          .catch(function(){notify('Profile save failed. Try again.','error','❌');});
-      }).catch(function(err){
-        var msg='Registration failed';
-        if(err.code==='auth/email-already-in-use') msg='This email is already registered. Please log in.';
-        notify(msg,'error','❌');
-      });
+    // Always auto-approve: every new student gets instant access
+    window._fbSignUp(email, pw).then(function(cred){
+      var uid=cred.user.uid;
+      // Store profile + device fingerprint in Firestore
+      fsAdd('users',{uid:uid,name:name,username:un,level:level,email:email,
+        status:'approved',role:'user',
+        joinedAt:new Date().toISOString(),bio:'',phone:'',badges:'',
+        totalScore:'50',quizzesTaken:'0',referredBy:refCode||'',
+        registrationDeviceFp:deviceFp})
+        .then(function(){
+          sendBrevoWelcomeEmail(email, name);
+          window._fbSignOut().catch(function(){});
+          logPoints(un,'earn',50,'🎁 Registration bonus');
+          if(refCode){notify('Registered with referral! 🎁 50 bonus points! 🔗','success','✅');}
+          else{notify('Registered! 🎁 50 bonus points! You can log in now ⚡','success','✅');}
+          sat('login');
+        })
+        .catch(function(){notify('Profile save failed. Try again.','error','❌');});
+    }).catch(function(err){
+      var msg='Registration failed';
+      if(err.code==='auth/email-already-in-use') msg='This email is already registered. Please log in.';
+      else if(err.code==='auth/invalid-email') msg='Invalid email address.';
+      else if(err.code==='auth/weak-password') msg='Password too weak. Use at least 6 characters.';
+      notify(msg,'error','❌');
     });
   }).catch(function(){notify('Registration failed. Try again.','error','❌');});
 };
