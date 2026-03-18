@@ -5384,28 +5384,11 @@ D. Rankine</code>
       </div>
       <button class="btn bs bsm" style="margin-top:10px;width:100%" onclick="renderOnlineStudents()">🔄 Refresh</button>
     </div>
-    <!-- Registration Mode Card -->
-    <div class="card" style="margin-bottom:12px">
-      <div class="st"><span class="dot"></span>&#x2699;&#xFE0F; Registration Mode</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:11px;background:rgba(255,255,255,.05);border:1px solid var(--cb);margin-bottom:8px">
-        <div>
-          <div style="font-weight:700;font-size:.88rem" id="regmode-label">Loading...</div>
-          <div style="font-size:.74rem;color:var(--text2);margin-top:2px" id="regmode-desc">Checking current mode...</div>
-        </div>
-        <button class="btn bsm" id="regmode-btn" onclick="toggleRegMode()" style="min-width:120px">...</button>
-      </div>
-      <div id="regmode-status" style="font-size:.74rem;color:var(--text2);text-align:center;padding:4px 0"></div>
-    </div>
+    <!-- Registration Mode removed — all registrations are auto-approved -->
     <!-- Pending / Approved -->
     <div class="card" style="margin-bottom:12px">
-      <div style="display:none" id="pending-approvals-section">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
-          <div class="st" style="margin-bottom:0"><span class="dot"></span>Pending Approvals</div>
-          <button class="btn bp bsm" style="background:linear-gradient(135deg,#4ade80,#16a34a);box-shadow:0 4px 12px rgba(22,163,74,.4)" onclick="approveAllPending()">✅ Approve All</button>
-        </div>
-        <div id="pending-list"></div>
-      </div>
-      <div class="div"></div>
+      <!-- pending-list kept hidden for legacy compatibility -->
+      <div id="pending-list" style="display:none"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
         <div class="st" style="margin-bottom:0"><span class="dot"></span>All Students</div>
         <div style="display:flex;gap:5px;flex-wrap:wrap">
@@ -11333,26 +11316,14 @@ function _processUsersRes(res){
     notify('Failed to load students: '+(res.error.message||'Firebase error'),'error','⚠️');return;
   }
   var users=getDocs(res);
-  var pending=users.filter(function(u){return u.status==='pending';});
-  allStudents=users.filter(function(u){return u.role!=='admin'&&u.status!=='pending';});
-  document.getElementById('pending-list').innerHTML=pending.length?
-    pending.map(function(u){
-      return'<div class="pu-item"><div style="display:flex;align-items:center;gap:7px">'+
-        '<div class="pu-av">'+(u.name?u.name[0].toUpperCase():'?')+'</div>'+
-        '<div><div style="font-weight:600;font-size:.83rem">'+esc(u.name)+'</div>'+
-        '<div style="font-size:.69rem;color:var(--text2)">@'+esc(u.username)+' · '+esc(u.level||'')+'</div></div></div>'+
-        '<div style="display:flex;gap:4px">'+
-          '<button class="btn bg2 bsm" onclick="approveUser(\''+u.__id+'\',\''+esc(u.name)+'\')">✅ Approve</button>'+
-          '<button class="btn bd bsm" onclick="rejectUser(\''+u.__id+'\',\''+esc(u.name)+'\')">❌ Reject</button>'+
-        '</div></div>';
-    }).join(''):'<div class="empty"><span>✅</span>No pending requests.</div>';
+  // All registered users are auto-approved — no pending system
+  allStudents=users.filter(function(u){return u.role!=='admin';});
   renderStudentList();
   loadDeviceBlockList();
   document.getElementById('su').textContent=allStudents.filter(function(u){return u.status==='approved';}).length;
 }
 
 function loadUsers(forceRefresh){
-  loadRegMode();
   var approvedEl=document.getElementById('approved-list');
   var now=Date.now();
   // Use cache if fresh and not a forced refresh
@@ -11373,7 +11344,7 @@ function loadUsers(forceRefresh){
 
 function renderStudentList(){
   var list=allStudents;
-  if(studentFilter==='active')list=allStudents.filter(function(u){return u.status==='approved';});
+  if(studentFilter==='active')list=allStudents.filter(function(u){return u.status==='approved'||u.status==='pending';});
   if(studentFilter==='deactivated')list=allStudents.filter(function(u){return u.status==='deactivated';});
   if(studentFilter==='blocked')list=allStudents.filter(function(u){return u.deviceBlocked==='true';});
   document.getElementById('approved-list').innerHTML=list.length?
