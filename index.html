@@ -3483,7 +3483,25 @@ body:not(.app-mode) #session-timeout-modal { display: none !important; }
         <label for="remember-me">Keep me logged in on this device</label>
       </div>
       <button class="btn bp" style="width:100%;justify-content:center" onclick="doLogin()">✨ Enter Cloud</button>
+      <div style="text-align:center;margin-top:12px">
+        <a href="#" onclick="showForgotPassword();return false;" style="font-size:.78rem;color:var(--accent);text-decoration:none;opacity:.85">🔑 Forgot Password?</a>
+      </div>
 
+    </div>
+    <!-- Forgot Password Panel -->
+    <div id="fp-panel" style="display:none;margin-top:12px">
+      <div style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.25);border-radius:12px;padding:16px">
+        <div style="font-family:var(--fh);font-size:.9rem;font-weight:800;margin-bottom:4px">🔑 Reset Password</div>
+        <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px">Enter the email you registered with. We'll send you a reset link.</div>
+        <div class="fg" style="margin-bottom:10px">
+          <input type="email" id="fp-email" placeholder="your@email.com" style="width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--cb);background:rgba(255,255,255,.06);color:var(--text);font-family:var(--fb);font-size:.87rem;outline:none"/>
+        </div>
+        <button class="btn bp" style="width:100%;justify-content:center" onclick="doForgotPassword()">📧 Send Reset Link</button>
+        <div style="text-align:center;margin-top:8px">
+          <a href="#" onclick="hideForgotPassword();return false;" style="font-size:.75rem;color:var(--text2);text-decoration:none">← Back to Login</a>
+        </div>
+        <div id="fp-status" style="display:none;margin-top:10px;padding:8px 12px;border-radius:8px;font-size:.8rem;text-align:center"></div>
+      </div>
     </div>
     <div id="rf" style="display:none">
       <div class="fg"><label>Full Name</label><input type="text" id="rname" placeholder="Your full name"/></div>
@@ -7338,6 +7356,45 @@ async function hashPassword(plaintext){
   return 'sha256:'+(await sha256(plaintext));
 }
 
+function showForgotPassword(){
+  document.getElementById('fp-panel').style.display='';
+  document.getElementById('lf').querySelector('button.bp').style.display='none';
+  document.querySelector('[onclick="showForgotPassword();return false;"]').style.display='none';
+  var st=document.getElementById('fp-status');if(st){st.style.display='none';}
+  setTimeout(function(){var e=document.getElementById('fp-email');if(e)e.focus();},100);
+}
+function hideForgotPassword(){
+  document.getElementById('fp-panel').style.display='none';
+  document.getElementById('lf').querySelector('button.bp').style.display='';
+  document.querySelector('[onclick="showForgotPassword();return false;"]').style.display='';
+}
+async function doForgotPassword(){
+  var email=document.getElementById('fp-email').value.trim().toLowerCase();
+  var st=document.getElementById('fp-status');
+  if(!email){
+    st.style.display='';st.style.background='rgba(248,113,113,.15)';st.style.color='var(--red)';
+    st.textContent='⚠️ Please enter your email address.';return;
+  }
+  if(!window._fbSendPasswordReset){
+    var ok=await _waitForAuth();
+    if(!ok){st.style.display='';st.style.background='rgba(248,113,113,.15)';st.style.color='var(--red)';st.textContent='❌ Auth unavailable. Check your internet.';return;}
+  }
+  var btn=document.querySelector('#fp-panel button.bp');
+  if(btn){btn.disabled=true;btn.textContent='Sending...';}
+  window._fbSendPasswordReset(email).then(function(){
+    st.style.display='';st.style.background='rgba(74,222,128,.12)';st.style.color='var(--green)';
+    st.textContent='✅ Reset link sent! Check your email inbox (and spam folder).';
+    if(btn){btn.disabled=false;btn.textContent='📧 Send Reset Link';}
+  }).catch(function(err){
+    var msg='❌ Could not send reset email.';
+    if(err.code==='auth/user-not-found')msg='⚠️ No account found with that email.';
+    else if(err.code==='auth/invalid-email')msg='⚠️ Invalid email address.';
+    else if(err.code==='auth/too-many-requests')msg='⚠️ Too many attempts. Try again later.';
+    st.style.display='';st.style.background='rgba(248,113,113,.15)';st.style.color='var(--red)';
+    st.textContent=msg;
+    if(btn){btn.disabled=false;btn.textContent='📧 Send Reset Link';}
+  });
+}
 async function doLogin(){
   var un=document.getElementById('lun').value.trim().toLowerCase(),pw=document.getElementById('lpw').value.trim();
   if(!un||!pw){notify('Fill all fields','error','⚠️');return;}
@@ -11318,7 +11375,12 @@ function _processUsersRes(res){
   var users=getDocs(res);
   // All registered users are auto-approved — no pending system
   allStudents=users.filter(function(u){return u.role!=='admin';});
-  renderStudentList();
+  if(!allStudents.length){
+    var approvedEl=document.getElementById('approved-list');
+    if(approvedEl)approvedEl.innerHTML='<div class="empty" style="color:var(--text2);text-align:center;padding:20px"><span style="font-size:2rem">👥</span><br>No students registered yet.</div>';
+  } else {
+    renderStudentList();
+  }
   loadDeviceBlockList();
   document.getElementById('su').textContent=allStudents.filter(function(u){return u.status==='approved';}).length;
 }
@@ -11326,18 +11388,19 @@ function _processUsersRes(res){
 function loadUsers(forceRefresh){
   var approvedEl=document.getElementById('approved-list');
   var now=Date.now();
-  // Use cache if fresh and not a forced refresh
   if(!forceRefresh&&_usersCache&&(now-_usersCacheTime)<USERS_CACHE_TTL){
     _processUsersRes(_usersCache);
     return;
   }
   if(approvedEl)approvedEl.innerHTML='<div class="ld">Loading<span class="sp"></span></div>';
-  fsGetAll('users').then(function(res){
+  // Always wipe localStorage cache on force refresh so we get fresh data
+  if(forceRefresh){try{localStorage.removeItem('bpcache_users');}catch(e){}}
+  fsGetAll('users', true).then(function(res){
     if(!(res&&res.error)){_usersCache=res;_usersCacheTime=Date.now();}
     _processUsersRes(res);
   }).catch(function(err){
     var msg=err&&err.message?err.message:'Network or Firebase error';
-    if(approvedEl)approvedEl.innerHTML='<div class="empty"><span>⚠️</span>Could not load students.<br><small style="color:var(--red)">'+esc(msg)+'</small></div>';
+    if(approvedEl)approvedEl.innerHTML='<div class="empty" style="color:var(--text2);text-align:center;padding:20px"><span>⚠️</span><br>Could not load students.<br><small style="color:var(--red)">'+esc(msg)+'</small><br><br><button class="btn bs bsm" onclick="loadUsers(true)">🔄 Retry</button></div>';
     notify('Failed to load students: '+msg,'error','⚠️');
   });
 }
