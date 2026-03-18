@@ -5398,11 +5398,13 @@ D. Rankine</code>
     </div>
     <!-- Pending / Approved -->
     <div class="card" style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
-        <div class="st" style="margin-bottom:0"><span class="dot"></span>Pending Approvals</div>
-        <button class="btn bp bsm" style="background:linear-gradient(135deg,#4ade80,#16a34a);box-shadow:0 4px 12px rgba(22,163,74,.4)" onclick="approveAllPending()">✅ Approve All</button>
+      <div style="display:none" id="pending-approvals-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+          <div class="st" style="margin-bottom:0"><span class="dot"></span>Pending Approvals</div>
+          <button class="btn bp bsm" style="background:linear-gradient(135deg,#4ade80,#16a34a);box-shadow:0 4px 12px rgba(22,163,74,.4)" onclick="approveAllPending()">✅ Approve All</button>
+        </div>
+        <div id="pending-list"></div>
       </div>
-      <div id="pending-list"><div class="ld">Loading<span class="sp"></span></div></div>
       <div class="div"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
         <div class="st" style="margin-bottom:0"><span class="dot"></span>All Students</div>
@@ -6994,6 +6996,8 @@ async function doRegister(){
             sendBrevoWelcomeEmail(email, name);
             // Sign out after registration — require admin approval before login
             window._fbSignOut().catch(function(){});
+            // Invalidate users cache so login fetches fresh data and finds the new account
+            try{localStorage.removeItem('bpcache_users');}catch(e){}
             if(mode==='auto'){
               notify('Registered! 🎁 50 bonus points added! You can log in now ⚡','success','✅'); logPoints(un,'earn',50,'🎁 Registration bonus');
             } else {
@@ -7011,6 +7015,8 @@ async function doRegister(){
           .then(function(){
             sendBrevoWelcomeEmail(email, name);
             window._fbSignOut().catch(function(){});
+            // Invalidate users cache so login fetches fresh data and finds the new account
+            try{localStorage.removeItem('bpcache_users');}catch(e){}
             notify('Registered! 🎁 50 bonus points added! You can log in now ⚡','success','✅'); logPoints(un,'earn',50,'🎁 Registration bonus');
             sat('login');
           })
@@ -7418,6 +7424,11 @@ async function doLogin(){
     }
     if(user.status==='banned'){notify('Account banned 🚫','error','🚫');return;}
     if(user.status==='deactivated'){notify('Your account has been deactivated. Contact admin.','error','🚫');return;}
+    // Auto-approve any legacy pending users — no user should be stuck pending
+    if(user.status==='pending'){
+      fsPatch('projects/'+PROJECT+'/databases/(default)/documents/users/'+user.__id,{status:'approved'}).catch(function(){});
+      user.status='approved';
+    }
     _doSignIn(user);
   }
 
@@ -11317,6 +11328,8 @@ function _processUsersRes(res){
   var approvedEl=document.getElementById('approved-list');
   if(res&&res.error){
     if(approvedEl)approvedEl.innerHTML='<div class="empty"><span>⚠️</span>Could not load students.<br><small style="color:var(--red)">'+esc(res.error.message||'Firebase error — check your API key or security rules.')+'</small></div>';
+    var pendingEl=document.getElementById('pending-list');
+    if(pendingEl)pendingEl.innerHTML='<div class="empty"><span>⚠️</span>Could not load. Check Firebase connection.</div>';
     notify('Failed to load students: '+(res.error.message||'Firebase error'),'error','⚠️');return;
   }
   var users=getDocs(res);
