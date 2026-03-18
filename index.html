@@ -3071,6 +3071,8 @@ body:not(.app-mode) #session-timeout-modal { display: none !important; }
       window._fbSignOut  = function(){ return fbAuth.signOut(); };
       window._fbOnAuthStateChanged = function(cb){ return fbAuth.onAuthStateChanged(cb); };
       window._fbSendPasswordReset  = function(email){ return fbAuth.sendPasswordResetEmail(email); };
+      window._fbVerifyResetCode     = function(code){ return fbAuth.verifyPasswordResetCode(code); };
+      window._fbConfirmReset        = function(code, newPw){ return fbAuth.confirmPasswordReset(code, newPw); };
       window._fbAuthReady = true;
       window.dispatchEvent(new Event('fbAuthReady'));
       if(window._fbAuthQueue && window._fbAuthQueue.length){
@@ -18402,6 +18404,88 @@ function pqAIExplainWrong(wrongOnes, quizTitle) {
 // ══════════════════════════════════
 // EXIT PRIVATE QUIZ → EXPLORE SITE
 // ══════════════════════════════════
+
+// ══ HANDLE FIREBASE PASSWORD RESET LINK ══
+(function(){
+  var params = new URLSearchParams(window.location.search);
+  var mode = params.get('mode');
+  var oobCode = params.get('oobCode');
+  if(mode === 'resetPassword' && oobCode){
+    // Show the reset overlay immediately
+    document.addEventListener('DOMContentLoaded', function(){
+      var overlay = document.getElementById('pw-reset-overlay');
+      if(overlay){ overlay.style.display='flex'; }
+      // Wait for Firebase then verify the code
+      function tryVerify(){
+        if(window._fbVerifyResetCode){
+          window._fbVerifyResetCode(oobCode).then(function(email){
+            var lbl = document.getElementById('pwr-email-label');
+            if(lbl) lbl.textContent = 'Resetting password for: ' + email;
+          }).catch(function(){
+            var st = document.getElementById('pwr-status');
+            if(st){
+              st.style.display='';
+              st.style.background='rgba(248,113,113,.15)';
+              st.style.color='var(--red)';
+              st.textContent='❌ This reset link has expired or already been used. Please request a new one.';
+            }
+            var btn = document.getElementById('pwr-btn');
+            if(btn) btn.disabled = true;
+          });
+        } else {
+          setTimeout(tryVerify, 300);
+        }
+      }
+      tryVerify();
+    });
+  }
+})();
+
+async function doConfirmPasswordReset(){
+  var params = new URLSearchParams(window.location.search);
+  var oobCode = params.get('oobCode');
+  var pw1 = document.getElementById('pwr-pw1').value;
+  var pw2 = document.getElementById('pwr-pw2').value;
+  var st  = document.getElementById('pwr-status');
+  var btn = document.getElementById('pwr-btn');
+
+  st.style.display='';
+  if(!pw1 || pw1.length < 6){
+    st.style.background='rgba(248,113,113,.15)';st.style.color='var(--red)';
+    st.textContent='⚠️ Password must be at least 6 characters.';return;
+  }
+  if(pw1 !== pw2){
+    st.style.background='rgba(248,113,113,.15)';st.style.color='var(--red)';
+    st.textContent='⚠️ Passwords do not match.';return;
+  }
+  btn.disabled=true; btn.textContent='Saving...';
+  if(!window._fbConfirmReset){
+    var ok = await _waitForAuth();
+    if(!ok){
+      st.style.background='rgba(248,113,113,.15)';st.style.color='var(--red)';
+      st.textContent='❌ Auth unavailable. Check your internet and try again.';
+      btn.disabled=false;btn.textContent='✅ Save New Password';return;
+    }
+  }
+  window._fbConfirmReset(oobCode, pw1).then(function(){
+    st.style.background='rgba(74,222,128,.12)';st.style.color='var(--green)';
+    st.textContent='✅ Password changed successfully! You can now log in.';
+    btn.style.display='none';
+    setTimeout(function(){
+      // Clean URL and redirect to login
+      window.location.href = window.location.pathname;
+    }, 2500);
+  }).catch(function(err){
+    var msg = '❌ Failed to reset password. The link may have expired.';
+    if(err.code==='auth/weak-password') msg='⚠️ Password too weak. Use at least 6 characters.';
+    if(err.code==='auth/expired-action-code') msg='❌ Reset link expired. Please request a new one.';
+    if(err.code==='auth/invalid-action-code') msg='❌ Invalid or already used link. Request a new one.';
+    st.style.background='rgba(248,113,113,.15)';st.style.color='var(--red)';
+    st.textContent=msg;
+    btn.disabled=false;btn.textContent='✅ Save New Password';
+  });
+}
+
 window.pqExitToSite = function() {
   // Hide the full-screen quiz overlay
   var overlay = document.getElementById('pq-take-overlay');
@@ -18423,6 +18507,31 @@ window.pqExitToSite = function() {
 
 
 </script>
+
+
+<!-- ══ PASSWORD RESET OVERLAY (handles Firebase reset link) ══ -->
+<div id="pw-reset-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:radial-gradient(circle at top,#2b0f55,#120022 70%);display:none;align-items:center;justify-content:center;padding:20px">
+  <div style="background:rgba(255,255,255,0.06);border:1px solid rgba(167,139,250,.3);border-radius:20px;padding:28px 22px;width:100%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.5);backdrop-filter:blur(20px)">
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:2.5rem;margin-bottom:8px">🔑</div>
+      <div style="font-family:var(--fh);font-size:1.3rem;font-weight:800;background:linear-gradient(90deg,var(--accent),var(--a2));-webkit-background-clip:text;-webkit-text-fill-color:transparent">Set New Password</div>
+      <div style="font-size:.8rem;color:var(--text2);margin-top:4px" id="pwr-email-label">Loading...</div>
+    </div>
+    <div class="fg">
+      <label style="font-size:.74rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px">New Password</label>
+      <input type="password" id="pwr-pw1" placeholder="Enter new password (min 6 chars)" style="width:100%;padding:10px 13px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.07);color:var(--text);font-family:var(--fb);font-size:.9rem;outline:none"/>
+    </div>
+    <div class="fg" style="margin-top:10px">
+      <label style="font-size:.74rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px">Confirm Password</label>
+      <input type="password" id="pwr-pw2" placeholder="Repeat new password" style="width:100%;padding:10px 13px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.07);color:var(--text);font-family:var(--fb);font-size:.9rem;outline:none"/>
+    </div>
+    <div id="pwr-status" style="display:none;margin:10px 0;padding:9px 13px;border-radius:9px;font-size:.82rem;text-align:center"></div>
+    <button id="pwr-btn" class="btn bp" style="width:100%;justify-content:center;margin-top:6px;font-size:.95rem" onclick="doConfirmPasswordReset()">✅ Save New Password</button>
+    <div style="text-align:center;margin-top:12px">
+      <a href="/" style="font-size:.75rem;color:var(--text2);text-decoration:none">← Back to Login</a>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
