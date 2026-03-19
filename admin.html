@@ -443,6 +443,15 @@ const FC={apiKey:"AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8",authDomain:"babspharm
 firebase.initializeApp(FC);
 const auth=firebase.auth(),db=firebase.firestore();
 let allStudents=[],selectedPQId='';
+// Force hide loading after 8 seconds no matter what
+setTimeout(()=>{
+  const l=document.getElementById('loading');
+  if(l&&!l.classList.contains('hidden')){
+    l.classList.add('hidden');
+    showAuthUI();
+  }
+},8000);
+
 auth.onAuthStateChanged(async function(user){
   document.getElementById('loading').classList.add('hidden');
   if(!user){showAuthUI();return;}

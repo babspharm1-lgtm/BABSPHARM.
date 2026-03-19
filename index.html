@@ -878,6 +878,15 @@ let quizData = [], currentQ = 0, answers = {}, quizTimer = null, timeLeft = 600;
 let currentSem = 'harm';
 
 // ══ AUTH STATE ══
+// Force hide loading after 8 seconds
+setTimeout(()=>{
+  const l=document.getElementById('loading');
+  if(l&&!l.classList.contains('hidden')){
+    l.classList.add('hidden');
+    showPage('auth');
+  }
+},8000);
+
 auth.onAuthStateChanged(async function(user){
   document.getElementById('loading').classList.add('hidden');
   // Load contact info for auth page
