@@ -446,10 +446,28 @@ let allStudents=[],selectedPQId='';
 auth.onAuthStateChanged(async function(user){
   document.getElementById('loading').classList.add('hidden');
   if(!user){showAuthUI();return;}
-  const doc=await db.collection('users').doc(user.uid).get();
-  if(!doc.exists||doc.data().role!=='admin'){await auth.signOut();showAuthUI();showToast('Access denied');return;}
-  document.getElementById('adm-name').textContent=doc.data().name||user.email;
-  showAdminUI();loadDashboard();
+  try{
+    // First try by uid
+    let doc = await db.collection('users').doc(user.uid).get();
+    // If not found, try by email
+    if(!doc.exists){
+      const snap = await db.collection('users').where('email','==',user.email).get();
+      if(!snap.empty) doc = snap.docs[0];
+    }
+    const data = doc.exists ? doc.data() : null;
+    if(!data || (data.role!=='admin' && data.role!=='subadmin')){
+      await auth.signOut();
+      showAuthUI();
+      showToast('Access denied — Admins only');
+      return;
+    }
+    document.getElementById('adm-name').textContent=data.name||user.email;
+    showAdminUI();
+    loadDashboard();
+  }catch(e){
+    showAuthUI();
+    showToast('Error loading profile. Try again.');
+  }
 });
 function showAuthUI(){document.getElementById('auth-wrap').classList.remove('hidden');['topbar','sidebar','main'].forEach(id=>document.getElementById(id).classList.add('hidden'));}
 function showAdminUI(){document.getElementById('auth-wrap').classList.add('hidden');['topbar','sidebar','main'].forEach(id=>document.getElementById(id).classList.remove('hidden'));}
