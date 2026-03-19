@@ -12119,7 +12119,11 @@ document.addEventListener('DOMContentLoaded', function(){
       } else if(!firebaseUser && CU){
         // Firebase signed out — clear session
         try{localStorage.removeItem('bp_session');}catch(e){}
-        CU=null;
+        CU=null;sat('login');
+} else {
+sat('login');
+}
+});
       }
     });
   });
