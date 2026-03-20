@@ -11,7 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
 :root{--navy:#0a1628;--navy2:#0f2044;--navy3:#162d5a;--gold:#c9a84c;--gold2:#e8c97a;--text:#f0ead6;--text2:#9bacc8;--card:rgba(255,255,255,0.04);--cb:rgba(201,168,76,0.2);--green:#4ade80;--red:#f87171;--r:13px;}
-*{box-sizing:border-box;margin:0;padding:0;}
+*{box-sizing:border-box;margin:0;padding:0;}body.loading{overflow:hidden;}
 body{font-family:'Outfit',sans-serif;background:var(--navy);color:var(--text);min-height:100vh;}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 20% 20%,rgba(201,168,76,.05) 0%,transparent 45%);}
 #topbar{position:fixed;top:0;left:0;right:0;z-index:300;display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:rgba(10,22,40,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--cb);}
@@ -78,11 +78,11 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .loader{width:42px;height:42px;border:3px solid rgba(201,168,76,.3);border-top-color:#c9a84c;border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .hidden{display:none!important;}
-#topbar,#sidebar,#main{display:none;}
+#topbar{display:none!important;}#sidebar{display:none!important;}#main{display:none!important;}#auth-wrap{display:none!important;}
 @media(max-width:700px){#sidebar{display:none;}#main{margin-left:0;}}
 </style>
 </head>
-<body>
+<body class="loading">
 <div id="loading"><div style="font-size:2.5rem">⚗️</div><div class="loader"></div><div style="font-family:'Playfair Display',serif;color:#e8c97a;font-size:1rem">Admin Panel</div></div>
 <div id="toast"></div>
 <div id="auth-wrap" class="hidden">
@@ -454,7 +454,7 @@ setTimeout(()=>{
 },8000);
 
 auth.onAuthStateChanged(async function(user){
-  document.getElementById('loading').classList.add('hidden');
+  document.getElementById('loading').classList.add('hidden');document.body.classList.remove('loading');
   if(!user){showAuthUI();return;}
   try{
     // First try by uid
@@ -480,16 +480,16 @@ auth.onAuthStateChanged(async function(user){
   }
 });
 function showAuthUI(){
-  document.getElementById('auth-wrap').classList.remove('hidden');
-  document.getElementById('topbar').style.display='none';
-  document.getElementById('sidebar').style.display='none';
-  document.getElementById('main').style.display='none';
+  document.getElementById('auth-wrap').style.cssText='display:flex!important;align-items:center;justify-content:center;min-height:100vh;padding:20px;';
+  document.getElementById('topbar').style.cssText='display:none!important';
+  document.getElementById('sidebar').style.cssText='display:none!important';
+  document.getElementById('main').style.cssText='display:none!important';
 }
 function showAdminUI(){
-  document.getElementById('auth-wrap').classList.add('hidden');
-  document.getElementById('topbar').style.display='flex';
-  document.getElementById('sidebar').style.display='block';
-  document.getElementById('main').style.display='block';
+  document.getElementById('auth-wrap').style.cssText='display:none!important';
+  document.getElementById('topbar').style.cssText='display:flex!important;position:fixed;top:0;left:0;right:0;z-index:300;align-items:center;justify-content:space-between;padding:11px 16px;background:rgba(10,22,40,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--cb);';
+  document.getElementById('sidebar').style.cssText='display:block!important';
+  document.getElementById('main').style.cssText='display:block!important';
 }
 async function adminLogin(){
   const em=document.getElementById('a-em').value.trim(),pw=document.getElementById('a-pw').value;
