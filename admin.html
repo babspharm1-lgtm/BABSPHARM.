@@ -140,6 +140,7 @@ html, body {
   <div class="sb-item" onclick="showPanel('courses',this)">📚 Courses</div>
   <div class="sb-item" onclick="showPanel('questions',this)">❓ Quiz Questions</div>
   <div class="sb-item" onclick="showPanel('privatequiz',this)">🔐 Private Quiz</div>
+  <div class="sb-item" onclick="showPanel('textbooks',this)">📗 Textbooks</div>
   <div class="sb-item" onclick="showPanel('files',this)">📁 Files</div>
   <div class="sb-item" onclick="showPanel('redemptions',this)">📋 Redemptions</div>
   <div class="sb-item" onclick="showPanel('coupons',this)">🎟️ Point Coupons</div>
@@ -188,7 +189,7 @@ html, body {
     <div class="sec-title">Quiz Questions</div>
     <div class="row2">
       <div class="card">
-        <div class="card-title">Add Question</div>
+        <div class="card-title">Add Single Question</div>
         <div class="fg"><label>Course</label><select id="q-course"><option value="">Select course...</option></select></div>
         <div class="fg"><label>Question</label><textarea id="q-text" placeholder="Type the question..."></textarea></div>
         <div class="fg"><label>Option A</label><input type="text" id="q-a"/></div>
@@ -205,6 +206,71 @@ html, body {
           </select>
         </div>
         <div id="questions-list"></div>
+      </div>
+    </div>
+
+    <!-- BULK UPLOAD -->
+    <div class="card">
+      <div class="card-title">📦 Bulk Upload Questions</div>
+      <div style="font-size:.76rem;color:var(--text2);margin-bottom:14px;">Upload many questions at once. Supports CSV, JSON, TXT or any text file.</div>
+      <div class="row2">
+        <div>
+          <div class="fg"><label>Course to upload into</label>
+            <select id="bulk-course" style="width:100%;padding:10px 13px;border-radius:9px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;">
+              <option value="">Select course...</option>
+            </select>
+          </div>
+          <div class="fg"><label>Upload Format</label>
+            <select id="bulk-format" onchange="showBulkFormat(this.value)" style="width:100%;padding:10px 13px;border-radius:9px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;">
+              <option value="csv">CSV File (Excel)</option>
+              <option value="json">JSON File</option>
+              <option value="txt">Plain Text / Word paste</option>
+            </select>
+          </div>
+
+          <!-- FORMAT GUIDES -->
+          <div id="fmt-csv" style="background:rgba(201,168,76,.06);border:1px solid var(--cb);border-radius:8px;padding:10px;margin-bottom:10px;font-size:.72rem;color:var(--text2);">
+            <b style="color:var(--gold2)">CSV Format:</b> Download template below. Each row = 1 question.<br>
+            Columns: <code style="color:var(--gold)">question, optionA, optionB, optionC, optionD, answer</code><br>
+            Answer = A, B, C, or D
+            <br><br>
+            <button class="btn btn-sm" style="background:rgba(201,168,76,.1);color:var(--gold);border:1px solid var(--cb)" onclick="downloadCSVTemplate()">⬇ Download CSV Template</button>
+          </div>
+          <div id="fmt-json" style="display:none;background:rgba(201,168,76,.06);border:1px solid var(--cb);border-radius:8px;padding:10px;margin-bottom:10px;font-size:.72rem;color:var(--text2);">
+            <b style="color:var(--gold2)">JSON Format:</b><br>
+            <code style="color:var(--gold);line-height:1.8">[{"q":"Question?","opts":["A","B","C","D"],"ans":0}]</code><br>
+            ans = 0 for A, 1 for B, 2 for C, 3 for D
+          </div>
+          <div id="fmt-txt" style="display:none;background:rgba(201,168,76,.06);border:1px solid var(--cb);border-radius:8px;padding:10px;margin-bottom:10px;font-size:.72rem;color:var(--text2);">
+            <b style="color:var(--gold2)">Text Format:</b> Paste questions in this format:<br>
+            <code style="color:var(--gold);line-height:1.8;white-space:pre">1. What is...?
+A. Option 1
+B. Option 2
+C. Option 3
+D. Option 4
+Answer: A</code>
+          </div>
+
+          <!-- FILE DROP ZONE -->
+          <div id="bulk-dropzone" onclick="document.getElementById('bulk-file').click()" style="border:2px dashed var(--cb);border-radius:10px;padding:20px;text-align:center;cursor:pointer;margin-bottom:10px;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--cb)'">
+            <div style="font-size:1.8rem;margin-bottom:6px">📂</div>
+            <div style="font-size:.8rem;color:var(--text2)">Tap to select file</div>
+            <div id="bulk-fname" style="font-size:.76rem;color:var(--gold);margin-top:4px;display:none;"></div>
+          </div>
+          <input type="file" id="bulk-file" accept=".csv,.json,.txt,.doc,.docx" style="display:none" onchange="previewBulkFile(this)"/>
+
+          <!-- OR PASTE TEXT -->
+          <div class="fg"><label>Or paste questions directly</label>
+            <textarea id="bulk-paste" placeholder="Paste your questions here..." style="min-height:100px;"></textarea>
+          </div>
+
+          <button class="btn btn-gold" style="width:100%" onclick="uploadBulkQuestions()">📦 Upload All Questions</button>
+          <div id="bulk-progress" style="display:none;margin-top:10px;padding:10px;background:rgba(201,168,76,.08);border-radius:8px;font-size:.78rem;text-align:center;"></div>
+        </div>
+        <div>
+          <div style="font-size:.82rem;font-weight:700;color:var(--gold2);margin-bottom:10px;">Preview</div>
+          <div id="bulk-preview-list" style="max-height:400px;overflow-y:auto;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -265,7 +331,42 @@ html, body {
       </div>
     </div>
   </div>
-  <div id="panel-files" class="panel">
+  <!-- TEXTBOOKS PANEL -->
+  <div id="panel-textbooks" class="panel">
+    <div class="sec-title">📗 Textbooks</div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">Add Textbook</div>
+        <div class="fg"><label>Book Title</label><input type="text" id="tb-title" placeholder="e.g. Atkins Physical Chemistry"/></div>
+        <div class="fg"><label>Author</label><input type="text" id="tb-author" placeholder="e.g. Peter Atkins"/></div>
+        <div class="fg"><label>Course Code</label>
+          <select id="tb-course" style="width:100%;padding:10px 13px;border-radius:9px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;">
+            <option value="">Select course...</option>
+            <option value="CHM">CHM — Chemistry</option>
+            <option value="MTH">MTH — Mathematics</option>
+            <option value="PHY">PHY — Physics</option>
+            <option value="PCY">PCY — Pharmacology</option>
+            <option value="BIO">BIO — Biology</option>
+            <option value="COS">COS — Computer Science</option>
+            <option value="GST">GST — General Studies</option>
+          </select>
+        </div>
+        <div class="fg"><label>Edition (optional)</label><input type="text" id="tb-edition" placeholder="e.g. 10th Edition"/></div>
+        <div class="fg"><label>Google Drive / PDF Link</label><input type="text" id="tb-url" placeholder="https://drive.google.com/..."/></div>
+        <div class="fg"><label>Cover Image URL (optional)</label>
+          <input type="text" id="tb-img" placeholder="https://... (leave blank for auto icon)"/>
+          <div style="font-size:.68rem;color:var(--text2);margin-top:3px">Tip: Upload book cover to Drive and paste the image link here</div>
+        </div>
+        <button class="btn btn-gold" style="width:100%" onclick="addTextbook()">➕ Add Textbook</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Current Textbooks</div>
+        <div id="admin-tb-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILES PANEL -->
     <div class="sec-title">Study Files</div>
     <div class="row2">
       <div class="card">
@@ -322,6 +423,83 @@ html, body {
         </div>
       </div>
       <button class="btn btn-gold" onclick="saveContact()">💾 Save Contact Info</button>
+    </div>
+
+    <!-- Batch Points -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">🎁 Batch Give Points to All Students</div>
+      <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;">Give the same amount of points to all registered students at once — great for bonuses and promotions!</div>
+      <div class="row2">
+        <div class="fg">
+          <label>Points to Give Each Student</label>
+          <input type="number" id="batch-pts" placeholder="e.g. 50" min="1"/>
+        </div>
+        <div class="fg">
+          <label>Reason (shown in history)</label>
+          <input type="text" id="batch-reason" placeholder="e.g. Exam season bonus 🎁"/>
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="batchGivePoints()">🎁 Give Points to All Students</button>
+      <div id="batch-progress" style="display:none;margin-top:10px;font-size:.78rem;color:var(--text2);text-align:center;padding:8px;background:rgba(201,168,76,.08);border-radius:8px;"></div>
+    </div>
+
+    <!-- Login Popup -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">🎯 Login Popup Announcement</div>
+      <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;">Shows a popup to students when they login. Great for urgent announcements, exam alerts or motivation.</div>
+      <div class="row2">
+        <div class="fg">
+          <label>Emoji</label>
+          <input type="text" id="popup-emoji-inp" placeholder="e.g. 🚨" maxlength="2" style="font-size:1.4rem;text-align:center;"/>
+        </div>
+        <div class="fg">
+          <label>Title</label>
+          <input type="text" id="popup-title-inp" placeholder="e.g. Exam Alert!"/>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Message</label>
+        <textarea id="popup-msg-inp" placeholder="Type your popup message..."></textarea>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <input type="checkbox" id="popup-active" style="accent-color:var(--gold);width:16px;height:16px;"/>
+        <label style="font-size:.8rem;color:var(--text2)">Popup is active (students will see it on login)</label>
+      </div>
+      <button class="btn btn-gold" onclick="savePopup()">💾 Save Popup</button>
+      <button class="btn btn-sm" style="margin-left:8px;background:rgba(248,113,113,.1);color:var(--red);border:1px solid rgba(248,113,113,.2)" onclick="disablePopup()">✕ Disable Popup</button>
+    </div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">📧 Brevo Email Settings</div>
+      <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;">Connect Brevo to send welcome emails, announcements and direct messages to students automatically.</div>
+      <div class="row2">
+        <div class="fg">
+          <label>Brevo API Key</label>
+          <input type="password" id="brevo-key" placeholder="xkeysib-..."/>
+          <div style="font-size:.68rem;color:var(--text2);margin-top:3px">Get from Brevo → Settings → API Keys</div>
+        </div>
+        <div class="fg">
+          <label>Sender Email</label>
+          <input type="text" id="brevo-email" placeholder="noreply@babspharm.com"/>
+        </div>
+        <div class="fg">
+          <label>Sender Name</label>
+          <input type="text" id="brevo-name" placeholder="BABSPHARM Cloud"/>
+        </div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--text2);cursor:pointer">
+          <input type="checkbox" id="brevo-welcome" checked style="accent-color:var(--gold)"/> Welcome email on registration
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--text2);cursor:pointer">
+          <input type="checkbox" id="brevo-ann" checked style="accent-color:var(--gold)"/> Announcement emails
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--text2);cursor:pointer">
+          <input type="checkbox" id="brevo-msg" checked style="accent-color:var(--gold)"/> Direct message emails
+        </label>
+      </div>
+      <button class="btn btn-gold" onclick="saveBrevoSettings()">💾 Save Brevo Settings</button>
+      <button class="btn btn-sm" style="margin-left:8px;background:rgba(201,168,76,.1);color:var(--gold);border:1px solid var(--cb)" onclick="testBrevoEmail()">🧪 Send Test Email</button>
+      <div id="brevo-status" style="font-size:.74rem;margin-top:8px;"></div>
     </div>
     <div class="row2">
       <div class="card">
@@ -526,7 +704,7 @@ function showPanel(name,el){
   document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('on'));
   document.getElementById('panel-'+name).classList.add('on');
   if(el)el.classList.add('on');
-  ({students:loadStudents,courses:loadCourses,questions:loadQCourses,privatequiz:()=>{loadPQList();loadHtmlQuizzes();},files:loadFiles,settings:loadSettings,dashboard:loadDashboard,messages:()=>{loadStudents();loadSentMessages();},subadmins:loadSubAdmins,coupons:loadCoupons,redemptions:loadRedemptions})[name]?.();
+  ({students:loadStudents,courses:loadCourses,questions:()=>{loadQCourses();loadBulkCourses();},privatequiz:()=>{loadPQList();loadHtmlQuizzes();},files:loadFiles,textbooks:loadAdminTextbooks,settings:()=>{loadSettings();loadBrevoSettings();loadPopupSettings();},dashboard:loadDashboard,messages:()=>{loadStudents();loadSentMessages();},subadmins:loadSubAdmins,coupons:loadCoupons,redemptions:loadRedemptions})[name]?.();
 }
 async function loadDashboard(){
   const snap=await db.collection('users').get();
@@ -555,6 +733,7 @@ function renderStudents(list){
       <td style="display:flex;gap:5px;flex-wrap:wrap">
         <button class="btn btn-sm ${u.banned?'btn-green':'btn-red'}" onclick="toggleBan('${u.id}',${!!u.banned})">${u.banned?'Unban':'Ban'}</button>
         <button class="btn btn-sm" style="background:rgba(201,168,76,.12);color:var(--gold);border:1px solid var(--cb)" onclick="setAttemptLimit('${u.id}','${u.name||'Student'}',${u.quizAttemptLimit||0})">⚙️ Limit</button>
+        <button class="btn btn-sm" style="background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.2)" onclick="grantAiMessages('${u.id}','${u.name||'Student'}')">🤖 AI</button>
         <button class="btn btn-sm" style="background:rgba(56,189,248,.1);color:#38bdf8;border:1px solid rgba(56,189,248,.2)" onclick="msgStudent('${u.id}','${u.name||'Student'}')">💬</button>
       </td>
     </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:18px">No students</td></tr>';
@@ -687,6 +866,8 @@ async function sendAnn(){
   await db.collection('announcements').add({title,msg,createdAt:new Date().toISOString()});
   document.getElementById('ann-title').value='';document.getElementById('ann-msg').value='';
   showToast('Announcement sent!');
+  // Send emails via Brevo
+  sendAnnouncementEmails(title,msg).catch(()=>{});
 }
 // ══ HTML QUIZ UPLOAD ══
 document.getElementById('hq-file').addEventListener('change', function(){
@@ -947,7 +1128,307 @@ async function managePoints(action){
   loadStudents();
 }
 
-// ══ COUPON REDEMPTIONS ══
+// ══ BULK QUIZ UPLOAD ══
+let bulkParsed = [];
+
+function showBulkFormat(fmt){
+  ['csv','json','txt'].forEach(f=>document.getElementById('fmt-'+f).style.display=f===fmt?'block':'none');
+}
+
+function downloadCSVTemplate(){
+  const csv = 'question,optionA,optionB,optionC,optionD,answer\nWhat is the atomic number of Carbon?,6,12,14,8,A\nWhat is H2O?,Water,Oxygen,Hydrogen,Salt,A';
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'babspharm_quiz_template.csv';
+  a.click();
+}
+
+function previewBulkFile(input){
+  if(!input.files[0]) return;
+  document.getElementById('bulk-fname').textContent = '✅ '+input.files[0].name;
+  document.getElementById('bulk-fname').style.display = 'block';
+  document.getElementById('bulk-dropzone').style.borderColor = 'var(--gold)';
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('bulk-paste').value = e.target.result;
+    parseBulkPreview(e.target.result);
+  };
+  reader.readAsText(input.files[0]);
+}
+
+function parseBulkPreview(text){
+  const fmt = document.getElementById('bulk-format').value;
+  bulkParsed = [];
+  try{
+    if(fmt==='json'){
+      bulkParsed = JSON.parse(text);
+    } else if(fmt==='csv'){
+      const lines = text.trim().split('\n').slice(1); // skip header
+      bulkParsed = lines.filter(l=>l.trim()).map(line=>{
+        const cols = line.split(',').map(c=>c.trim().replace(/^"|"$/g,''));
+        const ansMap = {A:0,B:1,C:2,D:3};
+        return {q:cols[0], opts:[cols[1],cols[2],cols[3],cols[4]], ans:ansMap[cols[5]?.toUpperCase()]||0};
+      });
+    } else {
+      // Parse text/word format
+      const blocks = text.trim().split(/\n\s*\n/).filter(b=>b.trim());
+      blocks.forEach(block=>{
+        const lines = block.trim().split('\n').map(l=>l.trim()).filter(l=>l);
+        if(lines.length<5) return;
+        const q = lines[0].replace(/^\d+\.\s*/,'');
+        const opts = lines.slice(1,5).map(l=>l.replace(/^[A-D][.)]\s*/i,''));
+        const ansLine = lines.find(l=>/^answer/i.test(l));
+        const ansLetter = ansLine ? ansLine.replace(/^answer[:\s]*/i,'').trim().toUpperCase() : 'A';
+        const ansMap = {A:0,B:1,C:2,D:3};
+        bulkParsed.push({q, opts, ans:ansMap[ansLetter]||0});
+      });
+    }
+  }catch(e){ bulkParsed = []; }
+  showBulkPreview();
+}
+
+function showBulkPreview(){
+  const list = document.getElementById('bulk-preview-list');
+  if(!bulkParsed.length){
+    list.innerHTML='<div style="color:var(--text2);font-size:.8rem">No questions parsed yet</div>';
+    return;
+  }
+  list.innerHTML = `<div style="color:var(--green);font-size:.82rem;font-weight:600;margin-bottom:8px;">✅ ${bulkParsed.length} questions ready to upload</div>`+
+    bulkParsed.map((q,i)=>`
+      <div style="background:rgba(255,255,255,.03);border:1px solid var(--cb);border-radius:8px;padding:10px;margin-bottom:6px;font-size:.76rem;">
+        <div style="font-weight:600;color:var(--text);margin-bottom:4px;">${i+1}. ${q.q}</div>
+        ${(q.opts||[]).map((o,j)=>`<div style="color:${j===q.ans?'var(--green)':'var(--text2)'};">${['A','B','C','D'][j]}. ${o}${j===q.ans?' ✓':''}</div>`).join('')}
+      </div>`).join('');
+}
+
+async function uploadBulkQuestions(){
+  const courseId = document.getElementById('bulk-course').value;
+  if(!courseId){showToast('Select a course first');return;}
+  const text = document.getElementById('bulk-paste').value.trim();
+  if(text && !bulkParsed.length) parseBulkPreview(text);
+  if(!bulkParsed.length){showToast('No questions to upload. Check your format.');return;}
+  const prog = document.getElementById('bulk-progress');
+  prog.style.display = 'block';
+  let uploaded = 0, failed = 0;
+  for(const q of bulkParsed){
+    try{
+      await db.collection('courses').doc(courseId).collection('questions').add({
+        q: q.q, opts: q.opts, ans: q.ans
+      });
+      uploaded++;
+      prog.textContent = `⬆ Uploading... ${uploaded}/${bulkParsed.length}`;
+    }catch(e){ failed++; }
+  }
+  prog.textContent = `✅ Done! ${uploaded} uploaded${failed?', '+failed+' failed':''}`;
+  showToast(`${uploaded} questions uploaded!`);
+  bulkParsed = [];
+  document.getElementById('bulk-paste').value = '';
+  document.getElementById('bulk-preview-list').innerHTML = '';
+  document.getElementById('bulk-file').value = '';
+  document.getElementById('bulk-fname').style.display = 'none';
+  setTimeout(()=>prog.style.display='none', 3000);
+}
+
+// ══ BATCH GIVE POINTS ══
+async function batchGivePoints(){
+  const pts = parseInt(document.getElementById('batch-pts').value);
+  const reason = document.getElementById('batch-reason').value.trim();
+  if(!pts||pts<1){showToast('Enter valid points amount');return;}
+  if(!reason){showToast('Enter a reason');return;}
+  if(!confirm(`Give ${pts} points to ALL students? This cannot be undone.`))return;
+  const prog = document.getElementById('batch-progress');
+  prog.style.display='block'; prog.textContent='Loading students...';
+  try{
+    const snap = await db.collection('users').where('role','==','user').get();
+    if(snap.empty){showToast('No students found');prog.style.display='none';return;}
+    let done=0; const total=snap.docs.length;
+    const today=new Date().toISOString();
+    const batches=[];
+    for(let i=0;i<snap.docs.length;i+=10) batches.push(snap.docs.slice(i,i+10));
+    for(const batch of batches){
+      await Promise.all(batch.map(async d=>{
+        const current=d.data().points||0;
+        await db.collection('users').doc(d.id).update({points:current+pts});
+        await db.collection('pointsLog').add({uid:d.id,reason,points:'+'+pts,date:today});
+        done++;
+      }));
+      prog.textContent=`⬆ Processing... ${done}/${total} students`;
+    }
+    prog.textContent=`✅ Done! Gave ${pts} points to ${done} students.`;
+    showToast(`✅ ${pts} points given to ${done} students!`);
+    document.getElementById('batch-pts').value='';
+    document.getElementById('batch-reason').value='';
+    setTimeout(()=>prog.style.display='none',4000);
+  }catch(e){prog.textContent='❌ Error: '+e.message;}
+}
+
+// ══ LOGIN POPUP ══
+async function loadPopupSettings(){
+  try{
+    const doc=await db.collection('settings').doc('popup').get();
+    if(doc.exists){
+      const p=doc.data();
+      document.getElementById('popup-emoji-inp').value=p.emoji||'📢';
+      document.getElementById('popup-title-inp').value=p.title||'';
+      document.getElementById('popup-msg-inp').value=p.msg||'';
+      document.getElementById('popup-active').checked=p.active||false;
+    }
+  }catch(e){}
+}
+
+async function savePopup(){
+  const emoji=document.getElementById('popup-emoji-inp').value.trim()||'📢';
+  const title=document.getElementById('popup-title-inp').value.trim();
+  const msg=document.getElementById('popup-msg-inp').value.trim();
+  const active=document.getElementById('popup-active').checked;
+  if(!title||!msg){showToast('Fill title and message');return;}
+  await db.collection('settings').doc('popup').set({emoji,title,msg,active,updatedAt:new Date().toISOString()});
+  showToast(active?'✅ Popup active! Students will see it on login.':'✅ Popup saved (inactive)');
+}
+
+async function disablePopup(){
+  await db.collection('settings').doc('popup').set({active:false},{merge:true});
+  document.getElementById('popup-active').checked=false;
+  showToast('Popup disabled');
+}
+
+// ══ BREVO EMAIL ══
+let BREVO_KEY = '', BREVO_EMAIL = '', BREVO_NAME = 'BABSPHARM Cloud';
+
+async function loadBrevoSettings(){
+  const doc = await db.collection('settings').doc('brevo').get();
+  if(doc.exists){
+    const d = doc.data();
+    BREVO_KEY = d.apiKey||'';
+    BREVO_EMAIL = d.senderEmail||'';
+    BREVO_NAME = d.senderName||'BABSPHARM Cloud';
+    if(d.apiKey) document.getElementById('brevo-key').value = d.apiKey;
+    if(d.senderEmail) document.getElementById('brevo-email').value = d.senderEmail;
+    if(d.senderName) document.getElementById('brevo-name').value = d.senderName;
+    if(typeof d.welcome!=='undefined') document.getElementById('brevo-welcome').checked = d.welcome;
+    if(typeof d.announcements!=='undefined') document.getElementById('brevo-ann').checked = d.announcements;
+    if(typeof d.messages!=='undefined') document.getElementById('brevo-msg').checked = d.messages;
+  }
+}
+
+async function saveBrevoSettings(){
+  const key = document.getElementById('brevo-key').value.trim();
+  const email = document.getElementById('brevo-email').value.trim();
+  const name = document.getElementById('brevo-name').value.trim();
+  if(!key||!email){showToast('Enter API key and sender email');return;}
+  await db.collection('settings').doc('brevo').set({
+    apiKey:key, senderEmail:email, senderName:name||'BABSPHARM Cloud',
+    welcome:document.getElementById('brevo-welcome').checked,
+    announcements:document.getElementById('brevo-ann').checked,
+    messages:document.getElementById('brevo-msg').checked,
+    updatedAt:new Date().toISOString()
+  });
+  BREVO_KEY=key; BREVO_EMAIL=email; BREVO_NAME=name;
+  showToast('Brevo settings saved!');
+  document.getElementById('brevo-status').textContent='✅ Settings saved';
+  document.getElementById('brevo-status').style.color='var(--green)';
+}
+
+async function sendBrevoEmail(toEmail, toName, subject, htmlContent){
+  if(!BREVO_KEY||!BREVO_EMAIL) return false;
+  try{
+    const res = await fetch('https://api.brevo.com/v3/smtp/email',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','api-key':BREVO_KEY},
+      body:JSON.stringify({
+        sender:{name:BREVO_NAME, email:BREVO_EMAIL},
+        to:[{email:toEmail, name:toName||toEmail}],
+        subject,
+        htmlContent
+      })
+    });
+    return res.ok;
+  }catch(e){ return false; }
+}
+
+async function testBrevoEmail(){
+  const key = document.getElementById('brevo-key').value.trim();
+  const email = document.getElementById('brevo-email').value.trim();
+  const name = document.getElementById('brevo-name').value.trim()||'BABSPHARM Cloud';
+  if(!key||!email){showToast('Save Brevo settings first');return;}
+  document.getElementById('brevo-status').textContent='Sending test email...';
+  document.getElementById('brevo-status').style.color='var(--text2)';
+  try{
+    const res = await fetch('https://api.brevo.com/v3/smtp/email',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','api-key':key},
+      body:JSON.stringify({
+        sender:{name, email},
+        to:[{email, name:'Admin Test'}],
+        subject:'✅ BABSPHARM Cloud — Email Test',
+        htmlContent:`<div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:30px;background:#0a1628;color:#f0ead6;border-radius:12px;">
+          <h2 style="color:#c9a84c;">BABSPHARM Cloud</h2>
+          <p>✅ Your Brevo email integration is working correctly!</p>
+          <p style="color:#9bacc8;font-size:14px;">Students will now receive emails from your platform.</p>
+        </div>`
+      })
+    });
+    if(res.ok){
+      document.getElementById('brevo-status').textContent='✅ Test email sent to '+email;
+      document.getElementById('brevo-status').style.color='var(--green)';
+    } else {
+      const err = await res.json();
+      document.getElementById('brevo-status').textContent='❌ Error: '+(err.message||'Check your API key');
+      document.getElementById('brevo-status').style.color='var(--red)';
+    }
+  }catch(e){
+    document.getElementById('brevo-status').textContent='❌ Connection error';
+    document.getElementById('brevo-status').style.color='var(--red)';
+  }
+}
+
+async function sendAnnouncementEmails(title, msg){
+  // Load brevo settings
+  const bDoc = await db.collection('settings').doc('brevo').get();
+  if(!bDoc.exists||!bDoc.data().announcements||!bDoc.data().apiKey) return;
+  const b = bDoc.data();
+  // Get all student emails
+  const snap = await db.collection('users').where('role','==','user').get();
+  if(snap.empty) return;
+  const html = `<div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:30px;background:#0a1628;color:#f0ead6;border-radius:12px;">
+    <h2 style="color:#c9a84c;">📢 ${title}</h2>
+    <p style="line-height:1.7;">${msg}</p>
+    <hr style="border-color:#c9a84c33;margin:20px 0"/>
+    <p style="color:#9bacc8;font-size:13px;">BABSPHARM Cloud — OAU Student Learning Platform</p>
+  </div>`;
+  // Send in batches of 5 to avoid rate limits
+  const students = snap.docs.map(d=>d.data());
+  for(let i=0;i<students.length;i+=5){
+    const batch = students.slice(i,i+5);
+    await Promise.all(batch.map(s=>fetch('https://api.brevo.com/v3/smtp/email',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','api-key':b.apiKey},
+      body:JSON.stringify({
+        sender:{name:b.senderName||'BABSPHARM Cloud',email:b.senderEmail},
+        to:[{email:s.email,name:s.name||s.email}],
+        subject:'📢 '+title+' — BABSPHARM Cloud',
+        htmlContent:html
+      })
+    }).catch(()=>{})));
+    await new Promise(r=>setTimeout(r,500)); // small delay between batches
+  }
+}
+
+// Update sendAnn to also send emails
+const _origSendAnn = typeof sendAnn !== 'undefined' ? sendAnn : null;
+
+async function loadBulkCourses(){
+  const snap = await db.collection('courses').get();
+  const sel = document.getElementById('bulk-course');
+  if(!sel) return;
+  sel.innerHTML = '<option value="">Select course...</option>';
+  snap.docs.forEach(d=>{
+    const c=d.data();
+    sel.innerHTML += `<option value="${d.id}">${c.code} — ${c.name}</option>`;
+  });
+}
+
 async function loadRedemptions(){
   const snap=await db.collection('couponRedemptions').orderBy('redeemedAt','desc').get();
   const list=document.getElementById('all-redemptions');
@@ -959,6 +1440,70 @@ async function loadRedemptions(){
       return `<tr><td>${r.studentName||'--'}</td><td style="color:var(--gold);font-weight:700;letter-spacing:1px">${r.code}</td><td style="color:var(--green);font-weight:700">+${r.points} pts</td><td style="color:var(--text2);font-size:.74rem">${r.redeemedAt?new Date(r.redeemedAt).toLocaleDateString():''}</td></tr>`;
     }).join('')}</tbody>
   </table>`;
+}
+
+// ══ TEXTBOOKS ══
+const TB_ICONS_A={CHM:'⚗️',MTH:'📐',PHY:'🔭',PCY:'💊',BIO:'🧬',COS:'💻',GST:'📝'};
+const TB_COLORS_A=['linear-gradient(135deg,#1e40af,#3730a3)','linear-gradient(135deg,#065f46,#047857)','linear-gradient(135deg,#7c3aed,#6d28d9)','linear-gradient(135deg,#b45309,#92400e)','linear-gradient(135deg,#be185d,#9d174d)','linear-gradient(135deg,#0e7490,#0369a1)'];
+
+async function addTextbook(){
+  const title=document.getElementById('tb-title').value.trim();
+  const author=document.getElementById('tb-author').value.trim();
+  const course=document.getElementById('tb-course').value;
+  const edition=document.getElementById('tb-edition').value.trim();
+  const url=document.getElementById('tb-url').value.trim();
+  const img=document.getElementById('tb-img').value.trim();
+  if(!title||!course||!url){showToast('Fill title, course and URL');return;}
+  await db.collection('textbooks').add({title,author,course,edition,url,img,createdAt:new Date().toISOString()});
+  ['tb-title','tb-author','tb-edition','tb-url','tb-img'].forEach(id=>document.getElementById(id).value='');
+  showToast('Textbook added!');
+  loadAdminTextbooks();
+}
+
+async function loadAdminTextbooks(){
+  const snap=await db.collection('textbooks').get();
+  const list=document.getElementById('admin-tb-list');
+  if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem">No textbooks yet</div>';return;}
+  list.innerHTML=snap.docs.map((d,i)=>{
+    const b=d.data();
+    const bg=TB_COLORS_A[i%TB_COLORS_A.length];
+    const icon=TB_ICONS_A[b.course]||'📗';
+    return `<div style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,.03);border:1px solid var(--cb);border-radius:10px;margin-bottom:8px;">
+      <div style="width:44px;height:56px;background:${bg};border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">${icon}</div>
+      <div style="flex:1;overflow:hidden;">
+        <div style="font-size:.82rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${b.title}</div>
+        <div style="font-size:.7rem;color:var(--text2)">${b.author||''}${b.edition?' • '+b.edition:''}</div>
+        <div style="font-size:.68rem;color:var(--gold);margin-top:2px">${b.course}</div>
+      </div>
+      <button class="btn btn-red btn-sm" onclick="deleteTextbook('${d.id}')">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+async function deleteTextbook(id){
+  if(!confirm('Delete this textbook?'))return;
+  await db.collection('textbooks').doc(id).delete();
+  showToast('Deleted');
+  loadAdminTextbooks();
+}
+
+// ══ GRANT AI MESSAGES ══
+async function grantAiMessages(uid, name){
+  const extra = prompt(`Grant extra AI messages to ${name} today.\nHow many extra messages to add?`, '3');
+  if(extra===null) return;
+  const n = parseInt(extra)||0;
+  if(n<1){showToast('Enter a valid number');return;}
+  const today = new Date().toDateString();
+  try{
+    const doc = await db.collection('aiUsage').doc(uid).get();
+    const current = (doc.exists && doc.data().date===today) ? (doc.data().count||0) : 0;
+    const currentLimit = (doc.exists && doc.data().date===today) ? (doc.data().limit||3) : 3;
+    const newLimit = currentLimit + n;
+    await db.collection('aiUsage').doc(uid).set({
+      date:today, count:current, limit:newLimit
+    },{merge:true});
+    showToast(`✅ Granted ${n} extra AI messages to ${name}! They now have ${newLimit-current} remaining today.`);
+  }catch(e){ showToast('Error: '+e.message); }
 }
 
 // ══ MAINTENANCE MODE ══
@@ -1014,12 +1559,40 @@ async function sendDirectMessage(){
   const subject=document.getElementById('msg-subject').value.trim();
   const body=document.getElementById('msg-body').value.trim();
   if(!subject||!body){showToast('Fill subject and message');return;}
+  // Save to Firestore inbox
   await db.collection('messages').add({
     toUid:msgTargetId, toName:msgTargetName,
     subject, body, fromAdmin:true,
     sentBy:auth.currentUser.email,
     createdAt:new Date().toISOString(), read:false
   });
+  // Send email via Brevo
+  const bDoc = await db.collection('settings').doc('brevo').get();
+  if(bDoc.exists && bDoc.data().messages && bDoc.data().apiKey){
+    const b = bDoc.data();
+    // Get student email
+    const uDoc = await db.collection('users').doc(msgTargetId).get();
+    const studentEmail = uDoc.exists ? uDoc.data().email : null;
+    if(studentEmail){
+      const html = `<div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:30px;background:#0a1628;color:#f0ead6;border-radius:12px;">
+        <h2 style="color:#c9a84c;">💬 Message from Admin</h2>
+        <h3 style="color:#e8c97a;">${subject}</h3>
+        <p style="line-height:1.7;">${body}</p>
+        <hr style="border-color:#c9a84c33;margin:20px 0"/>
+        <p style="color:#9bacc8;font-size:13px;">Login to BABSPHARM Cloud to reply or view your inbox.</p>
+      </div>`;
+      fetch('https://api.brevo.com/v3/smtp/email',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','api-key':b.apiKey},
+        body:JSON.stringify({
+          sender:{name:b.senderName||'BABSPHARM Cloud',email:b.senderEmail},
+          to:[{email:studentEmail,name:msgTargetName}],
+          subject:'💬 '+subject+' — BABSPHARM Cloud',
+          htmlContent:html
+        })
+      }).catch(()=>{});
+    }
+  }
   document.getElementById('msg-subject').value='';
   document.getElementById('msg-body').value='';
   clearMsgTarget();

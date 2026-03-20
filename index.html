@@ -323,6 +323,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="sb-item" onclick="showPage('mock');closeSB()"><span class="si">🎯</span>Mock Exam</div>
   <div class="sb-item" onclick="showPage('history');closeSB()"><span class="si">📊</span>Quiz History</div>
   <div class="sb-item" onclick="showPage('files');closeSB()"><span class="si">📁</span>Downloads</div>
+  <div class="sb-item" onclick="showPage('textbooks');closeSB()"><span class="si">📗</span>Textbooks</div>
   <div class="sb-item" onclick="showPage('ai');closeSB()"><span class="si">🤖</span>AI Tutor</div>
   <div class="sb-item" onclick="showPage('inbox');closeSB()"><span class="si">📥</span>Inbox <span id="sb-inbox-badge" style="display:none;background:var(--red);color:#fff;font-size:.6rem;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px"></span></div>
   <div class="sb-item" onclick="showPage('referral');closeSB()"><span class="si">🎁</span>Referral & Points</div>
@@ -451,13 +452,37 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="qc" onclick="openPQModal()"><div class="qc-icon">🔐</div><div class="qc-lbl">Private Quiz</div></div>
     <div class="qc" onclick="showPage('referral')"><div class="qc-icon">🎁</div><div class="qc-lbl">Referral</div></div>
     <div class="qc" onclick="showPage('profile')"><div class="qc-icon">👤</div><div class="qc-lbl">Profile</div></div>
+    <div class="qc" onclick="showPage('textbooks')"><div class="qc-icon">📗</div><div class="qc-lbl">Textbooks</div></div>
   </div>
+
+  <!-- ══ TEXTBOOK SHOWCASE ══ -->
+  <div class="sec-title" style="margin-top:4px">📗 Featured Textbooks</div>
+  <div id="dash-textbooks" style="display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;scrollbar-width:none;">
+    <div style="color:var(--text2);font-size:.8rem;padding:10px">Loading textbooks...</div>
+  </div>
+
   <div id="ann-banner" class="hidden" style="background:rgba(201,168,76,.1);border:1px solid var(--cb);
     border-radius:var(--r);padding:14px;margin-bottom:16px;">
     <div style="font-size:.7rem;color:var(--gold);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">📢 ANNOUNCEMENT</div>
     <div id="ann-title" style="font-size:.88rem;font-weight:600;margin-bottom:3px;"></div>
     <div id="ann-msg" style="font-size:.8rem;color:var(--text2);"></div>
   </div>
+</div>
+
+<!-- ══ TEXTBOOKS PAGE ══ -->
+<div id="pg-textbooks" class="page hidden">
+  <div class="sec-title">📗 Textbooks</div>
+  <div class="fcats" id="tb-cats">
+    <button class="fcat on" onclick="filterTextbooks('all',this)">All</button>
+    <button class="fcat" onclick="filterTextbooks('CHM',this)">CHM</button>
+    <button class="fcat" onclick="filterTextbooks('MTH',this)">MTH</button>
+    <button class="fcat" onclick="filterTextbooks('PHY',this)">PHY</button>
+    <button class="fcat" onclick="filterTextbooks('PCY',this)">PCY</button>
+    <button class="fcat" onclick="filterTextbooks('BIO',this)">BIO</button>
+    <button class="fcat" onclick="filterTextbooks('COS',this)">COS</button>
+    <button class="fcat" onclick="filterTextbooks('GST',this)">GST</button>
+  </div>
+  <div id="textbooks-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;"></div>
 </div>
 
 <!-- ══ QUIZ PAGE ══ -->
@@ -514,7 +539,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 <div id="pg-ai" class="page hidden">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
     <div class="sec-title" style="margin-bottom:0">🤖 AI Tutor</div>
-    <div style="font-size:.74rem;color:var(--text2)">Today: <span id="ai-count" style="color:var(--gold);font-weight:700">0</span>/3</div>
+    <div style="font-size:.74rem;color:var(--text2)">Today: <span id="ai-count" style="color:var(--gold);font-weight:700">0/3</span></div>
   </div>
 
   <div id="ai-limit-banner" style="display:none;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:.8rem;color:#f87171;">
@@ -791,12 +816,20 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
         <div style="font-size:.74rem;color:var(--text2)">Total Points Earned</div>
       </div>
     </div>
+    <!-- Low points warning -->
+    <div id="low-points-banner" style="display:none;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:12px 14px;margin-bottom:12px;">
+      <div style="font-size:.8rem;color:#f87171;font-weight:600;margin-bottom:6px;">⚠️ Your points are running low!</div>
+      <div style="font-size:.74rem;color:var(--text2);margin-bottom:10px;">You need points to take quizzes. Refer friends or redeem a coupon to earn more. You can also contact admin for help.</div>
+      <a id="low-pts-wa" href="#" target="_blank" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);border-radius:20px;color:#25d366;font-size:.8rem;font-weight:700;text-decoration:none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        Contact Admin on WhatsApp
+      </a>
+    </div>
     <div style="font-size:.8rem;color:var(--text2);margin-bottom:10px;font-weight:600">Points system:</div>
     <div style="display:flex;flex-direction:column;gap:7px;font-size:.78rem;color:var(--text2)">
       <div style="display:flex;justify-content:space-between;padding:8px 12px;background:rgba(74,222,128,.05);border-radius:8px;border:1px solid rgba(74,222,128,.15)">
         <span>👥 Refer a friend</span><span style="color:var(--green);font-weight:700">+15 pts</span>
       </div>
-
       <div style="display:flex;justify-content:space-between;padding:8px 12px;background:rgba(248,113,113,.05);border-radius:8px;border:1px solid rgba(248,113,113,.15)">
         <span>📝 Take a quiz (any)</span><span style="color:var(--red);font-weight:700">−5 pts</span>
       </div>
@@ -828,12 +861,30 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 </div>
 
 <!-- RESULT MODAL -->
+<canvas id="confetti-canvas" style="position:fixed;inset:0;z-index:999;pointer-events:none;display:none;"></canvas>
+
+<!-- LOGIN POPUP ANNOUNCEMENT -->
+<div id="popup-modal" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--navy2);border:1px solid var(--gold);border-radius:20px;max-width:340px;width:100%;overflow:hidden;position:relative;">
+    <div style="background:linear-gradient(135deg,var(--gold),var(--gold2));padding:20px;text-align:center;">
+      <div style="font-size:2rem;margin-bottom:6px" id="popup-emoji">📢</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--navy)" id="popup-title">Announcement</div>
+    </div>
+    <div style="padding:20px;">
+      <div style="font-size:.85rem;color:var(--text);line-height:1.7;text-align:center;" id="popup-msg"></div>
+      <button onclick="closePopup()" class="btn btn-gold" style="width:100%;margin-top:16px;">Got it! 👍</button>
+    </div>
+    <button onclick="closePopup()" style="position:absolute;top:10px;right:12px;background:rgba(0,0,0,.2);border:none;color:#fff;border-radius:50%;width:26px;height:26px;cursor:pointer;font-size:.9rem;">✕</button>
+  </div>
+</div>
+
 <div id="result-modal">
   <div class="result-card">
-    <div style="font-size:1.8rem;margin-bottom:7px">🏆</div>
+    <div style="font-size:1.8rem;margin-bottom:7px" id="res-emoji">🏆</div>
     <div class="res-score" id="res-score">0/10</div>
     <div class="res-lbl">Quiz Complete</div>
     <div class="res-msg" id="res-msg"></div>
+    <button id="res-wa-btn" style="display:none;width:100%;margin-bottom:8px;padding:10px;border-radius:10px;background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);color:#25d366;font-family:'Outfit',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;" onclick="shareResultWA()">📱 Share on WhatsApp</button>
     <button class="btn btn-gold" onclick="closeResult()">Back to Courses</button>
   </div>
 </div>
@@ -874,6 +925,28 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let CU = null, GROQ_KEY = '';
+
+// ══ CACHE HELPERS (reduces Firebase reads) ══
+function cacheSet(key, data, ttlMinutes=60){
+  try{
+    localStorage.setItem('babs_'+key, JSON.stringify({
+      data, expires: Date.now() + ttlMinutes*60*1000
+    }));
+  }catch(e){}
+}
+function cacheGet(key){
+  try{
+    const raw = localStorage.getItem('babs_'+key);
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(Date.now() > obj.expires){ localStorage.removeItem('babs_'+key); return null; }
+    return obj.data;
+  }catch(e){ return null; }
+}
+function cacheClear(key){ try{ localStorage.removeItem('babs_'+key); }catch(e){} }
+function cacheClearAll(){ try{ Object.keys(localStorage).filter(k=>k.startsWith('babs_')).forEach(k=>localStorage.removeItem(k)); }catch(e){} }
+
+
 let quizData = [], currentQ = 0, answers = {}, quizTimer = null, timeLeft = 600;
 let currentSem = 'harm';
 
@@ -925,6 +998,8 @@ auth.onAuthStateChanged(async function(user){
     loadStats();
     checkInboxBadge();
     initMotivSlider();
+    loadTextbooks();
+    checkLoginPopup();
     showPage('dash');
     document.getElementById('bnav').style.display = 'flex';
     // update last seen + daily login points
@@ -1001,6 +1076,32 @@ async function doRegister(){
       }
     }
     showMsg('rg-msg','Account created! You can now sign in.','ok');
+    // Send welcome email via Brevo
+    try{
+      const bDoc = await db.collection('settings').doc('brevo').get();
+      if(bDoc.exists && bDoc.data().welcome && bDoc.data().apiKey){
+        const b = bDoc.data();
+        const html = `<div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:30px;background:#0a1628;color:#f0ead6;border-radius:12px;">
+          <h2 style="color:#c9a84c;">🎓 Welcome to BABSPHARM Cloud!</h2>
+          <p>Hi <b>${nm}</b>,</p>
+          <p style="line-height:1.7;">Your account has been created successfully. You now have access to all study materials, AI tutor, quizzes and more!</p>
+          <div style="background:rgba(201,168,76,.1);border-radius:8px;padding:15px;margin:20px 0;">
+            <p style="margin:0;color:#e8c97a;font-weight:bold;">🎁 Welcome Bonus: 50 Points added to your account!</p>
+          </div>
+          <p style="color:#9bacc8;font-size:13px;">OAU Student Learning Platform — BABSPHARM Cloud</p>
+        </div>`;
+        fetch('https://api.brevo.com/v3/smtp/email',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','api-key':b.apiKey},
+          body:JSON.stringify({
+            sender:{name:b.senderName||'BABSPHARM Cloud',email:b.senderEmail},
+            to:[{email:em,name:nm}],
+            subject:'🎓 Welcome to BABSPHARM Cloud!',
+            htmlContent:html
+          })
+        }).catch(()=>{});
+      }
+    }catch(e){}
     setTimeout(()=>switchTab('li'), 1500);
   }catch(e){ showMsg('rg-msg', e.message.replace('Firebase:','').trim(), 'err'); }
 }
@@ -1030,6 +1131,7 @@ function showPage(pg){
   document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('on'));
   if(pg==='quiz'){ document.getElementById('pg-quiz-active').style.display='none'; loadCourses(currentSem); }
   if(pg==='files') loadFiles('all');
+  if(pg==='textbooks') loadTextbooks();
   if(pg==='profile') loadProfile();
   if(pg==='history') loadHistory();
   if(pg==='mock') loadMockCourses();
@@ -1053,19 +1155,28 @@ function closeSB(){
 
 // ══ STATS ══
 async function loadStats(){
+  const cached = cacheGet('stats_'+CU.uid);
+  if(cached){
+    document.getElementById('st-quiz').textContent = cached.quizCount||0;
+    document.getElementById('st-score').textContent = (cached.bestScore||0)+'%';
+    document.getElementById('st-streak').textContent = cached.streak||0;
+    document.getElementById('st-points').textContent = cached.points||0;
+    if((cached.points||0)<=10) showLowPointsToast(cached.points||0);
+    return;
+  }
   try{
-    const doc = await db.collection('userStats').doc(CU.uid).get();
-    if(doc.exists){
-      const d = doc.data();
-      document.getElementById('st-quiz').textContent = d.quizCount||0;
-      document.getElementById('st-score').textContent = (d.bestScore||0)+'%';
-      document.getElementById('st-streak').textContent = d.streak||0;
-    }
-    // Load points balance
-    const userDoc = await db.collection('users').doc(CU.uid).get();
-    if(userDoc.exists){
-      document.getElementById('st-points').textContent = userDoc.data().points||0;
-    }
+    const [statDoc, userDoc] = await Promise.all([
+      db.collection('userStats').doc(CU.uid).get(),
+      db.collection('users').doc(CU.uid).get()
+    ]);
+    const d = statDoc.exists ? statDoc.data() : {};
+    const pts = userDoc.exists ? (userDoc.data().points||0) : 0;
+    document.getElementById('st-quiz').textContent = d.quizCount||0;
+    document.getElementById('st-score').textContent = (d.bestScore||0)+'%';
+    document.getElementById('st-streak').textContent = d.streak||0;
+    document.getElementById('st-points').textContent = pts;
+    if(pts<=10) showLowPointsToast(pts);
+    cacheSet('stats_'+CU.uid, {quizCount:d.quizCount||0, bestScore:d.bestScore||0, streak:d.streak||0, points:pts}, 10);
   }catch(e){}
 }
 
@@ -1157,7 +1268,14 @@ async function endQuiz(){
   document.getElementById('res-score').textContent = score+'/'+total;
   const msgs=['Keep practicing! 💪','Good effort! 📚','Well done! ⭐','Excellent! 🏆','Outstanding! 🥇'];
   document.getElementById('res-msg').textContent = msgs[pct<40?0:pct<60?1:pct<75?2:pct<90?3:4]+' — '+pct+'%';
+  // Emoji based on score
+  document.getElementById('res-emoji').textContent = pct>=80?'🎊':pct>=60?'🏆':pct>=40?'📚':'💪';
   document.getElementById('result-modal').classList.add('open');
+  // Confetti for 80%+
+  if(pct>=80) launchConfetti();
+  // Show WhatsApp share button
+  document.getElementById('res-wa-btn').style.display='block';
+  window._lastResult = {score, total, pct, course: quizData[0]?.courseName||currentCourse||'Quiz'};
   // Save history and deduct points for quiz
   if(CU){
     const type = window._isMockExam ? 'Mock Exam' : 'Practice';
@@ -1170,6 +1288,7 @@ async function endQuiz(){
     const doc = await ref.get();
     const prev = doc.exists ? doc.data() : {quizCount:0,bestScore:0};
     await ref.set({quizCount:(prev.quizCount||0)+1, bestScore:Math.max(prev.bestScore||0,pct), lastQuiz:new Date().toISOString()},{merge:true});
+    cacheClear('stats_'+CU.uid); // clear cache so fresh stats show
     loadStats();
   }
 }
@@ -1250,9 +1369,13 @@ async function loadFiles(filter){
   const list = document.getElementById('files-list');
   list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)">Loading...</div>';
   try{
-    let query = db.collection('files').where('sem','==',currentFileSem);
-    const snap = await query.get();
-    let items = snap.docs.map(d=>d.data());
+    const cacheKey = 'files_'+currentFileSem;
+    let items = cacheGet(cacheKey);
+    if(!items){
+      const snap = await db.collection('files').where('sem','==',currentFileSem).get();
+      items = snap.docs.map(d=>d.data());
+      cacheSet(cacheKey, items, 60); // cache 1 hour
+    }
     const cat = filter || currentFileCourse;
     if(cat && cat!=='all') items = items.filter(f=>f.course===cat);
     if(!items.length){
@@ -1278,10 +1401,15 @@ function filterFiles(cat, btn){
 
 // ══ AI TUTOR ══
 async function loadGroqKey(){
+  const cached = cacheGet('groqKey');
+  if(cached){ GROQ_KEY = cached; return; }
   try{
     const doc = await db.collection('settings').doc('config').get();
-    if(doc.exists) GROQ_KEY = doc.data().groqKey||'';
-  }catch(e){}
+    if(doc.exists && doc.data().groqKey){
+      GROQ_KEY = doc.data().groqKey;
+      cacheSet('groqKey', GROQ_KEY, 120); // cache 2 hours
+    }
+  }catch(e){ console.log('GROQ key load error:',e); }
 }
 
 
@@ -1302,7 +1430,8 @@ function switchAIMode(mode, btn){
 async function runExplain(){
   const q = document.getElementById('explain-inp').value.trim();
   if(!q){showToast('Paste a question first');return;}
-  if(getAiCount()>=AI_DAILY_LIMIT){showToast('No AI messages left for today!');return;}
+  const [_c,_l]=await Promise.all([getAiCount(),getAiLimit()]);
+  if(_c>=_l){showToast('No AI messages left for today!');return;}
   document.getElementById('explain-inp').value='';
   appendMsg('Explain this: '+q,'user');
   const typing=appendTyping(); incAiCount(); updateAiUI();
@@ -1312,7 +1441,8 @@ async function runExplain(){
 async function runSummarize(){
   const notes = document.getElementById('summarize-inp').value.trim();
   if(!notes||notes.length<20){showToast('Paste your lecture notes first');return;}
-  if(getAiCount()>=AI_DAILY_LIMIT){showToast('No AI messages left for today!');return;}
+  const [_c,_l]=await Promise.all([getAiCount(),getAiLimit()]);
+  if(_c>=_l){showToast('No AI messages left for today!');return;}
   document.getElementById('summarize-inp').value='';
   appendMsg('Please summarize these lecture notes','user');
   const typing=appendTyping(); incAiCount(); updateAiUI();
@@ -1321,7 +1451,8 @@ async function runSummarize(){
 
 async function startQuizMe(){
   const course = document.getElementById('quizme-course').value;
-  if(getAiCount()>=AI_DAILY_LIMIT){showToast('No AI messages left for today!');return;}
+  const [_c,_l]=await Promise.all([getAiCount(),getAiLimit()]);
+  if(_c>=_l){showToast('No AI messages left for today!');return;}
   const typing=appendTyping(); incAiCount(); updateAiUI();
   try{
     const reply = await callGroqRaw('Generate ONE exam-style question for OAU '+course+'. Return ONLY the question text, nothing else.');
@@ -1338,7 +1469,8 @@ async function startQuizMe(){
 async function submitQuizMe(){
   const answer = document.getElementById('quizme-answer').value.trim();
   if(!answer){showToast('Type your answer first');return;}
-  if(getAiCount()>=AI_DAILY_LIMIT){showToast('No AI messages left for today!');return;}
+  const [_c,_l]=await Promise.all([getAiCount(),getAiLimit()]);
+  if(_c>=_l){showToast('No AI messages left for today!');return;}
   document.getElementById('quizme-question').style.display='none';
   document.getElementById('quizme-answer-wrap').style.display='none';
   appendMsg('My answer: '+answer,'user');
@@ -1348,7 +1480,8 @@ async function submitQuizMe(){
 
 async function runPredict(){
   const course = document.getElementById('predict-course').value;
-  if(getAiCount()>=AI_DAILY_LIMIT){showToast('No AI messages left for today!');return;}
+  const [_c,_l]=await Promise.all([getAiCount(),getAiLimit()]);
+  if(_c>=_l){showToast('No AI messages left for today!');return;}
   appendMsg('Predict exam questions for '+course,'user');
   const typing=appendTyping(); incAiCount(); updateAiUI();
   await callGroq('You are a brilliant OAU exam predictor. Generate 10 likely exam questions for '+course+' at OAU. Mix theory, calculation and definition questions. Number them and add topic hints in brackets.', typing);
@@ -1359,23 +1492,35 @@ async function runStudyPlan(){
   const hours = document.getElementById('plan-hours').value;
   const courses = Array.from(document.querySelectorAll('.plan-course:checked')).map(c=>c.value);
   if(courses.length===0){showToast('Select at least one course');return;}
-  if(getAiCount()>=AI_DAILY_LIMIT){showToast('No AI messages left for today!');return;}
+  const [_c,_l]=await Promise.all([getAiCount(),getAiLimit()]);
+  if(_c>=_l){showToast('No AI messages left for today!');return;}
   appendMsg('Create a study plan for my exams','user');
   const typing=appendTyping(); incAiCount(); updateAiUI();
   await callGroq('You are a brilliant OAU academic advisor. Create a detailed '+days+'-day study plan for an OAU student with '+hours+' hours daily. Courses: '+courses.join(', ')+'. Give day-by-day schedule, topics per day, study techniques, break times and revision days. Make it realistic and motivating!', typing);
 }
 
 async function callGroq(prompt, typing){
+  if(!GROQ_KEY){
+    typing.remove();
+    appendMsg('⚠️ AI is not configured yet. Ask your admin to set the GROQ API key in settings.','bot',false);
+    return;
+  }
   try{
     const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
       body:JSON.stringify({model:'llama3-70b-8192',messages:[{role:'user',content:prompt}],temperature:0.7})
     });
+    if(!res.ok){
+      const err=await res.json();
+      typing.remove();
+      appendMsg('❌ AI Error: '+(err.error?.message||'Please try again'),'bot',false);
+      return;
+    }
     const data=await res.json();
     typing.remove();
     appendMsg(data.choices&&data.choices[0]?data.choices[0].message.content:'Sorry, try again.','bot',true);
-  }catch(e){typing.remove();appendMsg('Connection error. Try again.','bot',false);}
+  }catch(e){typing.remove();appendMsg('❌ Connection error. Check your internet and try again.','bot',false);}
 }
 
 async function callGroqRaw(prompt){
@@ -1409,18 +1554,80 @@ function stopVoice(){
 }
 
 const AI_DAILY_LIMIT = 3;
-function getAiKey(){return 'ai_'+(CU?CU.uid:'')+'_'+new Date().toDateString();}
-function getAiCount(){try{return parseInt(localStorage.getItem(getAiKey())||'0');}catch(e){return 0;}}
-function incAiCount(){try{localStorage.setItem(getAiKey(),getAiCount()+1);}catch(e){}}
-function updateAiUI(){
-  const count=getAiCount();
+// AI usage stored in Firestore so admin can grant extra messages
+let aiUsageCache = null;
+
+function getAiKey(){ return 'ai_'+new Date().toDateString(); }
+
+async function getAiCount(){
+  // Check localStorage cache first
+  try{
+    const local = JSON.parse(localStorage.getItem('aiUsage_'+CU.uid)||'{}');
+    if(local.date === new Date().toDateString()) return local.count||0;
+  }catch(e){}
+  // Fetch from Firestore
+  try{
+    const doc = await db.collection('aiUsage').doc(CU.uid).get();
+    if(doc.exists){
+      const d = doc.data();
+      if(d.date === new Date().toDateString()){
+        // Cache locally
+        localStorage.setItem('aiUsage_'+CU.uid, JSON.stringify({date:d.date, count:d.count||0}));
+        return d.count||0;
+      }
+    }
+  }catch(e){}
+  return 0;
+}
+
+async function getAiLimit(){
+  // Check if admin granted extra messages
+  try{
+    const doc = await db.collection('aiUsage').doc(CU.uid).get();
+    if(doc.exists && doc.data().date === new Date().toDateString()){
+      return doc.data().limit || AI_DAILY_LIMIT;
+    }
+  }catch(e){}
+  return AI_DAILY_LIMIT;
+}
+
+async function incAiCount(){
+  const count = await getAiCount() + 1;
+  const today = new Date().toDateString();
+  // Update localStorage
+  localStorage.setItem('aiUsage_'+CU.uid, JSON.stringify({date:today, count}));
+  // Update Firestore
+  try{
+    const doc = await db.collection('aiUsage').doc(CU.uid).get();
+    const limit = (doc.exists && doc.data().date===today) ? (doc.data().limit||AI_DAILY_LIMIT) : AI_DAILY_LIMIT;
+    await db.collection('aiUsage').doc(CU.uid).set({date:today, count, limit}, {merge:true});
+  }catch(e){}
+}
+async function updateAiUI(){
+  const [count, limit] = await Promise.all([getAiCount(), getAiLimit()]);
   const el=document.getElementById('ai-count');
-  if(el)el.textContent=count;
+  if(el)el.textContent=count+'/'+limit;
   const banner=document.getElementById('ai-limit-banner');
   const btn=document.getElementById('ai-send-btn');
   const inp=document.getElementById('ai-inp');
-  const limited=count>=AI_DAILY_LIMIT;
-  if(banner)banner.style.display=limited?'block':'none';
+  const limited=count>=limit;
+  if(banner){
+    if(limited){
+      banner.style.display='block';
+      // Load WhatsApp contact and show it
+      db.collection('settings').doc('contact').get().then(doc=>{
+        const wa = doc.exists ? doc.data().whatsapp : '';
+        banner.innerHTML = `🚫 You have used all 3 AI messages for today. Come back tomorrow!
+          ${wa ? `<br><br><a href="https://wa.me/${wa}" target="_blank" style="display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:8px 16px;background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);border-radius:20px;color:#25d366;font-size:.8rem;font-weight:700;text-decoration:none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Chat Admin on WhatsApp
+          </a>` : ''}`;
+      }).catch(()=>{});
+    } else {
+      banner.style.display='none';
+      banner.innerHTML=`🚫 You have used all 3 AI messages for today. Come back tomorrow!`;
+    }
+  }
   if(btn){btn.style.opacity=limited?'.4':'1';btn.style.pointerEvents=limited?'none':'auto';}
   if(inp)inp.disabled=limited;
 }
@@ -1429,7 +1636,7 @@ async function sendAI(){
   const inp = document.getElementById('ai-inp');
   const msg = inp.value.trim();
   if(!msg) return;
-  if(!GROQ_KEY){showToast('AI not configured yet');return;}
+  if(!GROQ_KEY){appendMsg('⚠️ AI is not configured yet. Ask your admin to set the GROQ API key.','bot',false);return;}
   if(getAiCount()>=AI_DAILY_LIMIT){showToast('No AI messages left for today!');return;}
   inp.value='';
   appendMsg(msg,'user');
@@ -1453,8 +1660,9 @@ async function sendAI(){
   }catch(e){typing.remove();appendMsg('Connection error. Try again.','bot',false);}
 }
 
-function sendSug(t){
-  if(getAiCount()>=AI_DAILY_LIMIT){showToast('No AI messages left for today!');return;}
+async function sendSug(t){
+  const [count,limit]=await Promise.all([getAiCount(),getAiLimit()]);
+  if(count>=limit){showToast('No AI messages left for today!');return;}
   document.getElementById('ai-inp').value=t;sendAI();
 }
 
@@ -1600,12 +1808,88 @@ const MOTIVATIONS = [
   {emoji:'💡', text:'One hour of focused studying beats four hours of distracted reading.', sub:'Quality over quantity!', bg:'linear-gradient(135deg,#b45309,#a16207)'},
   {emoji:'🌈', text:'Your classmates who pass with distinction are not smarter — they just started earlier.', sub:'Start today!', bg:'linear-gradient(135deg,#7c3aed,#6d28d9)'},
   {emoji:'⭐', text:'OAU exams are hard, but YOU are harder. You were admitted because you deserve to be here!', sub:'You belong here!', bg:'linear-gradient(135deg,#1d4ed8,#1e40af)'},
-  {emoji:'🧠', text:'Your brain is a muscle. The more you use it, the stronger it gets. Use BABSPHARM AI!', sub:'Train your mind daily!', bg:'linear-gradient(135deg,#0f766e,#047857)'},
+  {emoji:'🧠', text:'Your brain is a muscle. The more you use it, the stronger it gets.', sub:'Train your mind daily!', bg:'linear-gradient(135deg,#0f766e,#047857)'},
   {emoji:'⏰', text:'Don\'t wait for motivation. Build the discipline and motivation will follow.', sub:'Discipline over mood!', bg:'linear-gradient(135deg,#9d174d,#881337)'},
+  {emoji:'🌅', text:'Every morning is a new chance to be better than yesterday. Use it!', sub:'Fresh start every day!', bg:'linear-gradient(135deg,#c2410c,#9a3412)'},
+  {emoji:'💎', text:'Excellence is not a gift. It is a skill that takes practice. Practice today!', sub:'Polish your skills!', bg:'linear-gradient(135deg,#0369a1,#075985)'},
+  {emoji:'🦁', text:'Be the student your lecturers remember for the right reasons. Show up and show out!', sub:'Make your mark!', bg:'linear-gradient(135deg,#7e22ce,#6b21a8)'},
+  {emoji:'🌊', text:'Don\'t drown in distractions. Ride the wave of focus all the way to graduation.', sub:'Stay the course!', bg:'linear-gradient(135deg,#0c4a6e,#082f49)'},
+  {emoji:'🏅', text:'Every distinction student once sat where you sit. They simply refused to give up.', sub:'Keep going!', bg:'linear-gradient(135deg,#854d0e,#713f12)'},
+  {emoji:'📱', text:'Your phone will still be there after the exam. Your GPA might not be. Choose wisely.', sub:'Prioritize your future!', bg:'linear-gradient(135deg,#4a044e,#3b0764)'},
+  {emoji:'🌙', text:'Late nights studying today mean bright mornings celebrating tomorrow.', sub:'The sacrifice is worth it!', bg:'linear-gradient(135deg,#1e1b4b,#312e81)'},
+  {emoji:'🦋', text:'Transformation happens inside the library, not inside your comfort zone.', sub:'Embrace the process!', bg:'linear-gradient(135deg,#14532d,#052e16)'},
+  {emoji:'💫', text:'Your parents are sacrificing so much for your education. Make every hour count.', sub:'Honor their sacrifice!', bg:'linear-gradient(135deg,#422006,#292524)'},
+  {emoji:'🎵', text:'Success has a soundtrack — it sounds like pages turning and pens writing.', sub:'Write your success story!', bg:'linear-gradient(135deg,#701a75,#581c87)'},
+  {emoji:'🌺', text:'Bloom where you are planted. OAU gave you the soil — now grow!', sub:'Thrive at OAU!', bg:'linear-gradient(135deg,#065f46,#064e3b)'},
+  {emoji:'🔑', text:'Knowledge is the only key that no one can take from you. Keep collecting keys!', sub:'Knowledge is power!', bg:'linear-gradient(135deg,#1e3a8a,#1e1b4b)'},
+  {emoji:'🏗️', text:'You are building something that will last a lifetime. Build it right!', sub:'Build your future now!', bg:'linear-gradient(135deg,#7c2d12,#431407)'},
+  {emoji:'🦅', text:'Eagles don\'t fly with pigeons. Surround yourself with people who push you higher.', sub:'Choose your circle wisely!', bg:'linear-gradient(135deg,#0c4a6e,#164e63)'},
+  {emoji:'⚗️', text:'Science rewards those who show up consistently. Show up. Every. Single. Day.', sub:'Consistency is key!', bg:'linear-gradient(135deg,#134e4a,#042f2e)'},
+  {emoji:'📊', text:'Track your progress. Every question you get right today was wrong last week.', sub:'You are improving!', bg:'linear-gradient(135deg,#312e81,#1e1b4b)'},
+  {emoji:'🌍', text:'The world needs brilliant graduates from OAU. That includes YOU.', sub:'The world is waiting!', bg:'linear-gradient(135deg,#166534,#052e16)'},
+  {emoji:'💬', text:'Talk less about studying. Study more. Results speak louder than words.', sub:'Let your results talk!', bg:'linear-gradient(135deg,#7e22ce,#4c1d95)'},
+  {emoji:'🔬', text:'Every great scientist started by memorizing what you are memorizing right now.', sub:'You are on the right path!', bg:'linear-gradient(135deg,#0e7490,#0c4a6e)'},
+  {emoji:'🥊', text:'When the exam gets hard, you get harder. You were made for this!', sub:'Fight through it!', bg:'linear-gradient(135deg,#9f1239,#881337)'},
+  {emoji:'🌱', text:'Plant the seed of knowledge today. The tree of success will shade you for life.', sub:'Invest in yourself!', bg:'linear-gradient(135deg,#14532d,#166534)'},
+  {emoji:'🧩', text:'Every topic you study is a piece of the puzzle. Don\'t skip pieces!', sub:'Complete the picture!', bg:'linear-gradient(135deg,#4338ca,#312e81)'},
+  {emoji:'🎪', text:'University is not a circus — it\'s your launching pad. Use it well!', sub:'Launch yourself to greatness!', bg:'linear-gradient(135deg,#c2410c,#b45309)'},
+  {emoji:'🏊', text:'Don\'t wait to feel ready. Jump in and learn to swim while you\'re in the water.', sub:'Start before you\'re ready!', bg:'linear-gradient(135deg,#0369a1,#0c4a6e)'},
+  {emoji:'🕯️', text:'Be the light in your family. Education is the flame nobody can extinguish.', sub:'Carry the torch!', bg:'linear-gradient(135deg,#92400e,#b45309)'},
+  {emoji:'🛡️', text:'Your degree is your shield against poverty. Protect it by studying hard.', sub:'Defend your future!', bg:'linear-gradient(135deg,#1e40af,#1d4ed8)'},
+  {emoji:'🎆', text:'Imagine the joy on graduation day. That feeling starts with what you do today.', sub:'The finish line is real!', bg:'linear-gradient(135deg,#6d28d9,#7c3aed)'},
+  {emoji:'📡', text:'Your mind is transmitting signals to your future. Make sure it\'s a strong signal!', sub:'Send the right signal!', bg:'linear-gradient(135deg,#047857,#065f46)'},
+  {emoji:'🌠', text:'Shoot for distinction. Even if you miss, you\'ll land among 2.1s.', sub:'Aim high always!', bg:'linear-gradient(135deg,#1e1b4b,#0f172a)'},
+  {emoji:'🦾', text:'Your brain has no storage limit. Keep filling it with knowledge!', sub:'Unlimited capacity!', bg:'linear-gradient(135deg,#be185d,#9d174d)'},
+  {emoji:'🎖️', text:'First class is not luck. It is a decision made months before results day.', sub:'Decide today!', bg:'linear-gradient(135deg,#92400e,#78350f)'},
+  {emoji:'🗺️', text:'You are not lost. You are on a journey. Keep following the map called Education.', sub:'Trust the process!', bg:'linear-gradient(135deg,#0f766e,#0369a1)'},
+  {emoji:'🏋️', text:'Mental toughness is built in the library at midnight, not in bed watching videos.', sub:'Build mental strength!', bg:'linear-gradient(135deg,#7c3aed,#6d28d9)'},
+  {emoji:'🌻', text:'You grow where the light of knowledge shines. Open your textbooks and grow!', sub:'Grow every day!', bg:'linear-gradient(135deg,#a16207,#92400e)'},
+  {emoji:'🎯', text:'Focus is the superpower that turns ordinary students into extraordinary graduates.', sub:'Activate your superpower!', bg:'linear-gradient(135deg,#0c4a6e,#1e3a8a)'},
+  {emoji:'🌐', text:'In 5 years your certificate will be opening doors. In 5 years your excuses won\'t.', sub:'Choose the certificate!', bg:'linear-gradient(135deg,#166534,#14532d)'},
+  {emoji:'💥', text:'Explode with brilliance in that exam hall. You\'ve got the knowledge — unleash it!', sub:'Unleash your potential!', bg:'linear-gradient(135deg,#b91c1c,#991b1b)'},
+  {emoji:'🔭', text:'Look ahead. Your future is brighter than any challenge you face today.', sub:'The best is ahead!', bg:'linear-gradient(135deg,#1e40af,#1e3a8a)'},
+  {emoji:'🐢', text:'Slow and steady wins the race. Consistent daily study beats emergency cramming.', sub:'Keep your pace!', bg:'linear-gradient(135deg,#065f46,#047857)'},
+  {emoji:'🗓️', text:'Every day you study is a deposit in your success account. Deposit daily!', sub:'Invest in yourself daily!', bg:'linear-gradient(135deg,#4c1d95,#5b21b6)'},
+  {emoji:'🤝', text:'BABSPHARM Cloud is here to help you succeed. Use every resource available!', sub:'We\'ve got your back!', bg:'linear-gradient(135deg,#b45309,#d97706)'},
+  {emoji:'🎀', text:'Success is the best gift you can give your family. Wrap it up with hard work!', sub:'Make them proud!', bg:'linear-gradient(135deg,#9d174d,#be185d)'},
+  {emoji:'🧲', text:'Attract success by becoming the student who never gives up, never gives in.', sub:'Attract greatness!', bg:'linear-gradient(135deg,#1e3a8a,#312e81)'},
+  {emoji:'🏰', text:'Build your academic foundation strong. Everything else in life depends on it.', sub:'Build strong foundations!', bg:'linear-gradient(135deg,#292524,#1c1917)'},
+  {emoji:'🌟', text:'One day you will look back at this moment and be thankful you didn\'t quit.', sub:'Future you will thank you!', bg:'linear-gradient(135deg,#7c3aed,#4338ca)'},
+  {emoji:'🙏', text:'Commit your studies to God. With His wisdom guiding you, no exam is too hard.', sub:'God is your strength!', bg:'linear-gradient(135deg,#1e3a5f,#1e40af)'},
+  {emoji:'✝️', text:'Cast your anxieties on God. He cares for you — including your exams and results.', sub:'He has not forgotten you!', bg:'linear-gradient(135deg,#3b1f6b,#5b21b6)'},
+  {emoji:'🌅', text:'His mercies are new every morning. Today is a new chance to excel with God\'s grace.', sub:'New mercies, new strength!', bg:'linear-gradient(135deg,#c2410c,#ea580c)'},
+  {emoji:'📖', text:'God gave you this mind. Honour Him by using it to its fullest potential.', sub:'Your intelligence is a gift!', bg:'linear-gradient(135deg,#065f46,#047857)'},
+  {emoji:'🕊️', text:'The peace of God surpasses all understanding. Walk into that exam hall in peace.', sub:'Perfect peace for your exams!', bg:'linear-gradient(135deg,#0369a1,#0284c7)'},
+  {emoji:'⚡', text:'God has not given you a spirit of fear, but of power, love and a sound mind. USE IT!', sub:'2 Timothy 1:7', bg:'linear-gradient(135deg,#92400e,#b45309)'},
+  {emoji:'🏆', text:'With God all things are possible — including that distinction you\'ve been praying for.', sub:'Matthew 19:26', bg:'linear-gradient(135deg,#7c3aed,#6d28d9)'},
+  {emoji:'🌟', text:'God ordered your steps to this university. Trust that He will order your steps to graduation.', sub:'Psalms 37:23', bg:'linear-gradient(135deg,#0f766e,#0369a1)'},
+  {emoji:'💎', text:'You are God\'s masterpiece, created for great things. Study like you believe that!', sub:'Ephesians 2:10', bg:'linear-gradient(135deg,#be185d,#9d174d)'},
+  {emoji:'🙌', text:'Pray before you study. Pray before your exam. God gives wisdom to those who ask.', sub:'James 1:5 — Ask and receive!', bg:'linear-gradient(135deg,#166534,#15803d)'},
 ];
+
+// Shuffle array using date as seed so it changes every day but is consistent within a day
+function seededShuffle(arr){
+  const today = new Date().toDateString();
+  let seed = 0;
+  for(let i=0;i<today.length;i++) seed += today.charCodeAt(i);
+  const shuffled = [...arr];
+  for(let i=shuffled.length-1;i>0;i--){
+    seed = (seed*9301+49297)%233280;
+    const j = Math.floor((seed/233280)*(i+1));
+    [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];
+  }
+  return shuffled;
+}
+
+// Pick 10 different ones each day from the 60
+function getDailyMotivations(){
+  const shuffled = seededShuffle(MOTIVATIONS);
+  return shuffled.slice(0,10);
+}
 
 let motivIndex = 0;
 let motivTimer = null;
+let DAILY_MOTIVATIONS = getDailyMotivations();
 
 function initMotivSlider(){
   const track = document.getElementById('motiv-track');
@@ -1613,23 +1897,21 @@ function initMotivSlider(){
   const slider = document.getElementById('motiv-slider');
   if(!track) return;
 
-  // Build slides
-  track.innerHTML = MOTIVATIONS.map((m,i)=>`
+  track.innerHTML = DAILY_MOTIVATIONS.map((m,i)=>`
     <div style="min-width:100%;padding:22px 40px 32px;background:${m.bg};display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;">
       <div style="font-size:2.2rem;margin-bottom:8px">${m.emoji}</div>
       <div style="font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#fff;line-height:1.5;margin-bottom:6px;text-shadow:0 1px 4px rgba(0,0,0,.3)">${m.text}</div>
       <div style="font-size:.72rem;color:rgba(255,255,255,.75);letter-spacing:.5px;font-weight:600">${m.sub}</div>
     </div>`).join('');
 
-  // Build dots
-  dots.innerHTML = MOTIVATIONS.map((_,i)=>`
+  dots.innerHTML = DAILY_MOTIVATIONS.map((_,i)=>`
     <div onclick="goMotiv(${i})" style="width:${i===0?'20px':'7px'};height:7px;border-radius:4px;background:${i===0?'#fff':'rgba(255,255,255,.4)'};cursor:pointer;transition:all .3s;" id="mdot-${i}"></div>`).join('');
 
   startMotivTimer();
 }
 
 function updateMotivDots(){
-  MOTIVATIONS.forEach((_,i)=>{
+  DAILY_MOTIVATIONS.forEach((_,i)=>{
     const dot = document.getElementById('mdot-'+i);
     if(dot){
       dot.style.width = i===motivIndex?'20px':'7px';
@@ -1645,13 +1927,13 @@ function goMotiv(idx){
 }
 
 function motivNext(){
-  motivIndex = (motivIndex+1)%MOTIVATIONS.length;
+  motivIndex = (motivIndex+1)%DAILY_MOTIVATIONS.length;
   goMotiv(motivIndex);
   resetMotivTimer();
 }
 
 function motivPrev(){
-  motivIndex = (motivIndex-1+MOTIVATIONS.length)%MOTIVATIONS.length;
+  motivIndex = (motivIndex-1+DAILY_MOTIVATIONS.length)%DAILY_MOTIVATIONS.length;
   goMotiv(motivIndex);
   resetMotivTimer();
 }
@@ -1664,6 +1946,148 @@ function resetMotivTimer(){
   clearInterval(motivTimer);
   startMotivTimer();
 }
+// ══ CONFETTI ══
+function launchConfetti(){
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.style.display='block';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const pieces = Array.from({length:120},()=>({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height - canvas.height,
+    w: Math.random()*10+5,
+    h: Math.random()*6+4,
+    color: ['#c9a84c','#e8c97a','#4ade80','#60a5fa','#f472b6','#fb923c'][Math.floor(Math.random()*6)],
+    rot: Math.random()*360,
+    speed: Math.random()*3+2,
+    rotSpeed: Math.random()*4-2,
+    swing: Math.random()*3-1.5,
+    swingSpeed: Math.random()*.05
+  }));
+  let frame=0;
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    pieces.forEach(p=>{
+      p.y += p.speed;
+      p.rot += p.rotSpeed;
+      p.x += Math.sin(frame*p.swingSpeed)*p.swing;
+      if(p.y>canvas.height) p.y=-20;
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle=p.color;
+      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      ctx.restore();
+    });
+    frame++;
+    if(frame<180) requestAnimationFrame(draw);
+    else canvas.style.display='none';
+  }
+  draw();
+}
+
+// ══ WHATSAPP SHARE RESULT ══
+function shareResultWA(){
+  const r = window._lastResult;
+  if(!r) return;
+  const emoji = r.pct>=80?'🎊🏆':r.pct>=60?'✅':r.pct>=40?'📚':'💪';
+  const msg = `${emoji} I just scored *${r.score}/${r.total} (${r.pct}%)* on *${r.course}* quiz on BABSPHARM Cloud!\n\nJoin me to study smarter 👉 https://babspharm1-lgtm.github.io/BABSPHARM./`;
+  window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank');
+}
+
+// ══ LOGIN POPUP ANNOUNCEMENT ══
+async function checkLoginPopup(){
+  try{
+    const doc = await db.collection('settings').doc('popup').get();
+    if(!doc.exists||!doc.data().active) return;
+    const p = doc.data();
+    // Only show once per day per student
+    const key = 'popup_'+new Date().toDateString()+(p.updatedAt||'');
+    if(localStorage.getItem(key)) return;
+    document.getElementById('popup-emoji').textContent = p.emoji||'📢';
+    document.getElementById('popup-title').textContent = p.title||'Announcement';
+    document.getElementById('popup-msg').textContent = p.msg||'';
+    document.getElementById('popup-modal').style.display='flex';
+    localStorage.setItem(key,'1');
+  }catch(e){}
+}
+
+function closePopup(){
+  document.getElementById('popup-modal').style.display='none';
+}
+const TB_COLORS=['linear-gradient(135deg,#1e40af,#3730a3)','linear-gradient(135deg,#065f46,#047857)','linear-gradient(135deg,#7c3aed,#6d28d9)','linear-gradient(135deg,#b45309,#92400e)','linear-gradient(135deg,#be185d,#9d174d)','linear-gradient(135deg,#0e7490,#0369a1)','linear-gradient(135deg,#166534,#15803d)','linear-gradient(135deg,#9d174d,#be123c)'];
+const TB_ICONS={CHM:'⚗️',MTH:'📐',PHY:'🔭',PCY:'💊',BIO:'🧬',COS:'💻',GST:'📝'};
+let allTextbooks=[],tbFilter='all';
+
+async function loadTextbooks(){
+  const grid=document.getElementById('textbooks-grid');
+  if(grid)grid.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px;grid-column:span 2">Loading...</div>';
+  try{
+    const cached=cacheGet('textbooks');
+    if(cached){allTextbooks=cached;renderTextbooks();loadDashTextbooks();return;}
+    const snap=await db.collection('textbooks').get();
+    allTextbooks=snap.docs.map(d=>({id:d.id,...d.data()}));
+    cacheSet('textbooks',allTextbooks,60);
+    renderTextbooks();loadDashTextbooks();
+  }catch(e){if(grid)grid.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px;grid-column:span 2">Error loading</div>';}
+}
+
+function renderTextbooks(){
+  const grid=document.getElementById('textbooks-grid');
+  if(!grid)return;
+  let books=tbFilter==='all'?allTextbooks:allTextbooks.filter(b=>b.course===tbFilter);
+  if(!books.length){grid.innerHTML='<div style="color:var(--text2);font-size:.84rem;padding:20px;text-align:center;grid-column:span 2">No textbooks found</div>';return;}
+  grid.innerHTML=books.map((b,i)=>{
+    const bg=TB_COLORS[i%TB_COLORS.length];
+    const icon=TB_ICONS[b.course]||'📗';
+    return `<div onclick="window.open('${b.url}','_blank')" style="cursor:pointer;border-radius:16px;overflow:hidden;background:var(--card);border:1px solid var(--cb);transition:transform .2s,box-shadow .2s;" onmouseover="this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 24px rgba(0,0,0,.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+      <div style="background:${bg};padding:24px 16px;text-align:center;position:relative;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div style="font-size:2.4rem;margin-bottom:6px">${icon}</div>
+        <div style="width:40px;height:4px;background:rgba(255,255,255,.3);border-radius:2px;margin-bottom:5px"></div>
+        <div style="width:28px;height:3px;background:rgba(255,255,255,.2);border-radius:2px"></div>
+        <div style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.25);border-radius:6px;padding:2px 7px;font-size:.62rem;font-weight:700;color:rgba(255,255,255,.9)">${b.course||''}</div>
+      </div>
+      <div style="padding:11px 12px;">
+        <div style="font-size:.82rem;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:3px;">${b.title}</div>
+        <div style="font-size:.7rem;color:var(--text2);margin-bottom:6px;">${b.author||''}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:.68rem;color:var(--gold);font-weight:600">${b.edition||''}</span>
+          <span style="font-size:.68rem;background:rgba(201,168,76,.1);color:var(--gold);padding:2px 7px;border-radius:10px;border:1px solid var(--cb)">📖 Open</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterTextbooks(cat,btn){
+  tbFilter=cat;
+  document.querySelectorAll('#tb-cats .fcat').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderTextbooks();
+}
+
+function loadDashTextbooks(){
+  const dash=document.getElementById('dash-textbooks');
+  if(!dash)return;
+  if(!allTextbooks.length){dash.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px">No textbooks yet</div>';return;}
+  dash.innerHTML=allTextbooks.slice(0,8).map((b,i)=>{
+    const bg=TB_COLORS[i%TB_COLORS.length];
+    const icon=TB_ICONS[b.course]||'📗';
+    return `<div onclick="window.open('${b.url}','_blank')" style="flex-shrink:0;width:115px;cursor:pointer;border-radius:14px;overflow:hidden;background:var(--card);border:1px solid var(--cb);">
+      <div style="background:${bg};padding:16px 10px;text-align:center;min-height:85px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div style="font-size:2rem;margin-bottom:4px">${icon}</div>
+        <div style="width:28px;height:3px;background:rgba(255,255,255,.3);border-radius:2px;margin-bottom:3px"></div>
+        <div style="width:18px;height:2px;background:rgba(255,255,255,.2);border-radius:2px"></div>
+      </div>
+      <div style="padding:8px 9px;">
+        <div style="font-size:.7rem;font-weight:700;color:var(--text);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${b.title}</div>
+        <div style="font-size:.64rem;color:var(--gold);margin-top:3px">${b.course||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 async function loadHistory(){
   const list = document.getElementById('history-list');
   list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2)">Loading...</div>';
@@ -1746,26 +2170,61 @@ async function loadReferral(){
     const data = doc.data();
     let refCode = data.referralCode;
     if(!refCode){
-      // Generate referral code from name
       refCode = (CU.name.replace(/\s/g,'').substring(0,4)+Math.floor(1000+Math.random()*9000)).toUpperCase();
       await db.collection('users').doc(CU.uid).update({referralCode:refCode});
     }
     document.getElementById('ref-code').textContent = refCode;
     document.getElementById('ref-points').textContent = data.points||0;
+    // Update dashboard points too
+    const ptEl = document.getElementById('st-points');
+    if(ptEl) ptEl.textContent = data.points||0;
+    // Show low points warning if 10 or below
+    const pts = data.points||0;
+    const lowBanner = document.getElementById('low-points-banner');
+    if(lowBanner){
+      if(pts<=10){
+        lowBanner.style.display='block';
+        // Load WhatsApp number
+        try{
+          const cDoc = await db.collection('settings').doc('contact').get();
+          const wa = cDoc.exists ? cDoc.data().whatsapp : '';
+          const waLink = document.getElementById('low-pts-wa');
+          if(waLink && wa) waLink.href='https://wa.me/'+wa+'?text='+encodeURIComponent('Hi, I need help with my BABSPHARM Cloud points. My name is '+CU.name+' and my email is '+CU.email);
+          else if(waLink && !wa) waLink.style.display='none';
+        }catch(e){}
+      } else {
+        lowBanner.style.display='none';
+      }
+    }
     // Load points history
-    const hSnap = await db.collection('pointsLog').where('uid','==',CU.uid).orderBy('date','desc').limit(10).get();
+    const hSnap = await db.collection('pointsLog').where('uid','==',CU.uid).limit(20).get();
     const ph = document.getElementById('points-history');
-    if(hSnap.empty){ph.innerHTML='<div style="color:var(--text2);font-size:.8rem;text-align:center;padding:14px">No points history yet</div>';return;}
-    ph.innerHTML = hSnap.docs.map(d=>{
-      const p=d.data();
+    if(hSnap.empty){
+      const pts = data.points||0;
+      ph.innerHTML = pts>0
+        ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--cb);margin-bottom:6px;font-size:.78rem">
+            <span style="color:var(--text2)">Welcome bonus 🎉</span>
+            <span style="color:var(--green);font-weight:700">+${pts} pts</span>
+          </div>`
+        : '<div style="color:var(--text2);font-size:.8rem;text-align:center;padding:14px">No points history yet</div>';
+      return;
+    }
+    const docs = hSnap.docs.map(d=>d.data()).sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+    ph.innerHTML = docs.map(p=>{
       const isDeduct = String(p.points).startsWith('-');
       const col = isDeduct ? 'var(--red)' : 'var(--green)';
+      const date = p.date ? new Date(p.date).toLocaleDateString() : '';
       return `<div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--cb);margin-bottom:6px;font-size:.78rem">
-        <span style="color:var(--text2)">${p.reason||'Points'}</span>
+        <div>
+          <div style="color:var(--text2)">${p.reason||'Points'}</div>
+          <div style="color:var(--text2);font-size:.68rem;opacity:.6">${date}</div>
+        </div>
         <span style="color:${col};font-weight:700">${p.points} pts</span>
       </div>`;
     }).join('');
-  }catch(e){}
+  }catch(e){
+    document.getElementById('points-history').innerHTML='<div style="color:var(--red);font-size:.78rem;text-align:center;padding:10px">Error: '+e.message+'</div>';
+  }
 }
 
 function copyRefCode(){
@@ -1821,7 +2280,7 @@ async function redeemCoupon(){
     await db.collection('coupons').doc(code).update({usedCount:(cp.usedCount||0)+1});
     document.getElementById('coupon-inp').value='';
     showCouponMsg(`🎉 Success! +${cp.points} points added!`,'var(--green)');
-    loadStats(); loadReferral();
+    cacheClear('stats_'+CU.uid); loadStats(); loadReferral();
   }catch(e){showCouponMsg('Error redeeming coupon. Try again.','var(--red)');}
 }
 
@@ -1829,6 +2288,14 @@ function showCouponMsg(msg,color){
   const el=document.getElementById('coupon-msg');
   el.textContent=msg; el.style.color=color; el.style.display='block';
   setTimeout(()=>el.style.display='none',4000);
+}
+
+function showLowPointsToast(pts){
+  if(pts===0){
+    showToast('⚠️ You have 0 points! Go to Referral page for help.');
+  } else if(pts<=10){
+    showToast('⚠️ Only '+pts+' points left! Visit Referral & Points page.');
+  }
 }
 
 function showToast(msg){
