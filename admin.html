@@ -74,15 +74,16 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .auth-sub{font-size:.72rem;color:var(--text2);margin-bottom:18px;letter-spacing:.8px;}
 .amsg{font-size:.76rem;margin-top:9px;padding:7px;border-radius:7px;display:none;text-align:center;}
 .amsg.err{background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.18);display:block;}
-#loading{position:fixed;inset:0;z-index:999;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:13px;}
-.loader{width:42px;height:42px;border:3px solid var(--cb);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+#loading{position:fixed;inset:0;z-index:9999;background:#0a1628;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:13px;}
+.loader{width:42px;height:42px;border:3px solid rgba(201,168,76,.3);border-top-color:#c9a84c;border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .hidden{display:none!important;}
+#topbar,#sidebar,#main{display:none;}
 @media(max-width:700px){#sidebar{display:none;}#main{margin-left:0;}}
 </style>
 </head>
 <body>
-<div id="loading"><img src="https://raw.githubusercontent.com/babspharm1-lgtm/BABSPHARM./refs/heads/main/logo.png" width="52" height="52" style="object-fit:contain;border-radius:10px"/><div class="loader"></div><div style="font-family:'Playfair Display',serif;color:var(--gold2)">Admin Panel</div></div>
+<div id="loading"><div style="font-size:2.5rem">⚗️</div><div class="loader"></div><div style="font-family:'Playfair Display',serif;color:#e8c97a;font-size:1rem">Admin Panel</div></div>
 <div id="toast"></div>
 <div id="auth-wrap" class="hidden">
   <div class="auth-card">
@@ -478,8 +479,18 @@ auth.onAuthStateChanged(async function(user){
     showToast('Error loading profile. Try again.');
   }
 });
-function showAuthUI(){document.getElementById('auth-wrap').classList.remove('hidden');['topbar','sidebar','main'].forEach(id=>document.getElementById(id).classList.add('hidden'));}
-function showAdminUI(){document.getElementById('auth-wrap').classList.add('hidden');['topbar','sidebar','main'].forEach(id=>document.getElementById(id).classList.remove('hidden'));}
+function showAuthUI(){
+  document.getElementById('auth-wrap').classList.remove('hidden');
+  document.getElementById('topbar').style.display='none';
+  document.getElementById('sidebar').style.display='none';
+  document.getElementById('main').style.display='none';
+}
+function showAdminUI(){
+  document.getElementById('auth-wrap').classList.add('hidden');
+  document.getElementById('topbar').style.display='flex';
+  document.getElementById('sidebar').style.display='block';
+  document.getElementById('main').style.display='block';
+}
 async function adminLogin(){
   const em=document.getElementById('a-em').value.trim(),pw=document.getElementById('a-pw').value;
   if(!em||!pw){showErr('a-msg','Fill all fields');return;}
