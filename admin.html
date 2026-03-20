@@ -122,22 +122,40 @@ html, body {
     <div id="a-msg" class="amsg"></div>
   </div>
 </div>
-<style>
-#sb-overlay{display:none;position:fixed;inset:0;z-index:199;background:rgba(0,0,0,.5);}
-@media(max-width:900px){
-  #sidebar{transform:translateX(-100%);transition:transform .3s;}
-  #sidebar.open{transform:translateX(0);}
-  #main{margin-left:0!important;}
-  #sb-overlay.show{display:block;}
-}
-</style>
-<div id="sb-overlay" onclick="closeSidebar()"></div>
+
+<!-- MOBILE MENU OVERLAY -->
+<div id="mob-overlay" onclick="closeSidebar()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:8888;"></div>
+
+<!-- MOBILE MENU DRAWER -->
+<div id="mob-drawer" style="display:none;position:fixed;top:0;left:0;height:100%;width:75%;max-width:260px;background:#0d1e3d;z-index:9999;overflow-y:auto;box-shadow:4px 0 20px rgba(0,0,0,.6);padding:16px 0;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px 16px;border-bottom:1px solid rgba(201,168,76,.2);margin-bottom:6px;">
+    <div style="font-family:'Playfair Display',serif;color:#e8c97a;font-weight:700;font-size:.9rem;">BABSPHARM Admin</div>
+    <button onclick="closeSidebar()" style="background:rgba(248,113,113,.15);border:1px solid rgba(248,113,113,.3);color:#f87171;border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.82rem;font-weight:700;">✕</button>
+  </div>
+  <div onclick="showPanel('dashboard',this);closeSidebar()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:#9bacc8;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04);" onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background=''">📊 Dashboard</div>
+  <div onclick="showPanel('students',this);closeSidebar()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:#9bacc8;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04);" onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background=''">👥 Students</div>
+  <div onclick="showPanel('messages',this);closeSidebar()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:#9bacc8;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04);" onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background=''">💬 Messages</div>
+  <div onclick="showPanel('courses',this);closeSidebar()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:#9bacc8;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04);" onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background=''">📚 Courses</div>
+  <div onclick="showPanel('questions',this);closeSidebar()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:#9bacc8;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04);" onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background=''">❓ Quiz Questions</div>
+  <div onclick="showPanel('privatequiz',this);closeSidebar()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:#9bacc8;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04);" onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background=''">🔐 Private Quiz</div>
+  <div onclick="showPanel('textbooks',this);closeSidebar()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:#9bacc8;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04);" onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background=''">📗 Textbooks</div>
+  <div onclick="showPanel('files',this);closeSidebar()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:#9bacc8;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04);" onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background=''">📁 Files</div>
+  <div onclick="showPanel('redemptions',this);closeSidebar()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:#9bacc8;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04);" onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background=''">📋 Redemptions</div>
+  <div onclick="showPanel('coupons',this);closeSidebar()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:#9bacc8;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04);" onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background=''">🎟️ Point Coupons</div>
+  <div onclick="showPanel('subadmins',this);closeSidebar()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:#9bacc8;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04);" onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background=''">👮 Sub-Admins</div>
+  <div onclick="showPanel('settings',this);closeSidebar()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:#9bacc8;font-size:.84rem;border-bottom:1px solid rgba(255,255,255,.04);" onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background=''">⚙️ Settings</div>
+  <div style="height:1px;background:rgba(201,168,76,.2);margin:8px 0;"></div>
+  <div onclick="window.open('index.html','_blank');closeSidebar()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:#9bacc8;font-size:.84rem;" onmouseover="this.style.background='rgba(201,168,76,.1)'" onmouseout="this.style.background=''">🌐 View Site</div>
+  <div onclick="doLogout()" style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;color:#f87171;font-size:.84rem;font-weight:600;" onmouseover="this.style.background='rgba(248,113,113,.08)'" onmouseout="this.style.background=''">🚪 Logout</div>
+</div>
+
+<div id="sb-overlay" style="display:none"></div>
 <div id="topbar" class="hidden">
   <div class="logo-wrap">
-    <button id="menu-btn" onclick="toggleSidebar()" style="background:none;border:none;cursor:pointer;padding:4px;display:flex;flex-direction:column;gap:5px;margin-right:4px;">
-      <span style="display:block;width:22px;height:2px;background:var(--gold);border-radius:2px;transition:all .3s"></span>
-      <span style="display:block;width:22px;height:2px;background:var(--gold);border-radius:2px;transition:all .3s"></span>
-      <span style="display:block;width:22px;height:2px;background:var(--gold);border-radius:2px;transition:all .3s"></span>
+    <button id="menu-btn" onclick="toggleSidebar()" style="background:none;border:none;cursor:pointer;padding:6px;display:flex;flex-direction:column;gap:5px;margin-right:6px;flex-shrink:0;">
+      <span style="display:block;width:22px;height:2px;background:var(--gold);border-radius:2px;"></span>
+      <span style="display:block;width:22px;height:2px;background:var(--gold);border-radius:2px;"></span>
+      <span style="display:block;width:22px;height:2px;background:var(--gold);border-radius:2px;"></span>
     </button>
     <img src="https://raw.githubusercontent.com/babspharm1-lgtm/BABSPHARM./refs/heads/main/logo.png" width="34" height="34" style="object-fit:contain;border-radius:8px"/>
     <div class="logo-txt">BABSPHARM Cloud</div>
@@ -728,26 +746,16 @@ function showAdminUI(){
 }
 
 function toggleSidebar(){
-  const sb = document.getElementById('sidebar');
-  const ov = document.getElementById('sb-overlay');
-  const isOpen = sb.getAttribute('data-open')==='1';
-  if(isOpen){
-    sb.style.transform='translateX(-100%)';
-    ov.style.display='none';
-    sb.setAttribute('data-open','0');
-  } else {
-    sb.style.transform='translateX(0)';
-    ov.style.display='block';
-    sb.setAttribute('data-open','1');
-  }
+  const drawer = document.getElementById('mob-drawer');
+  const overlay = document.getElementById('mob-overlay');
+  const isOpen = drawer.style.display === 'block';
+  drawer.style.display = isOpen ? 'none' : 'block';
+  overlay.style.display = isOpen ? 'none' : 'block';
 }
 
 function closeSidebar(){
-  const sb=document.getElementById('sidebar');
-  const ov=document.getElementById('sb-overlay');
-  sb.style.transform='translateX(-100%)';
-  ov.style.display='none';
-  sb.setAttribute('data-open','0');
+  document.getElementById('mob-drawer').style.display='none';
+  document.getElementById('mob-overlay').style.display='none';
 }
 async function doLogout(){await auth.signOut();}
 async function adminLogin(){
