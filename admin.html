@@ -467,6 +467,90 @@ Answer: A</code>
       <button class="btn btn-gold" onclick="saveContact()">💾 Save Contact Info</button>
     </div>
 
+    <!-- Emergency Alert -->
+    <div class="card" style="margin-bottom:14px;border:1px solid rgba(248,113,113,.3);">
+      <div class="card-title" style="color:#f87171;">🚨 Emergency Alert</div>
+      <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;">Shows a flashing red banner on ALL students' dashboards instantly. Use for urgent notices.</div>
+      <div class="fg"><label>Alert Title</label><input type="text" id="emg-title" placeholder="e.g. URGENT: Exam hall changed!"/></div>
+      <div class="fg"><label>Alert Message</label><textarea id="emg-msg" placeholder="Type the emergency message..."></textarea></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" style="flex:1;background:rgba(248,113,113,.15);border:1px solid var(--red);color:var(--red);" onclick="sendEmergencyAlert()">🚨 Send Emergency Alert</button>
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.05);border:1px solid var(--cb);color:var(--text2);" onclick="clearEmergencyAlert()">✕ Clear Alert</button>
+      </div>
+    </div>
+
+    <!-- Exam Countdown -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">⏰ Exam Countdown</div>
+      <div class="row2">
+        <div class="fg"><label>Exam Label</label><input type="text" id="cd-label" placeholder="e.g. 100L First Semester Exams"/></div>
+        <div class="fg"><label>Exam Date & Time</label><input type="datetime-local" id="cd-date"/></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <input type="checkbox" id="cd-active" style="accent-color:var(--gold);width:16px;height:16px;"/>
+        <label style="font-size:.8rem;color:var(--text2)">Show countdown on student dashboards</label>
+      </div>
+      <button class="btn btn-gold" onclick="saveCountdown()">💾 Save Countdown</button>
+    </div>
+
+    <!-- Student of the Week -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">👑 Student of the Week</div>
+      <div class="row2">
+        <div class="fg"><label>Student Name</label><input type="text" id="sotw-name-inp" placeholder="e.g. Ayomide Johnson"/></div>
+        <div class="fg"><label>Reason</label><input type="text" id="sotw-reason-inp" placeholder="e.g. Scored 95% in CHM 101!"/></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <input type="checkbox" id="sotw-active" style="accent-color:var(--gold);width:16px;height:16px;"/>
+        <label style="font-size:.8rem;color:var(--text2)">Show on all student dashboards</label>
+      </div>
+      <button class="btn btn-gold" onclick="saveSOTW()">💾 Save</button>
+    </div>
+
+    <!-- Daily Challenge -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">🧠 Daily Brain Challenge</div>
+      <div class="fg"><label>Question</label><textarea id="dc-q" placeholder="Type today's challenge question..."></textarea></div>
+      <div class="fg"><label>Option A</label><input type="text" id="dc-a"/></div>
+      <div class="fg"><label>Option B</label><input type="text" id="dc-b"/></div>
+      <div class="fg"><label>Option C</label><input type="text" id="dc-c"/></div>
+      <div class="fg"><label>Option D</label><input type="text" id="dc-d"/></div>
+      <div class="row2">
+        <div class="fg"><label>Correct Answer</label><select id="dc-ans"><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div>
+        <div class="fg"><label>Points for correct answer</label><input type="number" id="dc-pts" value="10" min="1"/></div>
+      </div>
+      <div class="fg"><label>Explanation (shown after answer)</label><textarea id="dc-exp" placeholder="Explain why the answer is correct..."></textarea></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+        <input type="checkbox" id="dc-active" checked style="accent-color:var(--gold);width:16px;height:16px;"/>
+        <label style="font-size:.8rem;color:var(--text2)">Challenge is active</label>
+      </div>
+      <button class="btn btn-gold" onclick="saveDailyChallenge()">💾 Save Today's Challenge</button>
+    </div>
+
+    <!-- Video Lessons -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">📹 Add Video Lesson</div>
+      <div class="row2">
+        <div class="fg"><label>Video Title</label><input type="text" id="vid-title" placeholder="e.g. CHM 101 - Reaction Kinetics"/></div>
+        <div class="fg"><label>Course</label><input type="text" id="vid-course" placeholder="e.g. CHM 101"/></div>
+      </div>
+      <div class="fg"><label>YouTube URL</label><input type="text" id="vid-url" placeholder="https://www.youtube.com/watch?v=..."/></div>
+      <div class="fg"><label>Lecturer (optional)</label><input type="text" id="vid-lecturer" placeholder="e.g. Prof. Soriyan"/></div>
+      <button class="btn btn-gold" onclick="addVideo()">➕ Add Video</button>
+    </div>
+
+    <!-- Spin Wheel Settings -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">🎰 Spin Wheel Settings</div>
+      <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;">Set the point values on the spin wheel. Students spin once per day to win points.</div>
+      <div class="fg">
+        <label>Point Values (comma separated)</label>
+        <input type="text" id="spin-segments" placeholder="e.g. 5,10,15,20,5,10,25,5,10,15,20,30"/>
+        <div style="font-size:.68rem;color:var(--text2);margin-top:3px">These are the values on each segment of the wheel. You can add as many as you want.</div>
+      </div>
+      <button class="btn btn-gold" onclick="saveSpinSettings()">💾 Save Spin Settings</button>
+      <div id="spin-save-status" style="font-size:.74rem;margin-top:7px;"></div>
+    </div>
     <!-- Batch Points -->
     <div class="card" style="margin-bottom:14px">
       <div class="card-title">🎁 Batch Give Points to All Students</div>
@@ -598,6 +682,37 @@ Answer: A</code>
       <div class="card">
         <div class="card-title">Sent Messages</div>
         <div id="sent-messages"></div>
+      </div>
+    </div>
+    <!-- Bulk message by department -->
+    <div class="card">
+      <div class="card-title">📢 Bulk Message by Department</div>
+      <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;">Send a message to all students in a specific department at once.</div>
+      <div class="row2">
+        <div>
+          <div class="fg"><label>Select Department</label>
+            <select id="bulk-dept" style="width:100%;padding:10px 13px;border-radius:9px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;">
+              <option value="all">📢 All Departments</option>
+              <option>Anatomy</option><option>Biochemistry</option><option>Botany</option>
+              <option>Chemical Engineering</option><option>Chemistry</option>
+              <option>Civil Engineering</option><option>Computer Science</option>
+              <option>Dentistry</option><option>Economics</option>
+              <option>Electrical Engineering</option><option>Food Science & Technology</option>
+              <option>Geology</option><option>Law</option><option>Mathematics</option>
+              <option>Mechanical Engineering</option><option>Medicine & Surgery</option>
+              <option>Microbiology</option><option>Nursing</option><option>Pharmacy</option>
+              <option>Physics</option><option>Physiology</option><option>Zoology</option>
+            </select>
+          </div>
+          <div class="fg"><label>Subject</label><input type="text" id="bulk-msg-subject" placeholder="e.g. Important Notice for Pharmacy Students"/></div>
+          <div class="fg"><label>Message</label><textarea id="bulk-msg-body" placeholder="Type your message to the department..."></textarea></div>
+          <button class="btn btn-gold" style="width:100%" onclick="sendBulkDeptMessage()">📢 Send to Department</button>
+          <div id="bulk-msg-progress" style="display:none;margin-top:10px;font-size:.78rem;color:var(--text2);text-align:center;padding:8px;background:rgba(201,168,76,.08);border-radius:8px;"></div>
+        </div>
+        <div class="card" style="border:none;padding:0;">
+          <div class="card-title">Department Stats</div>
+          <div id="dept-stats"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -773,7 +888,7 @@ function showPanel(name,el){
   document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('on'));
   document.getElementById('panel-'+name).classList.add('on');
   if(el)el.classList.add('on');
-  ({students:loadStudents,courses:loadCourses,questions:()=>{loadQCourses();loadBulkCourses();},privatequiz:()=>{loadPQList();loadHtmlQuizzes();},files:loadFiles,textbooks:loadAdminTextbooks,settings:()=>{loadSettings();loadBrevoSettings();loadPopupSettings();},dashboard:loadDashboard,messages:()=>{loadStudents();loadSentMessages();},subadmins:loadSubAdmins,coupons:loadCoupons,redemptions:loadRedemptions})[name]?.();
+  ({students:loadStudents,courses:loadCourses,questions:()=>{loadQCourses();loadBulkCourses();},privatequiz:()=>{loadPQList();loadHtmlQuizzes();},files:loadFiles,textbooks:loadAdminTextbooks,settings:()=>{loadSettings();loadBrevoSettings();loadPopupSettings();loadSpinSettings();loadCountdownSettings();loadSOTWSettings();loadDailyChallengeSettings();},dashboard:loadDashboard,messages:()=>{loadStudents();loadSentMessages();loadDeptStats();},subadmins:loadSubAdmins,coupons:loadCoupons,redemptions:loadRedemptions})[name]?.();
 }
 async function loadDashboard(){
   const snap=await db.collection('users').get();
@@ -1329,6 +1444,102 @@ async function uploadBulkQuestions(){
   setTimeout(()=>prog.style.display='none', 3000);
 }
 
+// ══ EMERGENCY ALERT ══
+async function sendEmergencyAlert(){
+  const title=document.getElementById('emg-title').value.trim();
+  const msg=document.getElementById('emg-msg').value.trim();
+  if(!title||!msg){showToast('Fill title and message');return;}
+  await db.collection('settings').doc('emergency').set({title,msg,active:true,sentAt:new Date().toISOString()});
+  showToast('🚨 Emergency alert sent to all students!');
+}
+async function clearEmergencyAlert(){
+  await db.collection('settings').doc('emergency').set({active:false},{merge:true});
+  showToast('Emergency alert cleared');
+}
+
+// ══ EXAM COUNTDOWN ══
+async function saveCountdown(){
+  const label=document.getElementById('cd-label').value.trim();
+  const date=document.getElementById('cd-date').value;
+  const active=document.getElementById('cd-active').checked;
+  if(!date){showToast('Select exam date');return;}
+  await db.collection('settings').doc('examCountdown').set({label,examDate:date,active,updatedAt:new Date().toISOString()});
+  showToast('Exam countdown saved!');
+}
+async function loadCountdownSettings(){
+  try{
+    const doc=await db.collection('settings').doc('examCountdown').get();
+    if(doc.exists){const d=doc.data();if(d.label)document.getElementById('cd-label').value=d.label;if(d.examDate)document.getElementById('cd-date').value=d.examDate;document.getElementById('cd-active').checked=d.active||false;}
+  }catch(e){}
+}
+
+// ══ STUDENT OF THE WEEK ══
+async function saveSOTW(){
+  const name=document.getElementById('sotw-name-inp').value.trim();
+  const reason=document.getElementById('sotw-reason-inp').value.trim();
+  const active=document.getElementById('sotw-active').checked;
+  if(!name){showToast('Enter student name');return;}
+  await db.collection('settings').doc('sotw').set({name,reason,active,updatedAt:new Date().toISOString()});
+  showToast('Student of the Week saved!');
+}
+async function loadSOTWSettings(){
+  try{
+    const doc=await db.collection('settings').doc('sotw').get();
+    if(doc.exists){const d=doc.data();if(d.name)document.getElementById('sotw-name-inp').value=d.name;if(d.reason)document.getElementById('sotw-reason-inp').value=d.reason;document.getElementById('sotw-active').checked=d.active||false;}
+  }catch(e){}
+}
+
+// ══ DAILY CHALLENGE ══
+async function saveDailyChallenge(){
+  const q=document.getElementById('dc-q').value.trim();
+  const options=['dc-a','dc-b','dc-c','dc-d'].map(id=>document.getElementById(id).value.trim());
+  const answer=parseInt(document.getElementById('dc-ans').value);
+  const points=parseInt(document.getElementById('dc-pts').value)||10;
+  const explanation=document.getElementById('dc-exp').value.trim();
+  const active=document.getElementById('dc-active').checked;
+  if(!q||options.some(o=>!o)){showToast('Fill all fields');return;}
+  await db.collection('settings').doc('dailyChallenge').set({question:q,options,answer,points,explanation,active,date:new Date().toDateString(),updatedAt:new Date().toISOString()});
+  showToast('Daily challenge saved!');
+}
+async function loadDailyChallengeSettings(){
+  try{
+    const doc=await db.collection('settings').doc('dailyChallenge').get();
+    if(doc.exists){const d=doc.data();if(d.question)document.getElementById('dc-q').value=d.question;if(d.options){['a','b','c','d'].forEach((l,i)=>document.getElementById('dc-'+l).value=d.options[i]||'');}if(typeof d.answer!=='undefined')document.getElementById('dc-ans').value=d.answer;if(d.points)document.getElementById('dc-pts').value=d.points;if(d.explanation)document.getElementById('dc-exp').value=d.explanation;document.getElementById('dc-active').checked=d.active!==false;}
+  }catch(e){}
+}
+
+// ══ VIDEO LESSONS ══
+async function addVideo(){
+  const title=document.getElementById('vid-title').value.trim();
+  const course=document.getElementById('vid-course').value.trim();
+  const url=document.getElementById('vid-url').value.trim();
+  const lecturer=document.getElementById('vid-lecturer').value.trim();
+  if(!title||!url){showToast('Fill title and URL');return;}
+  await db.collection('videos').add({title,course,url,lecturer,createdAt:new Date().toISOString()});
+  ['vid-title','vid-course','vid-url','vid-lecturer'].forEach(id=>document.getElementById(id).value='');
+  showToast('Video added!');
+}
+
+async function saveSpinSettings(){
+  const raw = document.getElementById('spin-segments').value.trim();
+  if(!raw){showToast('Enter segment values');return;}
+  const segments = raw.split(',').map(s=>parseInt(s.trim())).filter(n=>n>0);
+  if(segments.length<4){showToast('Add at least 4 values');return;}
+  await db.collection('settings').doc('spinWheel').set({segments,updatedAt:new Date().toISOString()});
+  const el = document.getElementById('spin-save-status');
+  if(el){el.textContent='✅ Saved! Students will see '+segments.length+' segments on the wheel.';el.style.color='var(--green)';}
+  showToast('Spin wheel updated!');
+}
+
+async function loadSpinSettings(){
+  try{
+    const doc = await db.collection('settings').doc('spinWheel').get();
+    if(doc.exists && doc.data().segments){
+      document.getElementById('spin-segments').value = doc.data().segments.join(',');
+    }
+  }catch(e){}
+}
+
 // ══ BATCH GIVE POINTS ══
 async function batchGivePoints(){
   const pts = parseInt(document.getElementById('batch-pts').value);
@@ -1697,6 +1908,46 @@ async function sendDirectMessage(){
   clearMsgTarget();
   showToast('Message sent to '+msgTargetName+'!');
   loadSentMessages();
+}
+
+async function sendBulkDeptMessage(){
+  const dept=document.getElementById('bulk-dept').value;
+  const subject=document.getElementById('bulk-msg-subject').value.trim();
+  const body=document.getElementById('bulk-msg-body').value.trim();
+  if(!subject||!body){showToast('Fill subject and message');return;}
+  const prog=document.getElementById('bulk-msg-progress');
+  prog.style.display='block';prog.textContent='Loading students...';
+  try{
+    let query=db.collection('users').where('role','==','user');
+    if(dept!=='all')query=query.where('dept','==',dept);
+    const snap=await query.get();
+    if(snap.empty){showToast('No students found');prog.style.display='none';return;}
+    let done=0;const total=snap.docs.length;
+    const today=new Date().toISOString();
+    const batches=[];
+    for(let i=0;i<snap.docs.length;i+=10)batches.push(snap.docs.slice(i,i+10));
+    for(const batch of batches){
+      await Promise.all(batch.map(d=>db.collection('messages').add({toUid:d.id,toName:d.data().name||d.data().email,subject,body,fromAdmin:true,sentBy:auth.currentUser.email,createdAt:today,read:false})));
+      done+=batch.length;
+      prog.textContent=`📨 Sending... ${done}/${total}`;
+    }
+    prog.textContent=`✅ Sent to ${done} students in ${dept==='all'?'all departments':dept}!`;
+    document.getElementById('bulk-msg-subject').value='';
+    document.getElementById('bulk-msg-body').value='';
+    setTimeout(()=>prog.style.display='none',4000);
+    showToast(`✅ Sent to ${done} students!`);
+  }catch(e){prog.textContent='❌ Error: '+e.message;}
+}
+
+async function loadDeptStats(){
+  try{
+    const snap=await db.collection('users').where('role','==','user').get();
+    const depts={};
+    snap.docs.forEach(d=>{const dept=d.data().dept||'Unknown';depts[dept]=(depts[dept]||0)+1;});
+    const sorted=Object.entries(depts).sort((a,b)=>b[1]-a[1]);
+    const el=document.getElementById('dept-stats');
+    if(el)el.innerHTML=sorted.map(([d,c])=>`<div style="display:flex;justify-content:space-between;padding:7px 10px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:5px;font-size:.78rem;"><span style="color:var(--text2)">${d}</span><span style="color:var(--gold);font-weight:700">${c}</span></div>`).join('');
+  }catch(e){}
 }
 
 async function loadSentMessages(){

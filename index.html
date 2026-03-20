@@ -319,9 +319,18 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="sb-udept" id="sb-dept">OAU</div>
   </div>
   <div class="sb-item on" onclick="showPage('dash');closeSB()"><span class="si">🏠</span>Dashboard</div>
+  <div class="sb-item" onclick="showPage('leaderboard');closeSB()"><span class="si">🏆</span>Leaderboard</div>
+  <div class="sb-item" onclick="showPage('challenge');closeSB()"><span class="si">🧠</span>Daily Challenge</div>
+  <div class="sb-item" onclick="showPage('flashcards');closeSB()"><span class="si">🃏</span>Flashcards</div>
+  <div class="sb-item" onclick="showPage('videos');closeSB()"><span class="si">📹</span>Video Lessons</div>
+  <div class="sb-item" onclick="showPage('forum');closeSB()"><span class="si">💬</span>Course Forum</div>
+  <div class="sb-item" onclick="showPage('badges');closeSB()"><span class="si">🏅</span>My Badges</div>
   <div class="sb-item" onclick="showPage('quiz');closeSB()"><span class="si">📝</span>CBT Quiz</div>
   <div class="sb-item" onclick="showPage('mock');closeSB()"><span class="si">🎯</span>Mock Exam</div>
   <div class="sb-item" onclick="showPage('history');closeSB()"><span class="si">📊</span>Quiz History</div>
+  <div class="sb-item" onclick="showPage('progress');closeSB()"><span class="si">📈</span>My Progress</div>
+  <div class="sb-item" onclick="showPage('gpa');closeSB()"><span class="si">🎓</span>GPA Calculator</div>
+  <div class="sb-item" onclick="showPage('map');closeSB()"><span class="si">🌍</span>Campus Map</div>
   <div class="sb-item" onclick="showPage('files');closeSB()"><span class="si">📁</span>Downloads</div>
   <div class="sb-item" onclick="showPage('textbooks');closeSB()"><span class="si">📗</span>Textbooks</div>
   <div class="sb-item" onclick="showPage('ai');closeSB()"><span class="si">🤖</span>AI Tutor</div>
@@ -420,6 +429,39 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 
 <!-- ══ DASHBOARD ══ -->
 <div id="pg-dash" class="page hidden">
+  <!-- Emergency Alert Banner -->
+  <div id="emergency-banner" style="display:none;background:linear-gradient(135deg,#dc2626,#991b1b);border-radius:12px;padding:12px 16px;margin-bottom:14px;animation:pulse 1.5s infinite;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="font-size:1.4rem;animation:pulse 1s infinite">🚨</div>
+      <div style="flex:1">
+        <div style="font-weight:700;font-size:.84rem;color:#fff;margin-bottom:2px" id="emergency-title">Emergency Alert</div>
+        <div style="font-size:.76rem;color:rgba(255,255,255,.85)" id="emergency-msg"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exam Countdown -->
+  <div id="exam-countdown-bar" style="display:none;background:linear-gradient(135deg,#1e40af,#7c3aed);border-radius:12px;padding:12px 16px;margin-bottom:14px;text-align:center;">
+    <div style="font-size:.7rem;color:rgba(255,255,255,.75);letter-spacing:1px;margin-bottom:4px" id="countdown-label">EXAM COUNTDOWN</div>
+    <div style="display:flex;justify-content:center;gap:12px;">
+      <div><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:#fff" id="cd-days">--</div><div style="font-size:.6rem;color:rgba(255,255,255,.7)">DAYS</div></div>
+      <div style="font-size:1.4rem;color:rgba(255,255,255,.5);align-self:center">:</div>
+      <div><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:#fff" id="cd-hrs">--</div><div style="font-size:.6rem;color:rgba(255,255,255,.7)">HRS</div></div>
+      <div style="font-size:1.4rem;color:rgba(255,255,255,.5);align-self:center">:</div>
+      <div><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:#fff" id="cd-mins">--</div><div style="font-size:.6rem;color:rgba(255,255,255,.7)">MINS</div></div>
+    </div>
+  </div>
+
+  <!-- Student of the Week -->
+  <div id="sotw-banner" style="display:none;background:linear-gradient(135deg,#b45309,#92400e);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+    <div style="font-size:2rem">👑</div>
+    <div>
+      <div style="font-size:.68rem;color:rgba(255,255,255,.7);letter-spacing:1px;font-weight:600">STUDENT OF THE WEEK</div>
+      <div style="font-size:.9rem;font-weight:700;color:#fff" id="sotw-name">--</div>
+      <div style="font-size:.72rem;color:rgba(255,255,255,.7)" id="sotw-reason"></div>
+    </div>
+  </div>
+
   <div class="dash-hdr">
     <h1 id="dash-greet">Welcome back!</h1>
     <p>OAU Student Learning Platform</p>
@@ -435,9 +477,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div id="motiv-slider" style="position:relative;overflow:hidden;border-radius:16px;margin-bottom:18px;min-height:110px;">
     <div id="motiv-track" style="display:flex;transition:transform .6s cubic-bezier(.4,0,.2,1);">
     </div>
-    <!-- Dots -->
     <div id="motiv-dots" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;"></div>
-    <!-- Arrows -->
     <button onclick="motivPrev()" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.3);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;">‹</button>
     <button onclick="motivNext()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,.3);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.8rem;display:flex;align-items:center;justify-content:center;">›</button>
   </div>
@@ -446,13 +486,22 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="quick-grid">
     <div class="qc" onclick="showPage('quiz')"><div class="qc-icon">📝</div><div class="qc-lbl">CBT Quiz</div></div>
     <div class="qc" onclick="showPage('mock')"><div class="qc-icon">🎯</div><div class="qc-lbl">Mock Exam</div></div>
+    <div class="qc" onclick="showPage('leaderboard')"><div class="qc-icon">🏆</div><div class="qc-lbl">Leaderboard</div></div>
+    <div class="qc" onclick="showPage('challenge')"><div class="qc-icon">🧠</div><div class="qc-lbl">Daily Challenge</div></div>
+    <div class="qc" onclick="showPage('flashcards')"><div class="qc-icon">🃏</div><div class="qc-lbl">Flashcards</div></div>
+    <div class="qc" onclick="showPage('videos')"><div class="qc-icon">📹</div><div class="qc-lbl">Videos</div></div>
+    <div class="qc" onclick="showPage('forum')"><div class="qc-icon">💬</div><div class="qc-lbl">Forum</div></div>
+    <div class="qc" onclick="showPage('badges')"><div class="qc-icon">🏅</div><div class="qc-lbl">Badges</div></div>
     <div class="qc" onclick="showPage('files')"><div class="qc-icon">📁</div><div class="qc-lbl">Downloads</div></div>
     <div class="qc" onclick="showPage('ai')"><div class="qc-icon">🤖</div><div class="qc-lbl">AI Tutor</div></div>
     <div class="qc" onclick="showPage('history')"><div class="qc-icon">📊</div><div class="qc-lbl">Quiz History</div></div>
+    <div class="qc" onclick="showPage('progress')"><div class="qc-icon">📈</div><div class="qc-lbl">My Progress</div></div>
+    <div class="qc" onclick="showPage('gpa')"><div class="qc-icon">🎓</div><div class="qc-lbl">GPA Calc</div></div>
+    <div class="qc" onclick="showPage('map')"><div class="qc-icon">🌍</div><div class="qc-lbl">Campus Map</div></div>
     <div class="qc" onclick="openPQModal()"><div class="qc-icon">🔐</div><div class="qc-lbl">Private Quiz</div></div>
     <div class="qc" onclick="showPage('referral')"><div class="qc-icon">🎁</div><div class="qc-lbl">Referral</div></div>
-    <div class="qc" onclick="showPage('profile')"><div class="qc-icon">👤</div><div class="qc-lbl">Profile</div></div>
     <div class="qc" onclick="showPage('textbooks')"><div class="qc-icon">📗</div><div class="qc-lbl">Textbooks</div></div>
+    <div class="qc" onclick="showPage('profile')"><div class="qc-icon">👤</div><div class="qc-lbl">Profile</div></div>
   </div>
 
   <!-- ══ TEXTBOOK SHOWCASE ══ -->
@@ -466,6 +515,70 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div style="font-size:.7rem;color:var(--gold);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">📢 ANNOUNCEMENT</div>
     <div id="ann-title" style="font-size:.88rem;font-weight:600;margin-bottom:3px;"></div>
     <div id="ann-msg" style="font-size:.8rem;color:var(--text2);"></div>
+  </div>
+</div>
+
+<!-- ══ PROGRESS REPORT PAGE ══ -->
+<div id="pg-progress" class="page hidden">
+  <div class="sec-title">📊 My Progress Report</div>
+  <div style="background:rgba(201,168,76,.06);border:1px solid var(--cb);border-radius:var(--r);padding:14px;margin-bottom:14px;font-size:.78rem;color:var(--text2);">
+    🤖 AI analyses your quiz history and generates a personalised weekly report showing your strengths, weak topics and study recommendations.
+  </div>
+  <div id="progress-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;"></div>
+  <div id="progress-report" style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:16px;margin-bottom:14px;min-height:100px;"></div>
+  <button class="btn btn-gold" style="width:100%" onclick="generateProgressReport()">🤖 Generate AI Report</button>
+</div>
+
+<!-- ══ GPA CALCULATOR PAGE ══ -->
+<div id="pg-gpa" class="page hidden">
+  <div class="sec-title">🎓 GPA Calculator</div>
+  <div style="background:rgba(201,168,76,.06);border:1px solid var(--cb);border-radius:var(--r);padding:12px;margin-bottom:14px;font-size:.76rem;color:var(--text2);">
+    Uses the official OAU 5-point grading system: A=5, B=4, C=3, D=2, E=1, F=0
+  </div>
+  <div id="gpa-courses" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;"></div>
+  <button class="btn btn-out" style="width:100%;margin-bottom:10px" onclick="addGPACourse()">➕ Add Course</button>
+  <div style="background:var(--card);border:2px solid var(--gold);border-radius:var(--r);padding:20px;text-align:center;margin-bottom:14px;">
+    <div style="font-size:.78rem;color:var(--text2);margin-bottom:6px;">YOUR GPA</div>
+    <div id="gpa-result" style="font-family:'Playfair Display',serif;font-size:3rem;font-weight:900;color:var(--gold2);">0.00</div>
+    <div id="gpa-class" style="font-size:.84rem;color:var(--text2);margin-top:4px;"></div>
+  </div>
+  <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:14px;">
+    <div style="font-size:.8rem;font-weight:600;color:var(--gold2);margin-bottom:10px;">OAU Grading Scale</div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-size:.76rem;">
+      <div style="padding:7px 10px;background:rgba(74,222,128,.08);border-radius:8px;border:1px solid rgba(74,222,128,.2)">A (70-100%) = 5 pts 🏆</div>
+      <div style="padding:7px 10px;background:rgba(96,165,250,.08);border-radius:8px;border:1px solid rgba(96,165,250,.2)">B (60-69%) = 4 pts ⭐</div>
+      <div style="padding:7px 10px;background:rgba(251,191,36,.08);border-radius:8px;border:1px solid rgba(251,191,36,.2)">C (50-59%) = 3 pts ✅</div>
+      <div style="padding:7px 10px;background:rgba(251,146,60,.08);border-radius:8px;border:1px solid rgba(251,146,60,.2)">D (45-49%) = 2 pts ⚠️</div>
+      <div style="padding:7px 10px;background:rgba(248,113,113,.08);border-radius:8px;border:1px solid rgba(248,113,113,.2)">E (40-44%) = 1 pt ❌</div>
+      <div style="padding:7px 10px;background:rgba(248,113,113,.12);border-radius:8px;border:1px solid rgba(248,113,113,.3)">F (0-39%) = 0 pts 💔</div>
+    </div>
+    <div style="margin-top:10px;font-size:.74rem;color:var(--text2);">
+      <div style="color:var(--green);font-weight:600">4.50–5.00 = First Class 🥇</div>
+      <div>3.50–4.49 = Second Class Upper 🥈</div>
+      <div>2.40–3.49 = Second Class Lower 🥉</div>
+      <div>1.50–2.39 = Third Class</div>
+      <div style="color:var(--red)">Below 1.50 = Pass / Fail</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CAMPUS MAP PAGE ══ -->
+<div id="pg-map" class="page hidden">
+  <div class="sec-title">🌍 OAU Campus Map</div>
+  <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;">Key locations on the Obafemi Awolowo University campus, Ile-Ife.</div>
+  <!-- Category filters -->
+  <div class="fcats" style="margin-bottom:12px;">
+    <button class="fcat on" onclick="filterMap('all',this)">All</button>
+    <button class="fcat" onclick="filterMap('academic',this)">🏫 Academic</button>
+    <button class="fcat" onclick="filterMap('health',this)">🏥 Health</button>
+    <button class="fcat" onclick="filterMap('food',this)">🍽 Food</button>
+    <button class="fcat" onclick="filterMap('hostel',this)">🏠 Hostel</button>
+    <button class="fcat" onclick="filterMap('services',this)">🔧 Services</button>
+  </div>
+  <div id="map-locations" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;"></div>
+  <!-- Embedded Google Map -->
+  <div style="border-radius:14px;overflow:hidden;border:1px solid var(--cb);">
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15866.94!2d4.5242!3d7.5208!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x1039ed85e7c4b5e9%3A0x4b0e7e0b2a6a4c0!2sObafemi%20Awolowo%20University!5e0!3m2!1sen!2sng!4v1" width="100%" height="300" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
   </div>
 </div>
 
@@ -483,6 +596,99 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <button class="fcat" onclick="filterTextbooks('GST',this)">GST</button>
   </div>
   <div id="textbooks-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;"></div>
+</div>
+
+<!-- ══ LEADERBOARD ══ -->
+<div id="pg-leaderboard" class="page hidden">
+  <div class="sec-title">🏆 Leaderboard</div>
+  <div class="fcats" style="margin-bottom:12px;" id="lb-course-tabs"></div>
+  <div id="leaderboard-list"></div>
+</div>
+
+<!-- ══ DAILY CHALLENGE ══ -->
+<div id="pg-challenge" class="page hidden">
+  <div class="sec-title">🧠 Daily Brain Challenge</div>
+  <div style="background:linear-gradient(135deg,#7c3aed,#4338ca);border-radius:16px;padding:20px;text-align:center;margin-bottom:14px;">
+    <div style="font-size:.7rem;color:rgba(255,255,255,.7);letter-spacing:1px;margin-bottom:4px" id="challenge-date"></div>
+    <div style="font-size:.78rem;color:rgba(255,255,255,.8);margin-bottom:6px">Answer correctly to earn bonus points! 🎯</div>
+    <div style="background:rgba(255,255,255,.1);border-radius:10px;padding:12px;font-size:.84rem;color:#fff;font-weight:600;line-height:1.5" id="challenge-q">Loading today's question...</div>
+  </div>
+  <div id="challenge-options" style="display:flex;flex-direction:column;gap:9px;margin-bottom:14px;"></div>
+  <div id="challenge-result" style="display:none;border-radius:12px;padding:14px;text-align:center;margin-bottom:14px;"></div>
+  <div id="challenge-done" style="display:none;text-align:center;padding:20px;background:var(--card);border:1px solid var(--cb);border-radius:var(--r);">
+    <div style="font-size:2rem;margin-bottom:8px">✅</div>
+    <div style="font-weight:600;color:var(--gold2)">Challenge Complete!</div>
+    <div style="font-size:.78rem;color:var(--text2);margin-top:6px">Come back tomorrow for a new challenge!</div>
+  </div>
+</div>
+
+<!-- ══ FLASHCARDS ══ -->
+<div id="pg-flashcards" class="page hidden">
+  <div class="sec-title">🃏 Flashcards</div>
+  <div class="fg" style="margin-bottom:12px;">
+    <label>Select Course</label>
+    <select id="fc-course" onchange="loadFlashcards(this.value)" style="width:100%;padding:10px 13px;border-radius:9px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;">
+      <option value="">Select course...</option>
+    </select>
+  </div>
+  <div id="flashcard-container" style="display:none;">
+    <div style="text-align:center;font-size:.76rem;color:var(--text2);margin-bottom:10px">Card <span id="fc-current">1</span> of <span id="fc-total">0</span> • Tap card to flip</div>
+    <div id="flashcard" onclick="flipCard()" style="height:200px;border-radius:16px;cursor:pointer;position:relative;perspective:1000px;margin-bottom:16px;">
+      <div id="fc-inner" style="position:absolute;inset:0;transition:transform .6s;transform-style:preserve-3d;">
+        <div id="fc-front" style="position:absolute;inset:0;background:linear-gradient(135deg,#1e40af,#7c3aed);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;backface-visibility:hidden;">
+          <div style="font-size:.68rem;color:rgba(255,255,255,.6);letter-spacing:1px;margin-bottom:10px">QUESTION</div>
+          <div id="fc-q" style="font-size:.9rem;font-weight:600;color:#fff;text-align:center;line-height:1.5"></div>
+        </div>
+        <div id="fc-back" style="position:absolute;inset:0;background:linear-gradient(135deg,#065f46,#0f766e);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;backface-visibility:hidden;transform:rotateY(180deg);">
+          <div style="font-size:.68rem;color:rgba(255,255,255,.6);letter-spacing:1px;margin-bottom:10px">ANSWER</div>
+          <div id="fc-a" style="font-size:.88rem;font-weight:600;color:#fff;text-align:center;line-height:1.5"></div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-out" style="flex:1" onclick="prevCard()">‹ Previous</button>
+      <button class="btn btn-gold" style="flex:1" onclick="nextCard()">Next ›</button>
+    </div>
+  </div>
+  <div id="fc-empty" style="text-align:center;padding:30px;color:var(--text2);font-size:.84rem">Select a course to see flashcards</div>
+</div>
+
+<!-- ══ VIDEO LESSONS ══ -->
+<div id="pg-videos" class="page hidden">
+  <div class="sec-title">📹 Video Lessons</div>
+  <div class="fcats" id="vid-cats" style="margin-bottom:12px;">
+    <button class="fcat on" onclick="filterVideos('all',this)">All</button>
+  </div>
+  <div id="videos-grid" style="display:grid;grid-template-columns:repeat(1,1fr);gap:12px;"></div>
+</div>
+
+<!-- ══ COURSE FORUM ══ -->
+<div id="pg-forum" class="page hidden">
+  <div class="sec-title">💬 Course Forum</div>
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <select id="forum-course" onchange="loadForumPosts(this.value)" style="flex:1;padding:10px 13px;border-radius:9px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;">
+      <option value="">Select course...</option>
+    </select>
+    <button class="btn btn-gold" onclick="openNewPost()" style="white-space:nowrap;">✏️ Ask</button>
+  </div>
+  <div id="forum-posts"></div>
+</div>
+
+<!-- ══ BADGES ══ -->
+<div id="pg-badges" class="page hidden">
+  <div class="sec-title">🏅 My Badges & Achievements</div>
+  <div id="badges-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
+</div>
+
+<!-- ══ QUIZ REVIEW MODAL ══ -->
+<div id="review-modal" style="display:none;position:fixed;inset:0;z-index:600;background:var(--navy);overflow-y:auto;">
+  <div style="padding:16px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+      <button onclick="closeReview()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:.8rem;">✕ Close</button>
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold2)">Quiz Review</div>
+    </div>
+    <div id="review-list"></div>
+  </div>
 </div>
 
 <!-- ══ QUIZ PAGE ══ -->
@@ -799,6 +1005,21 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 <!-- ══ REFERRAL PAGE ══ -->
 <div id="pg-referral" class="page hidden">
   <div class="sec-title">Referral & Points</div>
+
+  <!-- SPIN WHEEL -->
+  <div style="background:var(--card);border:1px solid var(--gold);border-radius:var(--r);padding:20px;text-align:center;margin-bottom:14px;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold2),var(--gold));"></div>
+    <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold2);font-weight:700;margin-bottom:4px;">🎰 Daily Spin Wheel</div>
+    <div style="font-size:.74rem;color:var(--text2);margin-bottom:16px;">Spin once per day to win bonus points!</div>
+    <!-- Wheel -->
+    <div style="position:relative;display:inline-block;margin-bottom:16px;">
+      <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:1.4rem;z-index:10;">▼</div>
+      <canvas id="spin-wheel" width="220" height="220" style="border-radius:50%;cursor:pointer;" onclick="spinWheel()"></canvas>
+    </div>
+    <br>
+    <button id="spin-btn" class="btn btn-gold" style="width:100%;max-width:240px" onclick="spinWheel()">🎰 SPIN NOW!</button>
+    <div id="spin-status" style="font-size:.78rem;color:var(--text2);margin-top:8px;"></div>
+  </div>
   <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:20px;text-align:center;margin-bottom:14px;">
     <div style="font-size:2rem;margin-bottom:8px">🎁</div>
     <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold2);margin-bottom:4px">Your Referral Code</div>
@@ -885,6 +1106,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="res-lbl">Quiz Complete</div>
     <div class="res-msg" id="res-msg"></div>
     <button id="res-wa-btn" style="display:none;width:100%;margin-bottom:8px;padding:10px;border-radius:10px;background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);color:#25d366;font-family:'Outfit',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;" onclick="shareResultWA()">📱 Share on WhatsApp</button>
+    <button id="res-review-btn" style="display:none;width:100%;margin-bottom:8px;padding:10px;border-radius:10px;background:rgba(201,168,76,.1);border:1px solid var(--cb);color:var(--gold);font-family:'Outfit',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;" onclick="openReview()">📝 Review Answers</button>
     <button class="btn btn-gold" onclick="closeResult()">Back to Courses</button>
   </div>
 </div>
@@ -1000,6 +1222,9 @@ auth.onAuthStateChanged(async function(user){
     initMotivSlider();
     loadTextbooks();
     checkLoginPopup();
+    checkEmergencyAlert();
+    checkExamCountdown();
+    checkSOTW();
     showPage('dash');
     document.getElementById('bnav').style.display = 'flex';
     // update last seen + daily login points
@@ -1135,9 +1360,18 @@ function showPage(pg){
   if(pg==='profile') loadProfile();
   if(pg==='history') loadHistory();
   if(pg==='mock') loadMockCourses();
-  if(pg==='referral') loadReferral();
+  if(pg==='referral') { loadReferral(); initSpinWheel(); }
   if(pg==='inbox') loadInbox();
   if(pg==='ai') updateAiUI();
+  if(pg==='progress') loadProgressPage();
+  if(pg==='gpa') initGPA();
+  if(pg==='map') initMap();
+  if(pg==='leaderboard') loadLeaderboard();
+  if(pg==='challenge') loadDailyChallenge();
+  if(pg==='flashcards') loadFlashcardCourses();
+  if(pg==='videos') loadVideos();
+  if(pg==='forum') loadForumCourses();
+  if(pg==='badges') loadBadges();
   if(pg==='auth'){ document.getElementById('pg-auth').classList.remove('hidden'); }
 }
 
@@ -1224,9 +1458,12 @@ async function loadCourses(sem){
 }
 
 async function startQuiz(courseId, code, name){
+  const ok = await checkPointsBeforeQuiz();
+  if(!ok) return;
   const snap = await db.collection('courses').doc(courseId).collection('questions').get();
   if(snap.empty){showToast('No questions yet for this course');return;}
   quizData = snap.docs.map(d=>d.data());
+  currentCourse = name||code;
   currentQ = 0; answers = {}; timeLeft = 600;
   document.getElementById('pg-quiz').classList.add('hidden');
   document.getElementById('pg-quiz-active').style.display = 'block';
@@ -1270,6 +1507,8 @@ async function endQuiz(){
   document.getElementById('res-msg').textContent = msgs[pct<40?0:pct<60?1:pct<75?2:pct<90?3:4]+' — '+pct+'%';
   // Emoji based on score
   document.getElementById('res-emoji').textContent = pct>=80?'🎊':pct>=60?'🏆':pct>=40?'📚':'💪';
+  lastQuizData=[...quizData]; lastAnswers={...answers};
+  document.getElementById('res-review-btn').style.display='block';
   document.getElementById('result-modal').classList.add('open');
   // Confetti for 80%+
   if(pct>=80) launchConfetti();
@@ -2075,6 +2314,644 @@ function closePopup(){
 }
 const TB_COLORS=['linear-gradient(135deg,#1e40af,#3730a3)','linear-gradient(135deg,#065f46,#047857)','linear-gradient(135deg,#7c3aed,#6d28d9)','linear-gradient(135deg,#b45309,#92400e)','linear-gradient(135deg,#be185d,#9d174d)','linear-gradient(135deg,#0e7490,#0369a1)','linear-gradient(135deg,#166534,#15803d)','linear-gradient(135deg,#9d174d,#be123c)'];
 const TB_ICONS={CHM:'⚗️',MTH:'📐',PHY:'🔭',PCY:'💊',BIO:'🧬',COS:'💻',GST:'📝'};
+// ══ EMERGENCY ALERT ══
+async function checkEmergencyAlert(){
+  try{
+    const doc = await db.collection('settings').doc('emergency').get();
+    if(doc.exists && doc.data().active){
+      const d = doc.data();
+      document.getElementById('emergency-title').textContent = d.title||'Emergency Alert';
+      document.getElementById('emergency-msg').textContent = d.msg||'';
+      document.getElementById('emergency-banner').style.display='block';
+    }
+  }catch(e){}
+}
+
+// ══ EXAM COUNTDOWN ══
+let countdownTimer = null;
+async function checkExamCountdown(){
+  try{
+    const doc = await db.collection('settings').doc('examCountdown').get();
+    if(!doc.exists||!doc.data().active) return;
+    const d = doc.data();
+    document.getElementById('countdown-label').textContent = (d.label||'EXAM COUNTDOWN').toUpperCase();
+    const target = new Date(d.examDate).getTime();
+    const bar = document.getElementById('exam-countdown-bar');
+    function update(){
+      const now = Date.now();
+      const diff = target - now;
+      if(diff<=0){bar.style.display='none';return;}
+      bar.style.display='block';
+      const days = Math.floor(diff/(1000*60*60*24));
+      const hrs = Math.floor((diff%(1000*60*60*24))/(1000*60*60));
+      const mins = Math.floor((diff%(1000*60*60))/(1000*60));
+      document.getElementById('cd-days').textContent = String(days).padStart(2,'0');
+      document.getElementById('cd-hrs').textContent = String(hrs).padStart(2,'0');
+      document.getElementById('cd-mins').textContent = String(mins).padStart(2,'0');
+    }
+    update();
+    if(countdownTimer) clearInterval(countdownTimer);
+    countdownTimer = setInterval(update,60000);
+  }catch(e){}
+}
+
+// ══ STUDENT OF THE WEEK ══
+async function checkSOTW(){
+  try{
+    const doc = await db.collection('settings').doc('sotw').get();
+    if(!doc.exists||!doc.data().active) return;
+    const d = doc.data();
+    const banner = document.getElementById('sotw-banner');
+    document.getElementById('sotw-name').textContent = d.name||'';
+    document.getElementById('sotw-reason').textContent = d.reason||'';
+    banner.style.display='flex';
+  }catch(e){}
+}
+
+// ══ LEADERBOARD ══
+async function loadLeaderboard(){
+  const list = document.getElementById('leaderboard-list');
+  list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)">Loading...</div>';
+  try{
+    const snap = await db.collection('userStats').orderBy('bestScore','desc').limit(10).get();
+    if(snap.empty){list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)">No scores yet</div>';return;}
+    const medals=['🥇','🥈','🥉'];
+    list.innerHTML = snap.docs.map((d,i)=>{
+      const s=d.data();
+      return `<div style="display:flex;align-items:center;gap:12px;padding:14px;background:${i<3?'rgba(201,168,76,.08)':'var(--card)'};border:1px solid ${i<3?'var(--gold)':'var(--cb)'};border-radius:14px;margin-bottom:9px;">
+        <div style="font-size:1.6rem;width:36px;text-align:center">${medals[i]||'#'+(i+1)}</div>
+        <div style="flex:1">
+          <div style="font-weight:700;font-size:.86rem">${s.name||'Student'}</div>
+          <div style="font-size:.72rem;color:var(--text2)">${s.quizCount||0} quizzes taken</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:var(--gold2)">${s.bestScore||0}%</div>
+          <div style="font-size:.68rem;color:var(--text2)">Best Score</div>
+        </div>
+      </div>`;
+    }).join('');
+  }catch(e){list.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px">Error loading</div>';}
+}
+
+// ══ DAILY CHALLENGE ══
+let challengeData = null;
+async function loadDailyChallenge(){
+  const today = new Date().toDateString();
+  document.getElementById('challenge-date').textContent = today;
+  // Check if already answered today
+  const doneKey = 'challenge_'+CU.uid+'_'+today;
+  if(localStorage.getItem(doneKey)){
+    document.getElementById('challenge-options').style.display='none';
+    document.getElementById('challenge-done').style.display='block';
+    document.getElementById('challenge-q').textContent='';
+    return;
+  }
+  try{
+    const doc = await db.collection('settings').doc('dailyChallenge').get();
+    if(!doc.exists||!doc.data().active){
+      document.getElementById('challenge-q').textContent='No challenge set for today. Check back later!';
+      return;
+    }
+    challengeData = doc.data();
+    document.getElementById('challenge-q').textContent = challengeData.question;
+    document.getElementById('challenge-options').innerHTML = challengeData.options.map((o,i)=>`
+      <button onclick="answerChallenge(${i})" style="padding:13px 16px;border-radius:12px;border:1px solid var(--cb);background:rgba(255,255,255,.04);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;text-align:left;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--cb)'">
+        <span style="color:var(--gold);font-weight:700;margin-right:8px">${['A','B','C','D'][i]}.</span>${o}
+      </button>`).join('');
+  }catch(e){document.getElementById('challenge-q').textContent='Error loading challenge';}
+}
+
+async function answerChallenge(idx){
+  if(!challengeData) return;
+  const today = new Date().toDateString();
+  const doneKey = 'challenge_'+CU.uid+'_'+today;
+  const correct = idx === challengeData.answer;
+  const resultEl = document.getElementById('challenge-result');
+  resultEl.style.display='block';
+  if(correct){
+    const pts = challengeData.points||10;
+    resultEl.style.background='rgba(74,222,128,.1)';
+    resultEl.style.border='1px solid rgba(74,222,128,.2)';
+    resultEl.innerHTML=`<div style="font-size:1.5rem;margin-bottom:8px">🎉</div><div style="color:var(--green);font-weight:700;margin-bottom:4px">Correct! +${pts} points!</div><div style="font-size:.78rem;color:var(--text2)">${challengeData.explanation||''}</div>`;
+    await awardPoints('Daily Challenge correct answer!', pts);
+    loadStats();
+    launchConfetti();
+  } else {
+    resultEl.style.background='rgba(248,113,113,.1)';
+    resultEl.style.border='1px solid rgba(248,113,113,.2)';
+    resultEl.innerHTML=`<div style="font-size:1.5rem;margin-bottom:8px">❌</div><div style="color:var(--red);font-weight:700;margin-bottom:4px">Wrong! The correct answer was ${['A','B','C','D'][challengeData.answer]}</div><div style="font-size:.78rem;color:var(--text2)">${challengeData.explanation||''}</div>`;
+  }
+  localStorage.setItem(doneKey,'1');
+  document.getElementById('challenge-options').innerHTML='';
+  setTimeout(()=>{
+    document.getElementById('challenge-done').style.display='block';
+  },3000);
+}
+
+// ══ FLASHCARDS ══
+let fcCards=[], fcIndex=0, fcFlipped=false;
+
+async function loadFlashcardCourses(){
+  const snap = await db.collection('courses').get();
+  const sel = document.getElementById('fc-course');
+  snap.docs.forEach(d=>{
+    const o = document.createElement('option');
+    o.value=d.id; o.textContent=d.data().code+' — '+d.data().name;
+    sel.appendChild(o);
+  });
+}
+
+async function loadFlashcards(courseId){
+  if(!courseId) return;
+  document.getElementById('fc-empty').style.display='none';
+  document.getElementById('flashcard-container').style.display='none';
+  try{
+    const snap = await db.collection('courses').doc(courseId).collection('questions').get();
+    if(snap.empty){document.getElementById('fc-empty').textContent='No questions for this course yet';document.getElementById('fc-empty').style.display='block';return;}
+    fcCards = snap.docs.map(d=>d.data());
+    fcIndex=0; fcFlipped=false;
+    document.getElementById('fc-total').textContent=fcCards.length;
+    document.getElementById('flashcard-container').style.display='block';
+    showCard();
+  }catch(e){}
+}
+
+function showCard(){
+  if(!fcCards.length) return;
+  const c = fcCards[fcIndex];
+  document.getElementById('fc-q').textContent = c.q;
+  document.getElementById('fc-a').textContent = c.opts ? c.opts[c.ans] : c.answer||'';
+  document.getElementById('fc-current').textContent = fcIndex+1;
+  fcFlipped=false;
+  document.getElementById('fc-inner').style.transform='rotateY(0deg)';
+}
+
+function flipCard(){
+  fcFlipped=!fcFlipped;
+  document.getElementById('fc-inner').style.transform=fcFlipped?'rotateY(180deg)':'rotateY(0deg)';
+}
+function nextCard(){fcIndex=(fcIndex+1)%fcCards.length;showCard();}
+function prevCard(){fcIndex=(fcIndex-1+fcCards.length)%fcCards.length;showCard();}
+
+// ══ VIDEO LESSONS ══
+let allVideos=[];
+async function loadVideos(){
+  const grid=document.getElementById('videos-grid');
+  grid.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px">Loading...</div>';
+  try{
+    const snap=await db.collection('videos').get();
+    allVideos=snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderVideos('all');
+    // Build course filter tabs
+    const courses=[...new Set(allVideos.map(v=>v.course).filter(Boolean))];
+    const cats=document.getElementById('vid-cats');
+    cats.innerHTML='<button class="fcat on" onclick="filterVideos(\'all\',this)">All</button>'+
+      courses.map(c=>`<button class="fcat" onclick="filterVideos('${c}',this)">${c}</button>`).join('');
+  }catch(e){grid.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px">Error loading videos</div>';}
+}
+
+function filterVideos(cat,btn){
+  document.querySelectorAll('#vid-cats .fcat').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  renderVideos(cat);
+}
+
+function renderVideos(cat){
+  const vids=cat==='all'?allVideos:allVideos.filter(v=>v.course===cat);
+  const grid=document.getElementById('videos-grid');
+  if(!vids.length){grid.innerHTML='<div style="color:var(--text2);font-size:.84rem;text-align:center;padding:30px">No videos yet</div>';return;}
+  grid.innerHTML=vids.map(v=>{
+    const ytId=v.url?getYTId(v.url):'';
+    return `<div style="background:var(--card);border:1px solid var(--cb);border-radius:14px;overflow:hidden;">
+      ${ytId?`<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;"><iframe src="https://www.youtube.com/embed/${ytId}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allowfullscreen></iframe></div>`:''}
+      <div style="padding:12px;">
+        <div style="font-size:.86rem;font-weight:700;color:var(--text);margin-bottom:3px;">${v.title}</div>
+        <div style="font-size:.72rem;color:var(--text2);">${v.course||''} ${v.lecturer?'• '+v.lecturer:''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function getYTId(url){
+  const m=url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/);
+  return m?m[1]:'';
+}
+
+// ══ COURSE FORUM ══
+let forumCourseId='';
+async function loadForumCourses(){
+  const snap=await db.collection('courses').get();
+  const sel=document.getElementById('forum-course');
+  snap.docs.forEach(d=>{
+    const o=document.createElement('option');
+    o.value=d.id;o.textContent=d.data().code+' — '+d.data().name;
+    sel.appendChild(o);
+  });
+}
+
+async function loadForumPosts(courseId){
+  forumCourseId=courseId;
+  const el=document.getElementById('forum-posts');
+  if(!courseId){el.innerHTML='';return;}
+  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)">Loading...</div>';
+  try{
+    const snap=await db.collection('forum').where('courseId','==',courseId).orderBy('createdAt','desc').limit(30).get();
+    if(snap.empty){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--text2);font-size:.84rem">No posts yet. Be the first to ask a question!</div>';return;}
+    el.innerHTML=snap.docs.map(d=>{
+      const p=d.data();
+      return `<div style="background:var(--card);border:1px solid var(--cb);border-radius:14px;padding:14px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:.76rem;font-weight:700;color:var(--gold2)">${p.authorName||'Student'}</span>
+          <span style="font-size:.68rem;color:var(--text2)">${p.createdAt?new Date(p.createdAt).toLocaleDateString():''}</span>
+        </div>
+        <div style="font-size:.84rem;font-weight:600;color:var(--text);margin-bottom:6px;">${p.question}</div>
+        ${p.answer?`<div style="background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.15);border-radius:9px;padding:10px;font-size:.78rem;color:var(--green);margin-top:6px;"><b>Answer:</b> ${p.answer}</div>`:'<div style="font-size:.72rem;color:var(--text2);margin-top:4px">⏳ Awaiting answer...</div>'}
+      </div>`;
+    }).join('');
+  }catch(e){el.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px">Error loading posts</div>';}
+}
+
+function openNewPost(){
+  if(!forumCourseId){showToast('Select a course first');return;}
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.8);display:flex;align-items:flex-end;justify-content:center;';
+  modal.innerHTML=`<div style="background:#0d1e3d;border-radius:20px 20px 0 0;width:100%;max-width:500px;padding:20px;">
+    <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--gold2);margin-bottom:14px;">Ask a Question</div>
+    <textarea id="post-q" placeholder="Type your question about this course..." style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;resize:vertical;min-height:100px;margin-bottom:12px;"></textarea>
+    <div style="display:flex;gap:10px;">
+      <button onclick="this.closest('[style]').remove()" class="btn btn-out" style="flex:1">Cancel</button>
+      <button onclick="submitForumPost(this)" class="btn btn-gold" style="flex:1">Post Question</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+}
+
+async function submitForumPost(btn){
+  const q=document.getElementById('post-q').value.trim();
+  if(!q){showToast('Type your question first');return;}
+  btn.textContent='Posting...';btn.disabled=true;
+  await db.collection('forum').add({
+    courseId:forumCourseId, question:q,
+    authorName:CU.name, authorUid:CU.uid,
+    createdAt:new Date().toISOString(), answer:null
+  });
+  btn.closest('[style]').remove();
+  showToast('Question posted!');
+  loadForumPosts(forumCourseId);
+}
+
+// ══ BADGES ══
+const ALL_BADGES=[
+  {id:'first_quiz',icon:'🎯',name:'First Step',desc:'Complete your first quiz',check:s=>s.quizCount>=1},
+  {id:'quiz_5',icon:'📚',name:'Bookworm',desc:'Complete 5 quizzes',check:s=>s.quizCount>=5},
+  {id:'quiz_10',icon:'🔥',name:'On Fire',desc:'Complete 10 quizzes',check:s=>s.quizCount>=10},
+  {id:'quiz_25',icon:'⚡',name:'Quiz Master',desc:'Complete 25 quizzes',check:s=>s.quizCount>=25},
+  {id:'score_80',icon:'⭐',name:'High Scorer',desc:'Score 80%+ on any quiz',check:s=>s.bestScore>=80},
+  {id:'score_100',icon:'🏆',name:'Perfect Score',desc:'Score 100% on any quiz',check:s=>s.bestScore>=100},
+  {id:'referral',icon:'👥',name:'Referral King',desc:'Refer at least 1 friend',check:(s,u)=>(u.referralCount||0)>=1},
+  {id:'points_100',icon:'💰',name:'Points Collector',desc:'Earn 100+ total points',check:(s,u)=>(u.points||0)>=100},
+  {id:'spin_win',icon:'🎰',name:'Lucky Spinner',desc:'Win the spin wheel',check:(s,u)=>(u.spinWins||0)>=1},
+  {id:'streak_3',icon:'🔥',name:'Streak Starter',desc:'3-day login streak',check:s=>s.streak>=3},
+  {id:'streak_7',icon:'💥',name:'Streak Master',desc:'7-day login streak',check:s=>s.streak>=7},
+  {id:'ai_user',icon:'🤖',name:'AI Scholar',desc:'Use the AI tutor',check:(s,u)=>true},
+];
+
+async function loadBadges(){
+  const grid=document.getElementById('badges-grid');
+  try{
+    const [statDoc,userDoc]=await Promise.all([
+      db.collection('userStats').doc(CU.uid).get(),
+      db.collection('users').doc(CU.uid).get()
+    ]);
+    const stats=statDoc.exists?statDoc.data():{};
+    const user=userDoc.exists?userDoc.data():{};
+    grid.innerHTML=ALL_BADGES.map(b=>{
+      const earned=b.check(stats,user);
+      return `<div style="background:${earned?'rgba(201,168,76,.08)':'var(--card)'};border:1px solid ${earned?'var(--gold)':'var(--cb)'};border-radius:14px;padding:14px;text-align:center;opacity:${earned?1:.4};">
+        <div style="font-size:2rem;margin-bottom:6px">${b.icon}</div>
+        <div style="font-size:.74rem;font-weight:700;color:${earned?'var(--gold2)':'var(--text2)'};margin-bottom:3px">${b.name}</div>
+        <div style="font-size:.62rem;color:var(--text2);line-height:1.3">${b.desc}</div>
+        ${earned?'<div style="font-size:.6rem;color:var(--green);margin-top:5px;font-weight:600">✅ Earned</div>':'<div style="font-size:.6rem;color:var(--text2);margin-top:5px">🔒 Locked</div>'}
+      </div>`;
+    }).join('');
+  }catch(e){grid.innerHTML='<div style="color:var(--text2);font-size:.84rem">Error loading badges</div>';}
+}
+
+// ══ QUIZ REVIEW ══
+let lastQuizData=[], lastAnswers={};
+function openReview(){
+  if(!lastQuizData.length){showToast('No quiz data to review');return;}
+  document.getElementById('review-modal').style.display='block';
+  document.getElementById('review-list').innerHTML=lastQuizData.map((q,i)=>{
+    const studentAns=lastAnswers[i];
+    const correct=studentAns===q.ans;
+    return `<div style="background:${correct?'rgba(74,222,128,.06)':'rgba(248,113,113,.06)'};border:1px solid ${correct?'rgba(74,222,128,.2)':'rgba(248,113,113,.2)'};border-radius:14px;padding:14px;margin-bottom:12px;">
+      <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:8px;">${i+1}. ${q.q}</div>
+      ${(q.opts||[]).map((o,j)=>`<div style="padding:6px 10px;border-radius:8px;margin-bottom:4px;font-size:.78rem;background:${j===q.ans?'rgba(74,222,128,.1)':j===studentAns&&!correct?'rgba(248,113,113,.1)':'transparent'};border:1px solid ${j===q.ans?'rgba(74,222,128,.3)':j===studentAns&&!correct?'rgba(248,113,113,.3)':'transparent'};">
+        <span style="font-weight:700;margin-right:6px;color:${j===q.ans?'var(--green)':j===studentAns&&!correct?'var(--red)':'var(--text2)'}">${['A','B','C','D'][j]}.</span>${o}
+        ${j===q.ans?' ✅':''}${j===studentAns&&!correct?' ❌':''}
+      </div>`).join('')}
+      ${!correct&&GROQ_KEY?`<div id="explain-${i}" style="margin-top:8px;font-size:.74rem;color:var(--text2)"><button onclick="explainAnswer(${i})" style="background:rgba(201,168,76,.1);border:1px solid var(--cb);color:var(--gold);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.74rem;font-family:'Outfit',sans-serif;">🤖 AI Explain</button></div>`:''}
+    </div>`;
+  }).join('');
+}
+
+async function explainAnswer(i){
+  const q=lastQuizData[i];
+  const el=document.getElementById('explain-'+i);
+  if(!el) return;
+  el.innerHTML='<div style="color:var(--text2)">🤖 Explaining...</div>';
+  try{
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+      body:JSON.stringify({model:'llama3-70b-8192',messages:[{role:'user',content:`Explain this OAU exam question briefly: "${q.q}". The correct answer is "${q.opts[q.ans]}". Why is it correct? Be concise.`}]})
+    });
+    const data=await res.json();
+    el.innerHTML=`<div style="background:rgba(201,168,76,.06);border:1px solid var(--cb);border-radius:8px;padding:10px;font-size:.76rem;color:var(--text2);line-height:1.5;margin-top:6px;">${data.choices?.[0]?.message?.content||'Could not explain'}</div>`;
+  }catch(e){el.innerHTML='<div style="color:var(--red);font-size:.74rem">Error</div>';}
+}
+
+function closeReview(){
+  document.getElementById('review-modal').style.display='none';
+}
+let spinSegments = [];
+let isSpinning = false;
+let spinAngle = 0;
+
+async function initSpinWheel(){
+  // Load segments from admin settings
+  try{
+    const doc = await db.collection('settings').doc('spinWheel').get();
+    if(doc.exists && doc.data().segments){
+      spinSegments = doc.data().segments;
+    } else {
+      // Default segments
+      spinSegments = [5,10,15,20,5,10,25,5,10,15,20,30];
+    }
+  }catch(e){
+    spinSegments = [5,10,15,20,5,10,25,5,10,15,20,30];
+  }
+  drawWheel(spinAngle);
+  checkSpinStatus();
+}
+
+function drawWheel(rotation){
+  const canvas = document.getElementById('spin-wheel');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const cx = canvas.width/2, cy = canvas.height/2, r = cx-4;
+  const n = spinSegments.length;
+  const arc = (2*Math.PI)/n;
+  const colors = ['#1e40af','#065f46','#7c3aed','#b45309','#be185d','#0e7490','#166534','#9d174d','#0369a1','#92400e','#6d28d9','#047857'];
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  spinSegments.forEach((seg,i)=>{
+    const start = rotation + i*arc - Math.PI/2;
+    const end = start + arc;
+    // Segment
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,start,end);
+    ctx.closePath();
+    ctx.fillStyle = colors[i%colors.length];
+    ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.3)';
+    ctx.lineWidth=1.5;
+    ctx.stroke();
+    // Text
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(start+arc/2);
+    ctx.textAlign='right';
+    ctx.fillStyle='#fff';
+    ctx.font='bold 13px Outfit,sans-serif';
+    ctx.fillText('+'+seg+'pts', r-8, 5);
+    ctx.restore();
+  });
+  // Center circle
+  ctx.beginPath();
+  ctx.arc(cx,cy,22,0,2*Math.PI);
+  ctx.fillStyle='#0a1628';
+  ctx.fill();
+  ctx.strokeStyle='var(--gold)';
+  ctx.lineWidth=3;
+  ctx.stroke();
+  ctx.fillStyle='#e8c97a';
+  ctx.font='bold 11px Outfit,sans-serif';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText('SPIN',cx,cy);
+}
+
+async function checkSpinStatus(){
+  const today = new Date().toDateString();
+  const key = 'spin_'+CU.uid+'_'+today;
+  const spun = localStorage.getItem(key);
+  const btn = document.getElementById('spin-btn');
+  const status = document.getElementById('spin-status');
+  if(spun){
+    if(btn){btn.style.opacity='.5';btn.style.pointerEvents='none';btn.textContent='✅ Already spun today';}
+    if(status) status.textContent='Come back tomorrow for another spin!';
+  } else {
+    if(btn){btn.style.opacity='1';btn.style.pointerEvents='auto';btn.textContent='🎰 SPIN NOW!';}
+    if(status) status.textContent='You have a free spin today!';
+  }
+}
+
+async function spinWheel(){
+  if(isSpinning) return;
+  const today = new Date().toDateString();
+  const key = 'spin_'+CU.uid+'_'+today;
+  if(localStorage.getItem(key)){showToast('You already spun today! Come back tomorrow.');return;}
+  isSpinning = true;
+  const btn = document.getElementById('spin-btn');
+  if(btn){btn.style.opacity='.5';btn.style.pointerEvents='none';}
+  // Pick random segment
+  const winIdx = Math.floor(Math.random()*spinSegments.length);
+  const n = spinSegments.length;
+  const arc = (2*Math.PI)/n;
+  // Calculate target angle so winning segment lands at top
+  const targetAngle = (2*Math.PI*5) - (winIdx*arc) - (arc/2);
+  const startAngle = spinAngle;
+  const totalRotation = targetAngle + (2*Math.PI*3);
+  const duration = 4000;
+  const start = performance.now();
+  function animate(now){
+    const elapsed = now - start;
+    const progress = Math.min(elapsed/duration,1);
+    // Ease out cubic
+    const ease = 1 - Math.pow(1-progress,3);
+    spinAngle = startAngle + totalRotation*ease;
+    drawWheel(spinAngle);
+    if(progress<1){ requestAnimationFrame(animate); }
+    else{
+      isSpinning=false;
+      const won = spinSegments[winIdx];
+      // Award points
+      awardPoints('🎰 Spin wheel win!', won).then(()=>{
+        localStorage.setItem(key,'1');
+        checkSpinStatus();
+        loadStats();
+        // Show win animation
+        showSpinWin(won);
+        loadReferral();
+      });
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+function showSpinWin(pts){
+  launchConfetti();
+  showToast('🎉 You won +'+pts+' points!');
+  const status = document.getElementById('spin-status');
+  if(status){
+    status.innerHTML='<span style="color:var(--green);font-weight:700;font-size:.9rem">🎉 You won +'+pts+' points!</span>';
+  }
+}
+
+// ══ INSUFFICIENT POINTS CHECK ══
+async function checkPointsBeforeQuiz(){
+  try{
+    const doc = await db.collection('users').doc(CU.uid).get();
+    const pts = doc.exists ? (doc.data().points||0) : 0;
+    if(pts<=0){
+      // Load admin WhatsApp
+      const cDoc = await db.collection('settings').doc('contact').get();
+      const wa = cDoc.exists ? cDoc.data().whatsapp : '';
+      const modal = document.createElement('div');
+      modal.style.cssText='position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:20px;';
+      modal.innerHTML=`<div style="background:#0d1e3d;border:1px solid rgba(248,113,113,.3);border-radius:20px;max-width:320px;width:100%;padding:24px;text-align:center;">
+        <div style="font-size:2.5rem;margin-bottom:10px">❌</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:#f87171;margin-bottom:8px">Insufficient Points</div>
+        <div style="font-size:.82rem;color:var(--text2);line-height:1.6;margin-bottom:16px">You need points to take a quiz. Your balance is <b style="color:var(--red)">0 points</b>.<br><br>Contact admin to get more points or redeem a coupon.</div>
+        ${wa?`<a href="https://wa.me/${wa}?text=${encodeURIComponent('Hi, I need help with my BABSPHARM Cloud points. My name is '+CU.name)}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);border-radius:12px;color:#25d366;font-weight:700;font-size:.84rem;text-decoration:none;margin-bottom:10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>Contact Admin on WhatsApp</a>`:''}
+        <button onclick="this.closest('[style]').remove();showPage('referral')" style="width:100%;padding:10px;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:10px;color:var(--gold);font-family:'Outfit',sans-serif;font-size:.84rem;cursor:pointer;">🎰 Spin for Points</button>
+        <button onclick="this.closest('[style]').remove()" style="width:100%;padding:8px;background:none;border:none;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;margin-top:6px;">Cancel</button>
+      </div>`;
+      document.body.appendChild(modal);
+      return false;
+    }
+    return true;
+  }catch(e){ return true; } // Allow if check fails
+}
+async function loadProgressPage(){
+  const statsEl=document.getElementById('progress-stats');
+  const reportEl=document.getElementById('progress-report');
+  if(reportEl) reportEl.innerHTML='<div style="color:var(--text2);font-size:.84rem;text-align:center;padding:20px">Tap the button below to generate your AI progress report!</div>';
+  try{
+    const snap=await db.collection('quizHistory').where('uid','==',CU.uid).limit(20).get();
+    const history=snap.docs.map(d=>d.data());
+    const total=history.length;
+    const avg=total?Math.round(history.reduce((s,h)=>s+(h.score/h.total*100),0)/total):0;
+    const best=total?Math.max(...history.map(h=>Math.round(h.score/h.total*100))):0;
+    if(statsEl) statsEl.innerHTML=`
+      <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:14px;text-align:center"><div style="font-size:1.6rem;font-weight:900;color:var(--gold2);font-family:'Playfair Display',serif">${total}</div><div style="font-size:.7rem;color:var(--text2)">Quizzes Taken</div></div>
+      <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:14px;text-align:center"><div style="font-size:1.6rem;font-weight:900;color:${avg>=60?'var(--green)':'var(--red)'};font-family:'Playfair Display',serif">${avg}%</div><div style="font-size:.7rem;color:var(--text2)">Avg Score</div></div>
+      <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:14px;text-align:center"><div style="font-size:1.6rem;font-weight:900;color:var(--gold2);font-family:'Playfair Display',serif">${best}%</div><div style="font-size:.7rem;color:var(--text2)">Best Score</div></div>`;
+  }catch(e){}
+}
+
+async function generateProgressReport(){
+  const reportEl=document.getElementById('progress-report');
+  if(!GROQ_KEY){reportEl.innerHTML='<div style="color:var(--red);font-size:.84rem">AI not configured yet</div>';return;}
+  reportEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)"><div style="font-size:1.5rem;margin-bottom:8px">🤖</div>Generating your report...</div>';
+  try{
+    const snap=await db.collection('quizHistory').where('uid','==',CU.uid).limit(20).get();
+    const history=snap.docs.map(d=>d.data());
+    if(!history.length){reportEl.innerHTML='<div style="color:var(--text2);font-size:.84rem;text-align:center;padding:20px">Take some quizzes first!</div>';return;}
+    const summary=history.map(h=>`${h.course}: ${h.score}/${h.total} (${Math.round(h.score/h.total*100)}%)`).join(', ');
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+      body:JSON.stringify({model:'llama3-70b-8192',messages:[{role:'user',content:`You are an OAU academic advisor. Student ${CU.name} has these quiz results: ${summary}. Generate a friendly weekly progress report with: 1) Performance summary 2) Strong topics 3) Weak topics 4) Study recommendations 5) Motivational closing. Use emojis. Be concise.`}],temperature:0.7})
+    });
+    const data=await res.json();
+    reportEl.innerHTML=`<div style="font-size:.82rem;line-height:1.8;color:var(--text)">${(data.choices?.[0]?.message?.content||'Could not generate report').replace(/\n/g,'<br>')}</div>`;
+  }catch(e){reportEl.innerHTML='<div style="color:var(--red);font-size:.84rem">Error. Try again.</div>';}
+}
+
+// ══ GPA CALCULATOR ══
+let gpaCourses=[];
+const gradePoints={A:5,B:4,C:3,D:2,E:1,F:0};
+
+function initGPA(){
+  if(gpaCourses.length===0) gpaCourses=[{name:'CHM 101',units:3,grade:'A'},{name:'MTH 101',units:3,grade:'B'},{name:'PHY 101',units:3,grade:'C'}];
+  renderGPACourses();
+}
+
+function addGPACourse(){gpaCourses.push({name:'',units:3,grade:'A'});renderGPACourses();}
+function removeGPACourse(i){gpaCourses.splice(i,1);renderGPACourses();}
+
+function renderGPACourses(){
+  document.getElementById('gpa-courses').innerHTML=gpaCourses.map((c,i)=>`
+    <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:11px;display:flex;gap:7px;align-items:center;">
+      <input type="text" placeholder="Course" value="${c.name}" oninput="gpaCourses[${i}].name=this.value" style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.8rem;outline:none;min-width:0;"/>
+      <select onchange="gpaCourses[${i}].units=parseInt(this.value);calcGPA()" style="padding:8px 4px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.8rem;outline:none;width:48px;">
+        ${[1,2,3,4,6].map(u=>`<option ${c.units===u?'selected':''}>${u}</option>`).join('')}
+      </select>
+      <select onchange="gpaCourses[${i}].grade=this.value;calcGPA()" style="padding:8px 4px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.8rem;outline:none;width:48px;">
+        ${['A','B','C','D','E','F'].map(g=>`<option ${c.grade===g?'selected':''}>${g}</option>`).join('')}
+      </select>
+      <button onclick="removeGPACourse(${i})" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:8px;padding:6px 8px;cursor:pointer;font-size:.8rem;flex-shrink:0;">✕</button>
+    </div>`).join('');
+  calcGPA();
+}
+
+function calcGPA(){
+  let tp=0,tu=0;
+  gpaCourses.forEach(c=>{tp+=(gradePoints[c.grade]||0)*c.units;tu+=c.units;});
+  const gpa=tu?(tp/tu).toFixed(2):'0.00';
+  const g=parseFloat(gpa);
+  document.getElementById('gpa-result').textContent=gpa;
+  document.getElementById('gpa-result').style.color=g>=4.5?'var(--green)':g>=3.5?'var(--gold2)':g>=2.4?'var(--gold)':'var(--red)';
+  document.getElementById('gpa-class').textContent=g>=4.5?'🥇 First Class Honours':g>=3.5?'🥈 Second Class Upper':g>=2.4?'🥉 Second Class Lower':g>=1.5?'Third Class':g>0?'❌ Pass / Fail':'';
+}
+
+// ══ CAMPUS MAP ══
+const OAU_LOCATIONS=[
+  {name:'Hezekiah Oluwasanmi Library',cat:'academic',emoji:'📚',desc:'Main university library — 7am–10pm',color:'#1e40af'},
+  {name:'Faculty of Pharmacy',cat:'academic',emoji:'💊',desc:'Pharmacy faculty, opposite Senate building',color:'#065f46'},
+  {name:'Faculty of Science',cat:'academic',emoji:'🔬',desc:'Chemistry, Biology, Physics departments',color:'#7c3aed'},
+  {name:'Faculty of Law',cat:'academic',emoji:'⚖️',desc:'Law faculty building',color:'#b45309'},
+  {name:'Faculty of Engineering',cat:'academic',emoji:'⚙️',desc:'Engineering complex',color:'#0e7490'},
+  {name:'Oduduwa Hall',cat:'academic',emoji:'🎭',desc:'Main auditorium — convocations & events',color:'#92400e'},
+  {name:'Great Ife Hall',cat:'academic',emoji:'🏛',desc:'Large lecture venue',color:'#1e3a8a'},
+  {name:'OAUTHC Hospital',cat:'health',emoji:'🏥',desc:'OAU Teaching Hospital — 24 hours',color:'#be185d'},
+  {name:'Student Health Centre',cat:'health',emoji:'🩺',desc:'Campus clinic for students',color:'#9d174d'},
+  {name:'Buka Cafeteria',cat:'food',emoji:'🍽',desc:'Main student cafeteria area',color:'#c2410c'},
+  {name:'SUB Canteen',cat:'food',emoji:'🥘',desc:'Student Union Building canteen',color:'#a16207'},
+  {name:'Angola Hostel',cat:'hostel',emoji:'🏠',desc:'Male student hostel',color:'#1e3a8a'},
+  {name:'Mozambique Hostel',cat:'hostel',emoji:'🏠',desc:'Female student hostel',color:'#5b21b6'},
+  {name:'Moremi Hall',cat:'hostel',emoji:'🏠',desc:'Female hostel — one of the oldest',color:'#6d28d9'},
+  {name:'Fajuyi Hall',cat:'hostel',emoji:'🏠',desc:'Male student hostel',color:'#0369a1'},
+  {name:'Student Union Building',cat:'services',emoji:'🏛',desc:'SUB — student activities centre',color:'#047857'},
+  {name:'Post Office',cat:'services',emoji:'📮',desc:'Campus post office',color:'#166534'},
+  {name:'OAU Microfinance Bank',cat:'services',emoji:'🏦',desc:'Campus bank branch',color:'#0f766e'},
+  {name:'Sports Complex',cat:'services',emoji:'⚽',desc:'Stadium and sports facilities',color:'#7c3aed'},
+];
+
+function initMap(){filterMap('all',document.querySelector('#pg-map .fcat'));}
+
+function filterMap(cat,btn){
+  document.querySelectorAll('#pg-map .fcat').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  const locs=cat==='all'?OAU_LOCATIONS:OAU_LOCATIONS.filter(l=>l.cat===cat);
+  document.getElementById('map-locations').innerHTML=locs.map(l=>`
+    <div style="background:var(--card);border:1px solid var(--cb);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .2s;" onclick="openMapLocation('${l.name.replace(/'/g,"\\'")}')" onmouseover="this.style.transform='translateY(-2px)';this.style.borderColor='var(--gold)'" onmouseout="this.style.transform='';this.style.borderColor='var(--cb)'">
+      <div style="background:${l.color};padding:14px;text-align:center;font-size:1.8rem;">${l.emoji}</div>
+      <div style="padding:10px;">
+        <div style="font-size:.76rem;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:3px;">${l.name}</div>
+        <div style="font-size:.65rem;color:var(--text2);line-height:1.4;">${l.desc}</div>
+        <div style="font-size:.64rem;color:var(--gold);margin-top:5px;font-weight:600;">📍 Open in Maps →</div>
+      </div>
+    </div>`).join('');
+}
+
+function openMapLocation(name){
+  window.open('https://www.google.com/maps/search/'+encodeURIComponent(name+' OAU Ile-Ife Nigeria'),'_blank');
+}
+
 let allTextbooks=[],tbFilter='all';
 
 async function loadTextbooks(){
@@ -2198,7 +3075,8 @@ async function loadMockCourses(){
 async function startMockExam(){
   const checked = document.querySelectorAll('#mock-courses input:checked');
   if(checked.length===0){showToast('Select at least one course');return;}
-  const numQ = parseInt(document.getElementById('mock-num').value);
+  const ok = await checkPointsBeforeQuiz();
+  if(!ok) return;  const numQ = parseInt(document.getElementById('mock-num').value);
   const dur = parseInt(document.getElementById('mock-dur').value);
   showToast('Loading questions...');
   let allQ = [];
