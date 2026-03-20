@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Reset Password — BABSPHARM Cloud</title>
+<meta name="theme-color" content="#0a1628"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--navy:#0a1628;--navy2:#0f2044;--gold:#c9a84c;--gold2:#e8c97a;--text:#f0ead6;--text2:#9bacc8;--cb:rgba(201,168,76,.2);--red:#f87171;--green:#4ade80;--r:13px;}
+body{font-family:'Outfit',sans-serif;background:var(--navy);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 20% 20%,rgba(201,168,76,.06) 0%,transparent 50%);}
+.card{position:relative;z-index:1;background:rgba(15,32,68,.9);border:1px solid var(--cb);border-radius:20px;padding:32px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4);}
+.logo{width:80px;height:80px;object-fit:contain;border-radius:16px;margin-bottom:14px;}
+.title{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;background:linear-gradient(90deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px;}
+.sub{font-size:.78rem;color:var(--text2);margin-bottom:24px;}
+.fg{margin-bottom:14px;text-align:left;}
+.fg label{display:block;font-size:.72rem;font-weight:600;color:var(--text2);margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase;}
+.fg input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;outline:none;transition:all .3s;}
+.fg input:focus{border-color:var(--gold);background:rgba(201,168,76,.05);}
+.pw-wrap{position:relative;}
+.pw-tog{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;font-size:.76rem;font-family:'Outfit',sans-serif;}
+.btn{width:100%;padding:13px;border-radius:10px;border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.5px;transition:all .3s;margin-bottom:10px;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(201,168,76,.3);}
+.msg{font-size:.8rem;padding:10px 14px;border-radius:9px;margin-top:10px;display:none;}
+.msg.ok{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2);color:var(--green);}
+.msg.err{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--red);}
+.loading-state{padding:20px;}
+.spinner{width:40px;height:40px;border:3px solid var(--cb);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div class="card" id="main-card">
+  <div class="loading-state" id="loading-state">
+    <div class="spinner"></div>
+    <div style="color:var(--text2);font-size:.84rem">Verifying reset link...</div>
+  </div>
+
+  <!-- Reset form (hidden until link verified) -->
+  <div id="reset-form" style="display:none">
+    <img src="https://raw.githubusercontent.com/babspharm1-lgtm/BABSPHARM./refs/heads/main/logo.png" class="logo" onerror="this.style.display='none'"/>
+    <div class="title">Reset Password</div>
+    <div class="sub">Enter your new password below</div>
+    <div class="fg">
+      <label>New Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="new-pw" placeholder="Min 6 characters"/>
+        <button class="pw-tog" type="button" onclick="togglePw()">Show</button>
+      </div>
+    </div>
+    <div class="fg">
+      <label>Confirm Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="confirm-pw" placeholder="Repeat your password"/>
+        <button class="pw-tog" type="button" onclick="togglePw2()">Show</button>
+      </div>
+    </div>
+    <button class="btn btn-gold" onclick="doReset()">🔒 Set New Password</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <!-- Success state -->
+  <div id="success-state" style="display:none">
+    <div style="font-size:3rem;margin-bottom:14px">✅</div>
+    <div class="title" style="font-size:1.2rem;margin-bottom:8px">Password Changed!</div>
+    <div style="font-size:.84rem;color:var(--text2);margin-bottom:20px;line-height:1.6">Your password has been updated successfully. You can now sign in with your new password.</div>
+    <button class="btn btn-gold" onclick="window.location.href='index.html'">🔑 Go to Sign In</button>
+  </div>
+
+  <!-- Error state -->
+  <div id="error-state" style="display:none">
+    <div style="font-size:3rem;margin-bottom:14px">❌</div>
+    <div class="title" style="font-size:1.1rem;margin-bottom:8px">Invalid Link</div>
+    <div style="font-size:.84rem;color:var(--text2);margin-bottom:20px;line-height:1.6">This reset link has expired or is invalid. Please request a new one.</div>
+    <button class="btn btn-gold" onclick="window.location.href='index.html'">← Back to Login</button>
+  </div>
+</div>
+
+<script>
+const FC={apiKey:"AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8",authDomain:"babspharmcloud.firebaseapp.com",projectId:"babspharmcloud",storageBucket:"babspharmcloud.firebasestorage.app",messagingSenderId:"385674572482",appId:"1:385674572482:web:a427125e649fef011b815b"};
+firebase.initializeApp(FC);
+const auth = firebase.auth();
+
+// Get oobCode from URL
+const urlParams = new URLSearchParams(window.location.search);
+const oobCode = urlParams.get('oobCode');
+const mode = urlParams.get('mode');
+
+function show(id){
+  ['loading-state','reset-form','success-state','error-state'].forEach(s=>{
+    document.getElementById(s).style.display = s===id ? 'block' : 'none';
+  });
+}
+
+// Verify the action code
+let resetEmail = '';
+if(!oobCode || mode !== 'resetPassword'){
+  show('error-state');
+} else {
+  auth.verifyPasswordResetCode(oobCode)
+    .then(email => {
+      resetEmail = email;
+      show('reset-form');
+      document.getElementById('new-pw').focus();
+    })
+    .catch(err => {
+      show('error-state');
+    });
+}
+
+async function doReset(){
+  const pw = document.getElementById('new-pw').value;
+  const pw2 = document.getElementById('confirm-pw').value;
+  const msg = document.getElementById('msg');
+  if(pw.length < 6){
+    msg.textContent = 'Password must be at least 6 characters';
+    msg.className = 'msg err'; msg.style.display = 'block'; return;
+  }
+  if(pw !== pw2){
+    msg.textContent = 'Passwords do not match';
+    msg.className = 'msg err'; msg.style.display = 'block'; return;
+  }
+  try{
+    // Confirm the reset
+    await auth.confirmPasswordReset(oobCode, pw);
+    // Auto sign in with new password
+    msg.textContent = '✅ Password changed! Signing you in...';
+    msg.className = 'msg ok'; msg.style.display = 'block';
+    try{
+      await auth.signInWithEmailAndPassword(resetEmail, pw);
+      // Signed in! Redirect to dashboard
+      window.location.href = 'index.html';
+    }catch(e){
+      // Sign in failed but password was changed - show success and redirect
+      show('success-state');
+    }
+  }catch(e){
+    msg.textContent = e.message.replace('Firebase:','').trim();
+    msg.className = 'msg err'; msg.style.display = 'block';
+  }
+}
+
+function togglePw(){
+  const inp = document.getElementById('new-pw');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+function togglePw2(){
+  const inp = document.getElementById('confirm-pw');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+</script>
+</body>
+</html>

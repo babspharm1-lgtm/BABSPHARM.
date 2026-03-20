@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root{--navy:#0a1628;--navy2:#0f2044;--navy3:#162d5a;--gold:#c9a84c;--gold2:#e8c97a;--text:#f0ead6;--text2:#9bacc8;--card:rgba(255,255,255,0.04);--cb:rgba(201,168,76,0.2);--green:#4ade80;--red:#f87171;--r:13px;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -173,6 +174,7 @@ html, body {
     <button onclick="closeSidebar()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:8px;padding:4px 10px;cursor:pointer;font-size:.8rem;">✕ Close</button>
   </div>
   <div class="sb-item on" onclick="showPanel('dashboard',this);closeSidebar()">📊 Dashboard</div>
+  <div class="sb-item" onclick="showPanel('analytics',this);closeSidebar()">📈 Analytics</div>
   <div class="sb-item" onclick="showPanel('students',this);closeSidebar()">👥 Students</div>
   <div class="sb-item" onclick="showPanel('messages',this);closeSidebar()">💬 Messages</div>
   <div class="sb-item" onclick="showPanel('courses',this);closeSidebar()">📚 Courses</div>
@@ -183,11 +185,40 @@ html, body {
   <div class="sb-item" onclick="showPanel('redemptions',this);closeSidebar()">📋 Redemptions</div>
   <div class="sb-item" onclick="showPanel('coupons',this);closeSidebar()">🎟️ Point Coupons</div>
   <div class="sb-item" onclick="showPanel('subadmins',this);closeSidebar()">👮 Sub-Admins</div>
+  <div class="sb-item" onclick="showPanel('motivations',this);closeSidebar()">✨ Motivations</div>
   <div class="sb-item" onclick="showPanel('settings',this);closeSidebar()">⚙️ Settings</div>
   <div class="sb-div"></div>
   <div class="sb-item" onclick="window.open('index.html','_blank');closeSidebar()">🌐 View Site</div>
 </div>
 <div id="main" class="hidden">
+  <!-- ANALYTICS PANEL -->
+  <div id="panel-analytics" class="panel">
+    <div class="sec-title">📈 Analytics</div>
+    <!-- Summary cards -->
+    <div class="sgrid" id="analytics-cards" style="margin-bottom:20px;"></div>
+    <!-- Charts -->
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">📝 Quiz Attempts (Last 7 Days)</div>
+        <canvas id="chart-quizzes" height="200"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">👥 Registrations (Last 7 Days)</div>
+        <canvas id="chart-registrations" height="200"></canvas>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">🏆 Top Scoring Departments</div>
+        <canvas id="chart-depts" height="200"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">📊 Score Distribution</div>
+        <canvas id="chart-scores" height="200"></canvas>
+      </div>
+    </div>
+  </div>
+
   <div id="panel-dashboard" class="panel on">
     <div class="sec-title">Dashboard</div>
     <div class="sgrid">
@@ -435,6 +466,63 @@ Answer: A</code>
       </div>
     </div>
   </div>
+  <!-- MOTIVATIONS PANEL -->
+  <div id="panel-motivations" class="panel">
+    <div class="sec-title">✨ Motivation Store</div>
+    <div style="font-size:.76rem;color:var(--text2);margin-bottom:14px;">Add, edit or delete motivations shown on student dashboards. Students see 10 random ones daily from this list.</div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title" id="motiv-form-title">Add New Motivation</div>
+        <input type="hidden" id="motiv-edit-id" value=""/>
+        <div class="fg"><label>Emoji</label>
+          <input type="text" id="motiv-emoji" placeholder="e.g. 🔥" maxlength="4" style="font-size:1.4rem;text-align:center;width:80px;"/>
+        </div>
+        <div class="fg"><label>Motivation Text</label>
+          <textarea id="motiv-text" placeholder="The motivational message..." style="min-height:80px;"></textarea>
+        </div>
+        <div class="fg"><label>Sub-text (short tagline)</label>
+          <input type="text" id="motiv-sub" placeholder="e.g. Keep pushing!"/>
+        </div>
+        <div class="fg"><label>Category</label>
+          <select id="motiv-cat" style="width:100%;padding:10px 13px;border-radius:9px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;">
+            <option value="general">💪 General Motivation</option>
+            <option value="exam">📝 Exam Tips</option>
+            <option value="mental">🧠 Mental Health</option>
+            <option value="faith">🙏 Faith & God</option>
+            <option value="money">💰 Money & Life</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-gold" style="flex:1" onclick="saveMotivation()">💾 Save</button>
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.05);border:1px solid var(--cb);color:var(--text2);" onclick="clearMotivForm()">✕ Clear</button>
+        </div>
+        <div id="motiv-save-status" style="font-size:.74rem;margin-top:8px;"></div>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--cb);">
+          <div class="card-title" style="margin-bottom:10px">Quick Add Templates</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <button class="btn btn-sm" style="background:rgba(201,168,76,.08);color:var(--gold);border:1px solid var(--cb);text-align:left;" onclick="fillMotivTemplate('exam')">📝 Exam tip template</button>
+            <button class="btn btn-sm" style="background:rgba(139,92,246,.08);color:#a78bfa;border:1px solid var(--cb);text-align:left;" onclick="fillMotivTemplate('mental')">🧠 Mental health template</button>
+            <button class="btn btn-sm" style="background:rgba(74,222,128,.08);color:var(--green);border:1px solid var(--cb);text-align:left;" onclick="fillMotivTemplate('faith')">🙏 Faith template</button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div class="card-title" style="margin-bottom:0">All Motivations <span id="motiv-count" style="color:var(--text2);font-size:.76rem;font-weight:400"></span></div>
+          <select id="motiv-filter" onchange="filterMotivations(this.value)" style="padding:6px 10px;border-radius:7px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.74rem;outline:none;">
+            <option value="all">All</option>
+            <option value="general">General</option>
+            <option value="exam">Exam</option>
+            <option value="mental">Mental</option>
+            <option value="faith">Faith</option>
+            <option value="money">Money</option>
+          </select>
+        </div>
+        <div id="motivations-list" style="max-height:500px;overflow-y:auto;"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="panel-settings" class="panel">
     <div class="sec-title">Settings</div>
     <div class="row2">
@@ -888,7 +976,7 @@ function showPanel(name,el){
   document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('on'));
   document.getElementById('panel-'+name).classList.add('on');
   if(el)el.classList.add('on');
-  ({students:loadStudents,courses:loadCourses,questions:()=>{loadQCourses();loadBulkCourses();},privatequiz:()=>{loadPQList();loadHtmlQuizzes();},files:loadFiles,textbooks:loadAdminTextbooks,settings:()=>{loadSettings();loadBrevoSettings();loadPopupSettings();loadSpinSettings();loadCountdownSettings();loadSOTWSettings();loadDailyChallengeSettings();},dashboard:loadDashboard,messages:()=>{loadStudents();loadSentMessages();loadDeptStats();},subadmins:loadSubAdmins,coupons:loadCoupons,redemptions:loadRedemptions})[name]?.();
+  ({motivations:loadMotivations,analytics:loadAnalytics,students:loadStudents,courses:loadCourses,questions:()=>{loadQCourses();loadBulkCourses();},privatequiz:()=>{loadPQList();loadHtmlQuizzes();},files:loadFiles,textbooks:loadAdminTextbooks,settings:()=>{loadSettings();loadBrevoSettings();loadPopupSettings();loadSpinSettings();loadCountdownSettings();loadSOTWSettings();loadDailyChallengeSettings();},dashboard:loadDashboard,messages:()=>{loadStudents();loadSentMessages();loadDeptStats();},subadmins:loadSubAdmins,coupons:loadCoupons,redemptions:loadRedemptions})[name]?.();
 }
 async function loadDashboard(){
   const snap=await db.collection('users').get();
@@ -1442,6 +1530,188 @@ async function uploadBulkQuestions(){
   document.getElementById('bulk-file').value = '';
   document.getElementById('bulk-fname').style.display = 'none';
   setTimeout(()=>prog.style.display='none', 3000);
+}
+
+// ══ MOTIVATIONS MANAGEMENT ══
+let allMotivations = [];
+const MOTIV_COLORS = {
+  general:'linear-gradient(135deg,#7c3aed,#4338ca)',
+  exam:'linear-gradient(135deg,#1e40af,#1e3a8a)',
+  mental:'linear-gradient(135deg,#5b21b6,#4c1d95)',
+  faith:'linear-gradient(135deg,#065f46,#047857)',
+  money:'linear-gradient(135deg,#b45309,#92400e)'
+};
+const MOTIV_LABELS = {general:'💪 General',exam:'📝 Exam',mental:'🧠 Mental',faith:'🙏 Faith',money:'💰 Money'};
+
+async function loadMotivations(){
+  const list = document.getElementById('motivations-list');
+  list.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px">Loading...</div>';
+  try{
+    const snap = await db.collection('motivations').orderBy('createdAt','desc').get();
+    allMotivations = snap.docs.map(d=>({id:d.id,...d.data()}));
+    renderMotivations('all');
+    document.getElementById('motiv-count').textContent='('+allMotivations.length+' total)';
+  }catch(e){
+    list.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px">No custom motivations yet. Add one!</div>';
+  }
+}
+
+function renderMotivations(filter){
+  const list = document.getElementById('motivations-list');
+  const items = filter==='all'?allMotivations:allMotivations.filter(m=>m.category===filter);
+  if(!items.length){list.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px;text-align:center">No motivations in this category yet</div>';return;}
+  list.innerHTML=items.map(m=>`
+    <div style="background:rgba(255,255,255,.03);border:1px solid var(--cb);border-radius:10px;padding:12px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="display:flex;align-items:flex-start;gap:8px;flex:1;">
+          <span style="font-size:1.4rem;flex-shrink:0">${m.emoji||'💡'}</span>
+          <div style="flex:1">
+            <div style="font-size:.8rem;font-weight:600;color:var(--text);line-height:1.4">${m.text}</div>
+            <div style="font-size:.7rem;color:var(--text2);margin-top:2px">${m.sub||''}</div>
+            <div style="display:inline-block;font-size:.64rem;color:var(--gold);background:rgba(201,168,76,.1);padding:2px 7px;border-radius:10px;margin-top:4px;">${MOTIV_LABELS[m.category||'general']||m.category}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0;">
+          <button class="btn btn-sm" style="background:rgba(201,168,76,.1);color:var(--gold);border:1px solid var(--cb);" onclick="editMotivation('${m.id}')">✏️</button>
+          <button class="btn btn-red btn-sm" onclick="deleteMotivation('${m.id}')">🗑</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function filterMotivations(filter){renderMotivations(filter);}
+
+async function saveMotivation(){
+  const id=document.getElementById('motiv-edit-id').value;
+  const emoji=document.getElementById('motiv-emoji').value.trim();
+  const text=document.getElementById('motiv-text').value.trim();
+  const sub=document.getElementById('motiv-sub').value.trim();
+  const category=document.getElementById('motiv-cat').value;
+  if(!text){showToast('Enter the motivation text');return;}
+  const data={emoji:emoji||'💡',text,sub,category,bg:MOTIV_COLORS[category]||MOTIV_COLORS.general,updatedAt:new Date().toISOString()};
+  const statusEl=document.getElementById('motiv-save-status');
+  if(id){
+    await db.collection('motivations').doc(id).update(data);
+    statusEl.textContent='✅ Updated!';statusEl.style.color='var(--green)';
+    showToast('Motivation updated!');
+  } else {
+    data.createdAt=new Date().toISOString();
+    await db.collection('motivations').add(data);
+    statusEl.textContent='✅ Added!';statusEl.style.color='var(--green)';
+    showToast('Motivation added!');
+  }
+  clearMotivForm();loadMotivations();
+  setTimeout(()=>statusEl.textContent='',3000);
+}
+
+function editMotivation(id){
+  const m=allMotivations.find(x=>x.id===id);
+  if(!m) return;
+  document.getElementById('motiv-edit-id').value=id;
+  document.getElementById('motiv-emoji').value=m.emoji||'';
+  document.getElementById('motiv-text').value=m.text||'';
+  document.getElementById('motiv-sub').value=m.sub||'';
+  document.getElementById('motiv-cat').value=m.category||'general';
+  document.getElementById('motiv-form-title').textContent='✏️ Edit Motivation';
+  document.getElementById('motiv-form-title').scrollIntoView({behavior:'smooth'});
+}
+
+async function deleteMotivation(id){
+  if(!confirm('Delete this motivation?')) return;
+  await db.collection('motivations').doc(id).delete();
+  showToast('Deleted');loadMotivations();
+}
+
+function clearMotivForm(){
+  document.getElementById('motiv-edit-id').value='';
+  document.getElementById('motiv-emoji').value='';
+  document.getElementById('motiv-text').value='';
+  document.getElementById('motiv-sub').value='';
+  document.getElementById('motiv-cat').value='general';
+  document.getElementById('motiv-form-title').textContent='Add New Motivation';
+}
+
+function fillMotivTemplate(type){
+  const templates={
+    exam:{emoji:'📝',text:'Your course outline is your exam blueprint. Study it like your degree depends on it — because it does!',sub:'Know your outline!',cat:'exam'},
+    mental:{emoji:'💜',text:'One bad test does not define your GPA. One bad semester does not define your degree. Get back up!',sub:'Recover and rise!',cat:'mental'},
+    faith:{emoji:'🙏',text:'God did not bring you to OAU to fail. Trust His plan and do your part with diligence.',sub:'Trust the process!',cat:'faith'}
+  };
+  const t=templates[type];
+  document.getElementById('motiv-emoji').value=t.emoji;
+  document.getElementById('motiv-text').value=t.text;
+  document.getElementById('motiv-sub').value=t.sub;
+  document.getElementById('motiv-cat').value=t.cat;
+}
+
+// ══ ANALYTICS ══
+let analyticsCharts = {};
+
+async function loadAnalytics(){
+  // Summary cards
+  try{
+    const [usersSnap, quizSnap] = await Promise.all([
+      db.collection('users').where('role','==','user').get(),
+      db.collection('quizHistory').get()
+    ]);
+    const totalStudents = usersSnap.size;
+    const totalQuizzes = quizSnap.size;
+    const today = new Date().toDateString();
+    const activeToday = usersSnap.docs.filter(d=>d.data().lastSeen && new Date(d.data().lastSeen).toDateString()===today).length;
+    const avgScore = quizSnap.size ? Math.round(quizSnap.docs.reduce((s,d)=>{const h=d.data();return s+(h.total?h.score/h.total*100:0);},0)/quizSnap.size) : 0;
+
+    document.getElementById('analytics-cards').innerHTML=`
+      <div class="sc"><div class="si">👥</div><div><div class="sv">${totalStudents}</div><div class="sl">Total Students</div></div></div>
+      <div class="sc"><div class="si">✅</div><div><div class="sv">${activeToday}</div><div class="sl">Active Today</div></div></div>
+      <div class="sc"><div class="si">📝</div><div><div class="sv">${totalQuizzes}</div><div class="sl">Total Quizzes</div></div></div>
+      <div class="sc"><div class="si">⭐</div><div><div class="sv">${avgScore}%</div><div class="sl">Avg Score</div></div></div>`;
+
+    // Build last 7 days labels
+    const days=[], labels=[];
+    for(let i=6;i>=0;i--){
+      const d=new Date(); d.setDate(d.getDate()-i);
+      days.push(d.toDateString());
+      labels.push(d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric'}));
+    }
+
+    // Quiz attempts per day
+    const quizPerDay = days.map(day=>quizSnap.docs.filter(d=>d.data().date&&new Date(d.data().date).toDateString()===day).length);
+
+    // Registrations per day
+    const regPerDay = days.map(day=>usersSnap.docs.filter(d=>d.data().createdAt&&new Date(d.data().createdAt).toDateString()===day).length);
+
+    // Department scores
+    const deptScores={};
+    quizSnap.docs.forEach(d=>{
+      const h=d.data();
+      const uid=h.uid;
+      const student=usersSnap.docs.find(u=>u.id===uid);
+      const dept=student?student.data().dept||'Unknown':'Unknown';
+      if(!deptScores[dept])deptScores[dept]={total:0,count:0};
+      deptScores[dept].total+=(h.total?h.score/h.total*100:0);
+      deptScores[dept].count++;
+    });
+    const topDepts=Object.entries(deptScores).sort((a,b)=>b[1].total/b[1].count-a[1].total/a[1].count).slice(0,6);
+
+    // Score distribution
+    const buckets=[0,0,0,0,0]; // 0-20, 21-40, 41-60, 61-80, 81-100
+    quizSnap.docs.forEach(d=>{const h=d.data();const pct=h.total?h.score/h.total*100:0;buckets[Math.min(4,Math.floor(pct/20))]++;});
+
+    const chartOpts={responsive:true,plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#9bacc8',font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}},y:{ticks:{color:'#9bacc8',font:{size:10}},grid:{color:'rgba(255,255,255,.05)'}}}};
+
+    // Destroy old charts
+    Object.values(analyticsCharts).forEach(c=>c.destroy());
+    analyticsCharts={};
+
+    analyticsCharts.quizzes=new Chart(document.getElementById('chart-quizzes'),{type:'bar',data:{labels,datasets:[{data:quizPerDay,backgroundColor:'rgba(201,168,76,.6)',borderColor:'#c9a84c',borderWidth:1,borderRadius:6}]},options:chartOpts});
+
+    analyticsCharts.regs=new Chart(document.getElementById('chart-registrations'),{type:'line',data:{labels,datasets:[{data:regPerDay,borderColor:'#4ade80',backgroundColor:'rgba(74,222,128,.1)',fill:true,tension:.4,pointBackgroundColor:'#4ade80'}]},options:chartOpts});
+
+    analyticsCharts.depts=new Chart(document.getElementById('chart-depts'),{type:'bar',data:{labels:topDepts.map(([d])=>d.substring(0,12)),datasets:[{data:topDepts.map(([,v])=>Math.round(v.total/v.count)),backgroundColor:'rgba(139,92,246,.6)',borderColor:'#7c3aed',borderWidth:1,borderRadius:6}]},options:{...chartOpts,indexAxis:'y'}});
+
+    analyticsCharts.scores=new Chart(document.getElementById('chart-scores'),{type:'doughnut',data:{labels:['0-20%','21-40%','41-60%','61-80%','81-100%'],datasets:[{data:buckets,backgroundColor:['#f87171','#fb923c','#fbbf24','#60a5fa','#4ade80'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'bottom',labels:{color:'#9bacc8',font:{size:10},padding:8}}}}});
+
+  }catch(e){console.log('Analytics error:',e);}
 }
 
 // ══ EMERGENCY ALERT ══
