@@ -327,12 +327,16 @@ Answer: A</code>
 
     <!-- HTML QUIZ UPLOAD -->
     <div class="card">
-      <div class="card-title">📄 Upload HTML Quiz File</div>
-      <div style="font-size:.76rem;color:var(--text2);margin-bottom:14px;">Upload a standalone HTML quiz file. Students enter the code and take it directly in their browser — fully styled.</div>
+      <div class="card-title">📄 Upload HTML Quiz Files</div>
+      <div style="font-size:.76rem;color:var(--text2);margin-bottom:14px;">Upload multiple HTML quiz files under one access code. Students enter the code and see all quizzes listed beautifully.</div>
       <div class="row2">
         <div>
-          <div class="fg"><label>Quiz Title</label><input type="text" id="hq-title" placeholder="e.g. CHM 101 CA Test"/></div>
-          <div class="fg"><label>Access Code</label><input type="text" id="hq-code" placeholder="e.g. CA2024" style="letter-spacing:3px;font-weight:700;text-transform:uppercase;font-size:1rem;text-align:center;"/></div>
+          <div class="fg">
+            <label>Group Code (students enter this)</label>
+            <input type="text" id="hq-code" placeholder="e.g. CA2024" style="letter-spacing:3px;font-weight:700;text-transform:uppercase;font-size:1rem;text-align:center;"/>
+            <div style="font-size:.68rem;color:var(--text2);margin-top:3px">All quizzes uploaded with same code will appear together</div>
+          </div>
+          <div class="fg"><label>Quiz Title</label><input type="text" id="hq-title" placeholder="e.g. CHM 101 CA Test 1"/></div>
           <div class="fg"><label>Course</label><input type="text" id="hq-course" placeholder="e.g. CHM 101"/></div>
           <div class="fg"><label>Duration (minutes)</label><input type="number" id="hq-duration" placeholder="e.g. 30" value="30"/></div>
           <div class="fg">
@@ -348,7 +352,7 @@ Answer: A</code>
           <div id="hq-progress" style="font-size:.76rem;color:var(--text2);margin-top:8px;display:none;text-align:center;padding:8px;background:rgba(201,168,76,.08);border-radius:8px;"></div>
         </div>
         <div>
-          <div style="font-size:.82rem;font-weight:700;color:var(--gold2);margin-bottom:12px;">Uploaded Quizzes</div>
+          <div style="font-size:.82rem;font-weight:700;color:var(--gold2);margin-bottom:12px;">Quiz Groups</div>
           <div id="hq-list"></div>
         </div>
       </div>
@@ -951,56 +955,86 @@ async function uploadHtmlQuiz(){
   try{
     const html=await file.text();
     prog.textContent='☁️ Uploading to Firestore...';
-    await db.collection('htmlQuizzes').doc(code).set({
-      title,code,html,course,duration,active:true,
-      createdAt:new Date().toISOString(),createdBy:auth.currentUser.email
+    // Store as subcollection under code — supports multiple quizzes per code
+    const groupRef = db.collection('htmlQuizGroups').doc(code);
+    // Create/update the group doc
+    await groupRef.set({code, active:true, updatedAt:new Date().toISOString()},{merge:true});
+    // Add quiz as subcollection item
+    await groupRef.collection('quizzes').add({
+      title, course, duration, html, active:true,
+      createdAt:new Date().toISOString(), createdBy:auth.currentUser.email
     });
-    ['hq-title','hq-code','hq-course','hq-duration'].forEach(id=>document.getElementById(id).value=id==='hq-duration'?'30':'');
+    ['hq-title','hq-course','hq-duration'].forEach(id=>document.getElementById(id).value=id==='hq-duration'?'30':'');
     document.getElementById('hq-file').value='';
     document.getElementById('hq-fname').style.display='none';
     document.getElementById('hq-dropzone').style.borderColor='var(--cb)';
     document.getElementById('hq-dropzone').style.background='';
-    prog.textContent='✅ Uploaded successfully!';
+    prog.textContent='✅ Added to group '+code+'!';
     setTimeout(()=>{prog.style.display='none';},2000);
-    showToast('HTML Quiz uploaded! Code: '+code);
+    showToast('Quiz uploaded under code: '+code);
     loadHtmlQuizzes();
   }catch(e){prog.textContent='❌ Error: '+e.message;showToast('Upload failed');}
 }
 
 async function loadHtmlQuizzes(){
-  const snap=await db.collection('htmlQuizzes').get();
+  const snap=await db.collection('htmlQuizGroups').get();
   const list=document.getElementById('hq-list');
-  if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem;text-align:center;padding:20px;">No HTML quizzes uploaded yet</div>';return;}
-  list.innerHTML=snap.docs.map(d=>{
-    const q=d.data();
-    return `<div style="background:rgba(255,255,255,.03);border:1px solid ${q.active?'var(--gold)':'var(--cb)'};border-radius:12px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${q.active?'linear-gradient(90deg,var(--gold),var(--gold2))':'var(--cb)'}"></div>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-        <div style="flex:1">
-          <div style="font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--gold2);margin-bottom:3px;">${q.title}</div>
-          <div style="font-size:.72rem;color:var(--text2);margin-bottom:6px;">${q.course||''} ${q.duration?'• '+q.duration+' min':''}</div>
-          <div style="display:inline-block;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:6px;padding:3px 10px;font-size:.8rem;font-weight:700;letter-spacing:2px;color:var(--gold);">${q.code}</div>
-          <div style="font-size:.68rem;color:${q.active?'var(--green)':'var(--red)'};margin-top:6px;font-weight:600;">${q.active?'✅ Active':'⛔ Inactive'}</div>
+  if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem;text-align:center;padding:20px;">No quiz groups yet</div>';return;}
+  list.innerHTML='';
+  for(const d of snap.docs){
+    const g=d.data();
+    const qSnap=await db.collection('htmlQuizGroups').doc(d.id).collection('quizzes').get();
+    const quizzes=qSnap.docs.map(q=>({id:q.id,...q.data()}));
+    const div=document.createElement('div');
+    div.style.cssText='background:rgba(255,255,255,.03);border:1px solid var(--gold);border-radius:12px;padding:14px;margin-bottom:12px;';
+    div.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div>
+          <div style="display:inline-block;background:rgba(201,168,76,.15);border:1px solid var(--gold);border-radius:8px;padding:4px 12px;font-size:.9rem;font-weight:900;letter-spacing:3px;color:var(--gold);">${g.code}</div>
+          <span style="font-size:.7rem;color:var(--text2);margin-left:8px">${quizzes.length} quiz${quizzes.length!==1?'zes':''}</span>
         </div>
-        <div style="display:flex;flex-direction:column;gap:5px;">
-          <button class="btn btn-sm ${q.active?'btn-red':'btn-green'}" onclick="toggleHQ('${d.id}',${!!q.active})">${q.active?'Deactivate':'Activate'}</button>
-          <button class="btn btn-red btn-sm" onclick="deleteHQ('${d.id}')">🗑 Delete</button>
-        </div>
+        <button class="btn btn-red btn-sm" onclick="deleteHQGroup('${d.id}')">🗑 Delete All</button>
       </div>
-    </div>`;
-  }).join('');
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        ${quizzes.map(q=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:rgba(255,255,255,.03);border-radius:9px;border:1px solid var(--cb);">
+            <div>
+              <div style="font-size:.82rem;font-weight:600;color:var(--text)">${q.title}</div>
+              <div style="font-size:.7rem;color:var(--text2)">${q.course||''} ${q.duration?'• '+q.duration+' min':''}</div>
+              <div style="font-size:.68rem;color:${q.active?'var(--green)':'var(--red)'};">${q.active?'✅ Active':'⛔ Inactive'}</div>
+            </div>
+            <div style="display:flex;gap:5px;">
+              <button class="btn btn-sm ${q.active?'btn-red':'btn-green'}" onclick="toggleHQ('${d.id}','${q.id}',${!!q.active})">${q.active?'Off':'On'}</button>
+              <button class="btn btn-red btn-sm" onclick="deleteHQ('${d.id}','${q.id}')">🗑</button>
+            </div>
+          </div>`).join('')}
+      </div>`;
+    list.appendChild(div);
+  }
 }
 
-async function toggleHQ(id, isActive){
-  await db.collection('htmlQuizzes').doc(id).update({active:!isActive});
+async function toggleHQ(groupId, quizId, isActive){
+  await db.collection('htmlQuizGroups').doc(groupId).collection('quizzes').doc(quizId).update({active:!isActive});
   showToast(isActive?'Quiz deactivated':'Quiz activated');
   loadHtmlQuizzes();
 }
 
-async function deleteHQ(id){
-  if(!confirm('Delete this HTML quiz?')) return;
-  await db.collection('htmlQuizzes').doc(id).delete();
+async function deleteHQ(groupId, quizId){
+  if(!confirm('Delete this quiz?')) return;
+  await db.collection('htmlQuizGroups').doc(groupId).collection('quizzes').doc(quizId).delete();
+  // Check if group is now empty
+  const remaining = await db.collection('htmlQuizGroups').doc(groupId).collection('quizzes').get();
+  if(remaining.empty) await db.collection('htmlQuizGroups').doc(groupId).delete();
   showToast('Deleted');
+  loadHtmlQuizzes();
+}
+
+async function deleteHQGroup(groupId){
+  if(!confirm('Delete ALL quizzes in this group?')) return;
+  const qSnap = await db.collection('htmlQuizGroups').doc(groupId).collection('quizzes').get();
+  await Promise.all(qSnap.docs.map(d=>d.ref.delete()));
+  await db.collection('htmlQuizGroups').doc(groupId).delete();
+  showToast('Group deleted');
   loadHtmlQuizzes();
 }
 

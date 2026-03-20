@@ -1111,7 +1111,7 @@ async function doForgot(){
   if(!em){showMsg('li-msg','Enter your email above first','err');return;}
   try{
     await auth.sendPasswordResetEmail(em);
-    showMsg('li-msg','Reset link sent! Check your email then come back to sign in.','ok');
+    showMsg('li-msg','✅ Reset link sent to '+em+'! Open your email, click the link to set a new password, then come back here to Sign In with your new password.','ok');
   }catch(e){ showMsg('li-msg', e.message.replace('Firebase:','').trim(), 'err'); }
 }
 
@@ -1307,30 +1307,87 @@ function closePQModal(){ document.getElementById('pq-modal').classList.remove('o
 async function joinPrivateQuiz(){
   const code = document.getElementById('pq-code').value.trim().toUpperCase();
   if(!code){showMsg('pq-msg','Enter quiz code','err');return;}
-  showMsg('pq-msg','Loading quiz...','');
+  showMsg('pq-msg','Loading...','');
   try{
-    // Check HTML quiz first
+    // Check new htmlQuizGroups first (multiple quizzes per code)
+    const groupDoc = await db.collection('htmlQuizGroups').doc(code).get();
+    if(groupDoc.exists){
+      const qSnap = await db.collection('htmlQuizGroups').doc(code).collection('quizzes').where('active','==',true).get();
+      if(!qSnap.empty){
+        closePQModal();
+        showQuizGroupList(code, qSnap.docs.map(d=>({id:d.id,...d.data()})));
+        return;
+      }
+    }
+    // Check old htmlQuizzes (single quiz per code - backwards compat)
     const hqDoc = await db.collection('htmlQuizzes').doc(code).get();
     if(hqDoc.exists && hqDoc.data().active){
       const hq = hqDoc.data();
       closePQModal();
-      await deductPoints('HTML Quiz attempt — '+hq.title, 5);
+      await deductPoints('HTML Quiz — '+hq.title, 5);
       openHtmlQuiz(hq.title, hq.html);
       return;
     }
     // Check regular private quiz
     const snap = await db.collection('privateQuizzes').where('code','==',code).where('active','==',true).get();
-    if(snap.empty){showMsg('pq-msg','Invalid or expired code','err');return;}
+    if(snap.empty){showMsg('pq-msg','❌ Invalid or expired code','err');return;}
     const pq = snap.docs[0].data();
-    const qSnap = await snap.docs[0].ref.collection('questions').get();
-    if(qSnap.empty){showMsg('pq-msg','No questions in this quiz yet','err');return;}
-    quizData = qSnap.docs.map(d=>d.data());
+    const qSnap2 = await snap.docs[0].ref.collection('questions').get();
+    if(qSnap2.empty){showMsg('pq-msg','No questions in this quiz yet','err');return;}
+    quizData = qSnap2.docs.map(d=>d.data());
     currentQ=0; answers={}; timeLeft=pq.duration||600;
     closePQModal();
     document.getElementById('pg-dash').classList.add('hidden');
     document.getElementById('pg-quiz-active').style.display='block';
     renderQ(); startTimer();
   }catch(e){ showMsg('pq-msg','Error joining quiz. Try again.','err'); }
+}
+
+function showQuizGroupList(code, quizzes){
+  // Remove existing modal if any
+  const existing = document.getElementById('quiz-group-modal');
+  if(existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'quiz-group-modal';
+  modal.style.cssText='position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.8);display:flex;align-items:flex-end;justify-content:center;padding:0;';
+
+  const colors=['linear-gradient(135deg,#1e40af,#3730a3)','linear-gradient(135deg,#065f46,#047857)','linear-gradient(135deg,#7c3aed,#6d28d9)','linear-gradient(135deg,#b45309,#92400e)','linear-gradient(135deg,#be185d,#9d174d)','linear-gradient(135deg,#0e7490,#0369a1)'];
+
+  modal.innerHTML=`
+    <div style="background:#0d1e3d;border-radius:20px 20px 0 0;width:100%;max-width:500px;padding:20px;max-height:85vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--gold2)">📚 Quiz Group</div>
+          <div style="font-size:.74rem;color:var(--text2);margin-top:2px">Code: <span style="color:var(--gold);font-weight:700;letter-spacing:2px">${code}</span> • ${quizzes.length} quiz${quizzes.length!==1?'zes':''} available</div>
+        </div>
+        <button onclick="document.getElementById('quiz-group-modal').remove()" style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:#f87171;border-radius:10px;padding:6px 12px;cursor:pointer;font-size:.8rem;font-weight:700;">✕ Close</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${quizzes.map((q,i)=>`
+          <div onclick="startGroupQuiz('${q.id}','${code}',\`${q.title}\`)" style="display:flex;align-items:center;gap:14px;padding:14px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid var(--cb);cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.background='rgba(201,168,76,.06)'" onmouseout="this.style.borderColor='var(--cb)';this.style.background='rgba(255,255,255,.04)'">
+            <div style="width:52px;height:62px;background:${colors[i%colors.length]};border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;">
+              <div style="font-size:1.4rem;">📄</div>
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:.88rem;font-weight:700;color:var(--text);margin-bottom:3px;">${q.title}</div>
+              <div style="font-size:.72rem;color:var(--text2);">${q.course||''} ${q.duration?'• ⏱ '+q.duration+' min':''}</div>
+              <div style="font-size:.7rem;color:var(--gold);margin-top:4px;font-weight:600;">Costs 5 pts • Tap to start →</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  document.body.appendChild(modal);
+}
+
+async function startGroupQuiz(quizId, code, title){
+  document.getElementById('quiz-group-modal')?.remove();
+  try{
+    const qDoc = await db.collection('htmlQuizGroups').doc(code).collection('quizzes').doc(quizId).get();
+    if(!qDoc.exists){showToast('Quiz not found');return;}
+    await deductPoints('HTML Quiz — '+title, 5);
+    openHtmlQuiz(title, qDoc.data().html);
+  }catch(e){showToast('Error loading quiz');}
 }
 
 function openHtmlQuiz(title, html){
