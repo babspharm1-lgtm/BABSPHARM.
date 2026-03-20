@@ -78,7 +78,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;bac
 .loader{width:42px;height:42px;border:3px solid rgba(201,168,76,.3);border-top-color:#c9a84c;border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .hidden{display:none!important;}
-#topbar{display:none!important;}#sidebar{display:none!important;}#main{display:none!important;}#auth-wrap{display:none!important;}
+#topbar{display:none!important;}#sidebar{display:none!important;}#main{display:none!important;}
 @media(max-width:700px){#sidebar{display:none;}#main{margin-left:0;}}
 </style>
 <style id="critical">
@@ -503,10 +503,10 @@ auth.onAuthStateChanged(async function(user){
   }
 });
 function showAuthUI(){
-  document.getElementById('auth-wrap').style.display='flex';
-  document.getElementById('topbar').style.display='none';
-  document.getElementById('sidebar').style.display='none';
-  document.getElementById('main').style.display='none';
+  document.getElementById('auth-wrap').style.cssText='display:flex!important;align-items:center;justify-content:center;min-height:100vh;padding:20px;';
+  document.getElementById('topbar').style.cssText='display:none!important';
+  document.getElementById('sidebar').style.cssText='display:none!important';
+  document.getElementById('main').style.cssText='display:none!important';
 }
 function showAdminUI(){
   document.getElementById('auth-wrap').style.cssText='display:none!important';
