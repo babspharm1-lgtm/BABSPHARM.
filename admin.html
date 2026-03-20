@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>BABSPHARM Admin</title>
+<meta name="theme-color" content="#0a1628"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+:root{--navy:#0a1628;--navy2:#0f2044;--navy3:#162d5a;--gold:#c9a84c;--gold2:#e8c97a;--text:#f0ead6;--text2:#9bacc8;--card:rgba(255,255,255,0.04);--cb:rgba(201,168,76,0.2);--green:#4ade80;--red:#f87171;--r:13px;}
+*{box-sizing:border-box;margin:0;padding:0;}body.loading{overflow:hidden;}
+body{font-family:'Outfit',sans-serif;background:#0a1628;color:var(--text);min-height:100vh;position:relative;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 20% 20%,rgba(201,168,76,.05) 0%,transparent 45%);}
+#topbar{position:fixed;top:0;left:0;right:0;z-index:300;display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:rgba(10,22,40,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--cb);}
+.logo-wrap{display:flex;align-items:center;gap:9px;}
+.logo-txt{font-family:'Playfair Display',serif;font-size:.92rem;font-weight:700;background:linear-gradient(90deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.adm-badge{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.25);color:#f87171;font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:18px;letter-spacing:.4px;}
+#sidebar{position:fixed;top:54px;left:0;bottom:0;width:210px;z-index:200;background:var(--navy2);border-right:1px solid var(--cb);overflow-y:auto;}
+.sb-item{display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;transition:all .2s;color:var(--text2);font-size:.83rem;font-weight:500;}
+.sb-item:hover,.sb-item.on{background:rgba(201,168,76,.08);color:var(--gold2);border-right:3px solid var(--gold);}
+.sb-div{height:1px;background:var(--cb);margin:5px 14px;}
+#main{margin-left:210px;padding:68px 18px 28px;position:relative;z-index:1;}
+.panel{display:none;}.panel.on{display:block;animation:fu .25s ease;}
+@keyframes fu{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.sec-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--gold2);margin-bottom:14px;display:flex;align-items:center;gap:7px;}
+.sec-title::before{content:'';width:3px;height:16px;background:linear-gradient(180deg,var(--gold),var(--gold2));border-radius:2px;}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;}
+@media(max-width:900px){.sgrid{grid-template-columns:repeat(2,1fr);}}
+.sc{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:14px;display:flex;align-items:center;gap:10px;}
+.si{width:40px;height:40px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+.sv{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--gold2);line-height:1;}
+.sl{font-size:.68rem;color:var(--text2);margin-top:2px;}
+.card{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:18px;margin-bottom:14px;}
+.card-title{font-size:.83rem;font-weight:700;color:var(--gold2);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.tbl{width:100%;border-collapse:collapse;font-size:.8rem;}
+.tbl th{padding:9px 11px;text-align:left;color:var(--text2);font-size:.7rem;letter-spacing:.4px;text-transform:uppercase;border-bottom:1px solid var(--cb);}
+.tbl td{padding:10px 11px;border-bottom:1px solid rgba(201,168,76,.07);vertical-align:middle;}
+.tbl tr:hover td{background:rgba(255,255,255,.02);}
+.badge{display:inline-block;padding:2px 8px;border-radius:18px;font-size:.66rem;font-weight:700;}
+.badge-ok{background:rgba(74,222,128,.12);color:var(--green);}
+.badge-ban{background:rgba(248,113,113,.12);color:var(--red);}
+.fg{margin-bottom:11px;}
+.fg label{display:block;font-size:.7rem;font-weight:600;color:var(--text2);margin-bottom:3px;letter-spacing:.4px;text-transform:uppercase;}
+.fg input,.fg select,.fg textarea{width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.83rem;outline:none;transition:all .3s;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--gold);}
+.fg textarea{resize:vertical;min-height:72px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:700px){.row2{grid-template-columns:1fr;}}
+.btn{font-family:'Outfit',sans-serif;font-size:.8rem;font-weight:700;padding:9px 16px;border-radius:8px;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:5px;}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);}
+.btn-gold:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(201,168,76,.25);}
+.btn-red{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.18);}
+.btn-red:hover{background:rgba(248,113,113,.22);}
+.btn-green{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.18);}
+.btn-sm{padding:5px 11px;font-size:.72rem;}
+.li{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid var(--cb);margin-bottom:7px;transition:all .2s;}
+.li:hover{border-color:var(--gold);}
+.li-code{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:700;color:var(--gold2);}
+.li-name{font-size:.73rem;color:var(--text2);margin-top:2px;}
+.sem-tag{font-size:.62rem;padding:2px 7px;border-radius:9px;font-weight:700;background:rgba(201,168,76,.1);color:var(--gold);margin-top:3px;display:inline-block;}
+.q-item{background:rgba(255,255,255,.03);border:1px solid var(--cb);border-radius:9px;padding:12px 13px;margin-bottom:8px;}
+.q-text{font-size:.82rem;font-weight:600;margin-bottom:7px;}
+.q-opts{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.q-opt{font-size:.74rem;padding:5px 9px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid var(--cb);}
+.q-opt.correct{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:var(--green);}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(14px);background:var(--navy2);border:1px solid var(--cb);border-radius:9px;padding:9px 18px;font-size:.8rem;z-index:999;opacity:0;transition:all .3s;white-space:nowrap;pointer-events:none;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+#auth-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.auth-card{background:rgba(12,26,55,.9);border:1px solid var(--cb);border-radius:18px;padding:32px 24px;width:100%;max-width:360px;box-shadow:0 20px 56px rgba(0,0,0,.6);}
+.auth-title{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:900;background:linear-gradient(90deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:3px;}
+.auth-sub{font-size:.72rem;color:var(--text2);margin-bottom:18px;letter-spacing:.8px;}
+.amsg{font-size:.76rem;margin-top:9px;padding:7px;border-radius:7px;display:none;text-align:center;}
+.amsg.err{background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.18);display:block;}
+#loading{position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;z-index:9999;background:#0a1628;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:13px;margin:0;padding:0;}
+.loader{width:42px;height:42px;border:3px solid rgba(201,168,76,.3);border-top-color:#c9a84c;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.hidden{display:none!important;}
+#topbar{display:none!important;}#sidebar{display:none!important;}#main{display:none!important;}#auth-wrap{display:none!important;}
+@media(max-width:700px){#sidebar{display:none;}#main{margin-left:0;}}
+</style>
+<style id="critical">
+#loading{
+  position:fixed !important;
+  top:0 !important;
+  left:0 !important;
+  right:0 !important;
+  bottom:0 !important;
+  width:100% !important;
+  height:100% !important;
+  background:#0a1628 !important;
+  z-index:99999 !important;
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:16px !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+html, body {
+  margin:0 !important;
+  padding:0 !important;
+  width:100% !important;
+  overflow-x:hidden !important;
+}
+</style>
+</head>
+<body class="loading">
+<div id="loading" style="position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;background:#0a1628;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;overflow:hidden;">
+  <div style="font-size:2.5rem">⚗️</div>
+  <div style="width:42px;height:42px;border:3px solid rgba(201,168,76,.3);border-top-color:#c9a84c;border-radius:50%;animation:spin .8s linear infinite;"></div>
+  <div style="font-family:serif;color:#e8c97a;font-size:1rem;font-weight:bold;">Admin Panel</div>
+</div>
+<div id="toast"></div>
+<div id="auth-wrap" class="hidden">
+  <div class="auth-card">
+    <div style="text-align:center;margin-bottom:14px"><img src="https://raw.githubusercontent.com/babspharm1-lgtm/BABSPHARM./refs/heads/main/logo.png" width="70" height="70" style="object-fit:contain;border-radius:12px"/></div>
+    <div class="auth-title">Admin Login</div>
+    <div class="auth-sub">BABSPHARM CLOUD · ADMIN ONLY</div>
+    <div class="fg"><label>Email</label><input type="email" id="a-em" placeholder="Admin email"/></div>
+    <div class="fg"><label>Password</label><input type="password" id="a-pw" placeholder="Password"/></div>
+    <button class="btn btn-gold" style="width:100%" onclick="adminLogin()">Sign In</button>
+    <div id="a-msg" class="amsg"></div>
+  </div>
+</div>
+<div id="topbar" class="hidden">
+  <div class="logo-wrap">
+    <img src="https://raw.githubusercontent.com/babspharm1-lgtm/BABSPHARM./refs/heads/main/logo.png" width="34" height="34" style="object-fit:contain;border-radius:8px"/>
+    <div class="logo-txt">BABSPHARM Cloud</div>
+    <div class="adm-badge">Admin</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:9px;">
+    <span style="font-size:.76rem;color:var(--text2)" id="adm-name"></span>
+    <button class="btn btn-red btn-sm" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+<div id="sidebar" class="hidden">
+  <div class="sb-item on" onclick="showPanel('dashboard',this)">📊 Dashboard</div>
+  <div class="sb-item" onclick="showPanel('students',this)">👥 Students</div>
+  <div class="sb-item" onclick="showPanel('messages',this)">💬 Messages</div>
+  <div class="sb-item" onclick="showPanel('courses',this)">📚 Courses</div>
+  <div class="sb-item" onclick="showPanel('questions',this)">❓ Quiz Questions</div>
+  <div class="sb-item" onclick="showPanel('privatequiz',this)">🔐 Private Quiz</div>
+  <div class="sb-item" onclick="showPanel('files',this)">📁 Files</div>
+  <div class="sb-item" onclick="showPanel('redemptions',this)">📋 Redemptions</div>
+  <div class="sb-item" onclick="showPanel('coupons',this)">🎟️ Point Coupons</div>
+  <div class="sb-item" onclick="showPanel('subadmins',this)">👮 Sub-Admins</div>
+  <div class="sb-item" onclick="showPanel('settings',this)">⚙️ Settings</div>
+  <div class="sb-div"></div>
+  <div class="sb-item" onclick="window.open('index.html','_blank')">🌐 View Site</div>
+</div>
+<div id="main" class="hidden">
+  <div id="panel-dashboard" class="panel on">
+    <div class="sec-title">Dashboard</div>
+    <div class="sgrid">
+      <div class="sc"><div class="si">👥</div><div><div class="sv" id="st-total">--</div><div class="sl">Total Students</div></div></div>
+      <div class="sc"><div class="si">✅</div><div><div class="sv" id="st-today">--</div><div class="sl">Active Today</div></div></div>
+      <div class="sc"><div class="si">🚫</div><div><div class="sv" id="st-ban">--</div><div class="sl">Banned</div></div></div>
+      <div class="sc"><div class="si">📚</div><div><div class="sv" id="st-courses">--</div><div class="sl">Courses</div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Recent Registrations</div>
+      <table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Joined</th></tr></thead><tbody id="recent-list"></tbody></table>
+    </div>
+  </div>
+  <div id="panel-students" class="panel">
+    <div class="sec-title">Students</div>
+    <div class="card">
+      <div class="card-title">All Students
+        <input type="text" id="sch-inp" placeholder="Search name or email..." style="padding:7px 11px;border-radius:7px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.78rem;outline:none;width:200px;" oninput="filterStudents(this.value)"/>
+      </div>
+      <table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Dept</th><th>Points</th><th>Status</th><th>Actions</th></tr></thead><tbody id="students-list"></tbody></table>
+    </div>
+  </div>
+  <div id="panel-courses" class="panel">
+    <div class="sec-title">Courses</div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">Add Course</div>
+        <div class="fg"><label>Course Code</label><input type="text" id="c-code" placeholder="e.g. CHM101"/></div>
+        <div class="fg"><label>Course Name</label><input type="text" id="c-name" placeholder="e.g. Introductory Chemistry"/></div>
+        <div class="fg"><label>Semester</label><select id="c-sem"><option value="harm">☀️ Harmattan</option><option value="rain">🌧 Rain</option></select></div>
+        <button class="btn btn-gold" onclick="addCourse()">➕ Add Course</button>
+      </div>
+      <div class="card"><div class="card-title">Current Courses</div><div id="courses-list"></div></div>
+    </div>
+  </div>
+  <div id="panel-questions" class="panel">
+    <div class="sec-title">Quiz Questions</div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">Add Question</div>
+        <div class="fg"><label>Course</label><select id="q-course"><option value="">Select course...</option></select></div>
+        <div class="fg"><label>Question</label><textarea id="q-text" placeholder="Type the question..."></textarea></div>
+        <div class="fg"><label>Option A</label><input type="text" id="q-a"/></div>
+        <div class="fg"><label>Option B</label><input type="text" id="q-b"/></div>
+        <div class="fg"><label>Option C</label><input type="text" id="q-c"/></div>
+        <div class="fg"><label>Option D</label><input type="text" id="q-d"/></div>
+        <div class="fg"><label>Correct Answer</label><select id="q-ans"><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div>
+        <button class="btn btn-gold" onclick="addQuestion()">➕ Add Question</button>
+      </div>
+      <div class="card">
+        <div class="card-title">View Questions
+          <select id="qview-course" onchange="loadQuestions(this.value)" style="padding:6px 10px;border-radius:7px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.76rem;outline:none;">
+            <option value="">Select course...</option>
+          </select>
+        </div>
+        <div id="questions-list"></div>
+      </div>
+    </div>
+  </div>
+  <div id="panel-privatequiz" class="panel">
+    <div class="sec-title">Private Quiz</div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">Create Private Quiz</div>
+        <div class="fg"><label>Quiz Title</label><input type="text" id="pq-title" placeholder="e.g. CHM 101 Test 1"/></div>
+        <div class="fg"><label>Quiz Code (students use this)</label><input type="text" id="pq-code" placeholder="e.g. CHM2024" style="letter-spacing:2px;font-weight:700;"/></div>
+        <div class="fg"><label>Duration (seconds)</label><input type="number" id="pq-dur" value="600"/></div>
+        <button class="btn btn-gold" onclick="createPrivateQuiz()">🔐 Create Quiz</button>
+      </div>
+      <div class="card"><div class="card-title">Active Quizzes</div><div id="pq-list"></div></div>
+    </div>
+
+    <!-- HTML QUIZ UPLOAD -->
+    <div class="card">
+      <div class="card-title">📄 Upload HTML Quiz File</div>
+      <div style="font-size:.76rem;color:var(--text2);margin-bottom:14px;">Upload a standalone HTML quiz file. Students enter the code and take it directly in their browser — fully styled.</div>
+      <div class="row2">
+        <div>
+          <div class="fg"><label>Quiz Title</label><input type="text" id="hq-title" placeholder="e.g. CHM 101 CA Test"/></div>
+          <div class="fg"><label>Access Code</label><input type="text" id="hq-code" placeholder="e.g. CA2024" style="letter-spacing:3px;font-weight:700;text-transform:uppercase;font-size:1rem;text-align:center;"/></div>
+          <div class="fg"><label>Course</label><input type="text" id="hq-course" placeholder="e.g. CHM 101"/></div>
+          <div class="fg"><label>Duration (minutes)</label><input type="number" id="hq-duration" placeholder="e.g. 30" value="30"/></div>
+          <div class="fg">
+            <label>Upload HTML File</label>
+            <div id="hq-dropzone" onclick="document.getElementById('hq-file').click()" style="border:2px dashed var(--cb);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--cb)'">
+              <div style="font-size:1.5rem;margin-bottom:6px">📄</div>
+              <div style="font-size:.8rem;color:var(--text2)">Tap to select HTML file</div>
+              <div id="hq-fname" style="font-size:.76rem;color:var(--gold);margin-top:4px;display:none;"></div>
+            </div>
+            <input type="file" id="hq-file" accept=".html,.htm" style="display:none;" onchange="previewHQFile(this)"/>
+          </div>
+          <button class="btn btn-gold" style="width:100%" onclick="uploadHtmlQuiz()">📤 Upload Quiz</button>
+          <div id="hq-progress" style="font-size:.76rem;color:var(--text2);margin-top:8px;display:none;text-align:center;padding:8px;background:rgba(201,168,76,.08);border-radius:8px;"></div>
+        </div>
+        <div>
+          <div style="font-size:.82rem;font-weight:700;color:var(--gold2);margin-bottom:12px;">Uploaded Quizzes</div>
+          <div id="hq-list"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" id="pq-q-section" style="display:none">
+      <div class="card-title">Add Questions to: <span id="pq-sel-title" style="color:var(--gold)"></span></div>
+      <div class="row2">
+        <div>
+          <div class="fg"><label>Question</label><textarea id="pqq-text" placeholder="Type question..."></textarea></div>
+          <div class="fg"><label>Option A</label><input type="text" id="pqq-a"/></div>
+          <div class="fg"><label>Option B</label><input type="text" id="pqq-b"/></div>
+          <div class="fg"><label>Option C</label><input type="text" id="pqq-c"/></div>
+          <div class="fg"><label>Option D</label><input type="text" id="pqq-d"/></div>
+          <div class="fg"><label>Correct Answer</label><select id="pqq-ans"><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select></div>
+          <button class="btn btn-gold" onclick="addPQQ()">➕ Add Question</button>
+        </div>
+        <div id="pq-qlist"></div>
+      </div>
+    </div>
+  </div>
+  <div id="panel-files" class="panel">
+    <div class="sec-title">Study Files</div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">Add File</div>
+        <div class="fg"><label>File Name</label><input type="text" id="f-name" placeholder="e.g. CHM 101 Past Questions 2024"/></div>
+        <div class="fg"><label>Course Code</label><input type="text" id="f-course" placeholder="e.g. CHM"/></div>
+        <div class="fg"><label>Semester</label>
+          <select id="f-sem">
+            <option value="harm">☀️ Harmattan Semester</option>
+            <option value="rain">🌧 Rain Semester</option>
+          </select>
+        </div>
+        <div class="fg"><label>File URL (Google Drive / any link)</label><input type="text" id="f-url" placeholder="https://drive.google.com/..."/></div>
+        <div class="fg"><label>File Size (optional)</label><input type="text" id="f-size" placeholder="e.g. 2.4 MB"/></div>
+        <button class="btn btn-gold" onclick="addFile()">➕ Add File</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Files by Semester</div>
+        <div style="display:flex;gap:7px;margin-bottom:12px;">
+          <button class="btn btn-gold btn-sm" onclick="switchFileSem('harm',this)" id="fsem-harm">☀️ Harmattan</button>
+          <button class="btn btn-sm" style="background:var(--card);border:1px solid var(--cb);color:var(--text2)" onclick="switchFileSem('rain',this)" id="fsem-rain">🌧 Rain</button>
+        </div>
+        <div id="files-list"></div>
+      </div>
+    </div>
+  </div>
+  <div id="panel-settings" class="panel">
+    <div class="sec-title">Settings</div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">🤖 GROQ AI Key</div>
+        <div class="fg"><label>GROQ API Key</label><input type="password" id="groq-key" placeholder="gsk_..."/></div>
+        <button class="btn btn-gold" onclick="saveGroqKey()">💾 Save Key</button>
+        <div style="font-size:.7rem;color:var(--text2);margin-top:7px;">Saved to Firestore. Students load it automatically.</div>
+      </div>
+      <div class="card">
+        <div class="card-title">📢 Send Announcement</div>
+        <div class="fg"><label>Title</label><input type="text" id="ann-title" placeholder="Announcement title"/></div>
+        <div class="fg"><label>Message</label><textarea id="ann-msg" placeholder="Your message..."></textarea></div>
+        <button class="btn btn-gold" onclick="sendAnn()">📢 Send to All Students</button>
+      </div>
+    </div>
+    <!-- Contact Info -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title">📞 Contact Info (shown on registration page)</div>
+      <div class="row2">
+        <div class="fg">
+          <label>WhatsApp Number</label>
+          <input type="text" id="contact-wa-inp" placeholder="e.g. 2348012345678 (with country code, no +)"/>
+        </div>
+        <div class="fg">
+          <label>Email Address</label>
+          <input type="text" id="contact-email-inp" placeholder="e.g. babspharm@gmail.com"/>
+        </div>
+      </div>
+      <button class="btn btn-gold" onclick="saveContact()">💾 Save Contact Info</button>
+    </div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">🔧 Maintenance Mode</div>
+        <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;">When enabled, students see a maintenance message and cannot use the platform.</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <span style="font-size:.85rem;font-weight:600">Maintenance Mode</span>
+          <div id="maint-toggle" onclick="toggleMaintenance()" style="width:48px;height:26px;border-radius:20px;background:var(--card);border:1px solid var(--cb);cursor:pointer;position:relative;transition:all .3s;">
+            <div id="maint-knob" style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--text2);transition:all .3s;"></div>
+          </div>
+        </div>
+        <div class="fg"><label>Maintenance Message</label>
+          <textarea id="maint-msg" placeholder="e.g. Platform under maintenance. Back in 2 hours." style="min-height:60px"></textarea>
+        </div>
+        <button class="btn btn-gold" onclick="saveMaintenance()">💾 Save</button>
+        <div id="maint-status" style="font-size:.74rem;color:var(--text2);margin-top:7px;"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">💰 Manage Student Points</div>
+        <div class="fg"><label>Search Student</label>
+          <input type="text" id="pts-search" placeholder="Name or email..." oninput="searchPtsStudent(this.value)"/>
+          <div id="pts-results" style="margin-top:6px;"></div>
+        </div>
+        <div id="pts-selected" style="display:none;padding:8px 12px;background:rgba(201,168,76,.08);border:1px solid var(--cb);border-radius:8px;margin-bottom:10px;font-size:.8rem;">
+          Student: <span id="pts-name" style="color:var(--gold2);font-weight:600"></span>
+          <span style="color:var(--text2);margin-left:8px">Current: <b id="pts-current" style="color:var(--gold)">0</b> pts</span>
+        </div>
+        <div class="fg"><label>Amount</label><input type="number" id="pts-amount" placeholder="e.g. 50" min="1"/></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-green" style="flex:1" onclick="managePoints('add')">➕ Add Points</button>
+          <button class="btn btn-red" style="flex:1" onclick="managePoints('deduct')">➖ Deduct Points</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- MESSAGES PANEL -->
+  <div id="panel-messages" class="panel">
+    <div class="sec-title">Direct Messages</div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">Send Message to Student</div>
+        <div class="fg"><label>Search Student</label>
+          <input type="text" id="msg-search" placeholder="Type name or email..." oninput="searchMsgStudent(this.value)"/>
+          <div id="msg-search-results" style="margin-top:6px;"></div>
+        </div>
+        <div id="msg-selected" style="display:none;padding:10px 12px;background:rgba(201,168,76,.08);border:1px solid var(--cb);border-radius:8px;margin-bottom:11px;font-size:.8rem;">
+          <span style="color:var(--text2)">Sending to: </span><span id="msg-to-name" style="color:var(--gold2);font-weight:600"></span>
+          <button onclick="clearMsgTarget()" style="float:right;background:none;border:none;color:var(--text2);cursor:pointer;font-size:.8rem;">✕</button>
+        </div>
+        <div class="fg"><label>Subject</label><input type="text" id="msg-subject" placeholder="Message subject"/></div>
+        <div class="fg"><label>Message</label><textarea id="msg-body" placeholder="Type your message..."></textarea></div>
+        <button class="btn btn-gold" onclick="sendDirectMessage()">📨 Send Message</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Sent Messages</div>
+        <div id="sent-messages"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REDEMPTIONS PANEL -->
+  <div id="panel-redemptions" class="panel">
+    <div class="sec-title">📋 Coupon Redemptions</div>
+    <div class="card">
+      <div class="card-title">All Redemptions</div>
+      <div id="all-redemptions"></div>
+    </div>
+  </div>
+
+  <!-- COUPONS PANEL -->
+  <div id="panel-coupons" class="panel">
+    <div class="sec-title">🎟️ Point Coupons</div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">Create Coupon</div>
+        <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;">Create a coupon code. Students redeem it on their Referral & Points page to receive the points.</div>
+        <div class="fg"><label>Coupon Code</label>
+          <div style="display:flex;gap:7px;">
+            <input type="text" id="cp-code" placeholder="e.g. WELCOME100" style="letter-spacing:2px;font-weight:700;text-transform:uppercase;flex:1"/>
+            <button class="btn btn-gold" style="white-space:nowrap;padding:9px 12px" onclick="generateCouponCode()">🎲 Generate</button>
+          </div>
+        </div>
+        <div class="fg"><label>Points Value</label>
+          <input type="number" id="cp-points" placeholder="e.g. 100" min="1"/>
+        </div>
+        <div class="fg"><label>Usage Limit (0 = unlimited)</label>
+          <input type="number" id="cp-limit" placeholder="e.g. 50" value="0" min="0"/>
+        </div>
+        <div class="fg"><label>Expiry Date (optional)</label>
+          <input type="date" id="cp-expiry"/>
+        </div>
+        <button class="btn btn-gold" style="width:100%" onclick="createCoupon()">🎟️ Create Coupon</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Active Coupons</div>
+        <div id="coupons-list"></div>
+      </div>
+    </div>
+    <!-- Coupon usage log -->
+    <div class="card">
+      <div class="card-title">Redemption History</div>
+      <div id="coupon-log"></div>
+    </div>
+  </div>
+
+  <!-- SUB-ADMINS PANEL -->
+  <div id="panel-subadmins" class="panel">
+    <div class="sec-title">Sub-Admins</div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title">Add Sub-Admin</div>
+        <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;">Sub-admins can manage students, courses and files but cannot access settings or create other sub-admins.</div>
+        <div class="fg"><label>Student Email</label>
+          <input type="text" id="sa-email" placeholder="Student's registered email"/>
+        </div>
+        <div class="fg"><label>Permissions</label>
+          <div style="display:flex;flex-direction:column;gap:7px;margin-top:4px;">
+            <label style="display:flex;align-items:center;gap:8px;font-size:.8rem;cursor:pointer;color:var(--text2)">
+              <input type="checkbox" id="sa-students" checked style="accent-color:var(--gold)"/> Manage Students
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.8rem;cursor:pointer;color:var(--text2)">
+              <input type="checkbox" id="sa-courses" checked style="accent-color:var(--gold)"/> Manage Courses
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.8rem;cursor:pointer;color:var(--text2)">
+              <input type="checkbox" id="sa-files" checked style="accent-color:var(--gold)"/> Manage Files
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.8rem;cursor:pointer;color:var(--text2)">
+              <input type="checkbox" id="sa-quiz" style="accent-color:var(--gold)"/> Manage Quizzes
+            </label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:.8rem;cursor:pointer;color:var(--text2)">
+              <input type="checkbox" id="sa-messages" style="accent-color:var(--gold)"/> Send Messages
+            </label>
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="addSubAdmin()">➕ Add Sub-Admin</button>
+      </div>
+      <div class="card">
+        <div class="card-title">Current Sub-Admins</div>
+        <div id="subadmins-list"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+const FC={apiKey:"AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8",authDomain:"babspharmcloud.firebaseapp.com",projectId:"babspharmcloud",storageBucket:"babspharmcloud.firebasestorage.app",messagingSenderId:"385674572482",appId:"1:385674572482:web:a427125e649fef011b815b"};
+firebase.initializeApp(FC);
+const auth=firebase.auth(),db=firebase.firestore();
+let allStudents=[],selectedPQId='';
+// Force hide loading after 8 seconds no matter what
+setTimeout(()=>{
+  const l=document.getElementById('loading');
+  if(l&&l.style.display!=='none'){
+    l.style.display='none';
+    showAuthUI();
+  }
+},10000);
+
+auth.onAuthStateChanged(async function(user){
+  if(!user){
+    document.getElementById('loading').style.display='none';
+    document.body.classList.remove('loading');
+    showAuthUI();
+    return;
+  }
+  try{
+    let doc = await db.collection('users').doc(user.uid).get();
+    if(!doc.exists){
+      const snap = await db.collection('users').where('email','==',user.email).get();
+      if(!snap.empty) doc = snap.docs[0];
+    }
+    const data = doc.exists ? doc.data() : null;
+    if(!data || (data.role!=='admin' && data.role!=='subadmin')){
+      await auth.signOut();
+      document.getElementById('loading').style.display='none';
+      document.body.classList.remove('loading');
+      showAuthUI();
+      showToast('Access denied — Admins only');
+      return;
+    }
+    document.getElementById('adm-name').textContent=data.name||user.email;
+    document.getElementById('loading').style.display='none';
+    document.body.classList.remove('loading');
+    showAdminUI();
+    loadDashboard();
+  }catch(e){
+    document.getElementById('loading').style.display='none';
+    document.body.classList.remove('loading');
+    showAuthUI();
+    showToast('Error loading. Try again.');
+  }
+});
+function showAuthUI(){
+  document.getElementById('auth-wrap').style.cssText='display:flex!important;align-items:center;justify-content:center;min-height:100vh;padding:20px;';
+  document.getElementById('topbar').style.cssText='display:none!important';
+  document.getElementById('sidebar').style.cssText='display:none!important';
+  document.getElementById('main').style.cssText='display:none!important';
+}
+function showAdminUI(){
+  document.getElementById('auth-wrap').style.cssText='display:none!important';
+  document.getElementById('topbar').style.cssText='display:flex!important;position:fixed;top:0;left:0;right:0;z-index:300;align-items:center;justify-content:space-between;padding:11px 16px;background:rgba(10,22,40,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--cb);';
+  document.getElementById('sidebar').style.cssText='display:block!important';
+  document.getElementById('main').style.cssText='display:block!important';
+}
+async function adminLogin(){
+  const em=document.getElementById('a-em').value.trim(),pw=document.getElementById('a-pw').value;
+  if(!em||!pw){showErr('a-msg','Fill all fields');return;}
+  try{await auth.signInWithEmailAndPassword(em,pw);}catch(e){showErr('a-msg',e.message.replace('Firebase:','').trim());}
+}
+async function doLogout(){await auth.signOut();}
+function showErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.className='amsg err';}
+function showPanel(name,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('on'));
+  document.getElementById('panel-'+name).classList.add('on');
+  if(el)el.classList.add('on');
+  ({students:loadStudents,courses:loadCourses,questions:loadQCourses,privatequiz:()=>{loadPQList();loadHtmlQuizzes();},files:loadFiles,settings:loadSettings,dashboard:loadDashboard,messages:()=>{loadStudents();loadSentMessages();},subadmins:loadSubAdmins,coupons:loadCoupons,redemptions:loadRedemptions})[name]?.();
+}
+async function loadDashboard(){
+  const snap=await db.collection('users').get();
+  const users=snap.docs.map(d=>d.data()),students=users.filter(u=>u.role!=='admin');
+  document.getElementById('st-total').textContent=students.length;
+  document.getElementById('st-ban').textContent=students.filter(u=>u.banned).length;
+  const today=new Date().toDateString();
+  document.getElementById('st-today').textContent=students.filter(u=>u.lastSeen&&new Date(u.lastSeen).toDateString()===today).length;
+  const cSnap=await db.collection('courses').get();
+  document.getElementById('st-courses').textContent=cSnap.size;
+  document.getElementById('recent-list').innerHTML=students.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0)).slice(0,8).map(u=>`<tr><td>${u.name||'--'}</td><td style="color:var(--text2);font-size:.76rem">${u.email||'--'}</td><td style="font-size:.76rem">${u.dept||'--'}</td><td style="color:var(--text2);font-size:.7rem">${u.createdAt?new Date(u.createdAt).toLocaleDateString():'--'}</td></tr>`).join('');
+}
+async function loadStudents(){
+  const snap=await db.collection('users').get();
+  allStudents=snap.docs.map(d=>({id:d.id,...d.data()})).filter(u=>u.role!=='admin');
+  renderStudents(allStudents);
+}
+function renderStudents(list){
+  document.getElementById('students-list').innerHTML=list.map(u=>`
+    <tr>
+      <td>${u.name||'--'}</td>
+      <td style="color:var(--text2);font-size:.76rem">${u.email||'--'}</td>
+      <td style="font-size:.76rem">${u.dept||'--'}</td>
+      <td style="font-size:.76rem;color:var(--gold)">${u.points||0} pts</td>
+      <td><span class="badge ${u.banned?'badge-ban':'badge-ok'}">${u.banned?'Banned':'Active'}</span></td>
+      <td style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="btn btn-sm ${u.banned?'btn-green':'btn-red'}" onclick="toggleBan('${u.id}',${!!u.banned})">${u.banned?'Unban':'Ban'}</button>
+        <button class="btn btn-sm" style="background:rgba(201,168,76,.12);color:var(--gold);border:1px solid var(--cb)" onclick="setAttemptLimit('${u.id}','${u.name||'Student'}',${u.quizAttemptLimit||0})">⚙️ Limit</button>
+        <button class="btn btn-sm" style="background:rgba(56,189,248,.1);color:#38bdf8;border:1px solid rgba(56,189,248,.2)" onclick="msgStudent('${u.id}','${u.name||'Student'}')">💬</button>
+      </td>
+    </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:18px">No students</td></tr>';
+}
+function filterStudents(q){renderStudents(allStudents.filter(u=>(u.name||'').toLowerCase().includes(q.toLowerCase())||(u.email||'').toLowerCase().includes(q.toLowerCase())));}
+async function toggleBan(uid,isBanned){await db.collection('users').doc(uid).update({banned:!isBanned});showToast(isBanned?'Unbanned':'Banned');loadStudents();}
+async function loadCourses(){
+  const snap=await db.collection('courses').get();
+  document.getElementById('courses-list').innerHTML=snap.empty?'<div style="color:var(--text2);font-size:.8rem">No courses yet</div>':snap.docs.map(d=>{const c=d.data();return`<div class="li"><div><div class="li-code">${c.code}</div><div class="li-name">${c.name}</div><div class="sem-tag">${c.sem==='harm'?'☀️ Harmattan':'🌧 Rain'}</div></div><button class="btn btn-red btn-sm" onclick="deleteCourse('${d.id}')">🗑</button></div>`;}).join('');
+}
+async function addCourse(){
+  const code=document.getElementById('c-code').value.trim().toUpperCase(),name=document.getElementById('c-name').value.trim(),sem=document.getElementById('c-sem').value;
+  if(!code||!name){showToast('Fill all fields');return;}
+  await db.collection('courses').add({code,name,sem,createdAt:new Date().toISOString()});
+  document.getElementById('c-code').value='';document.getElementById('c-name').value='';
+  showToast('Course added!');loadCourses();
+}
+async function deleteCourse(id){if(!confirm('Delete?'))return;await db.collection('courses').doc(id).delete();showToast('Deleted');loadCourses();}
+async function loadQCourses(){
+  const snap=await db.collection('courses').get();
+  const opts=snap.docs.map(d=>`<option value="${d.id}">${d.data().code} — ${d.data().name}</option>`).join('');
+  document.getElementById('q-course').innerHTML='<option value="">Select course...</option>'+opts;
+  document.getElementById('qview-course').innerHTML='<option value="">Select course...</option>'+opts;
+}
+async function addQuestion(){
+  const cid=document.getElementById('q-course').value,q=document.getElementById('q-text').value.trim();
+  const a=document.getElementById('q-a').value.trim(),b=document.getElementById('q-b').value.trim();
+  const c=document.getElementById('q-c').value.trim(),d=document.getElementById('q-d').value.trim();
+  const ans=parseInt(document.getElementById('q-ans').value);
+  if(!cid||!q||!a||!b||!c||!d){showToast('Fill all fields');return;}
+  await db.collection('courses').doc(cid).collection('questions').add({q,opts:[a,b,c,d],ans});
+  ['q-text','q-a','q-b','q-c','q-d'].forEach(id=>document.getElementById(id).value='');
+  showToast('Question added!');
+}
+async function loadQuestions(cid){
+  if(!cid)return;
+  const snap=await db.collection('courses').doc(cid).collection('questions').get();
+  const letters=['A','B','C','D'];
+  document.getElementById('questions-list').innerHTML=snap.empty?'<div style="color:var(--text2);font-size:.8rem;padding:10px">No questions yet</div>':snap.docs.map((d,i)=>{const q=d.data();return`<div class="q-item"><div class="q-text">${i+1}. ${q.q}</div><div class="q-opts">${q.opts.map((o,j)=>`<div class="q-opt${j===q.ans?' correct':''}">${letters[j]}. ${o}</div>`).join('')}</div><button class="btn btn-red btn-sm" style="margin-top:7px" onclick="deleteQ('${cid}','${d.id}')">🗑 Delete</button></div>`;}).join('');
+}
+async function deleteQ(cid,qid){await db.collection('courses').doc(cid).collection('questions').doc(qid).delete();showToast('Deleted');loadQuestions(cid);}
+async function loadPQList(){
+  const snap=await db.collection('privateQuizzes').orderBy('createdAt','desc').get();
+  document.getElementById('pq-list').innerHTML=snap.empty?'<div style="color:var(--text2);font-size:.8rem">No private quizzes yet</div>':snap.docs.map(d=>{const p=d.data();return`<div class="li"><div><div class="li-code">${p.title}</div><div class="li-name">Code: <b style="color:var(--gold);letter-spacing:2px">${p.code}</b></div><div class="sem-tag">${p.active?'✅ Active':'⛔ Inactive'}</div></div><div style="display:flex;gap:5px;flex-direction:column"><button class="btn btn-gold btn-sm" onclick="selectPQ('${d.id}','${p.title}')">+ Q</button><button class="btn btn-sm ${p.active?'btn-red':'btn-green'}" onclick="togglePQ('${d.id}',${!!p.active})">${p.active?'Off':'On'}</button></div></div>`;}).join('');
+}
+async function createPrivateQuiz(){
+  const title=document.getElementById('pq-title').value.trim(),code=document.getElementById('pq-code').value.trim().toUpperCase(),dur=parseInt(document.getElementById('pq-dur').value)||600;
+  if(!title||!code){showToast('Fill all fields');return;}
+  await db.collection('privateQuizzes').add({title,code,duration:dur,active:true,createdAt:new Date().toISOString()});
+  document.getElementById('pq-title').value='';document.getElementById('pq-code').value='';
+  showToast('Quiz created! Code: '+code);loadPQList();
+}
+async function togglePQ(id,isActive){await db.collection('privateQuizzes').doc(id).update({active:!isActive});showToast(isActive?'Deactivated':'Activated');loadPQList();}
+function selectPQ(id,title){selectedPQId=id;document.getElementById('pq-sel-title').textContent=title;document.getElementById('pq-q-section').style.display='block';loadPQQList(id);document.getElementById('pq-q-section').scrollIntoView({behavior:'smooth'});}
+async function addPQQ(){
+  if(!selectedPQId){showToast('Select a quiz first');return;}
+  const q=document.getElementById('pqq-text').value.trim(),a=document.getElementById('pqq-a').value.trim(),b=document.getElementById('pqq-b').value.trim(),c=document.getElementById('pqq-c').value.trim(),d=document.getElementById('pqq-d').value.trim(),ans=parseInt(document.getElementById('pqq-ans').value);
+  if(!q||!a||!b||!c||!d){showToast('Fill all fields');return;}
+  await db.collection('privateQuizzes').doc(selectedPQId).collection('questions').add({q,opts:[a,b,c,d],ans});
+  ['pqq-text','pqq-a','pqq-b','pqq-c','pqq-d'].forEach(id=>document.getElementById(id).value='');
+  showToast('Question added!');loadPQQList(selectedPQId);
+}
+async function loadPQQList(id){
+  const snap=await db.collection('privateQuizzes').doc(id).collection('questions').get();
+  const letters=['A','B','C','D'];
+  document.getElementById('pq-qlist').innerHTML=snap.empty?'<div style="color:var(--text2);font-size:.8rem;padding:10px">No questions yet</div>':snap.docs.map((d,i)=>{const q=d.data();return`<div class="q-item"><div class="q-text">${i+1}. ${q.q}</div><div class="q-opts">${q.opts.map((o,j)=>`<div class="q-opt${j===q.ans?' correct':''}">${letters[j]}. ${o}</div>`).join('')}</div><button class="btn btn-red btn-sm" style="margin-top:6px" onclick="deletePQQ('${id}','${d.id}')">🗑</button></div>`;}).join('');
+}
+async function deletePQQ(pid,qid){await db.collection('privateQuizzes').doc(pid).collection('questions').doc(qid).delete();showToast('Deleted');loadPQQList(pid);}
+let currentFileSem = 'harm';
+function switchFileSem(sem, btn){
+  currentFileSem = sem;
+  document.getElementById('fsem-harm').className = sem==='harm'?'btn btn-gold btn-sm':'btn btn-sm';
+  document.getElementById('fsem-harm').style = sem==='harm'?'':'background:var(--card);border:1px solid var(--cb);color:var(--text2)';
+  document.getElementById('fsem-rain').className = sem==='rain'?'btn btn-gold btn-sm':'btn btn-sm';
+  document.getElementById('fsem-rain').style = sem==='rain'?'':'background:var(--card);border:1px solid var(--cb);color:var(--text2)';
+  loadFiles();
+}
+
+async function loadFiles(){
+  const snap = await db.collection('files').where('sem','==',currentFileSem).get();
+  const list = document.getElementById('files-list');
+  if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem">No files for this semester yet</div>';return;}
+  const icons={CHM:'📄',MTH:'📊',PHY:'🔬',PCY:'💊',BIO:'🧬',COS:'💻',GST:'📝'};
+  list.innerHTML = snap.docs.map(d=>{
+    const f=d.data();
+    return `<div class="li">
+      <div style="overflow:hidden;flex:1">
+        <div style="font-size:.82rem;font-weight:600">${icons[f.course]||'📄'} ${f.name}</div>
+        <div style="font-size:.7rem;color:var(--text2)">${f.course}${f.size?' • '+f.size:''}</div>
+      </div>
+      <button class="btn btn-red btn-sm" onclick="deleteFile('${d.id}')">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+async function addFile(){
+  const name=document.getElementById('f-name').value.trim();
+  const course=document.getElementById('f-course').value.trim().toUpperCase();
+  const sem=document.getElementById('f-sem').value;
+  const url=document.getElementById('f-url').value.trim();
+  const size=document.getElementById('f-size').value.trim();
+  if(!name||!course||!url){showToast('Fill required fields');return;}
+  await db.collection('files').add({name,course,sem,url,size,createdAt:new Date().toISOString()});
+  ['f-name','f-course','f-url','f-size'].forEach(id=>document.getElementById(id).value='');
+  showToast('File added!'); loadFiles();
+}
+async function deleteFile(id){if(!confirm('Delete?'))return;await db.collection('files').doc(id).delete();showToast('Deleted');loadFiles();}
+
+function previewHQFile(input){
+  if(input.files[0]){
+    document.getElementById('hq-fname').textContent='✅ '+input.files[0].name;
+    document.getElementById('hq-fname').style.display='block';
+    document.getElementById('hq-dropzone').style.borderColor='var(--gold)';
+    document.getElementById('hq-dropzone').style.background='rgba(201,168,76,.05)';
+  }
+}
+async function loadSettings(){
+  const doc=await db.collection('settings').doc('config').get();
+  if(doc.exists&&doc.data().groqKey)document.getElementById('groq-key').value=doc.data().groqKey;
+}
+async function saveGroqKey(){
+  const key=document.getElementById('groq-key').value.trim();
+  if(!key){showToast('Enter GROQ key');return;}
+  await db.collection('settings').doc('config').set({groqKey:key},{merge:true});
+  showToast('GROQ key saved!');
+}
+async function sendAnn(){
+  const title=document.getElementById('ann-title').value.trim(),msg=document.getElementById('ann-msg').value.trim();
+  if(!title||!msg){showToast('Fill title and message');return;}
+  await db.collection('announcements').add({title,msg,createdAt:new Date().toISOString()});
+  document.getElementById('ann-title').value='';document.getElementById('ann-msg').value='';
+  showToast('Announcement sent!');
+}
+// ══ HTML QUIZ UPLOAD ══
+document.getElementById('hq-file').addEventListener('change', function(){
+  if(this.files[0]) previewHQFile(this);
+});
+
+async function uploadHtmlQuiz(){
+  const title=document.getElementById('hq-title').value.trim();
+  const code=document.getElementById('hq-code').value.trim().toUpperCase();
+  const course=document.getElementById('hq-course').value.trim();
+  const duration=parseInt(document.getElementById('hq-duration').value)||30;
+  const file=document.getElementById('hq-file').files[0];
+  if(!title||!code||!file){showToast('Fill all fields and select a file');return;}
+  const prog=document.getElementById('hq-progress');
+  prog.style.display='block'; prog.textContent='📖 Reading file...';
+  try{
+    const html=await file.text();
+    prog.textContent='☁️ Uploading to Firestore...';
+    await db.collection('htmlQuizzes').doc(code).set({
+      title,code,html,course,duration,active:true,
+      createdAt:new Date().toISOString(),createdBy:auth.currentUser.email
+    });
+    ['hq-title','hq-code','hq-course','hq-duration'].forEach(id=>document.getElementById(id).value=id==='hq-duration'?'30':'');
+    document.getElementById('hq-file').value='';
+    document.getElementById('hq-fname').style.display='none';
+    document.getElementById('hq-dropzone').style.borderColor='var(--cb)';
+    document.getElementById('hq-dropzone').style.background='';
+    prog.textContent='✅ Uploaded successfully!';
+    setTimeout(()=>{prog.style.display='none';},2000);
+    showToast('HTML Quiz uploaded! Code: '+code);
+    loadHtmlQuizzes();
+  }catch(e){prog.textContent='❌ Error: '+e.message;showToast('Upload failed');}
+}
+
+async function loadHtmlQuizzes(){
+  const snap=await db.collection('htmlQuizzes').get();
+  const list=document.getElementById('hq-list');
+  if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem;text-align:center;padding:20px;">No HTML quizzes uploaded yet</div>';return;}
+  list.innerHTML=snap.docs.map(d=>{
+    const q=d.data();
+    return `<div style="background:rgba(255,255,255,.03);border:1px solid ${q.active?'var(--gold)':'var(--cb)'};border-radius:12px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${q.active?'linear-gradient(90deg,var(--gold),var(--gold2))':'var(--cb)'}"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div style="flex:1">
+          <div style="font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--gold2);margin-bottom:3px;">${q.title}</div>
+          <div style="font-size:.72rem;color:var(--text2);margin-bottom:6px;">${q.course||''} ${q.duration?'• '+q.duration+' min':''}</div>
+          <div style="display:inline-block;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:6px;padding:3px 10px;font-size:.8rem;font-weight:700;letter-spacing:2px;color:var(--gold);">${q.code}</div>
+          <div style="font-size:.68rem;color:${q.active?'var(--green)':'var(--red)'};margin-top:6px;font-weight:600;">${q.active?'✅ Active':'⛔ Inactive'}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <button class="btn btn-sm ${q.active?'btn-red':'btn-green'}" onclick="toggleHQ('${d.id}',${!!q.active})">${q.active?'Deactivate':'Activate'}</button>
+          <button class="btn btn-red btn-sm" onclick="deleteHQ('${d.id}')">🗑 Delete</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleHQ(id, isActive){
+  await db.collection('htmlQuizzes').doc(id).update({active:!isActive});
+  showToast(isActive?'Quiz deactivated':'Quiz activated');
+  loadHtmlQuizzes();
+}
+
+async function deleteHQ(id){
+  if(!confirm('Delete this HTML quiz?')) return;
+  await db.collection('htmlQuizzes').doc(id).delete();
+  showToast('Deleted');
+  loadHtmlQuizzes();
+}
+
+// ══ POINT COUPONS ══
+function generateCouponCode(){
+  const chars='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const code = Array.from({length:8},()=>chars[Math.floor(Math.random()*chars.length)]).join('');
+  document.getElementById('cp-code').value = code;
+}
+
+async function createCoupon(){
+  const code = document.getElementById('cp-code').value.trim().toUpperCase();
+  const points = parseInt(document.getElementById('cp-points').value);
+  const limit = parseInt(document.getElementById('cp-limit').value)||0;
+  const expiry = document.getElementById('cp-expiry').value;
+  if(!code||!points||points<1){showToast('Enter a valid code and points value');return;}
+  // Check if code already exists
+  const existing = await db.collection('coupons').doc(code).get();
+  if(existing.exists){showToast('Coupon code already exists!');return;}
+  await db.collection('coupons').doc(code).set({
+    code, points, limit, usedCount:0,
+    expiry: expiry||null, active:true,
+    createdAt:new Date().toISOString(),
+    createdBy:auth.currentUser.email
+  });
+  document.getElementById('cp-code').value='';
+  document.getElementById('cp-points').value='';
+  document.getElementById('cp-limit').value='0';
+  document.getElementById('cp-expiry').value='';
+  showToast(`Coupon ${code} created! Worth ${points} points`);
+  loadCoupons();
+}
+
+async function loadCoupons(){
+  const snap = await db.collection('coupons').orderBy('createdAt','desc').get();
+  const list = document.getElementById('coupons-list');
+  if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem">No coupons created yet</div>';return;}
+  list.innerHTML = snap.docs.map(d=>{
+    const c=d.data();
+    const isExpired = c.expiry && new Date(c.expiry) < new Date();
+    const isFull = c.limit>0 && c.usedCount>=c.limit;
+    const status = !c.active?'Disabled':isExpired?'Expired':isFull?'Used up':'Active';
+    const statusCol = status==='Active'?'var(--green)':'var(--red)';
+    return `<div class="li">
+      <div>
+        <div class="li-code" style="letter-spacing:2px">${c.code}</div>
+        <div class="li-name">💰 ${c.points} points • Used: ${c.usedCount}${c.limit>0?'/'+c.limit:''}</div>
+        ${c.expiry?`<div class="li-name">Expires: ${new Date(c.expiry).toLocaleDateString()}</div>`:''}
+        <div class="sem-tag" style="color:${statusCol};background:${statusCol}22">${status}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <button class="btn btn-sm ${c.active?'btn-red':'btn-green'}" onclick="toggleCoupon('${d.id}',${!!c.active})">${c.active?'Disable':'Enable'}</button>
+        <button class="btn btn-red btn-sm" onclick="deleteCoupon('${d.id}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+  loadCouponLog();
+}
+
+async function toggleCoupon(id, isActive){
+  await db.collection('coupons').doc(id).update({active:!isActive});
+  showToast(isActive?'Coupon disabled':'Coupon enabled');
+  loadCoupons();
+}
+
+async function deleteCoupon(id){
+  if(!confirm('Delete this coupon?'))return;
+  await db.collection('coupons').doc(id).delete();
+  showToast('Coupon deleted');
+  loadCoupons();
+}
+
+async function loadCouponLog(){
+  const snap = await db.collection('couponRedemptions').orderBy('redeemedAt','desc').limit(20).get();
+  const list = document.getElementById('coupon-log');
+  if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px">No redemptions yet</div>';return;}
+  list.innerHTML = `<table class="tbl">
+    <thead><tr><th>Student</th><th>Coupon Code</th><th>Points</th><th>Date</th></tr></thead>
+    <tbody>${snap.docs.map(d=>{
+      const r=d.data();
+      return `<tr>
+        <td>${r.studentName||'--'}</td>
+        <td style="color:var(--gold);font-weight:700;letter-spacing:1px">${r.code}</td>
+        <td style="color:var(--green);font-weight:700">+${r.points} pts</td>
+        <td style="color:var(--text2);font-size:.74rem">${r.redeemedAt?new Date(r.redeemedAt).toLocaleDateString():''}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+async function saveContact(){
+  const wa=document.getElementById('contact-wa-inp').value.trim();
+  const email=document.getElementById('contact-email-inp').value.trim();
+  if(!wa&&!email){showToast('Enter at least WhatsApp or Email');return;}
+  await db.collection('settings').doc('contact').set({whatsapp:wa,email,updatedAt:new Date().toISOString()});
+  showToast('Contact info saved!');
+}
+
+// ══ MAINTENANCE MODE ══
+let maintActive = false;
+let maintUid = '';
+
+async function loadSettings(){
+  const doc=await db.collection('settings').doc('config').get();
+  if(doc.exists&&doc.data().groqKey)document.getElementById('groq-key').value=doc.data().groqKey;
+  // Load contact info
+  const cDoc=await db.collection('settings').doc('contact').get();
+  if(cDoc.exists){
+    if(cDoc.data().whatsapp)document.getElementById('contact-wa-inp').value=cDoc.data().whatsapp;
+    if(cDoc.data().email)document.getElementById('contact-email-inp').value=cDoc.data().email;
+  }
+  // Load maintenance
+  const mDoc=await db.collection('settings').doc('maintenance').get();
+  if(mDoc.exists){
+    maintActive=mDoc.data().active||false;
+    document.getElementById('maint-msg').value=mDoc.data().message||'';
+    updateMaintToggle();
+    document.getElementById('maint-status').textContent=maintActive?'🔴 Maintenance is ON':'🟢 Platform is live';
+  }
+}
+
+function updateMaintToggle(){
+  const toggle=document.getElementById('maint-toggle');
+  const knob=document.getElementById('maint-knob');
+  if(maintActive){
+    toggle.style.background='rgba(248,113,113,.3)';
+    toggle.style.borderColor='var(--red)';
+    knob.style.transform='translateX(22px)';
+    knob.style.background='var(--red)';
+  } else {
+    toggle.style.background='var(--card)';
+    toggle.style.borderColor='var(--cb)';
+    knob.style.transform='translateX(0)';
+    knob.style.background='var(--text2)';
+  }
+}
+
+function toggleMaintenance(){
+  maintActive=!maintActive;
+  updateMaintToggle();
+}
+
+async function saveMaintenance(){
+  const msg=document.getElementById('maint-msg').value.trim();
+  await db.collection('settings').doc('maintenance').set({
+    active:maintActive,
+    message:msg||'Platform is under maintenance. Please check back later.',
+    updatedAt:new Date().toISOString()
+  });
+  document.getElementById('maint-status').textContent=maintActive?'🔴 Maintenance is ON':'🟢 Platform is live';
+  showToast(maintActive?'Maintenance mode ON — students cannot access platform':'Platform is live again!');
+}
+
+// ══ MANUAL POINTS ══
+let ptsTargetId='', ptsTargetName='';
+
+async function searchPtsStudent(q){
+  const res=document.getElementById('pts-results');
+  if(!q||q.length<2){res.innerHTML='';return;}
+  const filtered=allStudents.filter(u=>(u.name||'').toLowerCase().includes(q.toLowerCase())||(u.email||'').toLowerCase().includes(q.toLowerCase())).slice(0,5);
+  res.innerHTML=filtered.map(u=>`<div onclick="selectPtsTarget('${u.id}','${u.name||u.email}',${u.points||0})" style="padding:8px 12px;cursor:pointer;border-radius:7px;font-size:.8rem;background:rgba(255,255,255,.04);border:1px solid var(--cb);margin-bottom:4px;transition:all .2s" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--cb)'"><span style="font-weight:600">${u.name||'--'}</span><span style="color:var(--text2);font-size:.74rem;margin-left:6px">${u.email||''}</span><span style="color:var(--gold);float:right">${u.points||0} pts</span></div>`).join('');
+}
+
+function selectPtsTarget(id,name,points){
+  ptsTargetId=id; ptsTargetName=name;
+  document.getElementById('pts-selected').style.display='block';
+  document.getElementById('pts-name').textContent=name;
+  document.getElementById('pts-current').textContent=points;
+  document.getElementById('pts-search').value='';
+  document.getElementById('pts-results').innerHTML='';
+}
+
+async function managePoints(action){
+  if(!ptsTargetId){showToast('Select a student first');return;}
+  const amount=parseInt(document.getElementById('pts-amount').value);
+  if(!amount||amount<1){showToast('Enter a valid amount');return;}
+  const doc=await db.collection('users').doc(ptsTargetId).get();
+  const current=doc.data().points||0;
+  const newPoints=action==='add'?current+amount:Math.max(0,current-amount);
+  await db.collection('users').doc(ptsTargetId).update({points:newPoints});
+  await db.collection('pointsLog').add({
+    uid:ptsTargetId,
+    reason:'Admin '+(action==='add'?'added':'deducted')+' points',
+    points:(action==='add'?'+':'-')+amount,
+    date:new Date().toISOString()
+  });
+  document.getElementById('pts-current').textContent=newPoints;
+  document.getElementById('pts-amount').value='';
+  showToast((action==='add'?'Added +':'Deducted -')+amount+' points to '+ptsTargetName);
+  loadStudents();
+}
+
+// ══ COUPON REDEMPTIONS ══
+async function loadRedemptions(){
+  const snap=await db.collection('couponRedemptions').orderBy('redeemedAt','desc').get();
+  const list=document.getElementById('all-redemptions');
+  if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px">No redemptions yet</div>';return;}
+  list.innerHTML=`<table class="tbl">
+    <thead><tr><th>Student</th><th>Coupon Code</th><th>Points</th><th>Date</th></tr></thead>
+    <tbody>${snap.docs.map(d=>{
+      const r=d.data();
+      return `<tr><td>${r.studentName||'--'}</td><td style="color:var(--gold);font-weight:700;letter-spacing:1px">${r.code}</td><td style="color:var(--green);font-weight:700">+${r.points} pts</td><td style="color:var(--text2);font-size:.74rem">${r.redeemedAt?new Date(r.redeemedAt).toLocaleDateString():''}</td></tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+// ══ MAINTENANCE MODE ══
+async function setAttemptLimit(uid, name, current){
+  const limit = prompt(`Set daily quiz attempt limit for ${name}.\nEnter 0 for unlimited:`, current||0);
+  if(limit===null) return;
+  const n = parseInt(limit)||0;
+  await db.collection('users').doc(uid).update({quizAttemptLimit:n});
+  showToast(n===0?'Attempt limit removed':'Limit set to '+n+' per day');
+  loadStudents();
+}
+
+// ══ DIRECT MESSAGES ══
+let msgTargetId = '', msgTargetName = '';
+
+async function searchMsgStudent(q){
+  const res = document.getElementById('msg-search-results');
+  if(!q||q.length<2){res.innerHTML='';return;}
+  const filtered = allStudents.filter(u=>
+    (u.name||'').toLowerCase().includes(q.toLowerCase())||
+    (u.email||'').toLowerCase().includes(q.toLowerCase())
+  ).slice(0,5);
+  res.innerHTML = filtered.map(u=>`
+    <div onclick="selectMsgTarget('${u.id}','${u.name||u.email}')"
+      style="padding:8px 12px;cursor:pointer;border-radius:7px;font-size:.8rem;
+      background:rgba(255,255,255,.04);border:1px solid var(--cb);margin-bottom:4px;transition:all .2s;"
+      onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--cb)'">
+      <span style="font-weight:600">${u.name||'--'}</span>
+      <span style="color:var(--text2);font-size:.74rem;margin-left:6px">${u.email||''}</span>
+    </div>`).join('');
+}
+
+function selectMsgTarget(id, name){
+  msgTargetId=id; msgTargetName=name;
+  document.getElementById('msg-selected').style.display='block';
+  document.getElementById('msg-to-name').textContent=name;
+  document.getElementById('msg-search').value='';
+  document.getElementById('msg-search-results').innerHTML='';
+}
+
+function clearMsgTarget(){
+  msgTargetId=''; msgTargetName='';
+  document.getElementById('msg-selected').style.display='none';
+}
+
+function msgStudent(uid, name){
+  showPanel('messages', document.querySelector('.sb-item:nth-child(3)'));
+  selectMsgTarget(uid, name);
+}
+
+async function sendDirectMessage(){
+  if(!msgTargetId){showToast('Select a student first');return;}
+  const subject=document.getElementById('msg-subject').value.trim();
+  const body=document.getElementById('msg-body').value.trim();
+  if(!subject||!body){showToast('Fill subject and message');return;}
+  await db.collection('messages').add({
+    toUid:msgTargetId, toName:msgTargetName,
+    subject, body, fromAdmin:true,
+    sentBy:auth.currentUser.email,
+    createdAt:new Date().toISOString(), read:false
+  });
+  document.getElementById('msg-subject').value='';
+  document.getElementById('msg-body').value='';
+  clearMsgTarget();
+  showToast('Message sent to '+msgTargetName+'!');
+  loadSentMessages();
+}
+
+async function loadSentMessages(){
+  const snap=await db.collection('messages').where('fromAdmin','==',true).orderBy('createdAt','desc').limit(20).get();
+  const list=document.getElementById('sent-messages');
+  if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem">No messages sent yet</div>';return;}
+  list.innerHTML=snap.docs.map(d=>{
+    const m=d.data();
+    return `<div style="padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid var(--cb);border-radius:8px;margin-bottom:7px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:.8rem;font-weight:600;color:var(--gold2)">To: ${m.toName}</span>
+        <span style="font-size:.68rem;color:var(--text2)">${m.createdAt?new Date(m.createdAt).toLocaleDateString():''}</span>
+      </div>
+      <div style="font-size:.78rem;font-weight:600">${m.subject}</div>
+      <div style="font-size:.74rem;color:var(--text2);margin-top:2px">${m.body.substring(0,60)}${m.body.length>60?'...':''}</div>
+    </div>`;
+  }).join('');
+}
+
+// ══ SUB-ADMINS ══
+async function loadSubAdmins(){
+  const snap=await db.collection('users').where('role','==','subadmin').get();
+  const list=document.getElementById('subadmins-list');
+  if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem">No sub-admins yet</div>';return;}
+  list.innerHTML=snap.docs.map(d=>{
+    const u=d.data();
+    const perms=[
+      u.perm_students?'Students':'',
+      u.perm_courses?'Courses':'',
+      u.perm_files?'Files':'',
+      u.perm_quiz?'Quizzes':'',
+      u.perm_messages?'Messages':''
+    ].filter(Boolean).join(', ');
+    return `<div class="li">
+      <div>
+        <div class="li-code">${u.name||u.email}</div>
+        <div class="li-name">${u.email}</div>
+        <div class="sem-tag">Can: ${perms||'No permissions'}</div>
+      </div>
+      <button class="btn btn-red btn-sm" onclick="removeSubAdmin('${d.id}')">Remove</button>
+    </div>`;
+  }).join('');
+}
+
+async function addSubAdmin(){
+  const email=document.getElementById('sa-email').value.trim();
+  if(!email){showToast('Enter student email');return;}
+  const snap=await db.collection('users').where('email','==',email).get();
+  if(snap.empty){showToast('Student not found. Must be registered first.');return;}
+  const uid=snap.docs[0].id;
+  await db.collection('users').doc(uid).update({
+    role:'subadmin',
+    perm_students:document.getElementById('sa-students').checked,
+    perm_courses:document.getElementById('sa-courses').checked,
+    perm_files:document.getElementById('sa-files').checked,
+    perm_quiz:document.getElementById('sa-quiz').checked,
+    perm_messages:document.getElementById('sa-messages').checked
+  });
+  document.getElementById('sa-email').value='';
+  showToast('Sub-admin added!');
+  loadSubAdmins();
+}
+
+async function removeSubAdmin(uid){
+  if(!confirm('Remove sub-admin access?'))return;
+  await db.collection('users').doc(uid).update({role:'user'});
+  showToast('Sub-admin removed');
+  loadSubAdmins();
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+</script>
+</body>
+</html>
