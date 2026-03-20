@@ -11,7 +11,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <style>
 :root{--navy:#0a1628;--navy2:#0f2044;--navy3:#162d5a;--gold:#c9a84c;--gold2:#e8c97a;--text:#f0ead6;--text2:#9bacc8;--card:rgba(255,255,255,0.04);--cb:rgba(201,168,76,0.2);--green:#4ade80;--red:#f87171;--r:13px;}
-*{box-sizing:border-box;margin:0;padding:0;}body.loading{overflow:hidden;}
+*{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Outfit',sans-serif;background:#0a1628;color:var(--text);min-height:100vh;position:relative;}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(circle at 20% 20%,rgba(201,168,76,.05) 0%,transparent 45%);}
 #topbar{position:fixed;top:0;left:0;right:0;z-index:300;display:flex;align-items:center;justify-content:space-between;padding:11px 16px;background:rgba(10,22,40,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--cb);}
@@ -108,14 +108,10 @@ html, body {
 }
 </style>
 </head>
-<body class="loading">
-<div id="loading" style="position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;height:100vh;background:#0a1628;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;overflow:hidden;">
-  <div style="font-size:2.5rem">⚗️</div>
-  <div style="width:42px;height:42px;border:3px solid rgba(201,168,76,.3);border-top-color:#c9a84c;border-radius:50%;animation:spin .8s linear infinite;"></div>
-  <div style="font-family:serif;color:#e8c97a;font-size:1rem;font-weight:bold;">Admin Panel</div>
-</div>
+<body>
+
 <div id="toast"></div>
-<div id="auth-wrap" class="hidden">
+<div id="auth-wrap">
   <div class="auth-card">
     <div style="text-align:center;margin-bottom:14px"><img src="https://raw.githubusercontent.com/babspharm1-lgtm/BABSPHARM./refs/heads/main/logo.png" width="70" height="70" style="object-fit:contain;border-radius:12px"/></div>
     <div class="auth-title">Admin Login</div>
@@ -470,26 +466,17 @@ html, body {
   </div>
 
 </div>
+<script>
 const FC={apiKey:"AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8",authDomain:"babspharmcloud.firebaseapp.com",projectId:"babspharmcloud",storageBucket:"babspharmcloud.firebasestorage.app",messagingSenderId:"385674572482",appId:"1:385674572482:web:a427125e649fef011b815b"};
 firebase.initializeApp(FC);
 const auth=firebase.auth(),db=firebase.firestore();
 let allStudents=[],selectedPQId='';
 // Force hide loading after 8 seconds no matter what
-setTimeout(()=>{
-  const l=document.getElementById('loading');
-  if(l&&l.style.display!=='none'){
-    l.style.display='none';
-    showAuthUI();
-  }
-},10000);
-
 auth.onAuthStateChanged(async function(user){
-  if(!user){
-    document.getElementById('loading').style.display='none';
-    document.body.classList.remove('loading');
-    showAuthUI();
-    return;
-  }
+  if(!user){ showAuthUI(); return; }
+  // Show loading indicator in button
+  document.getElementById('a-em').disabled=true;
+  document.getElementById('a-pw').disabled=true;
   try{
     let doc = await db.collection('users').doc(user.uid).get();
     if(!doc.exists){
@@ -499,29 +486,27 @@ auth.onAuthStateChanged(async function(user){
     const data = doc.exists ? doc.data() : null;
     if(!data || (data.role!=='admin' && data.role!=='subadmin')){
       await auth.signOut();
-      document.getElementById('loading').style.display='none';
-      document.body.classList.remove('loading');
+      document.getElementById('a-em').disabled=false;
+      document.getElementById('a-pw').disabled=false;
       showAuthUI();
       showToast('Access denied — Admins only');
       return;
     }
     document.getElementById('adm-name').textContent=data.name||user.email;
-    document.getElementById('loading').style.display='none';
-    document.body.classList.remove('loading');
     showAdminUI();
     loadDashboard();
   }catch(e){
-    document.getElementById('loading').style.display='none';
-    document.body.classList.remove('loading');
+    document.getElementById('a-em').disabled=false;
+    document.getElementById('a-pw').disabled=false;
     showAuthUI();
     showToast('Error loading. Try again.');
   }
 });
 function showAuthUI(){
-  document.getElementById('auth-wrap').style.cssText='display:flex!important;align-items:center;justify-content:center;min-height:100vh;padding:20px;';
-  document.getElementById('topbar').style.cssText='display:none!important';
-  document.getElementById('sidebar').style.cssText='display:none!important';
-  document.getElementById('main').style.cssText='display:none!important';
+  document.getElementById('auth-wrap').style.display='flex';
+  document.getElementById('topbar').style.display='none';
+  document.getElementById('sidebar').style.display='none';
+  document.getElementById('main').style.display='none';
 }
 function showAdminUI(){
   document.getElementById('auth-wrap').style.cssText='display:none!important';
