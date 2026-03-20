@@ -709,31 +709,52 @@ function showAuthUI(){
 function showAdminUI(){
   document.getElementById('auth-wrap').style.cssText='display:none!important';
   document.getElementById('topbar').style.cssText='display:flex!important;position:fixed;top:0;left:0;right:0;z-index:300;align-items:center;justify-content:space-between;padding:11px 16px;background:rgba(10,22,40,.96);backdrop-filter:blur(20px);border-bottom:1px solid var(--cb);';
-  // On desktop show sidebar always, on mobile hide until toggled
-  const isMobile = window.innerWidth <= 900;
-  document.getElementById('sidebar').style.cssText = isMobile
-    ? 'display:block!important;position:fixed;top:54px;left:0;bottom:0;width:210px;z-index:200;background:var(--navy2);border-right:1px solid var(--cb);overflow-y:auto;transform:translateX(-100%);transition:transform .3s;'
-    : 'display:block!important;position:fixed;top:54px;left:0;bottom:0;width:210px;z-index:200;background:var(--navy2);border-right:1px solid var(--cb);overflow-y:auto;';
-  document.getElementById('main').style.cssText = isMobile
-    ? 'display:block!important;margin-left:0;padding:68px 14px 28px;position:relative;z-index:1;'
-    : 'display:block!important;margin-left:210px;padding:68px 18px 28px;position:relative;z-index:1;';
+  document.getElementById('main').style.cssText='display:block!important;margin-left:0;padding:68px 14px 28px;position:relative;z-index:1;';
+  // Sidebar always hidden until toggled on mobile - use inline style directly
+  const sb = document.getElementById('sidebar');
+  sb.style.display='block';
+  sb.style.position='fixed';
+  sb.style.top='54px';
+  sb.style.left='0';
+  sb.style.bottom='0';
+  sb.style.width='210px';
+  sb.style.zIndex='250';
+  sb.style.background='var(--navy2)';
+  sb.style.borderRight='1px solid var(--cb)';
+  sb.style.overflowY='auto';
+  sb.style.transition='transform .3s';
+  sb.style.transform='translateX(-100%)'; // hidden by default on mobile
+  sb.setAttribute('data-open','0');
 }
+
+function toggleSidebar(){
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sb-overlay');
+  const isOpen = sb.getAttribute('data-open')==='1';
+  if(isOpen){
+    sb.style.transform='translateX(-100%)';
+    ov.style.display='none';
+    sb.setAttribute('data-open','0');
+  } else {
+    sb.style.transform='translateX(0)';
+    ov.style.display='block';
+    sb.setAttribute('data-open','1');
+  }
+}
+
+function closeSidebar(){
+  const sb=document.getElementById('sidebar');
+  const ov=document.getElementById('sb-overlay');
+  sb.style.transform='translateX(-100%)';
+  ov.style.display='none';
+  sb.setAttribute('data-open','0');
+}
+async function doLogout(){await auth.signOut();}
 async function adminLogin(){
   const em=document.getElementById('a-em').value.trim(),pw=document.getElementById('a-pw').value;
   if(!em||!pw){showErr('a-msg','Fill all fields');return;}
   try{await auth.signInWithEmailAndPassword(em,pw);}catch(e){showErr('a-msg',e.message.replace('Firebase:','').trim());}
 }
-function toggleSidebar(){
-  const sb = document.getElementById('sidebar');
-  const ov = document.getElementById('sb-overlay');
-  sb.classList.toggle('open');
-  ov.classList.toggle('show');
-}
-function closeSidebar(){
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sb-overlay').classList.remove('show');
-}
-async function doLogout(){await auth.signOut();}
 function showErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.className='amsg err';}
 function showPanel(name,el){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
