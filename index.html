@@ -959,8 +959,42 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div id="badges-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;"></div>
 </div>
 
+<!-- ══ DEPARTMENT PROMPT MODAL ══ -->
+<div id="dept-prompt-modal" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#0d1e3d;border:2px solid var(--gold);border-radius:20px;max-width:340px;width:100%;padding:28px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6);">
+    <div style="font-size:2.5rem;margin-bottom:12px">🎓</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--gold2);margin-bottom:8px;font-weight:700">Welcome back!</div>
+    <div style="font-size:.82rem;color:var(--text2);line-height:1.7;margin-bottom:20px">
+      We noticed your profile is missing your <b style="color:var(--gold)">department</b>.<br>
+      Please select it below so we can personalise your experience!
+    </div>
+    <div style="text-align:left;margin-bottom:16px;">
+      <label style="font-size:.74rem;color:var(--text2);font-weight:600;letter-spacing:.5px;text-transform:uppercase;display:block;margin-bottom:6px;">Your Department</label>
+      <select id="dept-prompt-select" style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.07);color:var(--text);font-family:'Outfit',sans-serif;font-size:.88rem;outline:none;">
+        <option value="">Select your department...</option>
+        <option>Anatomy</option><option>Biochemistry</option><option>Botany</option>
+        <option>Chemical Engineering</option><option>Chemistry</option>
+        <option>Civil Engineering</option><option>Computer Science</option>
+        <option>Dentistry</option><option>Economics</option>
+        <option>Electrical Engineering</option><option>Food Science & Technology</option>
+        <option>Geology</option><option>Law</option><option>Mathematics</option>
+        <option>Mechanical Engineering</option><option>Medicine & Surgery</option>
+        <option>Microbiology</option><option>Nursing</option><option>Pharmacy</option>
+        <option>Physics</option><option>Physiology</option><option>Zoology</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <button onclick="saveDeptPrompt()" class="btn btn-gold" style="width:100%;padding:13px;font-size:.9rem;margin-bottom:10px;">
+      💾 Save Department
+    </button>
+    <button onclick="document.getElementById('dept-prompt-modal').style.display='none'" style="width:100%;padding:8px;background:none;border:none;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;">
+      Skip for now
+    </button>
+  </div>
+</div>
+
 <!-- ══ ID CARD MODAL ══ -->
-<div id="id-card-modal" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;flex-direction:column;padding:20px;">
+<div id="id-card-modal" style="display:none;position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.9);align-items:center;justify-content:center;flex-direction:column;padding:20px;">
   <div style="text-align:center;margin-bottom:16px;">
     <div style="font-family:'Playfair Display',serif;color:var(--gold2);font-size:1rem;margin-bottom:4px;">💳 Student ID Card</div>
     <div style="font-size:.74rem;color:var(--text2)">Tap the card or use the button below to download</div>
@@ -1534,10 +1568,30 @@ auth.onAuthStateChanged(async function(user){
   }catch(e){}
   if(user){
     const doc = await db.collection('users').doc(user.uid).get();
-    CU = {uid:user.uid, email:user.email, name:user.displayName||user.email.split('@')[0],
-      dept: doc.exists ? doc.data().dept : '', photoURL: user.photoURL||'',
-      banned: doc.exists ? doc.data().banned : false};
+    const userData = doc.exists ? doc.data() : {};
+    CU = {
+      uid: user.uid,
+      email: user.email,
+      name: userData.name || user.displayName || user.email.split('@')[0],
+      dept: userData.dept || '',
+      photoURL: user.photoURL || '',
+      banned: userData.banned || false,
+      points: userData.points || 0
+    };
     if(CU.banned){ await auth.signOut(); showToast('Your account has been suspended'); return; }
+
+    // If old user — create/update their document with missing fields
+    if(!doc.exists || userData.points === undefined){
+      await db.collection('users').doc(user.uid).set({
+        name: CU.name,
+        email: CU.email,
+        points: userData.points || 0,
+        role: userData.role || 'user',
+        createdAt: userData.createdAt || new Date().toISOString(),
+        lastSeen: new Date().toISOString()
+      }, {merge:true});
+    }
+
     document.getElementById('wm').textContent = CU.name;
     updateSidebarProfile();
     loadGroqKey();
@@ -1552,8 +1606,12 @@ auth.onAuthStateChanged(async function(user){
     checkSOTW();
     showPage('dash');
     document.getElementById('bnav').style.display = 'flex';
-    // update last seen + daily login points
-    db.collection('users').doc(user.uid).update({lastSeen: new Date().toISOString()}).catch(()=>{});
+    // Update last seen using set merge — works for ALL users old and new
+    db.collection('users').doc(user.uid).set({lastSeen: new Date().toISOString()},{merge:true}).catch(()=>{});
+    // Check if old user is missing department — prompt them to fill it
+    if(!CU.dept || CU.dept.trim()===''){
+      setTimeout(()=>showDeptPrompt(), 1500);
+    }
   } else {
     CU = null;
     showPage('auth');
@@ -1730,15 +1788,6 @@ function closeSB(){
 
 // ══ STATS ══
 async function loadStats(){
-  const cached = cacheGet('stats_'+CU.uid);
-  if(cached){
-    document.getElementById('st-quiz').textContent = cached.quizCount||0;
-    document.getElementById('st-score').textContent = (cached.bestScore||0)+'%';
-    document.getElementById('st-streak').textContent = cached.streak||0;
-    document.getElementById('st-points').textContent = cached.points||0;
-    if((cached.points||0)<=10) showLowPointsToast(cached.points||0);
-    return;
-  }
   try{
     const [statDoc, userDoc] = await Promise.all([
       db.collection('userStats').doc(CU.uid).get(),
@@ -1751,7 +1800,8 @@ async function loadStats(){
     document.getElementById('st-streak').textContent = d.streak||0;
     document.getElementById('st-points').textContent = pts;
     if(pts<=10) showLowPointsToast(pts);
-    cacheSet('stats_'+CU.uid, {quizCount:d.quizCount||0, bestScore:d.bestScore||0, streak:d.streak||0, points:pts}, 10);
+    // Update CU points in memory
+    if(CU) CU.points = pts;
   }catch(e){}
 }
 
@@ -2310,7 +2360,7 @@ async function sendAI(){
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
       body:JSON.stringify({
-        model:'llama3-70b-8192',
+        model:'llama-3.3-70b-versatile',
         messages:[
           {role:'system',content:'You are a brilliant, knowledgeable AI tutor for OAU (Obafemi Awolowo University) students. You have deep expertise in PHY 101, BIO 101, PCY 101, MTH 101, CHM 101, COS 101, GST 111. Give thorough, accurate, well-explained answers. Use examples and step-by-step explanations. Be encouraging and supportive.'},
           {role:'user',content:msg}
@@ -2723,6 +2773,29 @@ function closePopup(){
 }
 const TB_COLORS=['linear-gradient(135deg,#1e40af,#3730a3)','linear-gradient(135deg,#065f46,#047857)','linear-gradient(135deg,#7c3aed,#6d28d9)','linear-gradient(135deg,#b45309,#92400e)','linear-gradient(135deg,#be185d,#9d174d)','linear-gradient(135deg,#0e7490,#0369a1)','linear-gradient(135deg,#166534,#15803d)','linear-gradient(135deg,#9d174d,#be123c)'];
 const TB_ICONS={CHM:'⚗️',MTH:'📐',PHY:'🔭',PCY:'💊',BIO:'🧬',COS:'💻',GST:'📝'};
+// ══ DEPARTMENT PROMPT ══
+function showDeptPrompt(){
+  const modal = document.getElementById('dept-prompt-modal');
+  if(modal) modal.style.display='flex';
+}
+
+async function saveDeptPrompt(){
+  const dept = document.getElementById('dept-prompt-select').value;
+  if(!dept){showToast('Please select your department');return;}
+  try{
+    await db.collection('users').doc(CU.uid).set({dept},{merge:true});
+    CU.dept = dept;
+    // Update sidebar and profile
+    const deptEl = document.getElementById('sb-dept');
+    if(deptEl) deptEl.textContent = dept;
+    document.getElementById('dept-prompt-modal').style.display='none';
+    showToast('✅ Department saved! Welcome to BABSPHARM Cloud!');
+    launchConfetti();
+  }catch(e){
+    showToast('Error saving. Please try again.');
+  }
+}
+
 // ══ STUDENT ID CARD ══
 async function showIDCard(){
   const modal = document.getElementById('id-card-modal');
@@ -3266,7 +3339,7 @@ async function explainAnswer(i){
     const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
-      body:JSON.stringify({model:'llama3-70b-8192',messages:[{role:'user',content:`Explain this OAU exam question briefly: "${q.q}". The correct answer is "${q.opts[q.ans]}". Why is it correct? Be concise.`}]})
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Explain this OAU exam question briefly: "${q.q}". The correct answer is "${q.opts[q.ans]}". Why is it correct? Be concise.`}]})
     });
     const data=await res.json();
     el.innerHTML=`<div style="background:rgba(201,168,76,.06);border:1px solid var(--cb);border-radius:8px;padding:10px;font-size:.76rem;color:var(--text2);line-height:1.5;margin-top:6px;">${data.choices?.[0]?.message?.content||'Could not explain'}</div>`;
@@ -3414,27 +3487,51 @@ function showSpinWin(pts){
 // ══ INSUFFICIENT POINTS CHECK ══
 async function checkPointsBeforeQuiz(){
   try{
+    // Always fetch fresh from Firestore — never use cache
     const doc = await db.collection('users').doc(CU.uid).get();
     const pts = doc.exists ? (doc.data().points||0) : 0;
+    if(CU) CU.points = pts;
+    document.getElementById('st-points').textContent = pts;
     if(pts<=0){
       // Load admin WhatsApp
-      const cDoc = await db.collection('settings').doc('contact').get();
-      const wa = cDoc.exists ? cDoc.data().whatsapp : '';
+      let wa = '';
+      try{
+        const cDoc = await db.collection('settings').doc('contact').get();
+        if(cDoc.exists) wa = cDoc.data().whatsapp||'';
+      }catch(e){}
+      // Remove any existing modal
+      document.getElementById('pts-block-modal')?.remove();
       const modal = document.createElement('div');
-      modal.style.cssText='position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:20px;';
-      modal.innerHTML=`<div style="background:#0d1e3d;border:1px solid rgba(248,113,113,.3);border-radius:20px;max-width:320px;width:100%;padding:24px;text-align:center;">
-        <div style="font-size:2.5rem;margin-bottom:10px">❌</div>
-        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:#f87171;margin-bottom:8px">Insufficient Points</div>
-        <div style="font-size:.82rem;color:var(--text2);line-height:1.6;margin-bottom:16px">You need points to take a quiz. Your balance is <b style="color:var(--red)">0 points</b>.<br><br>Contact admin to get more points or redeem a coupon.</div>
-        ${wa?`<a href="https://wa.me/${wa}?text=${encodeURIComponent('Hi, I need help with my BABSPHARM Cloud points. My name is '+CU.name)}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);border-radius:12px;color:#25d366;font-weight:700;font-size:.84rem;text-decoration:none;margin-bottom:10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>Contact Admin on WhatsApp</a>`:''}
-        <button onclick="this.closest('[style]').remove();showPage('referral')" style="width:100%;padding:10px;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:10px;color:var(--gold);font-family:'Outfit',sans-serif;font-size:.84rem;cursor:pointer;">🎰 Spin for Points</button>
-        <button onclick="this.closest('[style]').remove()" style="width:100%;padding:8px;background:none;border:none;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;margin-top:6px;">Cancel</button>
-      </div>`;
+      modal.id = 'pts-block-modal';
+      modal.style.cssText='position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:20px;';
+      modal.innerHTML=`
+        <div style="background:#0d1e3d;border:2px solid rgba(248,113,113,.4);border-radius:20px;max-width:320px;width:100%;padding:24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6);">
+          <div style="font-size:3rem;margin-bottom:10px">🚫</div>
+          <div style="font-family:'Playfair Display',serif;font-size:1.15rem;color:#f87171;margin-bottom:8px;font-weight:700">Insufficient Points</div>
+          <div style="font-size:.82rem;color:var(--text2);line-height:1.7;margin-bottom:20px">
+            You have <b style="color:#f87171;font-size:1rem">0 points</b> — you need points to take a quiz.<br><br>
+            Contact admin on WhatsApp to get points, or spin the wheel for free points!
+          </div>
+          ${wa ? `
+          <a href="https://wa.me/${wa.replace(/\D/g,'')}?text=${encodeURIComponent('Hi Admin, I need points to access BABSPHARM Cloud quiz. My name is '+CU.name+' and my email is '+CU.email)}" target="_blank"
+            style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;background:linear-gradient(135deg,#25d366,#128c7e);border:none;border-radius:12px;color:#fff;font-weight:700;font-size:.88rem;text-decoration:none;margin-bottom:10px;box-shadow:0 4px 15px rgba(37,211,102,.3);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            📲 Contact Admin on WhatsApp
+          </a>` : `<div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:10px;padding:10px;font-size:.78rem;color:#f87171;margin-bottom:10px;">Contact your admin to get more points</div>`}
+          <button onclick="document.getElementById('pts-block-modal').remove();showPage('referral')"
+            style="width:100%;padding:12px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:12px;color:var(--navy);font-family:'Outfit',sans-serif;font-size:.86rem;font-weight:700;cursor:pointer;margin-bottom:8px;">
+            🎰 Spin for Free Points
+          </button>
+          <button onclick="document.getElementById('pts-block-modal').remove()"
+            style="width:100%;padding:8px;background:none;border:1px solid var(--cb);border-radius:10px;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;">
+            ✕ Cancel
+          </button>
+        </div>`;
       document.body.appendChild(modal);
       return false;
     }
     return true;
-  }catch(e){ return true; } // Allow if check fails
+  }catch(e){ return true; } // Allow if Firestore check fails
 }
 
 // ══ GOAL TRACKER ══
@@ -3937,7 +4034,7 @@ async function generateProgressReport(){
     const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
-      body:JSON.stringify({model:'llama3-70b-8192',messages:[{role:'user',content:`You are an OAU academic advisor. Student ${CU.name} has these quiz results: ${summary}. Generate a friendly weekly progress report with: 1) Performance summary 2) Strong topics 3) Weak topics 4) Study recommendations 5) Motivational closing. Use emojis. Be concise.`}],temperature:0.7})
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`You are an OAU academic advisor. Student ${CU.name} has these quiz results: ${summary}. Generate a friendly weekly progress report with: 1) Performance summary 2) Strong topics 3) Weak topics 4) Study recommendations 5) Motivational closing. Use emojis. Be concise.`}],temperature:0.7})
     });
     const data=await res.json();
     reportEl.innerHTML=`<div style="font-size:.82rem;line-height:1.8;color:var(--text)">${(data.choices?.[0]?.message?.content||'Could not generate report').replace(/\n/g,'<br>')}</div>`;
@@ -4264,9 +4361,19 @@ async function awardPoints(reason, points){
     const ref = db.collection('users').doc(CU.uid);
     const doc = await ref.get();
     const current = doc.exists ? (doc.data().points||0) : 0;
-    await ref.update({points: current+points});
-    await db.collection('pointsLog').add({uid:CU.uid, reason, points:'+'+points, date:new Date().toISOString()});
-  }catch(e){}
+    const newTotal = current + points;
+    // Use set with merge:true so it works even for old users with no points field
+    await ref.set({points: newTotal}, {merge:true});
+    await db.collection('pointsLog').add({
+      uid:CU.uid, reason, points:'+'+points,
+      date:new Date().toISOString()
+    });
+    // Update UI immediately
+    document.getElementById('st-points').textContent = newTotal;
+    if(CU) CU.points = newTotal;
+  }catch(e){
+    console.log('awardPoints error:', e);
+  }
 }
 
 async function deductPoints(reason, points){
@@ -4276,32 +4383,59 @@ async function deductPoints(reason, points){
     const doc = await ref.get();
     const current = doc.exists ? (doc.data().points||0) : 0;
     const newBalance = Math.max(0, current-points);
-    await ref.update({points: newBalance});
-    await db.collection('pointsLog').add({uid:CU.uid, reason, points:'-'+points, date:new Date().toISOString()});
-  }catch(e){}
+    // Use set with merge:true so it works for old users too
+    await ref.set({points: newBalance}, {merge:true});
+    await db.collection('pointsLog').add({
+      uid:CU.uid, reason, points:'-'+points,
+      date:new Date().toISOString()
+    });
+    // Update UI immediately
+    document.getElementById('st-points').textContent = newBalance;
+    if(CU) CU.points = newBalance;
+  }catch(e){
+    console.log('deductPoints error:', e);
+  }
 }
+
 async function redeemCoupon(){
   const code = document.getElementById('coupon-inp').value.trim().toUpperCase();
   if(!code){showCouponMsg('Enter a coupon code','var(--red)');return;}
+  showCouponMsg('⏳ Checking coupon...','var(--text2)');
   try{
     const cpDoc = await db.collection('coupons').doc(code).get();
     if(!cpDoc.exists){showCouponMsg('❌ Invalid coupon code','var(--red)');return;}
     const cp = cpDoc.data();
     if(!cp.active){showCouponMsg('❌ This coupon is no longer active','var(--red)');return;}
     if(cp.expiry && new Date(cp.expiry) < new Date()){showCouponMsg('❌ This coupon has expired','var(--red)');return;}
-    if(cp.limit>0 && cp.usedCount>=cp.limit){showCouponMsg('❌ This coupon has been fully used','var(--red)');return;}
-    const usedSnap = await db.collection('couponRedemptions').where('code','==',code).where('uid','==',CU.uid).get();
+    if(cp.limit>0 && (cp.usedCount||0)>=(cp.limit)){showCouponMsg('❌ This coupon has been fully used','var(--red)');return;}
+    // Check if this student already used it
+    const usedSnap = await db.collection('couponRedemptions')
+      .where('code','==',code)
+      .where('uid','==',CU.uid)
+      .get();
     if(!usedSnap.empty){showCouponMsg('❌ You have already used this coupon','var(--red)');return;}
+    // Award points — works for old and new users
     await awardPoints('Coupon redeemed: '+code, cp.points);
+    // Log redemption
     await db.collection('couponRedemptions').add({
-      code, uid:CU.uid, studentName:CU.name,
-      points:cp.points, redeemedAt:new Date().toISOString()
+      code, uid:CU.uid,
+      studentName: CU.name||CU.email,
+      points: cp.points,
+      redeemedAt: new Date().toISOString()
     });
-    await db.collection('coupons').doc(code).update({usedCount:(cp.usedCount||0)+1});
+    // Update coupon used count
+    await db.collection('coupons').doc(code).update({
+      usedCount: (cp.usedCount||0)+1
+    });
     document.getElementById('coupon-inp').value='';
-    showCouponMsg(`🎉 Success! +${cp.points} points added!`,'var(--green)');
-    cacheClear('stats_'+CU.uid); loadStats(); loadReferral();
-  }catch(e){showCouponMsg('Error redeeming coupon. Try again.','var(--red)');}
+    showCouponMsg(`🎉 Success! +${cp.points} points added to your account!`,'var(--green)');
+    // Refresh everything
+    await loadStats();
+    await loadReferral();
+  }catch(e){
+    console.log('Coupon error:', e);
+    showCouponMsg('❌ Error: '+e.message+'. Try again.','var(--red)');
+  }
 }
 
 function showCouponMsg(msg,color){
