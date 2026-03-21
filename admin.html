@@ -238,7 +238,7 @@ html, body {
       <div class="card-title">All Students
         <input type="text" id="sch-inp" placeholder="Search name or email..." style="padding:7px 11px;border-radius:7px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.78rem;outline:none;width:200px;" oninput="filterStudents(this.value)"/>
       </div>
-      <table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Dept</th><th>Points</th><th>Status</th><th>Actions</th></tr></thead><tbody id="students-list"></tbody></table>
+      <table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Dept</th><th>Points</th><th>Last Seen</th><th>Status</th><th>Actions</th></tr></thead><tbody id="students-list"></tbody></table>
     </div>
   </div>
   <div id="panel-courses" class="panel">
@@ -995,12 +995,29 @@ async function loadStudents(){
   renderStudents(allStudents);
 }
 function renderStudents(list){
-  document.getElementById('students-list').innerHTML=list.map(u=>`
-    <tr>
+  const now = new Date();
+  document.getElementById('students-list').innerHTML=list.map(u=>{
+    // Format last seen
+    let lastSeenStr = 'Never';
+    let lastSeenColor = 'var(--text2)';
+    if(u.lastSeen){
+      const ls = new Date(u.lastSeen);
+      const diffMs = now - ls;
+      const diffMins = Math.floor(diffMs/60000);
+      const diffHrs = Math.floor(diffMs/3600000);
+      const diffDays = Math.floor(diffMs/86400000);
+      if(diffMins < 5){ lastSeenStr='🟢 Just now'; lastSeenColor='var(--green)'; }
+      else if(diffMins < 60){ lastSeenStr=`🟢 ${diffMins}m ago`; lastSeenColor='var(--green)'; }
+      else if(diffHrs < 24){ lastSeenStr=`🟡 ${diffHrs}h ago`; lastSeenColor='#fbbf24'; }
+      else if(diffDays < 7){ lastSeenStr=`🔴 ${diffDays}d ago`; lastSeenColor='#f87171'; }
+      else { lastSeenStr=`⚫ ${ls.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`; lastSeenColor='var(--text2)'; }
+    }
+    return `<tr>
       <td>${u.name||'--'}</td>
       <td style="color:var(--text2);font-size:.76rem">${u.email||'--'}</td>
       <td style="font-size:.76rem">${u.dept||'--'}</td>
       <td style="font-size:.76rem;color:var(--gold)">${u.points||0} pts</td>
+      <td style="font-size:.74rem;color:${lastSeenColor};white-space:nowrap">${lastSeenStr}</td>
       <td><span class="badge ${u.banned?'badge-ban':'badge-ok'}">${u.banned?'Banned':'Active'}</span></td>
       <td style="display:flex;gap:5px;flex-wrap:wrap">
         <button class="btn btn-sm ${u.banned?'btn-green':'btn-red'}" onclick="toggleBan('${u.id}',${!!u.banned})">${u.banned?'Unban':'Ban'}</button>
@@ -1008,7 +1025,8 @@ function renderStudents(list){
         <button class="btn btn-sm" style="background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.2)" onclick="grantAiMessages('${u.id}','${u.name||'Student'}')">🤖 AI</button>
         <button class="btn btn-sm" style="background:rgba(56,189,248,.1);color:#38bdf8;border:1px solid rgba(56,189,248,.2)" onclick="msgStudent('${u.id}','${u.name||'Student'}')">💬</button>
       </td>
-    </tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--text2);padding:18px">No students</td></tr>';
+    </tr>`;
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:18px">No students</td></tr>';
 }
 function filterStudents(q){renderStudents(allStudents.filter(u=>(u.name||'').toLowerCase().includes(q.toLowerCase())||(u.email||'').toLowerCase().includes(q.toLowerCase())));}
 async function toggleBan(uid,isBanned){await db.collection('users').doc(uid).update({banned:!isBanned});showToast(isBanned?'Unbanned':'Banned');loadStudents();}
