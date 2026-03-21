@@ -548,23 +548,14 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div id="survival-warnings">
     <div style="background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:14px;padding:16px;margin-bottom:10px;">
       <div style="color:#f87171;font-weight:700;font-size:.86rem;margin-bottom:12px;">⚠️ Things Nobody Will Tell You</div>
-      ${[
-        ['🔴','Cult groups actively recruit in 100L','Be very careful of strangers offering money, favours or "protection". If anyone pressures you to join a group, report to security or DSA immediately. Your life is more valuable than any group.'],
-        ['🔴','Carryover in 100L follows you for YEARS','One carryover becomes two, two becomes four. Take every single course seriously from day one. Don\'t wait till exam to start reading.'],
-        ['🔴','Don\'t skip lectures in first semester','You don\'t know the system yet. Some lecturers mark attendance and it counts towards your final score. Be present.'],
-        ['🔴','Don\'t be too trusting of new "friends"','Not everyone who smiles at you is your friend. Some people will collect your notes, your money and your time. Choose friends wisely.'],
-        ['🟡','Social media will destroy your GPA','Instagram, TikTok and Twitter will waste your reading time. Discipline yourself — there\'s time for everything but know your priorities.'],
-        ['🟡','Don\'t lend money you can\'t afford to lose','University friendships and money don\'t always mix well. Be kind but be wise.'],
-        ['🟡','First semester GPA sets the tone','It\'s much harder to recover from a bad first semester than to maintain a good one. Start strong.'],
-        ['🟡','Know where the Dean of Student Affairs office is','If you have any problem — academic, personal or safety — that\'s where to go.'],
-      ].map(([dot,title,desc])=>`
-        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(248,113,113,.1);">
-          <div style="font-size:1rem;flex-shrink:0;margin-top:2px">${dot}</div>
-          <div>
-            <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">${title}</div>
-            <div style="font-size:.76rem;color:var(--text2);line-height:1.5">${desc}</div>
-          </div>
-        </div>`).join('')}
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(248,113,113,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🔴</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Cult groups actively recruit in 100L</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Be very careful of strangers offering money, favours or protection. If anyone pressures you to join a group, report to security or DSA immediately. Your life is more valuable than any group.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(248,113,113,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🔴</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Carryover in 100L follows you for YEARS</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">One carryover becomes two, two becomes four. Take every single course seriously from day one. Do not wait till exam to start reading.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(248,113,113,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🔴</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Do not skip lectures in first semester</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">You do not know the system yet. Some lecturers mark attendance and it counts towards your final score. Be present.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(248,113,113,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🔴</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Do not be too trusting of new friends</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Not everyone who smiles at you is your friend. Some people will collect your notes, your money and your time. Choose friends wisely.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(248,113,113,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🟡</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Social media will destroy your GPA</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Instagram, TikTok and Twitter will waste your reading time. Discipline yourself — there is time for everything but know your priorities.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(248,113,113,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🟡</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Do not lend money you cannot afford to lose</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">University friendships and money do not always mix well. Be kind but be wise.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(248,113,113,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🟡</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">First semester GPA sets the tone</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">It is much harder to recover from a bad first semester than to maintain a good one. Start strong.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(248,113,113,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🟡</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Know where the Dean of Student Affairs office is</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">If you have any problem — academic, personal or safety — that is where to go.</div></div></div>
     </div>
   </div>
 
@@ -572,22 +563,13 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div id="survival-money" style="display:none;">
     <div style="background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.15);border-radius:14px;padding:16px;margin-bottom:10px;">
       <div style="color:var(--green);font-weight:700;font-size:.86rem;margin-bottom:12px;">💰 Money Management Tips</div>
-      ${[
-        ['💡','Budget your allowance the day you receive it','Divide it immediately: food, transport, data, books, emergency. Whatever is left is your spending money — not the other way around.'],
-        ['🍽','Buka area near faculties has the cheapest food','Don\'t eat at expensive restaurants every day. Find the affordable food spots near your faculty and become a regular.'],
-        ['🏠','Cook in your hostel when possible','Even simple cooking saves a lot of money over time. Rice, beans, noodles — learn to cook basic meals.'],
-        ['📱','Data and recharge cards drain fast — budget for them','Don\'t finish your data on entertainment and then have no money for important things.'],
-        ['💰','Always keep emergency money','Set aside a fixed amount you never touch unless it\'s a real emergency. Medical, transport home, urgent fees.'],
-        ['📚','Get your textbooks from seniors','Don\'t buy new textbooks immediately. Find seniors who have the same books — they often sell cheap or give for free.'],
-        ['⚠️','Don\'t spend all your allowance in the first week','The excitement of freedom will tempt you. Resist it. The semester is long.'],
-      ].map(([icon,title,desc])=>`
-        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(74,222,128,.1);">
-          <div style="font-size:1rem;flex-shrink:0;margin-top:2px">${icon}</div>
-          <div>
-            <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">${title}</div>
-            <div style="font-size:.76rem;color:var(--text2);line-height:1.5">${desc}</div>
-          </div>
-        </div>`).join('')}
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(74,222,128,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">💡</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Budget your allowance the day you receive it</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Divide it immediately: food, transport, data, books, emergency. Whatever is left is your spending money — not the other way around.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(74,222,128,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🍽</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Buka area near faculties has the cheapest food</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Do not eat at expensive restaurants every day. Find the affordable food spots near your faculty and become a regular.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(74,222,128,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🏠</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Cook in your hostel when possible</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Even simple cooking saves a lot of money over time. Rice, beans, noodles — learn to cook basic meals.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(74,222,128,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">📱</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Data and recharge cards drain fast — budget for them</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Do not finish your data on entertainment and then have no money for important things.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(74,222,128,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">💰</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Always keep emergency money</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Set aside a fixed amount you never touch unless it is a real emergency. Medical, transport home, urgent fees.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(74,222,128,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">📚</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Get your textbooks from seniors</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Do not buy new textbooks immediately. Find seniors who have the same books — they often sell cheap or give for free.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(74,222,128,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">⚠️</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Do not spend all your allowance in the first week</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">The excitement of freedom will tempt you. Resist it. The semester is long.</div></div></div>
     </div>
   </div>
 
@@ -595,23 +577,14 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div id="survival-exam" style="display:none;">
     <div style="background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:16px;margin-bottom:10px;">
       <div style="color:var(--gold2);font-weight:700;font-size:.86rem;margin-bottom:12px;">📝 Exam Tips That Actually Work</div>
-      ${[
-        ['🏆','OAU past questions are EVERYTHING','Lecturers repeat questions more than you think. Collect past questions from seniors for every course. Use BABSPHARM Cloud quiz section to practice them.'],
-        ['📋','Read your course outline religiously','Lecturers follow the course outline strictly. If something is not in the outline, it probably won\'t come in the exam. Focus your reading.'],
-        ['👥','Form study groups BEFORE exam period','Don\'t start a study group the night before exam. Form your group in week 2 or 3 and meet regularly throughout the semester.'],
-        ['✍️','Write legibly and structure your answers','OAU lecturers are marking many scripts. A well-structured answer with clear headings scores better than a messy correct answer.'],
-        ['📅','Start reading 3 weeks before exam','Not 3 days — 3 weeks. One week per week of the semester you were supposed to be reading. Emergency reading doesn\'t work at OAU level.'],
-        ['✅','Attempt EVERY question','Even if you\'re not sure, write something. You can\'t score marks on a blank page. Structured guessing is better than nothing.'],
-        ['🎯','Know your lecturers\' favorite topics','Pay attention in class to what a lecturer emphasises repeatedly — those things WILL come out in the exam.'],
-        ['💤','Sleep before exam day','Your brain needs rest to recall information. Pulling all-nighters the night before an exam usually hurts more than it helps.'],
-      ].map(([icon,title,desc])=>`
-        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(201,168,76,.1);">
-          <div style="font-size:1rem;flex-shrink:0;margin-top:2px">${icon}</div>
-          <div>
-            <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">${title}</div>
-            <div style="font-size:.76rem;color:var(--text2);line-height:1.5">${desc}</div>
-          </div>
-        </div>`).join('')}
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(201,168,76,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🏆</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">OAU past questions are EVERYTHING</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Lecturers repeat questions more than you think. Collect past questions from seniors for every course. Use BABSPHARM Cloud quiz section to practice them.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(201,168,76,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">📋</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Read your course outline religiously</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Lecturers follow the course outline strictly. If something is not in the outline, it probably will not come in the exam. Focus your reading.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(201,168,76,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">👥</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Form study groups BEFORE exam period</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Do not start a study group the night before exam. Form your group in week 2 or 3 and meet regularly throughout the semester.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(201,168,76,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">✍️</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Write legibly and structure your answers</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">OAU lecturers are marking many scripts. A well-structured answer with clear headings scores better than a messy correct answer.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(201,168,76,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">📅</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Start reading 3 weeks before exam</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Not 3 days — 3 weeks. One week per week of the semester you were supposed to be reading. Emergency reading does not work at OAU level.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(201,168,76,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">✅</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Attempt EVERY question</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Even if you are not sure, write something. You cannot score marks on a blank page. Structured guessing is better than nothing.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(201,168,76,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🎯</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Know your lecturers favorite topics</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Pay attention in class to what a lecturer emphasises repeatedly — those things WILL come out in the exam.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(201,168,76,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">💤</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Sleep before exam day</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Your brain needs rest to recall information. Pulling all-nighters the night before an exam usually hurts more than it helps.</div></div></div>
     </div>
   </div>
 
@@ -619,26 +592,16 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div id="survival-mental" style="display:none;">
     <div style="background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);border-radius:14px;padding:16px;margin-bottom:10px;">
       <div style="color:#a78bfa;font-weight:700;font-size:.86rem;margin-bottom:12px;">🧠 Mental Health & Wellbeing</div>
-      ${[
-        ['💜','First semester is the hardest — you are not alone','Every single 100L student is struggling just like you. The ones who look confident are also scared. It gets better — I promise.'],
-        ['🏠','Homesickness is completely normal','Missing your family, your home, your old life is natural. Give yourself time to adjust. Call home regularly. It gets easier week by week.'],
-        ['🚫','Stop comparing yourself to classmates','Someone in your class will always seem smarter, richer, more confident. That comparison will destroy you. Run your own race.'],
-        ['🆘','If you\'re failing, get help EARLY','Don\'t wait until you\'ve failed everything before seeking help. Talk to your course adviser, a senior student or a trusted lecturer early.'],
-        ['😴','Sleep is not a luxury — it\'s academic fuel','Your brain consolidates memory during sleep. A student who sleeps 6-7 hours and reads smartly beats the one who reads all night every night.'],
-        ['🙏','Your faith is your anchor — use it','Many OAU toppers credit their faith as what kept them going through the tough times. Stay connected to what gives you peace.'],
-        ['👥','Find your tribe','Find 2-3 people who are serious about their studies and who lift you up. Your circle determines your direction at OAU.'],
-        ['💪','Struggling doesn\'t mean failing','Having a bad week, failing a test or missing a deadline doesn\'t mean you\'re going to fail out. Recover, restrategize and keep going.'],
-      ].map(([icon,title,desc])=>`
-        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(139,92,246,.1);">
-          <div style="font-size:1rem;flex-shrink:0;margin-top:2px">${icon}</div>
-          <div>
-            <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">${title}</div>
-            <div style="font-size:.76rem;color:var(--text2);line-height:1.5">${desc}</div>
-          </div>
-        </div>`).join('')}
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(139,92,246,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">💜</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">First semester is the hardest — you are not alone</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Every single 100L student is struggling just like you. The ones who look confident are also scared. It gets better — I promise.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(139,92,246,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🏠</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Homesickness is completely normal</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Missing your family, your home, your old life is natural. Give yourself time to adjust. Call home regularly. It gets easier week by week.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(139,92,246,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🚫</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Stop comparing yourself to classmates</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Someone in your class will always seem smarter, richer, more confident. That comparison will destroy you. Run your own race.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(139,92,246,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🆘</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">If you are failing, get help EARLY</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Do not wait until you have failed everything before seeking help. Talk to your course adviser, a senior student or a trusted lecturer early.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(139,92,246,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">😴</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Sleep is not a luxury — it is academic fuel</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Your brain consolidates memory during sleep. A student who sleeps 6-7 hours and reads smartly beats the one who reads all night every night.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(139,92,246,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">🙏</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Your faith is your anchor — use it</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Many OAU toppers credit their faith as what kept them going through the tough times. Stay connected to what gives you peace.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(139,92,246,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">👥</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Find your tribe</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Find 2-3 people who are serious about their studies and who lift you up. Your circle determines your direction at OAU.</div></div></div>
+        <div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(139,92,246,.1);"><div style="font-size:1rem;flex-shrink:0;margin-top:2px">💪</div><div><div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:3px">Struggling does not mean failing</div><div style="font-size:.76rem;color:var(--text2);line-height:1.5">Having a bad week, failing a test or missing a deadline does not mean you are going to fail out. Recover, restrategize and keep going.</div></div></div>
     </div>
   </div>
-
   <div style="background:linear-gradient(135deg,#065f46,#0f766e);border-radius:14px;padding:16px;text-align:center;margin-top:4px;">
     <div style="font-size:1.4rem;margin-bottom:8px">🏆</div>
     <div style="font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#fff;margin-bottom:6px">You were admitted to OAU for a reason!</div>
@@ -710,53 +673,127 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 <!-- ══ PODCAST MODE ══ -->
 <div id="pg-podcast" class="page hidden">
   <div class="sec-title">🎧 Podcast Mode</div>
-  <div style="background:linear-gradient(135deg,#0e7490,#0369a1);border-radius:16px;padding:20px;text-align:center;margin-bottom:14px;">
-    <div style="font-size:2.5rem;margin-bottom:8px">🎧</div>
-    <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#fff;margin-bottom:4px;">Study While You Rest</div>
-    <div style="font-size:.76rem;color:rgba(255,255,255,.8);line-height:1.6">Type any topic or paste your notes — AI summarises it and reads it out loud to you!</div>
+
+  <!-- Mode tabs -->
+  <div style="display:flex;gap:8px;margin-bottom:14px;">
+    <button class="ai-mode-tab on" onclick="switchPodTab('listen',this)" style="flex:1">🎧 Listen</button>
+    <button class="ai-mode-tab" onclick="switchPodTab('voice',this)" style="flex:1">🎤 Voice Tutor</button>
+    <button class="ai-mode-tab" onclick="switchPodTab('bedtime',this)" style="flex:1">🌙 Bedtime</button>
   </div>
-  <!-- Input -->
-  <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:16px;margin-bottom:14px;">
-    <div class="fg">
-      <label>Topic or Course Name</label>
-      <input type="text" id="pod-topic" placeholder="e.g. Reaction Kinetics, CHM 101 Chapter 3..."/>
+
+  <!-- ── LISTEN TAB ── -->
+  <div id="pod-tab-listen">
+    <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:16px;margin-bottom:14px;">
+      <div class="fg"><label>Topic or Course Name</label>
+        <input type="text" id="pod-topic" placeholder="e.g. Reaction Kinetics, CHM 101..."/>
+      </div>
+      <div class="fg"><label>Paste Notes (optional)</label>
+        <textarea id="pod-notes" placeholder="Paste lecture notes or leave empty for AI to generate..." style="min-height:70px;"></textarea>
+      </div>
+      <div class="row2">
+        <div class="fg"><label>Format</label>
+          <select id="pod-format" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.82rem;outline:none;">
+            <option value="summary">📖 Summary</option>
+            <option value="qa">❓ Q&A Format</option>
+            <option value="story">📝 Story Style</option>
+          </select>
+        </div>
+        <div class="fg"><label>Speed</label>
+          <select id="pod-speed" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.82rem;outline:none;">
+            <option value="0.8">🐢 Slow</option>
+            <option value="1" selected>🚶 Normal</option>
+            <option value="1.2">🏃 Fast</option>
+            <option value="1.5">⚡ Very Fast</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-gold" style="width:100%" id="pod-gen-btn" onclick="generatePodcast()">🤖 Generate & Play</button>
     </div>
-    <div class="fg">
-      <label>Paste Notes (optional — leave empty to let AI generate summary)</label>
-      <textarea id="pod-notes" placeholder="Paste your lecture notes here or leave empty..." style="min-height:80px;"></textarea>
-    </div>
-    <div class="fg">
-      <label>Reading Speed</label>
-      <select id="pod-speed" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.82rem;outline:none;">
-        <option value="0.8">🐢 Slow (0.8x)</option>
-        <option value="1" selected>🚶 Normal (1x)</option>
-        <option value="1.2">🏃 Fast (1.2x)</option>
-        <option value="1.5">⚡ Very Fast (1.5x)</option>
-      </select>
-    </div>
-    <button class="btn btn-gold" style="width:100%;margin-bottom:8px" id="pod-gen-btn" onclick="generatePodcast()">🤖 Generate & Play</button>
-  </div>
-  <!-- Player -->
-  <div id="pod-player" style="display:none;background:var(--card);border:1px solid var(--gold);border-radius:var(--r);padding:20px;margin-bottom:14px;">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-      <div style="width:48px;height:48px;background:linear-gradient(135deg,#0e7490,#0369a1);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">🎧</div>
-      <div>
-        <div style="font-size:.84rem;font-weight:700;color:var(--text)" id="pod-title">Loading...</div>
-        <div style="font-size:.72rem;color:var(--text2)">AI Generated Summary</div>
+
+    <!-- Player -->
+    <div id="pod-player" style="display:none;background:var(--card);border:1px solid var(--gold);border-radius:var(--r);padding:18px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div style="width:46px;height:46px;background:linear-gradient(135deg,#0e7490,#0369a1);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;">🎧</div>
+        <div style="flex:1">
+          <div style="font-size:.84rem;font-weight:700;color:var(--text)" id="pod-title">Loading...</div>
+          <div style="font-size:.7rem;color:var(--text2)" id="pod-subtitle">AI Generated</div>
+        </div>
+        <button onclick="copyPodScript()" style="background:rgba(255,255,255,.06);border:1px solid var(--cb);color:var(--text2);border-radius:8px;padding:5px 10px;cursor:pointer;font-size:.72rem;">📋 Copy</button>
+      </div>
+      <!-- Progress -->
+      <div style="background:rgba(255,255,255,.08);border-radius:10px;height:5px;margin-bottom:14px;">
+        <div id="pod-progress-fill" style="background:linear-gradient(90deg,var(--gold),var(--gold2));height:100%;border-radius:10px;width:0%;transition:width .5s;"></div>
+      </div>
+      <!-- Controls -->
+      <div style="display:flex;justify-content:center;gap:14px;align-items:center;margin-bottom:14px;">
+        <button onclick="restartPodcast()" style="background:rgba(255,255,255,.08);border:none;color:var(--text2);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:1rem;">⏮</button>
+        <button id="pod-play-btn" onclick="togglePodcast()" style="background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;color:var(--navy);border-radius:50%;width:52px;height:52px;cursor:pointer;font-size:1.3rem;font-weight:700;">▶</button>
+        <button onclick="stopPodcast()" style="background:rgba(255,255,255,.08);border:none;color:var(--text2);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:1rem;">⏹</button>
+      </div>
+      <!-- Script -->
+      <div id="pod-script" style="font-size:.76rem;color:var(--text2);line-height:1.8;max-height:160px;overflow-y:auto;padding:10px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--cb);"></div>
+      <!-- AI Quiz button - shows after podcast ends -->
+      <div id="pod-quiz-btn-wrap" style="display:none;margin-top:12px;">
+        <button class="btn btn-gold" style="width:100%" onclick="generatePodcastQuiz()">🧠 Test Your Understanding (AI Quiz)</button>
       </div>
     </div>
-    <!-- Progress bar -->
-    <div id="pod-progress-bar" style="background:rgba(255,255,255,.1);border-radius:10px;height:6px;margin-bottom:14px;cursor:pointer;" onclick="seekPodcast(event)">
-      <div id="pod-progress-fill" style="background:linear-gradient(90deg,var(--gold),var(--gold2));height:100%;border-radius:10px;width:0%;transition:width .3s;"></div>
+
+    <!-- AI Quiz section -->
+    <div id="pod-quiz-section" style="display:none;background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:16px;margin-bottom:14px;">
+      <div style="font-size:.84rem;font-weight:700;color:var(--gold2);margin-bottom:12px;">🧠 Comprehension Quiz</div>
+      <div id="pod-quiz-list"></div>
+      <button id="pod-quiz-submit" style="display:none;width:100%;margin-top:12px;" class="btn btn-gold" onclick="submitPodcastQuiz()">Submit Answers</button>
+      <div id="pod-quiz-result" style="display:none;margin-top:12px;padding:14px;border-radius:12px;text-align:center;"></div>
     </div>
+  </div>
+
+  <!-- ── VOICE TUTOR TAB ── -->
+  <div id="pod-tab-voice" style="display:none;">
+    <div style="background:linear-gradient(135deg,#7c3aed,#4338ca);border-radius:16px;padding:20px;text-align:center;margin-bottom:14px;">
+      <div style="font-size:2rem;margin-bottom:8px">🎤</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#fff;margin-bottom:4px">Voice AI Tutor</div>
+      <div style="font-size:.76rem;color:rgba(255,255,255,.8)">Speak your question — AI responds in voice. Like a phone call with your tutor!</div>
+    </div>
+    <!-- Conversation history -->
+    <div id="voice-chat-history" style="min-height:200px;max-height:350px;overflow-y:auto;margin-bottom:14px;display:flex;flex-direction:column;gap:10px;"></div>
     <!-- Controls -->
-    <div style="display:flex;justify-content:center;gap:14px;align-items:center;margin-bottom:12px;">
-      <button onclick="restartPodcast()" style="background:rgba(255,255,255,.08);border:none;color:var(--text2);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:1rem;">⏮</button>
-      <button id="pod-play-btn" onclick="togglePodcast()" style="background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;color:var(--navy);border-radius:50%;width:52px;height:52px;cursor:pointer;font-size:1.3rem;font-weight:700;">▶</button>
-      <button onclick="stopPodcast()" style="background:rgba(255,255,255,.08);border:none;color:var(--text2);border-radius:50%;width:38px;height:38px;cursor:pointer;font-size:1rem;">⏹</button>
+    <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:16px;">
+      <div style="text-align:center;margin-bottom:14px;">
+        <button id="voice-record-btn" onclick="toggleVoiceRecord()" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#4338ca);border:none;cursor:pointer;font-size:2rem;box-shadow:0 4px 20px rgba(124,58,237,.4);transition:all .2s;">🎤</button>
+        <div id="voice-status" style="font-size:.78rem;color:var(--text2);margin-top:10px;">Tap to speak</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="voice-text-inp" placeholder="Or type your question..." style="flex:1;padding:10px 12px;border-radius:9px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;"/>
+        <button onclick="sendVoiceText()" style="background:var(--gold);border:none;border-radius:9px;padding:10px 14px;cursor:pointer;font-size:1rem;">➤</button>
+      </div>
+      <button onclick="clearVoiceChat()" style="width:100%;margin-top:8px;padding:8px;background:none;border:1px solid var(--cb);border-radius:8px;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;">🗑 Clear conversation</button>
     </div>
-    <!-- Script preview -->
-    <div id="pod-script" style="font-size:.76rem;color:var(--text2);line-height:1.7;max-height:150px;overflow-y:auto;padding:10px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--cb);"></div>
+  </div>
+
+  <!-- ── BEDTIME MODE TAB ── -->
+  <div id="pod-tab-bedtime" style="display:none;">
+    <div id="bedtime-screen" style="background:linear-gradient(180deg,#0a0a1a,#0d1333);border-radius:20px;padding:30px 20px;text-align:center;margin-bottom:14px;min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+      <div style="font-size:3rem;margin-bottom:12px" id="bedtime-moon">🌙</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:rgba(200,180,255,.9);margin-bottom:6px" id="bedtime-title">Bedtime Study Mode</div>
+      <div style="font-size:.76rem;color:rgba(150,130,200,.7);margin-bottom:20px">Soft voice • Dim screen • Study music</div>
+      <div id="bedtime-status" style="font-size:.78rem;color:rgba(200,180,255,.6);min-height:24px;"></div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:16px;margin-bottom:14px;">
+      <div class="fg"><label>What do you want to study?</label>
+        <input type="text" id="bedtime-topic" placeholder="e.g. Pharmacology, CHM 101 reactions..."/>
+      </div>
+      <div class="fg"><label>Music</label>
+        <select id="bedtime-music" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.82rem;outline:none;">
+          <option value="none">🔇 No music</option>
+          <option value="lofi">🎵 Lofi beats</option>
+          <option value="rain">🌧 Rain sounds</option>
+          <option value="nature">🌿 Nature sounds</option>
+          <option value="white">⬜ White noise</option>
+        </select>
+      </div>
+      <button class="btn btn-gold" style="width:100%;background:linear-gradient(135deg,#4338ca,#7c3aed);border:none;" id="bedtime-btn" onclick="startBedtimeMode()">🌙 Start Bedtime Study</button>
+      <button onclick="stopBedtimeMode()" style="width:100%;margin-top:8px;padding:10px;background:none;border:1px solid var(--cb);border-radius:10px;color:var(--text2);font-family:'Outfit',sans-serif;cursor:pointer;font-size:.82rem;">⏹ Stop</button>
+    </div>
   </div>
 </div>
 
@@ -3518,8 +3555,22 @@ async function deleteSemGPA(id){
   loadGPAHistory();
 }
 
-// ══ PODCAST MODE ══
+// ══ PODCAST MODE (ENHANCED) ══
 let podUtterance=null,podText='',podPlaying=false;
+let voiceRecognition=null,voiceRecording=false;
+let voiceChatHistory=[];
+let bedtimeAudio=null;
+let podQuizData=[];
+
+function switchPodTab(tab,btn){
+  ['listen','voice','bedtime'].forEach(t=>{
+    const el=document.getElementById('pod-tab-'+t);
+    if(el) el.style.display=t===tab?'block':'none';
+  });
+  document.querySelectorAll('#pg-podcast .ai-mode-tab').forEach(b=>b.classList.remove('on'));
+  if(btn) btn.classList.add('on');
+  if(tab==='voice') initVoiceTutor();
+}
 
 function initPodcast(){
   if(!window.speechSynthesis){
@@ -3528,22 +3579,32 @@ function initPodcast(){
   }
 }
 
+// ── LISTEN TAB ──
 async function generatePodcast(){
   const topic=document.getElementById('pod-topic').value.trim();
   const notes=document.getElementById('pod-notes').value.trim();
+  const format=document.getElementById('pod-format').value;
   if(!topic&&!notes){showToast('Enter a topic or paste notes');return;}
   if(!GROQ_KEY){showToast('AI not configured. Ask admin to set GROQ key');return;}
   stopPodcast();
   const btn=document.getElementById('pod-gen-btn');
   btn.textContent='🤖 Generating...';btn.disabled=true;
+  document.getElementById('pod-quiz-section').style.display='none';
+  document.getElementById('pod-quiz-btn-wrap').style.display='none';
   try{
-    const prompt=notes
-      ?`You are a podcast narrator for OAU students. Summarize these notes on "${topic||'this topic'}" into a clear spoken summary of 300-400 words. Write in flowing sentences only, no bullet points:\n\n${notes}`
-      :`You are a podcast narrator for OAU students. Generate a clear spoken summary of "${topic}" in 300-400 words covering key concepts, definitions and exam-likely points. Flowing sentences only, no bullet points.`;
-    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],temperature:0.7,max_tokens:600})});
+    let prompt='';
+    if(format==='qa'){
+      prompt=`You are a podcast host for OAU students. Create a Q&A podcast about "${topic||'this topic'}" with 6-8 questions and detailed answers. Format: "Question: [question]" then "Answer: [answer]". ${notes?'Use these notes: '+notes:''} Write in flowing spoken language, no bullet points. About 400 words total.`;
+    } else if(format==='story'){
+      prompt=`You are a storytelling educator for OAU students. Explain "${topic||'this topic'}" as an engaging story or analogy that makes the concept easy to remember. ${notes?'Based on: '+notes:''} About 350 words, conversational tone.`;
+    } else {
+      prompt=`You are a podcast narrator for OAU students. ${notes?`Summarize these notes on "${topic||'this topic'}"`:`Generate a summary of "${topic}"`} in 350-400 words. Cover key concepts, definitions and exam tips. Flowing sentences only, no bullet points.${notes?'\n\nNotes: '+notes:''}`;
+    }
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],temperature:0.7,max_tokens:700})});
     const data=await res.json();
-    podText=data.choices?.[0]?.message?.content||'Could not generate summary.';
+    podText=data.choices?.[0]?.message?.content||'Could not generate. Please try again.';
     document.getElementById('pod-title').textContent=topic||'Lecture Summary';
+    document.getElementById('pod-subtitle').textContent=format==='qa'?'Q&A Format':format==='story'?'Story Style':'AI Summary';
     document.getElementById('pod-script').innerHTML=podText.replace(/\n/g,'<br>');
     document.getElementById('pod-player').style.display='block';
     btn.textContent='🤖 Generate & Play';btn.disabled=false;
@@ -3556,14 +3617,19 @@ function playPodcast(){
   stopPodcast();
   const speed=parseFloat(document.getElementById('pod-speed').value)||1;
   podUtterance=new SpeechSynthesisUtterance(podText);
-  podUtterance.rate=speed;podUtterance.pitch=1;podUtterance.lang='en-NG';
+  podUtterance.rate=speed;podUtterance.pitch=1;
+  // Try to get a good English voice
+  const voices=window.speechSynthesis.getVoices();
+  const eng=voices.find(v=>v.lang.startsWith('en')&&v.name.includes('Female'))||voices.find(v=>v.lang.startsWith('en'))||voices[0];
+  if(eng) podUtterance.voice=eng;
   podUtterance.onboundary=(e)=>{
-    document.getElementById('pod-progress-fill').style.width=(e.charIndex/podText.length*100)+'%';
+    if(podText.length) document.getElementById('pod-progress-fill').style.width=(e.charIndex/podText.length*100)+'%';
   };
   podUtterance.onend=()=>{
     podPlaying=false;
     document.getElementById('pod-play-btn').textContent='▶';
     document.getElementById('pod-progress-fill').style.width='100%';
+    document.getElementById('pod-quiz-btn-wrap').style.display='block';
   };
   window.speechSynthesis.speak(podUtterance);
   podPlaying=true;
@@ -3591,6 +3657,256 @@ function stopPodcast(){
 }
 
 function restartPodcast(){stopPodcast();setTimeout(playPodcast,200);}
+
+function copyPodScript(){
+  if(!podText){showToast('No script to copy');return;}
+  navigator.clipboard.writeText(podText).then(()=>showToast('Script copied! 📋')).catch(()=>showToast('Could not copy'));
+}
+
+// ── AI QUIZ AFTER PODCAST ──
+async function generatePodcastQuiz(){
+  if(!podText||!GROQ_KEY) return;
+  const section=document.getElementById('pod-quiz-section');
+  const list=document.getElementById('pod-quiz-list');
+  section.style.display='block';
+  list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)">🧠 Generating quiz...</div>';
+  document.getElementById('pod-quiz-result').style.display='none';
+  document.getElementById('pod-quiz-submit').style.display='none';
+  try{
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Based on this content:\n\n${podText}\n\nGenerate exactly 5 multiple choice questions to test understanding. Return ONLY a JSON array with no markdown:\n[{"q":"question","opts":["A","B","C","D"],"ans":0}]`}],temperature:0.5,max_tokens:800})});
+    const data=await res.json();
+    let raw=data.choices?.[0]?.message?.content||'[]';
+    raw=raw.replace(/```json|```/g,'').trim();
+    podQuizData=JSON.parse(raw);
+    list.innerHTML=podQuizData.map((q,i)=>`
+      <div style="background:rgba(255,255,255,.03);border:1px solid var(--cb);border-radius:12px;padding:14px;margin-bottom:10px;">
+        <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:8px">${i+1}. ${q.q}</div>
+        ${q.opts.map((o,j)=>`
+          <label style="display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:.78rem;color:var(--text2);margin-bottom:4px;">
+            <input type="radio" name="pq${i}" value="${j}" style="accent-color:var(--gold)"/> ${['A','B','C','D'][j]}. ${o}
+          </label>`).join('')}
+      </div>`).join('');
+    document.getElementById('pod-quiz-submit').style.display='block';
+    section.scrollIntoView({behavior:'smooth'});
+  }catch(e){list.innerHTML='<div style="color:var(--red);font-size:.82rem;text-align:center;padding:20px">Error generating quiz. Try again.</div>';}
+}
+
+function submitPodcastQuiz(){
+  let correct=0;
+  podQuizData.forEach((q,i)=>{
+    const sel=document.querySelector(`input[name="pq${i}"]:checked`);
+    if(sel&&parseInt(sel.value)===q.ans) correct++;
+  });
+  const pct=Math.round(correct/podQuizData.length*100);
+  const result=document.getElementById('pod-quiz-result');
+  result.style.display='block';
+  result.style.background=pct>=60?'rgba(74,222,128,.08)':'rgba(248,113,113,.08)';
+  result.style.border=`1px solid ${pct>=60?'rgba(74,222,128,.2)':'rgba(248,113,113,.2)'}`;
+  result.innerHTML=`<div style="font-size:2rem;margin-bottom:8px">${pct>=80?'🎉':pct>=60?'👍':'📚'}</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:${pct>=60?'var(--green)':'var(--red)'}">${correct}/${podQuizData.length} correct — ${pct}%</div>
+    <div style="font-size:.76rem;color:var(--text2);margin-top:6px">${pct>=80?'Excellent! You understood the podcast very well!':pct>=60?'Good job! Listen again to improve further.':'Listen to the podcast again and retry the quiz.'}</div>`;
+  if(pct>=80) launchConfetti();
+  awardPoints('Podcast quiz completed', pct>=80?10:pct>=60?5:2);
+  document.getElementById('pod-quiz-submit').style.display='none';
+}
+
+// ── VOICE TUTOR TAB ──
+function initVoiceTutor(){
+  if(!voiceChatHistory.length){
+    addVoiceMessage('bot','Hello! 👋 I am your Voice AI Tutor. Ask me anything about your courses — you can speak or type!');
+  }
+}
+
+function addVoiceMessage(role, text){
+  voiceChatHistory.push({role,text});
+  const hist=document.getElementById('voice-chat-history');
+  const div=document.createElement('div');
+  div.style.cssText=`display:flex;${role==='user'?'justify-content:flex-end':'justify-content:flex-start'}`;
+  div.innerHTML=`<div style="max-width:80%;padding:10px 14px;border-radius:${role==='user'?'14px 14px 4px 14px':'14px 14px 14px 4px'};background:${role==='user'?'linear-gradient(135deg,var(--gold),var(--gold2))':'rgba(255,255,255,.06)'};color:${role==='user'?'var(--navy)':'var(--text)'};font-size:.82rem;line-height:1.5;">${text}</div>`;
+  hist.appendChild(div);
+  hist.scrollTop=hist.scrollHeight;
+  // Speak bot response
+  if(role==='bot'&&window.speechSynthesis){
+    const utt=new SpeechSynthesisUtterance(text);
+    utt.rate=1;utt.lang='en-NG';
+    const voices=window.speechSynthesis.getVoices();
+    const eng=voices.find(v=>v.lang.startsWith('en'))||voices[0];
+    if(eng) utt.voice=eng;
+    window.speechSynthesis.speak(utt);
+  }
+}
+
+async function sendVoiceQuestion(question){
+  if(!question.trim()) return;
+  addVoiceMessage('user',question);
+  document.getElementById('voice-status').textContent='🤖 AI is thinking...';
+  try{
+    const messages=[{role:'system',content:'You are a friendly OAU university AI tutor. Answer study questions clearly and concisely in 2-4 sentences. Be encouraging and use simple language.'}];
+    // Add recent history
+    voiceChatHistory.slice(-6).forEach(m=>{
+      if(m.role==='user') messages.push({role:'user',content:m.text});
+      else if(m.role==='bot') messages.push({role:'assistant',content:m.text});
+    });
+    messages.push({role:'user',content:question});
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages,temperature:0.7,max_tokens:200})});
+    const data=await res.json();
+    const reply=data.choices?.[0]?.message?.content||'Sorry, I could not answer that. Please try again.';
+    addVoiceMessage('bot',reply);
+    document.getElementById('voice-status').textContent='Tap to speak';
+  }catch(e){
+    addVoiceMessage('bot','Sorry, I had trouble connecting. Please check your internet and try again.');
+    document.getElementById('voice-status').textContent='Tap to speak';
+  }
+}
+
+function sendVoiceText(){
+  const inp=document.getElementById('voice-text-inp');
+  const q=inp.value.trim();
+  if(!q) return;
+  inp.value='';
+  sendVoiceQuestion(q);
+}
+
+function toggleVoiceRecord(){
+  if(!GROQ_KEY){showToast('AI not configured');return;}
+  if(voiceRecording){
+    stopVoiceRecord();
+  } else {
+    startVoiceRecord();
+  }
+}
+
+function startVoiceRecord(){
+  if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
+    showToast('Voice not supported on this browser. Please type instead.');
+    return;
+  }
+  window.speechSynthesis.cancel(); // Stop any playing audio
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  voiceRecognition=new SR();
+  voiceRecognition.lang='en-NG';
+  voiceRecognition.interimResults=false;
+  voiceRecognition.onresult=(e)=>{
+    const transcript=e.results[0][0].transcript;
+    document.getElementById('voice-status').textContent='You said: "'+transcript+'"';
+    sendVoiceQuestion(transcript);
+  };
+  voiceRecognition.onerror=()=>{
+    document.getElementById('voice-status').textContent='Could not hear you. Try again.';
+    stopVoiceRecord();
+  };
+  voiceRecognition.onend=()=>stopVoiceRecord();
+  voiceRecognition.start();
+  voiceRecording=true;
+  const btn=document.getElementById('voice-record-btn');
+  btn.style.background='linear-gradient(135deg,#dc2626,#991b1b)';
+  btn.style.animation='pulse 1s infinite';
+  btn.textContent='⏹';
+  document.getElementById('voice-status').textContent='🎤 Listening... speak now!';
+}
+
+function stopVoiceRecord(){
+  if(voiceRecognition) voiceRecognition.stop();
+  voiceRecording=false;
+  const btn=document.getElementById('voice-record-btn');
+  btn.style.background='linear-gradient(135deg,#7c3aed,#4338ca)';
+  btn.style.animation='';
+  btn.textContent='🎤';
+  if(document.getElementById('voice-status').textContent==='🎤 Listening... speak now!'){
+    document.getElementById('voice-status').textContent='Tap to speak';
+  }
+}
+
+function clearVoiceChat(){
+  voiceChatHistory=[];
+  document.getElementById('voice-chat-history').innerHTML='';
+  window.speechSynthesis.cancel();
+  initVoiceTutor();
+}
+
+// ── BEDTIME MODE TAB ──
+let bedtimeOscillator=null,bedtimeAudioCtx=null;
+
+async function startBedtimeMode(){
+  const topic=document.getElementById('bedtime-topic').value.trim();
+  if(!topic){showToast('Enter a topic to study');return;}
+  if(!GROQ_KEY){showToast('AI not configured');return;}
+  const btn=document.getElementById('bedtime-btn');
+  btn.textContent='🌙 Generating...';btn.disabled=true;
+  // Start background music
+  startBedtimeMusic();
+  // Generate soft summary
+  try{
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`You are a soft, calming bedtime study narrator for an OAU student who is tired. Gently explain "${topic}" in 200-250 words. Use very simple, soothing language. Speak slowly and clearly. No bullet points — just flowing, peaceful sentences. End with an encouraging goodnight message.`}],temperature:0.7,max_tokens:400})});
+    const data=await res.json();
+    const text=data.choices?.[0]?.message?.content||'Sweet dreams, dear student.';
+    document.getElementById('bedtime-status').textContent='Playing...';
+    document.getElementById('bedtime-title').textContent=topic;
+    // Speak very slowly
+    const utt=new SpeechSynthesisUtterance(text);
+    utt.rate=0.75;utt.pitch=0.9;utt.lang='en-NG';
+    const voices=window.speechSynthesis.getVoices();
+    const soft=voices.find(v=>v.lang.startsWith('en')&&v.name.includes('Female'))||voices.find(v=>v.lang.startsWith('en'))||voices[0];
+    if(soft) utt.voice=soft;
+    utt.onend=()=>{document.getElementById('bedtime-status').textContent='Rest well 🌙';};
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utt);
+    btn.textContent='🌙 Start Bedtime Study';btn.disabled=false;
+  }catch(e){btn.textContent='🌙 Start Bedtime Study';btn.disabled=false;stopBedtimeMusic();showToast('Error. Try again.');}
+}
+
+function startBedtimeMusic(){
+  const type=document.getElementById('bedtime-music').value;
+  if(type==='none') return;
+  try{
+    bedtimeAudioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    if(type==='white'){
+      // White noise
+      const bufferSize=2*bedtimeAudioCtx.sampleRate;
+      const buffer=bedtimeAudioCtx.createBuffer(1,bufferSize,bedtimeAudioCtx.sampleRate);
+      const data=buffer.getChannelData(0);
+      for(let i=0;i<bufferSize;i++) data[i]=Math.random()*2-1;
+      const source=bedtimeAudioCtx.createBufferSource();
+      source.buffer=buffer;source.loop=true;
+      const gain=bedtimeAudioCtx.createGain();gain.gain.value=0.05;
+      source.connect(gain);gain.connect(bedtimeAudioCtx.destination);
+      source.start();bedtimeOscillator=source;
+    } else if(type==='rain'){
+      // Simulated rain (filtered noise)
+      const bufferSize=2*bedtimeAudioCtx.sampleRate;
+      const buffer=bedtimeAudioCtx.createBuffer(1,bufferSize,bedtimeAudioCtx.sampleRate);
+      const data=buffer.getChannelData(0);
+      for(let i=0;i<bufferSize;i++) data[i]=Math.random()*2-1;
+      const source=bedtimeAudioCtx.createBufferSource();
+      source.buffer=buffer;source.loop=true;
+      const filter=bedtimeAudioCtx.createBiquadFilter();
+      filter.type='lowpass';filter.frequency.value=1000;
+      const gain=bedtimeAudioCtx.createGain();gain.gain.value=0.08;
+      source.connect(filter);filter.connect(gain);gain.connect(bedtimeAudioCtx.destination);
+      source.start();bedtimeOscillator=source;
+    } else {
+      // Soft lofi-style tone
+      const osc=bedtimeAudioCtx.createOscillator();
+      osc.type='sine';osc.frequency.value=432;
+      const gain=bedtimeAudioCtx.createGain();gain.gain.value=0.04;
+      osc.connect(gain);gain.connect(bedtimeAudioCtx.destination);
+      osc.start();bedtimeOscillator=osc;
+    }
+  }catch(e){}
+}
+
+function stopBedtimeMode(){
+  stopBedtimeMusic();
+  window.speechSynthesis.cancel();
+  document.getElementById('bedtime-status').textContent='';
+  document.getElementById('bedtime-title').textContent='Bedtime Study Mode';
+}
+
+function stopBedtimeMusic(){
+  try{if(bedtimeOscillator)bedtimeOscillator.stop();}catch(e){}
+  try{if(bedtimeAudioCtx)bedtimeAudioCtx.close();}catch(e){}
+  bedtimeOscillator=null;bedtimeAudioCtx=null;
+}
 
 async function loadProgressPage(){
   const statsEl=document.getElementById('progress-stats');
