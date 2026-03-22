@@ -3923,9 +3923,7 @@ async function removeSubAdmin(uid){
 }
 
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
-</script>
-</body>
-</html
+
 // ── CAMPAIGNS ENGINE ──
 async function runCampaign(type, groqKey){
   const log=[]; const addLog=(msg)=>{log.push('✅ '+msg);showActionResult('🎯 Campaign Running',log.map(l=>`<div style="font-size:.78rem;color:var(--green);padding:2px 0">${l}</div>`).join(''));};
@@ -4557,4 +4555,6 @@ async function deleteOrphans(orphans){
   showToast(`✅ Deleted ${orphans.length} orphaned records`);
 }
 
->
+</script>
+</body>
+</html>
