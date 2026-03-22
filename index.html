@@ -371,7 +371,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="auth-logo">
       <div class="auth-logo-ico"><img src="https://raw.githubusercontent.com/babspharm1-lgtm/BABSPHARM./refs/heads/main/logo.png" width="90" height="90" style="object-fit:contain;border-radius:12px"/></div>
       <div class="auth-logo-title">BABSPHARM</div>
-      <div class="auth-logo-sub">Cloud Learning Platform</div>
+      <div class="auth-logo-sub">Your Study Companion</div>
     </div>
     <div class="auth-tabs">
       <button class="atab on" id="tab-li" onclick="switchTab('li')">Sign In</button>
@@ -476,7 +476,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 
   <div class="dash-hdr">
     <h1 id="dash-greet">Welcome back!</h1>
-    <p>OAU Student Learning Platform</p>
+    <p>BABSPHARM Cloud</p>
   </div>
   <div class="stats-grid">
     <div class="sc"><div class="si2">📝</div><div><div class="sv" id="st-quiz">0</div><div class="sl">Quizzes Taken</div></div></div>
@@ -604,20 +604,51 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="sec-title">🏃 Study Sprint Mode</div>
   <div style="background:linear-gradient(135deg,#7c3aed,#4338ca);border-radius:16px;padding:20px;text-align:center;margin-bottom:14px;">
     <div style="font-size:2rem;margin-bottom:8px">⏱️</div>
-    <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#fff;margin-bottom:4px">25-Minute Study Sprint</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#fff;margin-bottom:4px">Study Sprint Mode</div>
     <div style="font-size:.76rem;color:rgba(255,255,255,.8)">Focus. No distractions. Sprint ends with a surprise quiz!</div>
   </div>
+
+  <!-- Timer display -->
   <div style="background:var(--card);border:2px solid var(--gold);border-radius:var(--r);padding:24px;text-align:center;margin-bottom:14px;">
-    <div id="sprint-timer" style="font-family:'Playfair Display',serif;font-size:4rem;font-weight:900;color:var(--gold2)">25:00</div>
-    <div id="sprint-label" style="font-size:.78rem;color:var(--text2);margin-top:4px">Ready to sprint?</div>
+    <div id="sprint-timer" style="font-family:'Playfair Display',serif;font-size:4.5rem;font-weight:900;color:var(--gold2);letter-spacing:2px;">25:00</div>
+    <div id="sprint-label" style="font-size:.78rem;color:var(--text2);margin-top:6px;">Set your duration and topic below, then start!</div>
+    <!-- Progress bar -->
+    <div style="margin-top:12px;background:rgba(255,255,255,.08);border-radius:20px;height:6px;overflow:hidden;">
+      <div id="sprint-progress" style="height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:20px;transition:width .5s;"></div>
+    </div>
   </div>
-  <div class="fg"><label>What are you studying?</label>
-    <input type="text" id="sprint-topic" placeholder="e.g. CHM 101 Reaction Kinetics"/>
+
+  <!-- Duration picker -->
+  <div class="fg" style="margin-bottom:10px;">
+    <label>⏱ Choose your sprint duration</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <button onclick="setSprintDuration(15,this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;">15 min</button>
+      <button onclick="setSprintDuration(25,this)" id="sprint-dur-default" style="padding:8px 16px;border-radius:20px;border:none;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;font-weight:700;">25 min</button>
+      <button onclick="setSprintDuration(30,this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;">30 min</button>
+      <button onclick="setSprintDuration(45,this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;">45 min</button>
+      <button onclick="setSprintDuration(60,this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;">60 min</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <label style="font-size:.74rem;color:var(--text2);white-space:nowrap;">Or type minutes:</label>
+      <input type="number" id="sprint-custom-mins" min="1" max="180" placeholder="e.g. 20"
+        style="flex:1;padding:9px 12px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.88rem;outline:none;"
+        oninput="setSprintDurationCustom(this.value)"/>
+      <span style="font-size:.78rem;color:var(--text2);">min</span>
+    </div>
   </div>
+
+  <!-- Topic input -->
+  <div class="fg" style="margin-bottom:14px;">
+    <label>📚 What are you studying?</label>
+    <input type="text" id="sprint-topic" placeholder="e.g. CHM 101 Reaction Kinetics, MTH Integration..."/>
+  </div>
+
+  <!-- Buttons -->
   <div style="display:flex;gap:10px;margin-bottom:14px;">
-    <button id="sprint-start-btn" class="btn btn-gold" style="flex:1" onclick="startSprint()">🏃 Start Sprint</button>
-    <button class="btn btn-out" style="flex:1" onclick="stopSprint()">⏹ Stop</button>
+    <button id="sprint-start-btn" class="btn btn-gold" style="flex:1;padding:14px;font-size:.9rem;" onclick="startSprint()">🏃 Start Sprint</button>
+    <button class="btn btn-out" style="flex:1;padding:14px;" onclick="stopSprint()">⏹ Stop</button>
   </div>
+
   <div id="sprint-message" style="text-align:center;font-size:.82rem;color:var(--text2);padding:10px;"></div>
   <div id="sprint-quiz-section" style="display:none;background:var(--card);border:1px solid var(--gold);border-radius:var(--r);padding:16px;">
     <div style="font-size:.84rem;font-weight:700;color:var(--gold2);margin-bottom:12px;">🎯 Sprint Complete! Quick Quiz Time!</div>
@@ -1019,23 +1050,60 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 <!-- ══ LEADERBOARD ══ -->
 <!-- ══ UNIVERSITY PAST QUESTIONS ══ -->
 <div id="pg-pq" class="page hidden">
-  <div class="sec-title">📋 University Past Questions</div>
-  <div style="background:linear-gradient(135deg,#7c2d12,#92400e);border-radius:14px;padding:14px;margin-bottom:14px;text-align:center;">
-    <div style="font-size:1.4rem;margin-bottom:6px">🎓</div>
-    <div style="font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#fde68a;margin-bottom:4px">100 Level University PQ Bank</div>
-    <div style="font-size:.74rem;color:rgba(255,255,255,.8)">Standard university-level questions — not O level. OAU style MCQs with full explanations.</div>
+  <div class="sec-title">📋 Past Questions Bank</div>
+
+  <!-- GATE -->
+  <div id="pq-gate" style="display:block;">
+    <div style="background:linear-gradient(135deg,#7c2d12,#92400e);border-radius:14px;padding:20px;margin-bottom:14px;text-align:center;">
+      <div style="font-size:2rem;margin-bottom:8px">🎓</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#fde68a;margin-bottom:6px">100 Level University PQ Bank</div>
+      <div style="font-size:.76rem;color:rgba(255,255,255,.8);line-height:1.6">Enter your access code to unlock the PQ Bank.</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:20px;">
+      <div class="fg" style="margin-bottom:14px;">
+        <label style="font-size:.78rem;color:var(--text2);font-weight:600;letter-spacing:.5px;text-transform:uppercase;">PQ Access Code</label>
+        <input type="text" id="pq-code-inp" placeholder="Enter your access code"
+          style="font-size:1.1rem;letter-spacing:3px;font-weight:700;text-transform:uppercase;text-align:center;"
+          onkeydown="if(event.key==='Enter') verifyPQCode()"/>
+        <div id="pq-code-msg" style="display:none;margin-top:8px;font-size:.78rem;text-align:center;"></div>
+      </div>
+      <button class="btn btn-gold" style="width:100%;padding:14px;font-size:.9rem;" onclick="verifyPQCode()">🔓 Unlock PQ Bank</button>
+      <div style="text-align:center;margin-top:12px;font-size:.74rem;color:var(--text2);">Don't have a code? Contact your admin.</div>
+    </div>
   </div>
-  <!-- Subject Tabs -->
-  <div style="display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;">
-    <button class="pq-tab on" onclick="switchPQTab('chm101',this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">⚗️ CHM 101</button>
-    <button class="pq-tab" onclick="switchPQTab('chm102',this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;white-space:nowrap;">⚗️ CHM 102</button>
-    <button class="pq-tab" onclick="switchPQTab('mth101',this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;white-space:nowrap;">📐 MTH 101</button>
-    <button class="pq-tab" onclick="switchPQTab('mth102',this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;white-space:nowrap;">📐 MTH 102</button>
-    <button class="pq-tab" onclick="switchPQTab('phy101',this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;white-space:nowrap;">⚡ PHY 101</button>
-    <button class="pq-tab" onclick="switchPQTab('phy102',this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;white-space:nowrap;">⚡ PHY 102</button>
+
+  <!-- UNLOCKED: Course grid -->
+  <div id="pq-unlocked" style="display:none;">
+    <div style="background:var(--card);border:1px solid rgba(74,222,128,.3);border-radius:12px;padding:10px 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:.8rem;color:var(--green);font-weight:700">✅ PQ Bank Unlocked!</div>
+      <button onclick="lockPQBank()" style="font-size:.72rem;padding:4px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:8px;color:#f87171;cursor:pointer;font-family:'Outfit',sans-serif;">🔒 Lock</button>
+    </div>
+    <div id="pq-course-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;"></div>
+
+    <!-- Course code entry -->
+    <div id="pq-course-gate" style="display:none;background:var(--card);border:1px solid var(--gold);border-radius:14px;padding:18px;margin-bottom:14px;">
+      <div style="font-size:.86rem;font-weight:700;color:var(--gold2);margin-bottom:4px" id="pq-course-gate-title">Unlock Course</div>
+      <div style="font-size:.74rem;color:var(--text2);margin-bottom:12px">Enter the course code to unlock this subject.</div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="pq-course-code-inp" placeholder="Course code..."
+          style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;outline:none;letter-spacing:2px;font-weight:700;text-transform:uppercase;"
+          onkeydown="if(event.key==='Enter') verifyCourseCode()"/>
+        <button onclick="verifyCourseCode()" class="btn btn-gold" style="padding:10px 16px;">🔓</button>
+      </div>
+      <div id="pq-course-code-msg" style="display:none;margin-top:8px;font-size:.76rem;text-align:center;"></div>
+      <button onclick="closeCourseGate()" style="width:100%;margin-top:8px;padding:7px;background:none;border:none;color:var(--text2);font-size:.74rem;cursor:pointer;font-family:'Outfit',sans-serif;">Cancel</button>
+    </div>
+
+    <!-- Subject view with topic tabs -->
+    <div id="pq-subject-view" style="display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <button onclick="closePQSubject()" style="padding:6px 14px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);border-radius:20px;color:var(--gold2);font-size:.76rem;cursor:pointer;font-family:'Outfit',sans-serif;">← Back to Courses</button>
+        <div id="pq-subject-title" style="font-size:.84rem;font-weight:700;color:var(--gold2);"></div>
+      </div>
+      <div id="pq-topic-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;overflow-x:auto;"></div>
+      <div id="pq-content"></div>
+    </div>
   </div>
-  <!-- PQ Content -->
-  <div id="pq-content"></div>
 </div>
 
 <div id="pg-leaderboard" class="page hidden">
@@ -1254,28 +1322,31 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   </div>
 
   <!-- MTH TUTOR MODE -->
+  <!-- ══ MTH TUTOR MODE ══ -->
   <div id="ai-mode-mth" style="display:none;">
-    <div style="background:linear-gradient(135deg,#1e40af,#4338ca);border-radius:14px;padding:14px;margin-bottom:12px;">
-      <div style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:4px;">📐 MTH 101 & 102 Tutor</div>
-      <div style="font-size:.74rem;color:rgba(255,255,255,.8)">Teaches Mathematics step by step, conversationally. Like a real teacher — not just answers!</div>
+    <!-- Difficulty selector -->
+    <div style="background:linear-gradient(135deg,#1e40af,#4338ca);border-radius:14px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:8px;">📐 MTH 101 & 102 Tutor</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:.72rem;color:rgba(255,255,255,.7);">Level:</span>
+        <button onclick="setTutorLevel('mth','easy',this)" id="mth-lvl-easy" style="padding:4px 12px;border-radius:20px;border:none;background:rgba(74,222,128,.25);color:#4ade80;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:700;">🟢 Easy</button>
+        <button onclick="setTutorLevel('mth','medium',this)" id="mth-lvl-medium" style="padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.6);font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🟡 Medium</button>
+        <button onclick="setTutorLevel('mth','hard',this)" id="mth-lvl-hard" style="padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.6);font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🔴 Hard</button>
+      </div>
     </div>
-    <!-- Topic buttons -->
-    <div style="font-size:.74rem;color:var(--text2);margin-bottom:8px;font-weight:600">Quick Topics:</div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
-      <button class="ai-sug" onclick="startMTHLesson('Sets and Set Theory')">Sets</button>
-      <button class="ai-sug" onclick="startMTHLesson('Functions and Relations')">Functions</button>
-      <button class="ai-sug" onclick="startMTHLesson('Limits and Continuity')">Limits</button>
-      <button class="ai-sug" onclick="startMTHLesson('Differentiation')">Differentiation</button>
-      <button class="ai-sug" onclick="startMTHLesson('Integration')">Integration</button>
-      <button class="ai-sug" onclick="startMTHLesson('Matrices and Determinants')">Matrices</button>
-      <button class="ai-sug" onclick="startMTHLesson('Complex Numbers')">Complex Numbers</button>
-      <button class="ai-sug" onclick="startMTHLesson('Binomial Theorem')">Binomial</button>
-      <button class="ai-sug" onclick="startMTHLesson('Trigonometry')">Trigonometry</button>
-      <button class="ai-sug" onclick="startMTHLesson('Vectors')">Vectors</button>
-      <button class="ai-sug" onclick="startMTHLesson('Sequences and Series')">Series</button>
-      <button class="ai-sug" onclick="startMTHLesson('Logarithms and Indices')">Logarithms</button>
+    <!-- Quick action buttons -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      <button onclick="tutorSimplify('mth')" style="padding:6px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🔄 Simpler please</button>
+      <button onclick="tutorRepeat('mth')" style="padding:6px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🔁 Repeat that</button>
+      <button onclick="tutorMiniQuiz('mth')" style="padding:6px 12px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);border-radius:20px;color:var(--gold2);font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🎯 Test me</button>
+      <button onclick="readTutorAloud('mth')" style="padding:6px 12px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:20px;color:#4ade80;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🎧 Read aloud</button>
+      <button onclick="generateTutorSummary('mth')" style="padding:6px 12px;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);border-radius:20px;color:#fb923c;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">📝 Summary PDF</button>
     </div>
-    <div style="font-size:.74rem;color:var(--text2);margin-bottom:6px;font-weight:600">Or ask anything:</div>
+    <div id="chat-area" style="min-height:200px;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="mth-inp" placeholder="Ask or answer here..." style="flex:1;padding:11px 13px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;" onkeydown="if(event.key==='Enter'){sendMTHMessage(this.value);}"/>
+      <button onclick="sendMTHMessage(document.getElementById('mth-inp').value)" style="background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;padding:11px 16px;cursor:pointer;font-size:1rem;">➤</button>
+    </div>
   </div>
 
   <!-- CHAT MODE -->
@@ -1290,32 +1361,54 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     </div>
   </div>
 
-  <!-- CHM TUTOR MODE -->
+  <!-- ══ CHM TUTOR MODE ══ -->
   <div id="ai-mode-chm" style="display:none;">
-    <div style="background:linear-gradient(135deg,#065f46,#0f766e);border-radius:14px;padding:14px;margin-bottom:12px;">
-      <div style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:4px;">⚗️ CHM 101 & 102 Tutor</div>
-      <div style="font-size:.74rem;color:rgba(255,255,255,.8)">Teaches Chemistry step by step, conversationally — like a loving teacher. Not just answers!</div>
+    <div style="background:linear-gradient(135deg,#065f46,#0f766e);border-radius:14px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:8px;">⚗️ CHM 101 & 102 Tutor</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:.72rem;color:rgba(255,255,255,.7);">Level:</span>
+        <button onclick="setTutorLevel('chm','easy',this)" id="chm-lvl-easy" style="padding:4px 12px;border-radius:20px;border:none;background:rgba(74,222,128,.25);color:#4ade80;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:700;">🟢 Easy</button>
+        <button onclick="setTutorLevel('chm','medium',this)" id="chm-lvl-medium" style="padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.6);font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🟡 Medium</button>
+        <button onclick="setTutorLevel('chm','hard',this)" id="chm-lvl-hard" style="padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.6);font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🔴 Hard</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      <button onclick="tutorSimplify('chm')" style="padding:6px 12px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:20px;color:#34d399;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🔄 Simpler please</button>
+      <button onclick="tutorRepeat('chm')" style="padding:6px 12px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:20px;color:#34d399;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🔁 Repeat that</button>
+      <button onclick="tutorMiniQuiz('chm')" style="padding:6px 12px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);border-radius:20px;color:var(--gold2);font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🎯 Test me</button>
+      <button onclick="readTutorAloud('chm')" style="padding:6px 12px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:20px;color:#4ade80;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🎧 Read aloud</button>
+      <button onclick="generateTutorSummary('chm')" style="padding:6px 12px;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);border-radius:20px;color:#fb923c;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">📝 Summary PDF</button>
     </div>
     <div id="chm-chat-area" style="min-height:200px;margin-bottom:10px;"></div>
     <div style="display:flex;gap:8px;">
-      <input type="text" id="chm-inp" placeholder="Ask any CHM 101/102 question..." style="flex:1;padding:11px 13px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;" onkeydown="if(event.key==='Enter')sendCHMMessage(document.getElementById('chm-inp').value)"/>
+      <input type="text" id="chm-inp" placeholder="Ask or answer here..." style="flex:1;padding:11px 13px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;" onkeydown="if(event.key==='Enter')sendCHMMessage(this.value)"/>
       <button onclick="sendCHMMessage(document.getElementById('chm-inp').value)" style="background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;padding:11px 16px;cursor:pointer;font-size:1rem;">➤</button>
     </div>
-    <button onclick="chmConversation=[];document.getElementById('chm-chat-area').innerHTML='';initCHMTutor();" style="width:100%;margin-top:8px;padding:7px;background:none;border:1px solid var(--cb);border-radius:8px;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.74rem;cursor:pointer;">🔄 Start New Topic</button>
   </div>
 
-  <!-- PHY TUTOR MODE -->
+  <!-- ══ PHY TUTOR MODE ══ -->
   <div id="ai-mode-phy" style="display:none;">
-    <div style="background:linear-gradient(135deg,#1e3a5f,#1e40af);border-radius:14px;padding:14px;margin-bottom:12px;">
-      <div style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:4px;">⚡ PHY 101 & 102 Tutor</div>
-      <div style="font-size:.74rem;color:rgba(255,255,255,.8)">Serway-level physics teaching — step by step, conversational, like a loving teacher.</div>
+    <div style="background:linear-gradient(135deg,#1e3a5f,#1e40af);border-radius:14px;padding:14px;margin-bottom:10px;">
+      <div style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:8px;">⚡ PHY 101 & 102 Tutor</div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <span style="font-size:.72rem;color:rgba(255,255,255,.7);">Level:</span>
+        <button onclick="setTutorLevel('phy','easy',this)" id="phy-lvl-easy" style="padding:4px 12px;border-radius:20px;border:none;background:rgba(74,222,128,.25);color:#4ade80;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:700;">🟢 Easy</button>
+        <button onclick="setTutorLevel('phy','medium',this)" id="phy-lvl-medium" style="padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.6);font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🟡 Medium</button>
+        <button onclick="setTutorLevel('phy','hard',this)" id="phy-lvl-hard" style="padding:4px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.2);background:transparent;color:rgba(255,255,255,.6);font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🔴 Hard</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
+      <button onclick="tutorSimplify('phy')" style="padding:6px 12px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:20px;color:#60a5fa;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🔄 Simpler please</button>
+      <button onclick="tutorRepeat('phy')" style="padding:6px 12px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:20px;color:#60a5fa;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🔁 Repeat that</button>
+      <button onclick="tutorMiniQuiz('phy')" style="padding:6px 12px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);border-radius:20px;color:var(--gold2);font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🎯 Test me</button>
+      <button onclick="readTutorAloud('phy')" style="padding:6px 12px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:20px;color:#4ade80;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">🎧 Read aloud</button>
+      <button onclick="generateTutorSummary('phy')" style="padding:6px 12px;background:rgba(249,115,22,.12);border:1px solid rgba(249,115,22,.3);border-radius:20px;color:#fb923c;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">📝 Summary PDF</button>
     </div>
     <div id="phy-chat-area" style="min-height:200px;margin-bottom:10px;"></div>
     <div style="display:flex;gap:8px;">
-      <input type="text" id="phy-inp" placeholder="Ask any PHY 101/102 question..." style="flex:1;padding:11px 13px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;" onkeydown="if(event.key==='Enter')sendPHYMessage(document.getElementById('phy-inp').value)"/>
+      <input type="text" id="phy-inp" placeholder="Ask or answer here..." style="flex:1;padding:11px 13px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;" onkeydown="if(event.key==='Enter')sendPHYMessage(this.value)"/>
       <button onclick="sendPHYMessage(document.getElementById('phy-inp').value)" style="background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;padding:11px 16px;cursor:pointer;font-size:1rem;">➤</button>
     </div>
-    <button onclick="phyConversationHistory=[];document.getElementById('phy-chat-area').innerHTML='';initPHYTutor();" style="width:100%;margin-top:8px;padding:7px;background:none;border:1px solid var(--cb);border-radius:8px;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.74rem;cursor:pointer;">🔄 Start New Topic</button>
   </div>
 
   <!-- EXPLAIN MODE -->
@@ -1915,7 +2008,7 @@ async function doRegister(){
           <div style="background:rgba(201,168,76,.1);border-radius:8px;padding:15px;margin:20px 0;">
             <p style="margin:0;color:#e8c97a;font-weight:bold;">🎁 Welcome Bonus: 50 Points added to your account!</p>
           </div>
-          <p style="color:#9bacc8;font-size:13px;">OAU Student Learning Platform — BABSPHARM Cloud</p>
+          <p style="color:#9bacc8;font-size:13px;">BABSPHARM Cloud</p>
         </div>`;
         fetch('https://api.brevo.com/v3/smtp/email',{
           method:'POST',
@@ -1983,7 +2076,21 @@ function showPage(pg){
   if(pg==='leaderboard') loadLeaderboard();
   if(pg==='survival') {}
   if(pg==='cbt'){document.getElementById('cbt-access-code').value='';document.getElementById('cbt-join-msg').style.display='none';}
-  if(pg==='pq'){renderPQ(currentPQSubject);}
+  if(pg==='pq'){
+    if(sessionStorage.getItem('pqUnlocked')==='true'){
+      document.getElementById('pq-gate').style.display='none';
+      document.getElementById('pq-unlocked').style.display='block';
+      document.getElementById('pq-subject-view').style.display='none';
+      document.getElementById('pq-course-gate').style.display='none';
+      document.getElementById('pq-course-grid').style.display='grid';
+      renderPQCourseGrid();
+    } else {
+      document.getElementById('pq-gate').style.display='block';
+      document.getElementById('pq-unlocked').style.display='none';
+      const inp=document.getElementById('pq-code-inp');
+      if(inp) inp.value='';
+    }
+  }
   if(pg==='vault') loadVault();
   if(pg==='sprint') initSprint();
   if(pg==='hot') loadHotTopics();
@@ -2344,9 +2451,22 @@ function switchAIMode(mode, btn){
     const el = document.getElementById('ai-mode-'+m);
     if(el) el.style.display = m===mode ? 'block' : 'none';
   });
-  if(mode==='mth') initMTHTutor();
-  if(mode==='chm') initCHMTutor();
-  if(mode==='phy') initPHYTutor();
+  // Always reset and show topics fresh when switching tutor modes
+  if(mode==='mth'){
+    mthConversation=[];
+    document.getElementById('chat-area').innerHTML='';
+    initMTHTutor();
+  }
+  if(mode==='chm'){
+    chmConversationHistory=[];
+    document.getElementById('chm-chat-area').innerHTML='';
+    initCHMTutor();
+  }
+  if(mode==='phy'){
+    phyConversationHistory=[];
+    document.getElementById('phy-chat-area').innerHTML='';
+    initPHYTutor();
+  }
 }
 
 async function runExplain(){
@@ -3766,6 +3886,146 @@ async function explainAnswer(i){
 function closeReview(){
   document.getElementById('review-modal').style.display='none';
 }
+// ══ TUTOR FEATURES ══
+const tutorLevels = {mth:'easy', chm:'easy', phy:'easy'};
+const tutorLastMsg = {mth:'', chm:'', phy:''};
+
+// Difficulty level setter
+function setTutorLevel(tutor, level, btn){
+  tutorLevels[tutor] = level;
+  const colors = {easy:['rgba(74,222,128,.25)','#4ade80'], medium:['rgba(250,204,21,.25)','#facc15'], hard:['rgba(248,113,113,.25)','#f87171']};
+  ['easy','medium','hard'].forEach(l=>{
+    const b = document.getElementById(`${tutor}-lvl-${l}`);
+    if(!b) return;
+    if(l===level){
+      b.style.background = colors[l][0];
+      b.style.color = colors[l][1];
+      b.style.border = 'none';
+      b.style.fontWeight = '700';
+    } else {
+      b.style.background = 'transparent';
+      b.style.color = 'rgba(255,255,255,.6)';
+      b.style.border = '1px solid rgba(255,255,255,.2)';
+      b.style.fontWeight = '400';
+    }
+  });
+  showToast(`${level.charAt(0).toUpperCase()+level.slice(1)} mode activated`);
+}
+
+// Get level instruction for system prompt
+function getLevelInstruction(tutor){
+  const l = tutorLevels[tutor]||'easy';
+  if(l==='easy') return 'Use very simple language. Assume student knows nothing. Many real-life examples. Very short sentences.';
+  if(l==='medium') return 'Use standard university level language. Give examples. Show working. Not too simple, not too complex.';
+  return 'Use advanced language. Include derivations. Challenge the student. Ask harder follow-up questions. University exam standard.';
+}
+
+// Simplify last explanation
+async function tutorSimplify(tutor){
+  const msg = 'Please explain that again but MUCH simpler. Use an even more basic everyday Nigerian example. Maximum 5 lines.';
+  if(tutor==='mth'){appendMsg(msg,'user');await sendMTHMessage(msg);}
+  else if(tutor==='chm'){appendCHMMsg(msg,'user');await sendCHMMessage(msg);}
+  else if(tutor==='phy'){appendPHYMsg(msg,'user');await sendPHYMessage(msg);}
+}
+
+// Repeat last concept
+async function tutorRepeat(tutor){
+  const msg = 'Please repeat the last concept again in a completely different way with a new example.';
+  if(tutor==='mth'){appendMsg(msg,'user');await sendMTHMessage(msg);}
+  else if(tutor==='chm'){appendCHMMsg(msg,'user');await sendCHMMessage(msg);}
+  else if(tutor==='phy'){appendPHYMsg(msg,'user');await sendPHYMessage(msg);}
+}
+
+// Mini quiz on current concept
+async function tutorMiniQuiz(tutor){
+  const msg = 'Give me ONE quick MCQ question to test if I understood the last concept. Give 4 options A B C D. Wait for my answer before revealing which is correct.';
+  if(tutor==='mth'){appendMsg(msg,'user');await sendMTHMessage(msg);}
+  else if(tutor==='chm'){appendCHMMsg(msg,'user');await sendCHMMessage(msg);}
+  else if(tutor==='phy'){appendPHYMsg(msg,'user');await sendPHYMessage(msg);}
+}
+
+// Read last tutor message aloud
+function readTutorAloud(tutor){
+  if(!window.speechSynthesis){showToast('Text to speech not supported on this device');return;}
+  window.speechSynthesis.cancel();
+  // Get last bot message
+  let lastText = '';
+  if(tutor==='mth'){
+    const msgs = document.querySelectorAll('#chat-area .ai-msg.bot');
+    if(msgs.length) lastText = msgs[msgs.length-1].innerText;
+  } else if(tutor==='chm'){
+    const area = document.getElementById('chm-chat-area');
+    const msgs = area?.querySelectorAll('[style*="margin-right"]');
+    if(msgs?.length) lastText = msgs[msgs.length-1].innerText;
+  } else if(tutor==='phy'){
+    const area = document.getElementById('phy-chat-area');
+    const msgs = area?.querySelectorAll('[style*="margin-right"]');
+    if(msgs?.length) lastText = msgs[msgs.length-1].innerText;
+  }
+  if(!lastText){showToast('No message to read yet');return;}
+  // Clean text
+  lastText = lastText.replace(/BABS (MATHS|CHEM|PHYSICS)/,'').replace(/[^\w\s.,!?:;()%-+=/]/g,' ').trim();
+  const utter = new SpeechSynthesisUtterance(lastText);
+  utter.rate = 0.85; utter.pitch = 1; utter.lang = 'en-GB';
+  window.speechSynthesis.speak(utter);
+  showToast('🎧 Reading aloud... tap again to stop');
+}
+
+// Generate summary PDF
+async function generateTutorSummary(tutor){
+  if(!GROQ_KEY){showToast('AI not configured');return;}
+  showToast('📝 Generating summary...');
+  const topic = (tutor==='mth'?mthCurrentTopic:tutor==='chm'?chmCurrentTopic:phyCurrentTopic)||'Current Topic';
+  const conv = (tutor==='mth'?mthConversation:tutor==='chm'?chmConversationHistory:phyConversationHistory)||[];
+  const convText = conv.slice(-8).map(m=>`${m.role}: ${m.content}`).join('\n');
+  try{
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+      body:JSON.stringify({
+        model:'llama-3.3-70b-versatile',
+        messages:[{role:'user',content:`Based on this tutoring session about "${topic}", generate a clean summary note a student can keep.\n\nSession:\n${convText}\n\nFormat:\n# ${topic} — Summary Notes\n\n## Key Concepts\n(bullet points of main ideas)\n\n## Important Formulas/Reactions\n(if any)\n\n## Common Mistakes to Avoid\n(from the session)\n\n## Exam Tips\n(what to remember)\n\nMake it concise and student-friendly.`}],
+        temperature:0.5, max_tokens:800
+      })
+    });
+    const data = await res.json();
+    const summary = data.choices?.[0]?.message?.content||'Could not generate summary';
+    // Create downloadable file
+    const blob = new Blob([summary],{type:'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=`${topic.replace(/\s+/g,'_')}_Summary.txt`;
+    a.click(); URL.revokeObjectURL(url);
+    showToast('📝 Summary downloaded!');
+  }catch(e){showToast('Error generating summary');}
+}
+
+// Save & restore tutor progress in Firestore
+async function saveTutorProgress(tutor, topic, msgCount){
+  if(!CU||!topic) return;
+  try{
+    await db.collection('tutorProgress').doc(CU.uid).set({
+      [tutor+'Topic']: topic,
+      [tutor+'MsgCount']: msgCount,
+      [tutor+'SavedAt']: new Date().toISOString()
+    },{merge:true});
+  }catch(e){}
+}
+
+async function loadTutorProgress(tutor){
+  if(!CU) return null;
+  try{
+    const doc = await db.collection('tutorProgress').doc(CU.uid).get();
+    if(doc.exists){
+      return {
+        topic: doc.data()[tutor+'Topic']||'',
+        savedAt: doc.data()[tutor+'SavedAt']||''
+      };
+    }
+  }catch(e){}
+  return null;
+}
+
 // ══ PHY TUTOR (CONVERSATIONAL) ══
 let phyConversationHistory = [];
 let phyCurrentTopic = '';
@@ -4130,48 +4390,153 @@ Special Relativity (Serway Chapter):
 - Kinetic energy: KE = (γ-1)m₀c²
 
 ════════════════════════════════════
-YOUR TEACHING STYLE — FATHER & CHILD
+HOW YOU TEACH — MANDATORY RULES
 ════════════════════════════════════
 
-STRICT RULES:
-1. ONE concept at a time. Explain it, give worked example, STOP
-2. After each concept: "Are you with me? 😊 Ready for the next step?"
-3. Give student a small problem to try after each concept
-4. Celebrate: "Excellent! 🎉 You've got it!" Wrong: "Good try! Let me show you..."
-5. Nigerian examples:
-   - Okada (motorbike) for velocity/acceleration
-   - Danfo bus stopping suddenly for inertia
-   - Market trader throwing goods for projectile
-   - Generator for electricity
-   - NEPA/PHCN for power and circuits
-   - Pressing iron for heat conduction
-   - Fan for circular motion
-   - Mobile phone screen for light/optics
-6. SHORT responses — max 2 concepts per reply
-7. Show EVERY calculation step on a new line
-8. Always connect to real life and everyday Nigerian experiences
-9. End EVERY reply with a question back to student
-10. Reference Serway when relevant: "As Serway explains in Chapter..."
-11. Be warm, patient, encouraging — never make them feel stupid
-12. Box or highlight final answers clearly`;
+🔴 RULE 1 — SMALL CHUNKS ONLY:
+Send ONE concept per message. Maximum 6-8 lines of text per response.
+NEVER dump a full lesson at once. Think of it like sending WhatsApp messages — short, one idea at a time.
+
+🔴 RULE 2 — ALWAYS END WITH A QUESTION:
+Every single message MUST end with either:
+- "Do you understand this? 😊" 
+- "Are you with me so far? Let me know!"
+- "Try this: [simple question for student to answer]"
+- "What happens if we change X to Y? Think about it!"
+NEVER send a message without ending with engagement.
+
+🔴 RULE 3 — WAIT FOR STUDENT:
+After asking, WAIT. When student responds:
+- If correct → celebrate "YES! 🎉 Exactly right!" then move to next concept
+- If wrong → kindly correct "Good try! Actually..." then re-explain simply
+- If confused → try a different analogy
+
+🔴 RULE 4 — USE VISUAL DIAGRAMS:
+Draw diagrams using text/ASCII art. Examples:
+
+For chemistry bonding:
+Na  →  Na⁺  +  e⁻
+Cl  +  e⁻  →  Cl⁻
+Na⁺  +  Cl⁻  →  [Na⁺][Cl⁻]
+
+For physics forces:
+        ↑ N (Normal force)
+        |
+[BOX]───────
+        |
+        ↓ W = mg (Weight)
+
+For maths graphs:
+y
+|    *  ← maximum
+|   * *
+|  *   *
+|___________ x
+     x=3
+
+For energy diagrams:
+Energy
+  |    *
+  |   / \  Ea →
+  |  /     | /     *___
+  |/  Reactants  Products
+  |_________________ reaction
+
+For circuits:
++──[R1]──[R2]──+
+|               |
+[Battery]    [Bulb]
+|               |
++───────────────+
+
+For molecular shapes:
+    Cl
+    |
+Cl─ C ─Cl    Tetrahedral
+    |
+    Cl
+
+ALWAYS draw a diagram when explaining:
+- Any chemical structure or reaction
+- Any physics force, motion, or circuit
+- Any mathematical graph or geometric shape
+- Any process or sequence of steps
+
+🔴 RULE 5 — REAL NIGERIAN EXAMPLES:
+Connect EVERY concept to Nigerian life:
+- Electricity → NEPA/PHCN power cuts
+- Pressure → tyre pressure at petrol station
+- Heat → pressing iron, cooking pot
+- Acid → battery acid, lemon/orange juice
+- Momentum → danfo bus braking suddenly
+- Waves → radio stations in Nigeria
+- Kinetics → how quickly garri dissolves in water
+- Bonding → how salt dissolves in soup
+
+🔴 RULE 6 — TEACH EVERY CONCEPT IN THE TOPIC:
+When a student picks a topic, teach ALL sub-concepts one by one:
+Example for "Ionic Bonding":
+Message 1: What is ionic bonding + diagram → ask question
+Message 2: How ions form (electron transfer) + diagram → ask question  
+Message 3: Properties of ionic compounds → ask question
+Message 4: Examples (NaCl, MgO, CaCl₂) → ask question
+Message 5: How to identify ionic compounds in exam → exam tip
+
+NEVER skip a sub-concept. Cover everything completely.
+
+🔴 RULE 7 — EXAM TIPS THROUGHOUT:
+Sprinkle exam tips naturally:
+"📝 Exam Tip: OAU always asks this..."
+"⚠️ Common mistake: Many students..."
+"🎯 If you see this in exam, immediately think..."
+
+🔴 RULE 8 — RESPONSE LENGTH:
+Each message = maximum 150 words + 1 diagram (if needed)
+Short. Punchy. Clear. Then ask.
+````;
 
 function initPHYTutor(){
-  if(phyConversationHistory.length===0){
-    const chatArea = document.getElementById('phy-chat-area');
-    if(chatArea && !document.getElementById('phy-welcome')){
-      const topics = ['Measurements & Units','Kinematics','Newton\'s Laws','Work & Energy','Momentum','Circular Motion','Gravitation','Simple Harmonic Motion','Waves & Sound','Thermodynamics','Electrostatics','Electric Circuits','Magnetism','Electromagnetic Induction','Optics','Modern Physics','Nuclear Physics','Special Relativity'];
-      const welcome = document.createElement('div');
-      welcome.id='phy-welcome';
-      welcome.style.cssText='background:linear-gradient(135deg,rgba(30,58,95,.15),rgba(30,64,175,.15));border:1px solid rgba(59,130,246,.3);border-radius:14px;padding:16px;margin-bottom:10px;';
-      welcome.innerHTML=`
-        <div style="font-size:.9rem;font-weight:700;color:#60a5fa;margin-bottom:8px">⚡ BABS PHYSICS is ready! 😊</div>
-        <div style="font-size:.78rem;color:var(--text2);line-height:1.7;margin-bottom:10px">My knowledge combines OAU PHY 101/102 + Serway Physics textbook. Step by step, your pace, like a father and child. 🙏</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;">
-          ${topics.map(t=>`<button onclick="startPHYLesson('${t.replace(/'/g,"\\'")}'')" style="padding:5px 11px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);border-radius:20px;color:#60a5fa;font-size:.7rem;cursor:pointer;font-family:'Outfit',sans-serif;">${t}</button>`).join('')}
-        </div>`;
-      chatArea.appendChild(welcome);
-    }
-  }
+  const chatArea = document.getElementById('phy-chat-area');
+  if(!chatArea) return;
+  chatArea.innerHTML = '';
+  const phyTopics = [
+    ['Measurements Units and Vectors','Measurements & Vectors'],
+    ['Kinematics motion in 1D and 2D equations of motion','Kinematics'],
+    ['Projectile Motion range height time of flight','Projectile Motion'],
+    ['Newton Laws of Motion friction tension','Newton\'s Laws'],
+    ['Work Energy Power and Conservation of Energy','Work & Energy'],
+    ['Momentum and Collisions elastic inelastic','Momentum'],
+    ['Circular Motion centripetal acceleration','Circular Motion'],
+    ['Gravitation Newtons law orbital motion Keplers laws','Gravitation'],
+    ['Simple Harmonic Motion spring pendulum','SHM'],
+    ['Waves frequency wavelength speed sound','Waves & Sound'],
+    ['Doppler Effect interference standing waves','Doppler & Interference'],
+    ['Thermodynamics laws heat transfer specific heat','Thermodynamics'],
+    ['Gas Laws and Kinetic Theory','Gas Laws'],
+    ['Electrostatics Coulombs law electric field potential','Electrostatics'],
+    ['Electric Circuits resistance Ohms law Kirchhoff','Electric Circuits'],
+    ['Capacitors energy stored series parallel','Capacitors'],
+    ['Magnetism magnetic force on charges and wires','Magnetism'],
+    ['Electromagnetic Induction Faraday Lenz transformer','EM Induction'],
+    ['Electromagnetic Waves EM spectrum light','EM Waves'],
+    ['Reflection and Refraction Snells law mirrors lenses','Optics'],
+    ['Interference Diffraction Youngs double slit','Interference'],
+    ['Photoelectric Effect and atomic models Bohr','Modern Physics'],
+    ['Nuclear Physics radioactive decay half life','Nuclear Physics'],
+    ['Special Relativity time dilation mass energy','Special Relativity']
+  ];
+  const welcome = document.createElement('div');
+  welcome.id = 'phy-welcome';
+  welcome.style.cssText = 'background:linear-gradient(135deg,rgba(30,58,95,.12),rgba(30,64,175,.12));border:1px solid rgba(59,130,246,.3);border-radius:16px;padding:18px;margin-bottom:10px;';
+  welcome.innerHTML = `
+    <div style="font-size:.95rem;font-weight:700;color:#60a5fa;margin-bottom:6px">⚡ BABS PHYSICS 😊</div>
+    <div style="font-size:.8rem;color:var(--text2);line-height:1.7;margin-bottom:14px">Combining OAU PHY 101/102 + Serway Physics. Choose a topic and I will teach you everything — step by step, like a loving teacher. 🙏</div>
+    <div style="font-size:.76rem;font-weight:700;color:#60a5fa;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">⚡ Choose a topic to start:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      ${phyTopics.map(([full, short])=>`<button onclick="startPHYLesson('${full.replace(/'/g,"\\'")}')" style="padding:7px 13px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);border-radius:20px;color:#60a5fa;font-size:.74rem;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;" onmouseover="this.style.background='rgba(59,130,246,.22)'" onmouseout="this.style.background='rgba(59,130,246,.1)'">${short}</button>`).join('')}
+    </div>
+    <div style="margin-top:12px;border-top:1px solid rgba(59,130,246,.2);padding-top:10px;font-size:.74rem;color:var(--text2)">Or just type any physics question below! 💬</div>`;
+  chatArea.appendChild(welcome);
 }
 
 function appendPHYMsg(text, type){
@@ -4190,11 +4555,17 @@ function appendPHYTyping(){
 }
 
 async function startPHYLesson(topic){
-  phyCurrentTopic=topic;
-  phyConversationHistory=[];
-  document.getElementById('phy-welcome')?.remove();
-  const msg=`I want to learn about ${topic}. Please teach me step by step, slowly, don't rush.`;
-  appendPHYMsg(msg,'user');
+  phyCurrentTopic = topic;
+  phyConversationHistory = [];
+  document.getElementById('phy-chat-area').innerHTML = '';
+  const backBtn = document.createElement('div');
+  backBtn.style.cssText = 'margin-bottom:10px;';
+  backBtn.innerHTML = `<button onclick="phyConversationHistory=[];initPHYTutor()" style="padding:6px 14px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:20px;color:#60a5fa;font-size:.74rem;cursor:pointer;font-family:'Outfit',sans-serif;">← Back to Topics</button>`;
+  document.getElementById('phy-chat-area').appendChild(backBtn);
+  saveTutorProgress('phy', topic, 0);
+  const levelInstr = getLevelInstruction('phy');
+  const msg = `Topic: "${topic}". Level: ${tutorLevels.phy}. ${levelInstr}. RULES: ONE concept per message max 6 lines, draw ASCII diagrams for forces/circuits/waves, use Nigerian examples, end every message asking if I understand, wait for reply. Begin with first concept now.`;
+  appendPHYMsg(topic, 'user');
   await sendPHYMessage(msg);
 }
 
@@ -4457,37 +4828,122 @@ ALCOHOLS (ORGANIC CHEMISTRY):
 - Acidity: 1° > 2° > 3° alcohols
 
 ════════════════════════════════════
-YOUR TEACHING STYLE — FATHER & CHILD
+HOW YOU TEACH — MANDATORY RULES
 ════════════════════════════════════
 
-STRICT RULES:
-1. ONE concept at a time. Explain, give example, STOP
-2. After each concept: "Are you with me so far? 😊 Tell me when you're ready!"
-3. Give student a small question to try after each point
-4. Celebrate correct answers: "Excellent! 🎉 You're getting it!"
-5. Wrong answers: "Good try! Let me show you a different way..."
-6. Use Nigerian examples: garri dissolving=solution, salt in water=ionic, burning wood=exothermic, generator fumes=CO gas, palm oil solidifying=freezing
-7. Keep responses SHORT — maximum 2 concepts per reply
-8. Connect chemistry to real life always
-9. End EVERY reply with a question back to the student
-10. Be warm, patient, encouraging always`;
+🔴 RULE 1 — SMALL CHUNKS ONLY:
+ONE concept per message. Max 6-8 lines of explanation.
+Like sending WhatsApp messages — short, one idea at a time.
+NEVER dump a full lesson at once. Students get lost!
+
+🔴 RULE 2 — ALWAYS END WITH ENGAGEMENT:
+Every single message MUST end with one of:
+- "Do you understand this? 😊"
+- "Try this: [simple question]"
+- "What do you think will happen if...?"
+
+🔴 RULE 3 — RESPOND TO STUDENT:
+- Correct → "YES! 🎉 Perfect! Now..." → next concept
+- Wrong → "Good try! Let me explain differently..."
+- Confused → try a completely different analogy
+
+🔴 RULE 4 — DRAW DIAGRAMS ALWAYS:
+Use ASCII/text diagrams for EVERY concept. Examples:
+
+Ionic bonding (electron transfer):
+Na (2,8,1) ──loses 1e⁻──→ Na⁺ (2,8)
+Cl (2,8,7) ──gains 1e⁻──→ Cl⁻ (2,8,8)
+         ↓
+   Na⁺ + Cl⁻ = NaCl ✓
+
+Lewis structure of water:
+  H ─ O ─ H
+      ‥‥  (2 lone pairs)
+
+Molecular shapes:
+Linear (180°):    Cl─Be─Cl
+Bent (104.5°):    H─O─H ∠
+Pyramidal (107°): N with 3 H below
+
+pH scale:
+|←─ ACID ─→|←NEUTRAL→|←─ BASE ─→|
+0  1  2  3  4  5  6  7  8  9  10  11  12  13  14
+HCl        Lemon    Water      Soap        NaOH
+
+Energy diagram:
+    ╔═══╗ ← Ea (activation energy)
+   ╱     ╲
+══╝ React.  ╚═══ Products (exothermic: ΔH<0)
+
+Periodic table trend:
+← Electronegativity ↑, Atomic radius ↓ →
+Period 2: Li  Be  B  C  N  O  F  Ne
+
+ALWAYS draw when explaining: structures, shapes, trends, reactions.
+
+🔴 RULE 5 — NIGERIAN REAL LIFE:
+- Ionic bonding → salt dissolving in soup
+- Acids → battery acid, lemon/orange juice
+- Kinetics → garri dissolves faster in hot water
+- Catalyst → yeast makes bread rise faster
+- Exothermic → burning firewood
+- Endothermic → ice melting in cold water
+- Oxidation → iron gate rusting in rain
+
+🔴 RULE 6 — COVER EVERY CONCEPT COMPLETELY:
+For any topic, teach ALL sub-concepts step by step.
+"Ionic Bonding" → definition → electron transfer → ion formation → lattice structure → properties → examples → exam tips.
+Never skip. Never rush. One step at a time.
+
+🔴 RULE 7 — EXAM TIPS THROUGHOUT:
+"📝 OAU Exam Tip: They always ask..."
+"⚠️ Common mistake: Students confuse X with Y..."
+"🎯 Key word to write in exam: ..."
+
+🔴 RULE 8 — RESPONSE LENGTH:
+Each response = max 150 words + 1 ASCII diagram.
+SHORT. CLEAR. Then engage the student.`;
 
 function initCHMTutor(){
-  if(chmConversationHistory.length===0){
-    const chatArea = document.getElementById('chm-chat-area');
-    if(chatArea && !document.getElementById('chm-welcome')){
-      const welcome = document.createElement('div');
-      welcome.id='chm-welcome';
-      welcome.style.cssText='background:linear-gradient(135deg,rgba(6,95,70,.15),rgba(15,118,110,.15));border:1px solid rgba(16,185,129,.3);border-radius:14px;padding:16px;margin-bottom:10px;';
-      welcome.innerHTML=`
-        <div style="font-size:.9rem;font-weight:700;color:#34d399;margin-bottom:8px">⚗️ BABS CHEM is ready! 😊</div>
-        <div style="font-size:.78rem;color:var(--text2);line-height:1.7;margin-bottom:10px">I know CHM 101 and CHM 102 deeply. We go step by step — your pace, your comfort. Like father and child. 🙏</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;">
-          ${['Atomic Structure','Periodic Table','Chemical Bonding','Stoichiometry','Gas Laws','Acids & Bases','Redox','Kinetics','Thermochemistry','Qualitative Analysis','Hybridization','VSEPR','Intermolecular Forces','Noble Gases','Alkali Metals','Alkaline Earth Metals','Hydrogen','Transition Metals','Alcohols'].map(t=>`<button onclick="startCHMLesson('${t}')" style="padding:5px 11px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);border-radius:20px;color:#34d399;font-size:.7rem;cursor:pointer;font-family:'Outfit',sans-serif;">${t}</button>`).join('')}
-        </div>`;
-      chatArea.appendChild(welcome);
-    }
-  }
+  const chatArea = document.getElementById('chm-chat-area');
+  if(!chatArea) return;
+  chatArea.innerHTML = '';
+  const chmTopics = [
+    ['Atomic Structure and Electronic Configuration','Atomic Structure'],
+    ['Periodic Table trends and periodicity','Periodic Table'],
+    ['Ionic Bonding with examples','Ionic Bonding'],
+    ['Covalent Bonding polar and non-polar','Covalent Bonding'],
+    ['Coordinate Dative Covalent Bond','Coordinate Bond'],
+    ['Stoichiometry mole calculations','Stoichiometry'],
+    ['Gas Laws Boyle Charles Ideal Gas','Gas Laws'],
+    ['Acids and Bases pH and neutralization','Acids & Bases'],
+    ['Redox Reactions oxidation numbers','Redox'],
+    ['Reaction Kinetics rate and activation energy','Kinetics'],
+    ['Thermochemistry enthalpy Hess Law','Thermochemistry'],
+    ['Qualitative Inorganic Analysis cations anions','Qualitative Analysis'],
+    ['Resonance and chemical bonding','Resonance'],
+    ['VSEPR Theory molecular shapes','VSEPR'],
+    ['Hybridization sp sp2 sp3','Hybridization'],
+    ['Intermolecular Forces and Hydrogen Bonding','Intermolecular Forces'],
+    ['Noble Gases Group 18 properties and uses','Noble Gases'],
+    ['Alkali Metals Group 1 reactions','Alkali Metals'],
+    ['Alkaline Earth Metals Group 2','Alkaline Earth Metals'],
+    ['Hydrogen element isotopes production','Hydrogen'],
+    ['Transition Metals properties complexes','Transition Metals'],
+    ['Alcohols types reactions oxidation','Alcohols']
+  ];
+  const welcome = document.createElement('div');
+  welcome.id = 'chm-welcome';
+  welcome.style.cssText = 'background:linear-gradient(135deg,rgba(6,95,70,.12),rgba(15,118,110,.12));border:1px solid rgba(16,185,129,.3);border-radius:16px;padding:18px;margin-bottom:10px;';
+  welcome.innerHTML = `
+    <div style="font-size:.95rem;font-weight:700;color:#34d399;margin-bottom:6px">⚗️ BABS CHEM 😊</div>
+    <div style="font-size:.8rem;color:var(--text2);line-height:1.7;margin-bottom:14px">I know CHM 101 & 102 completely. Choose a topic and I will teach you everything about it — step by step, like a loving teacher. 🙏</div>
+    <div style="font-size:.76rem;font-weight:700;color:#34d399;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">🧪 Choose a topic to start:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      ${chmTopics.map(([full, short])=>`<button onclick="startCHMLesson('${full}')" style="padding:7px 13px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);border-radius:20px;color:#34d399;font-size:.74rem;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;" onmouseover="this.style.background='rgba(16,185,129,.22)'" onmouseout="this.style.background='rgba(16,185,129,.1)'">${short}</button>`).join('')}
+    </div>
+    <div style="margin-top:12px;border-top:1px solid rgba(16,185,129,.2);padding-top:10px;font-size:.74rem;color:var(--text2)">Or just type any chemistry question below! 💬</div>`;
+  chatArea.appendChild(welcome);
 }
 
 function appendCHMMsg(text, type){
@@ -4507,11 +4963,17 @@ function appendCHMTyping(){
 }
 
 async function startCHMLesson(topic){
-  chmCurrentTopic=topic;
-  chmConversationHistory=[];
-  document.getElementById('chm-welcome')?.remove();
-  const msg=`I want to learn about ${topic}. Please teach me step by step, slowly, don't rush.`;
-  appendCHMMsg(msg,'user');
+  chmCurrentTopic = topic;
+  chmConversationHistory = [];
+  document.getElementById('chm-chat-area').innerHTML = '';
+  const backBtn = document.createElement('div');
+  backBtn.style.cssText = 'margin-bottom:10px;';
+  backBtn.innerHTML = `<button onclick="chmConversationHistory=[];initCHMTutor()" style="padding:6px 14px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:20px;color:#34d399;font-size:.74rem;cursor:pointer;font-family:'Outfit',sans-serif;">← Back to Topics</button>`;
+  document.getElementById('chm-chat-area').appendChild(backBtn);
+  saveTutorProgress('chm', topic, 0);
+  const levelInstr = getLevelInstruction('chm');
+  const msg = `Topic: "${topic}". Level: ${tutorLevels.chm}. ${levelInstr}. RULES: ONE concept per message max 6 lines, draw ASCII diagram for structures/reactions, use Nigerian examples, end every message asking if I understand, wait for reply. Begin with the very first concept now.`;
+  appendCHMMsg(topic, 'user');
   await sendCHMMessage(msg);
 }
 
@@ -4892,107 +5354,145 @@ COORDINATE GEOMETRY:
 - Tangent to circle is perpendicular to radius at point of contact
 
 ════════════════════════════════════
-YOUR CONVERSATIONAL TEACHING STYLE
+HOW YOU TEACH — MANDATORY RULES
 ════════════════════════════════════
 
-You teach like a loving, patient father teaching his precious child. NEVER rush. NEVER dump everything at once.
+🔴 RULE 1 — SMALL CHUNKS ONLY:
+ONE concept per message. Max 6-8 lines.
+Like sending WhatsApp messages — short, one step at a time.
+NEVER write out a full topic at once. Students get lost!
 
-CONVERSATIONAL RULES — FOLLOW STRICTLY:
+🔴 RULE 2 — ALWAYS END WITH ENGAGEMENT:
+Every message MUST end with:
+- "Are you following? 😊"
+- "Now YOU try: [simple practice question]"
+- "What do you think the answer is?"
+NEVER end without engaging the student.
 
-1. ONE CONCEPT AT A TIME
-   - Introduce ONE idea, explain it, give an example
-   - Then STOP and check: "Are you following me so far? 😊"
-   - Wait for student to confirm before going further
+🔴 RULE 3 — RESPOND TO STUDENT:
+- Correct → "YES! 🎉 Exactly! Now let me show you the next step..."
+- Wrong → "Good try! Let me show you where it went differently..."
+- Confused → completely different analogy
 
-2. BUILD FROM SIMPLE TO COMPLEX
-   - Always start with the easiest version
-   - Then gradually add complexity
-   - "Now that you understand that, let me show you a slightly harder version..."
+🔴 RULE 4 — DRAW DIAGRAMS ALWAYS:
+Use ASCII/text art for EVERY mathematical concept:
 
-3. USE REAL EXAMPLES
-   - Money for fractions (if you have ₦1000 and spend half...)
-   - Speed for rates (if a car travels at...)
-   - Area for integration (find the area of this field...)
-   - Sharing for division
+For graphs:
+  y
+  |      *← max point
+  |    *   *
+  |  *       *
+  |*           *
+  +───────────── x
+     f(x) = -x² + 4
 
-4. GIVE STUDENT PRACTICE
-   - After every concept: "Now you try one! Solve this: [simple question]"
-   - Wait for their answer
-   - If correct: "EXCELLENT! 🎉 You're getting it! Let's continue..."
-   - If wrong: "Good attempt! Let me show you where it went differently... [explain kindly]"
+For number line:
+  ←──|──|──|──|──|──|──→
+    -3 -2 -1  0  1  2  3
 
-5. CONNECT TO PREVIOUS KNOWLEDGE
-   - "Remember when we learned about gradients? Integration is the REVERSE of that!"
-   - Make links between topics
+For sets (Venn diagram):
+  ┌────────────────────┐
+  │  A  ┌─────┐  B    │
+  │     │ A∩B │       │
+  │     └─────┘       │
+  └────────────────────┘
 
-6. SHORT RESPONSES
-   - Maximum 1-2 concepts per response
-   - End EVERY response with a question to the student
-   - Never write essays — have a conversation
+For integration (area under curve):
+  y
+  │  ╔══╗
+  │  ║##║  ← shaded area = ∫f(x)dx
+  │  ║##║
+  │__║##║_______ x
+     a  b
 
-7. CELEBRATE PROGRESS
-   - "You're doing amazingly well!"
-   - "See? You understood that faster than you think!"
-   - "Your brain is working! Keep going!"
+For matrices:
+  [1  2] [a]   [1a + 2b]
+  [3  4] [b] = [3a + 4b]
 
-8. WHEN STUDENT IS CONFUSED
-   - Never show frustration
-   - "That's okay! This confuses many people. Let me explain it a completely different way..."
-   - Try a different analogy
+For triangle (trig):
+        *  ← angle A
+       /|
+  hyp / |  opposite
+     /  |
+    /B  |
+   *────* ← angle C
+    adjacent
 
-FORMAT MATHEMATICS CLEARLY:
-- Powers: x^2, x^3, x^(n+1)
-- Fractions: (3x+1)/(x-2)
-- Square root: √x or √(x+1)
-- Integrals: ∫f(x)dx
-- Summation: Σ
-- Show EVERY step on a new line
-- Box or mark the final answer clearly: → Answer: x = 3`;
+Show EVERY calculation step on a new line:
+Step 1: x² - 5x + 6 = 0
+Step 2: (x - 2)(x - 3) = 0
+Step 3: x = 2  OR  x = 3  ✓
+
+🔴 RULE 5 — NIGERIAN EXAMPLES:
+- Arithmetic → sharing ₦5000 among 4 people
+- Fractions → cutting bread or sharing suya
+- Rate of change → fuel price increasing daily
+- Integration/area → area of a farm in Ife
+- Probability → chance of NEPA cutting light today
+- Sequences → saving ₦100 more each week
+
+🔴 RULE 6 — COVER EVERY SUB-CONCEPT:
+For "Differentiation": rules → chain rule → product rule → quotient rule → applications → exam tips. One per message.
+NEVER skip any sub-concept. Complete coverage always.
+
+🔴 RULE 7 — EXAM TIPS:
+"📝 OAU Tip: This always comes in exam..."
+"⚠️ Common mistake: confusing n! with nP..."
+"🎯 Key formula to memorize: ..."
+
+🔴 RULE 8 — FORMAT MATHS:
+Powers: x^2, x^(n+1)
+Fractions: (3x+1)/(x-2)
+Roots: √x, ³√x
+Integrals: ∫f(x)dx from a to b
+Show → Answer: x = 3 clearly at end`;
 
 function initMTHTutor(){
-  if(mthConversation.length===0){
-    const chatArea=document.getElementById('chat-area');
-    if(chatArea&&!document.getElementById('mth-welcome')){
-      const welcome=document.createElement('div');
-      welcome.id='mth-welcome';
-      welcome.style.cssText='background:linear-gradient(135deg,rgba(30,64,175,.15),rgba(67,56,202,.15));border:1px solid rgba(99,102,241,.3);border-radius:14px;padding:16px;margin-bottom:10px;';
-      welcome.innerHTML=`
-        <div style="font-size:.9rem;font-weight:700;color:#818cf8;margin-bottom:8px">📐 BABS MATHS is here! 😊</div>
-        <div style="font-size:.78rem;color:var(--text2);line-height:1.7;margin-bottom:12px">Welcome! I know MTH 101 and MTH 102 very deeply. I will not rush you or dump everything at once. We go at YOUR pace — step by step, like a father and child. 🙏</div>
-        <div style="font-size:.78rem;color:var(--text2);margin-bottom:10px;font-weight:600">What would you like to learn today?</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px;">
-          <button onclick="startMTHLesson('Sets Theory')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Sets</button>
-          <button onclick="startMTHLesson('Quadratic Equations')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Quadratics</button>
-          <button onclick="startMTHLesson('Differentiation')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Differentiation</button>
-          <button onclick="startMTHLesson('Integration')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Integration</button>
-          <button onclick="startMTHLesson('Matrices')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Matrices</button>
-          <button onclick="startMTHLesson('Complex Numbers')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Complex Numbers</button>
-          <button onclick="startMTHLesson('Trigonometry')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Trigonometry</button>
-          <button onclick="startMTHLesson('Sequences and Series')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Sequences & Series</button>
-          <button onclick="startMTHLesson('Differential Equations')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Diff. Equations</button>
-          <button onclick="startMTHLesson('Probability and Statistics')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Statistics</button>
-          <button onclick="startMTHLesson('Permutations and Combinations')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Permutations & Combinations</button>
-          <button onclick="startMTHLesson('Number Systems and Real Numbers')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Number Systems</button>
-          <button onclick="startMTHLesson('Indices and Logarithms')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Indices & Logs</button>
-          <button onclick="startMTHLesson('Surds and Rationalization')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Surds</button>
-          <button onclick="startMTHLesson('Partial Fractions')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Partial Fractions</button>
-          <button onclick="startMTHLesson('Binomial Theorem')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Binomial Theorem</button>
-          <button onclick="startMTHLesson('Polynomials and Factor Theorem')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Polynomials</button>
-          <button onclick="startMTHLesson('Vectors in 2D and 3D')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Vectors</button>
-          <button onclick="startMTHLesson('Coordinate Geometry')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Coordinate Geometry</button>
-          <button onclick="startMTHLesson('Functions domain range inverse composite')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Functions</button>
-          <button onclick="startMTHLesson('Limits and Continuity')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Limits</button>
-        </div>`;
-      chatArea.insertBefore(welcome,chatArea.firstChild);
-    }
-  }
+  const chatArea = document.getElementById('chat-area');
+  if(!chatArea) return;
+  chatArea.innerHTML = '';
+  // Show continue from last + topic list
+  loadTutorProgress('mth').then(progress=>{
+    const continueHTML = progress?.topic ? `<div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);border-radius:10px;padding:10px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:.74rem;font-weight:700;color:#818cf8;">🔄 Continue last session?</div><div style="font-size:.7rem;color:var(--text2);">${progress.topic}</div></div><button onclick="startMTHLesson('${progress.topic}')" style="padding:6px 14px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:700;">Continue →</button></div>` : '';
+    const welcome = document.createElement('div');
+    welcome.id = 'mth-welcome';
+    const mthTopics = [
+    ['Sets Theory','Sets & Set Theory'],['Number Systems','Number Systems'],['Indices and Logarithms','Indices & Logs'],
+    ['Surds and Rationalization','Surds'],['Quadratic Equations','Quadratics'],['Polynomials and Factor Theorem','Polynomials'],
+    ['Partial Fractions','Partial Fractions'],['Sequences and Series AP and GP','Sequences & Series'],['Binomial Theorem','Binomial Theorem'],
+    ['Trigonometry including compound angles sine cosine rules','Trigonometry'],['Functions domain range inverse composite','Functions'],
+    ['Limits and Continuity and LHopital rule','Limits'],['Differentiation all rules chain product quotient','Differentiation'],
+    ['Applications of Differentiation turning points maxima minima','Differentiation Applications'],
+    ['Integration techniques substitution by parts','Integration'],['Definite Integrals and Applications area volume','Definite Integrals'],
+    ['Vectors in 2D and 3D dot product cross product','Vectors'],['Matrices determinant inverse Cramers rule','Matrices'],
+    ['Complex Numbers De Moivre theorem polar form','Complex Numbers'],['Differential Equations separable linear','Differential Equations'],
+    ['Permutations and Combinations probability','Permutations & Combinations'],['Probability distributions','Probability'],
+    ['Statistics mean variance standard deviation','Statistics'],['Coordinate Geometry circles lines','Coordinate Geometry']
+  ];
+    welcome.innerHTML = `${continueHTML}
+      <div style="background:linear-gradient(135deg,rgba(30,64,175,.12),rgba(67,56,202,.12));border:1px solid rgba(99,102,241,.3);border-radius:16px;padding:18px;margin-bottom:10px;"><div style="font-size:.95rem;font-weight:700;color:#818cf8;margin-bottom:6px">📐 BABS MATHS 😊</div>
+    <div style="font-size:.8rem;color:var(--text2);line-height:1.7;margin-bottom:14px">I know MTH 101 & 102 completely. Choose a topic below and I will teach you everything about it — step by step, like a father and child. No rushing! 🙏</div>
+    <div style="font-size:.76rem;font-weight:700;color:#818cf8;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">📚 Choose a topic to start:</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      ${mthTopics.map(([full, short])=>`<button onclick="startMTHLesson('${full}')" style="padding:7px 13px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.74rem;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;" onmouseover="this.style.background='rgba(99,102,241,.25)'" onmouseout="this.style.background='rgba(99,102,241,.12)'">${short}</button>`).join('')}
+    </div>
+    <div style="margin-top:12px;border-top:1px solid rgba(99,102,241,.2);padding-top:10px;font-size:.74rem;color:var(--text2)">Or just type any maths question below and I will answer it! 💬</div>`;
+    chatArea.appendChild(welcome);
+  });
 }
 
 async function startMTHLesson(topic){
-  mthCurrentTopic=topic;
-  mthConversation=[];
-  const msg=`I want to learn ${topic}. Please teach me step by step — don't give everything at once, go slowly.`;
-  appendMsg(msg,'user');
+  mthCurrentTopic = topic;
+  mthConversation = [];
+  document.getElementById('chat-area').innerHTML = '';
+  const backBtn = document.createElement('div');
+  backBtn.style.cssText = 'margin-bottom:10px;';
+  backBtn.innerHTML = `<button onclick="mthConversation=[];initMTHTutor()" style="padding:6px 14px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.74rem;cursor:pointer;font-family:'Outfit',sans-serif;">← Back to Topics</button>`;
+  document.getElementById('chat-area').appendChild(backBtn);
+  saveTutorProgress('mth', topic, 0);
+  const levelInstr = getLevelInstruction('mth');
+  const msg = `Topic: "${topic}". Level: ${tutorLevels.mth}. ${levelInstr}. RULES: ONE concept per message max 6 lines, draw ASCII diagram when helpful, end every message asking if I understand, wait for my reply. Begin with the very first concept now.`;
+  appendMsg(topic, 'user');
   await sendMTHMessage(msg);
 }
 
@@ -5520,6 +6020,59 @@ async function submitCBTExam(autoSubmit=false){
   document.getElementById('cbt-header').querySelector('#cbt-timer-display').style.color='var(--green)';
 }
 
+// ══ PQ BANK ACCESS CODE ══
+async function verifyPQCode(){
+  const code = document.getElementById('pq-code-inp').value.trim().toUpperCase();
+  const msgEl = document.getElementById('pq-code-msg');
+  if(!code){ showToast('Enter an access code'); return; }
+
+  msgEl.style.display='block';
+  msgEl.style.color='var(--text2)';
+  msgEl.textContent='🔍 Verifying code...';
+
+  try{
+    // Check code in Firestore settings/pqCode
+    const doc = await db.collection('settings').doc('pqAccess').get();
+    const validCodes = doc.exists ? (doc.data().codes||[]) : [];
+    const masterCode = doc.exists ? (doc.data().masterCode||'BABSPQ2024') : 'BABSPQ2024';
+
+    if(code === masterCode || validCodes.map(c=>c.toUpperCase()).includes(code)){
+      // Unlock!
+      sessionStorage.setItem('pqUnlocked','true');
+      msgEl.style.color='var(--green)';
+      msgEl.textContent='✅ Code verified!';
+      setTimeout(()=>{
+        document.getElementById('pq-gate').style.display='none';
+        document.getElementById('pq-unlocked').style.display='block';
+        renderPQ(currentPQSubject);
+        launchConfetti();
+      }, 500);
+    } else {
+      msgEl.style.color='var(--red)';
+      msgEl.textContent='❌ Invalid code. Contact your admin.';
+    }
+  }catch(e){
+    // If Firestore fails, use default code
+    if(code === 'BABSPQ2024'){
+      sessionStorage.setItem('pqUnlocked','true');
+      document.getElementById('pq-gate').style.display='none';
+      document.getElementById('pq-unlocked').style.display='block';
+      renderPQ(currentPQSubject);
+    } else {
+      msgEl.style.color='var(--red)';
+      msgEl.textContent='❌ Invalid code. Try again.';
+    }
+  }
+}
+
+function lockPQBank(){
+  sessionStorage.removeItem('pqUnlocked');
+  document.getElementById('pq-gate').style.display='block';
+  document.getElementById('pq-unlocked').style.display='none';
+  document.getElementById('pq-code-inp').value='';
+  document.getElementById('pq-code-msg').style.display='none';
+}
+
 // ══ UNIVERSITY PAST QUESTIONS BANK ══
 const PQ_BANK = {
 
@@ -5723,47 +6276,202 @@ phy102: [
 };
 
 
-let currentPQSubject = 'chm101';
-let pqAnswered = {};
+// ══ PQ BANK — COURSE & TOPIC SYSTEM ══
+const PQ_COURSES = {
+  chm101: {name:'CHM 101', icon:'⚗️', color:'#f97316', bg:'rgba(249,115,22,.12)', border:'rgba(249,115,22,.3)'},
+  chm102: {name:'CHM 102', icon:'⚗️', color:'#ea580c', bg:'rgba(234,88,12,.12)', border:'rgba(234,88,12,.3)'},
+  mth101: {name:'MTH 101', icon:'📐', color:'#818cf8', bg:'rgba(129,140,248,.12)', border:'rgba(129,140,248,.3)'},
+  mth102: {name:'MTH 102', icon:'📐', color:'#6366f1', bg:'rgba(99,102,241,.12)', border:'rgba(99,102,241,.3)'},
+  phy101: {name:'PHY 101', icon:'⚡', color:'#38bdf8', bg:'rgba(56,189,248,.12)', border:'rgba(56,189,248,.3)'},
+  phy102: {name:'PHY 102', icon:'⚡', color:'#0ea5e9', bg:'rgba(14,165,233,.12)', border:'rgba(14,165,233,.3)'}
+};
 
-function switchPQTab(subject, btn){
-  currentPQSubject = subject;
-  document.querySelectorAll('.pq-tab').forEach(b=>{
-    b.style.background='transparent';
-    b.style.color='var(--text2)';
-    b.style.border='1px solid var(--cb)';
-  });
-  btn.style.background='linear-gradient(135deg,var(--gold),var(--gold2))';
-  btn.style.color='var(--navy)';
-  btn.style.border='none';
-  renderPQ(subject);
+// Topics per subject
+const PQ_TOPICS = {
+  chm101: ['Atomic Structure','Periodic Table','Ionic Bonding','Covalent Bonding','Stoichiometry','Gas Laws','Acids & Bases','Redox','Reaction Kinetics','Thermochemistry'],
+  chm102: ['Qualitative Analysis','Resonance','VSEPR','Hybridization','Intermolecular Forces','Noble Gases','Alkali Metals','Alkaline Earth Metals','Hydrogen','Transition Metals','Alcohols'],
+  mth101: ['Sets Theory','Number Systems','Indices & Logs','Surds','Quadratics','Polynomials','Partial Fractions','Sequences & Series','Binomial Theorem','Trigonometry','Functions','Limits','Differentiation','Permutations & Combinations'],
+  mth102: ['Integration','Definite Integrals','Vectors','Matrices','Complex Numbers','Differential Equations','Statistics','Probability','Coordinate Geometry'],
+  phy101: ['Measurements & Units','Kinematics','Newton\'s Laws','Work & Energy','Momentum','Circular Motion','Gravitation','SHM','Waves & Sound','Thermodynamics'],
+  phy102: ['Electrostatics','Electric Circuits','Capacitors','Magnetism','EM Induction','Optics','Modern Physics','Nuclear Physics','Special Relativity']
+};
+
+let currentPQSubject = 'chm101';
+let currentPQTopic = 'all';
+let pqAnswered = {};
+let pqGatingSubject = '';
+
+function renderPQCourseGrid(){
+  const grid = document.getElementById('pq-course-grid');
+  if(!grid) return;
+  grid.innerHTML = Object.entries(PQ_COURSES).map(([key, c])=>{
+    const unlocked = sessionStorage.getItem('pq_unlocked_'+key)==='true';
+    return `<div onclick="${unlocked?`openPQSubject('${key}')`:`openCourseGate('${key}')`}"
+      style="background:${unlocked?c.bg:'rgba(255,255,255,.03)'};border:1px solid ${unlocked?c.border:'var(--cb)'};
+      border-radius:14px;padding:16px;cursor:pointer;text-align:center;transition:all .2s;position:relative;">
+      <div style="font-size:1.8rem;margin-bottom:6px">${c.icon}</div>
+      <div style="font-size:.84rem;font-weight:700;color:${unlocked?c.color:'var(--text2)'}">${c.name}</div>
+      <div style="font-size:.7rem;color:var(--text2);margin-top:3px">${unlocked?'✅ Unlocked':'🔒 Locked'}</div>
+      ${unlocked?`<div style="font-size:.68rem;color:${c.color};margin-top:4px">${PQ_BANK[key]?.length||0} questions</div>`:''}
+    </div>`;
+  }).join('');
 }
 
-async function renderPQ(subject){
-  const el = document.getElementById('pq-content');
-  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);font-size:.82rem">Loading questions...</div>';
+function openCourseGate(subject){
+  pqGatingSubject = subject;
+  const c = PQ_COURSES[subject];
+  document.getElementById('pq-course-gate-title').textContent = `🔒 Unlock ${c.name}`;
+  document.getElementById('pq-course-code-inp').value = '';
+  document.getElementById('pq-course-code-msg').style.display = 'none';
+  document.getElementById('pq-course-gate').style.display = 'block';
+  document.getElementById('pq-subject-view').style.display = 'none';
+}
 
-  // Load built-in + custom questions from Firestore
-  const builtIn = PQ_BANK[subject] || [];
+function closeCourseGate(){
+  document.getElementById('pq-course-gate').style.display = 'none';
+  pqGatingSubject = '';
+}
+
+async function verifyCourseCode(){
+  const code = document.getElementById('pq-course-code-inp').value.trim().toUpperCase();
+  const msgEl = document.getElementById('pq-course-code-msg');
+  if(!code){showToast('Enter a code');return;}
+  msgEl.style.display='block';
+  msgEl.style.color='var(--text2)';
+  msgEl.textContent='🔍 Verifying...';
+  try{
+    const doc = await db.collection('settings').doc('pqAccess').get();
+    const courseCodes = doc.exists ? (doc.data().courseCodes||{}) : {};
+    const masterCode = doc.exists ? (doc.data().masterCode||'BABSPQ2024') : 'BABSPQ2024';
+    const courseCode = courseCodes[pqGatingSubject]||'';
+    // Master code unlocks ALL courses
+    if(code===masterCode || (courseCode && code===courseCode.toUpperCase())){
+      sessionStorage.setItem('pq_unlocked_'+pqGatingSubject,'true');
+      msgEl.style.color='var(--green)';
+      msgEl.textContent='✅ Unlocked!';
+      setTimeout(()=>{
+        closeCourseGate();
+        renderPQCourseGrid();
+        openPQSubject(pqGatingSubject);
+      },400);
+    } else {
+      msgEl.style.color='var(--red)';
+      msgEl.textContent='❌ Wrong code. Ask your admin.';
+    }
+  }catch(e){
+    // Fallback: use default codes
+    const defaults = {chm101:'CHM101',chm102:'CHM102',mth101:'MTH101',mth102:'MTH102',phy101:'PHY101',phy102:'PHY102'};
+    if(code===defaults[pqGatingSubject]||code==='BABSPQ2024'){
+      sessionStorage.setItem('pq_unlocked_'+pqGatingSubject,'true');
+      closeCourseGate();
+      renderPQCourseGrid();
+      openPQSubject(pqGatingSubject);
+    } else {
+      msgEl.style.color='var(--red)';
+      msgEl.textContent='❌ Wrong code. Try again.';
+    }
+  }
+}
+
+async function openPQSubject(subject){
+  currentPQSubject = subject;
+  currentPQTopic = 'all';
+  const c = PQ_COURSES[subject];
+  document.getElementById('pq-course-gate').style.display = 'none';
+  document.getElementById('pq-subject-view').style.display = 'block';
+  document.getElementById('pq-subject-title').textContent = `${c.icon} ${c.name}`;
+  document.getElementById('pq-course-grid').style.display = 'none';
+  // Build topic tabs
+  renderTopicTabs(subject);
+  await renderPQ(subject, 'all');
+}
+
+function closePQSubject(){
+  document.getElementById('pq-subject-view').style.display = 'none';
+  document.getElementById('pq-course-grid').style.display = 'grid';
+  renderPQCourseGrid();
+}
+
+function renderTopicTabs(subject){
+  const tabsEl = document.getElementById('pq-topic-tabs');
+  if(!tabsEl) return;
+  const topics = PQ_TOPICS[subject]||[];
+  const c = PQ_COURSES[subject];
+  tabsEl.innerHTML = `
+    <button onclick="switchPQTopic('all',this)" 
+      style="padding:6px 14px;border-radius:20px;border:none;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:.74rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+      📚 All
+    </button>
+    ${topics.map(t=>`
+      <button onclick="switchPQTopic('${t}',this)"
+        style="padding:6px 14px;border-radius:20px;border:1px solid ${c.border};background:${c.bg};color:${c.color};font-family:'Outfit',sans-serif;font-size:.74rem;cursor:pointer;white-space:nowrap;">
+        ${t}
+      </button>`).join('')}`;
+}
+
+function switchPQTopic(topic, btn){
+  currentPQTopic = topic;
+  document.querySelectorAll('#pq-topic-tabs button').forEach(b=>{
+    b.style.background = PQ_COURSES[currentPQSubject]?.bg||'rgba(255,255,255,.05)';
+    b.style.border = `1px solid ${PQ_COURSES[currentPQSubject]?.border||'var(--cb)'}`;
+    b.style.fontWeight = '400';
+  });
+  btn.style.background = 'linear-gradient(135deg,var(--gold),var(--gold2))';
+  btn.style.color = 'var(--navy)';
+  btn.style.border = 'none';
+  btn.style.fontWeight = '700';
+  renderPQ(currentPQSubject, topic);
+}
+
+function switchPQTab(subject, btn){ openPQSubject(subject); }
+
+async function renderPQ(subject, topic){
+  const el = document.getElementById('pq-content');
+  if(!el) return;
+  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);font-size:.82rem">⏳ Loading questions...</div>';
+
+  const builtIn = (PQ_BANK[subject]||[]).map(q=>({...q}));
   let custom = [];
   try{
-    const snap = await db.collection('pqBank').where('subject','==',subject).orderBy('createdAt','desc').get();
+    const snap = await db.collection('pqBank').where('subject','==',subject).get();
     custom = snap.docs.map(d=>({id:d.id,...d.data()}));
   }catch(e){}
 
-  const questions = [...builtIn, ...custom];
-  if(!questions.length){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--text2)">Coming soon!</div>';return;}
+  let questions = [...builtIn, ...custom];
 
-  const subjectNames = {chm101:'CHM 101',chm102:'CHM 102',mth101:'MTH 101',mth102:'MTH 102',phy101:'PHY 101',phy102:'PHY 102'};
-  const icons = {chm101:'⚗️',chm102:'⚗️',mth101:'📐',mth102:'📐',phy101:'⚡',phy102:'⚡'};
+  // Filter by topic if not "all"
+  if(topic && topic !== 'all'){
+    // Match topic keywords against question text
+    const topicLower = topic.toLowerCase();
+    questions = questions.filter((q,i)=>{
+      // Built-in questions — match by index range based on topic
+      if(i < builtIn.length){
+        const topicIdx = (PQ_TOPICS[subject]||[]).indexOf(topic);
+        if(topicIdx>=0){
+          const qPerTopic = Math.ceil(builtIn.length/(PQ_TOPICS[subject].length));
+          const start = topicIdx * qPerTopic;
+          const end = start + qPerTopic;
+          return i >= start && i < end;
+        }
+      }
+      // Custom questions — match by topic field or text
+      return (q.topic||'').toLowerCase()===topicLower || q.q.toLowerCase().includes(topicLower);
+    });
+  }
 
-  el.innerHTML = `
-    <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <div style="font-size:.84rem;font-weight:700;color:var(--gold2)">${icons[subject]} ${subjectNames[subject]} — University PQ Bank</div>
-        <div style="font-size:.72rem;color:var(--text2)">100 Level Standard • ${questions.length} Questions • With Full Explanations</div>
-      </div>
-      <button onclick="startPQQuiz('${subject}')" class="btn btn-gold" style="font-size:.76rem;padding:8px 14px;">🎯 Take Quiz</button>
+  window.pqCurrentQuestions = window.pqCurrentQuestions||{};
+  window.pqCurrentQuestions[subject] = [...builtIn,...custom];
+
+  const c = PQ_COURSES[subject];
+  if(!questions.length){
+    el.innerHTML=`<div style="text-align:center;padding:30px;color:var(--text2);font-size:.84rem">No questions for "${topic}" yet.</div>`;
+    return;
+  }
+
+  el.innerHTML=`
+    <div style="background:${c.bg};border:1px solid ${c.border};border-radius:12px;padding:10px 14px;margin-bottom:12px;">
+      <div style="font-size:.8rem;font-weight:700;color:${c.color}">${c.icon} ${c.name} ${topic!=='all'?'— '+topic:''}</div>
+      <div style="font-size:.7rem;color:var(--text2);margin-top:2px">${questions.length} questions • Tap an option to answer • +2 pts for correct answer</div>
     </div>
     ${questions.map((q,i)=>renderPQQuestion(q,i,subject)).join('')}`;
 }
@@ -5771,36 +6479,43 @@ async function renderPQ(subject){
 function renderPQQuestion(q, i, subject){
   const key = subject+'_'+i;
   const answered = pqAnswered[key];
-  return `<div id="pq-${subject}-${i}" style="background:var(--card);border:1px solid var(--cb);border-radius:14px;padding:14px;margin-bottom:10px;">
-    <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.5">Q${i+1}. ${q.q}</div>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;">
+  return `<div id="pq-${subject}-${i}" style="background:var(--card);border:1px solid ${answered!==undefined?'rgba(201,168,76,.3)':'var(--cb)'};border-radius:14px;padding:14px;margin-bottom:10px;">
+    <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.5">
+      <span style="color:var(--gold2)">Q${i+1}.</span> ${q.q}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:${answered!==undefined?'10':'0'}px;">
       ${q.opts.map((opt,j)=>`
-        <button onclick="checkPQAnswer('${subject}',${i},${j})" id="pq-opt-${subject}-${i}-${j}"
-          style="padding:9px 13px;border-radius:9px;border:1px solid ${answered!==undefined?(j===q.ans?'rgba(74,222,128,.5)':j===answered&&answered!==q.ans?'rgba(248,113,113,.4)':'var(--cb)'):'var(--cb)'};
-          background:${answered!==undefined?(j===q.ans?'rgba(74,222,128,.1)':j===answered&&answered!==q.ans?'rgba(248,113,113,.1)':'rgba(255,255,255,.02)'):'rgba(255,255,255,.02)'};
-          color:${answered!==undefined?(j===q.ans?'var(--green)':j===answered&&answered!==q.ans?'var(--red)':'var(--text2)'):'var(--text2)'};
-          text-align:left;font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;transition:all .2s;">
-          ${['A','B','C','D'][j]}. ${opt} ${answered!==undefined&&j===q.ans?' ✅':''}${answered!==undefined&&j===answered&&answered!==q.ans?' ❌':''}
+        <button onclick="checkPQAnswer('${subject}',${i},${j})"
+          style="padding:10px 13px;border-radius:9px;
+          border:2px solid ${answered!==undefined?(j===q.ans?'rgba(74,222,128,.6)':j===answered&&j!==q.ans?'rgba(248,113,113,.5)':'var(--cb)'):'var(--cb)'};
+          background:${answered!==undefined?(j===q.ans?'rgba(74,222,128,.12)':j===answered&&j!==q.ans?'rgba(248,113,113,.1)':'rgba(255,255,255,.02)'):'rgba(255,255,255,.02)'};
+          color:${answered!==undefined?(j===q.ans?'var(--green)':j===answered&&j!==q.ans?'var(--red)':'var(--text2)'):'var(--text2)'};
+          text-align:left;font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;transition:all .2s;
+          display:flex;align-items:center;gap:8px;">
+          <span style="min-width:22px;height:22px;border-radius:50%;
+            border:2px solid ${answered!==undefined?(j===q.ans?'var(--green)':j===answered&&j!==q.ans?'var(--red)':'var(--cb)'):'var(--cb)'};
+            background:${answered!==undefined&&j===q.ans?'var(--green)':answered!==undefined&&j===answered&&j!==q.ans?'var(--red)':'transparent'};
+            display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0;
+            color:${answered!==undefined&&(j===q.ans||j===answered)?'#fff':'var(--text2)'};">
+            ${answered!==undefined?(j===q.ans?'✓':j===answered?'✗':['A','B','C','D'][j]):['A','B','C','D'][j]}
+          </span>
+          ${opt}
         </button>`).join('')}
     </div>
-    ${answered!==undefined?`<div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:9px;padding:10px;font-size:.76rem;color:var(--text2);line-height:1.6;"><b style="color:var(--gold2)">💡 Explanation:</b> ${q.exp}</div>`:''}
+    ${answered!==undefined&&q.exp?`<div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:9px;padding:10px;font-size:.76rem;color:var(--text2);line-height:1.6;"><span style="color:var(--gold2);font-weight:700">💡 Explanation:</span> ${q.exp}</div>`:''}
   </div>`;
 }
 
 function checkPQAnswer(subject, qIndex, selectedOpt){
   const key = subject+'_'+qIndex;
-  if(pqAnswered[key]!==undefined) return; // already answered
+  if(pqAnswered[key]!==undefined) return;
   pqAnswered[key] = selectedOpt;
-  const q = PQ_BANK[subject][qIndex];
-  if(selectedOpt === q.ans) awardPoints('PQ correct answer', 2);
-  // Re-render just this question
+  const allQ = (window.pqCurrentQuestions&&window.pqCurrentQuestions[subject])||PQ_BANK[subject]||[];
+  const q = allQ[qIndex];
+  if(!q) return;
+  if(selectedOpt===q.ans) awardPoints('PQ correct answer',2);
   const el = document.getElementById(`pq-${subject}-${qIndex}`);
   if(el) el.outerHTML = renderPQQuestion(q, qIndex, subject);
-}
-
-function startPQQuiz(subject){
-  showPage('quiz');
-  showToast('Opening CBT quiz for '+subject.toUpperCase());
 }
 
 // ══ SECRET STUDY VAULT ══
@@ -5836,63 +6551,147 @@ async function loadVault(){
 }
 
 // ══ STUDY SPRINT ══
-let sprintTimer=null, sprintSeconds=1500, sprintRunning=false;
+let sprintTimer=null, sprintSeconds=1500, sprintTotalSeconds=1500, sprintRunning=false;
+
+function setSprintDuration(mins, btn){
+  if(sprintRunning) return;
+  sprintTotalSeconds = mins*60;
+  sprintSeconds = sprintTotalSeconds;
+  // Update button styles
+  document.querySelectorAll('#pg-sprint button[onclick^="setSprintDuration"]').forEach(b=>{
+    b.style.background='rgba(255,255,255,.05)';
+    b.style.color='var(--text2)';
+    b.style.border='1px solid var(--cb)';
+    b.style.fontWeight='400';
+  });
+  if(btn){
+    btn.style.background='linear-gradient(135deg,var(--gold),var(--gold2))';
+    btn.style.color='var(--navy)';
+    btn.style.border='none';
+    btn.style.fontWeight='700';
+  }
+  document.getElementById('sprint-custom-mins').value='';
+  updateSprintDisplay();
+}
+
+function setSprintDurationCustom(val){
+  if(sprintRunning) return;
+  const mins = parseInt(val);
+  if(!mins||mins<1||mins>180) return;
+  sprintTotalSeconds = mins*60;
+  sprintSeconds = sprintTotalSeconds;
+  // Deselect preset buttons
+  document.querySelectorAll('#pg-sprint button[onclick^="setSprintDuration"]').forEach(b=>{
+    b.style.background='rgba(255,255,255,.05)';
+    b.style.color='var(--text2)';
+    b.style.border='1px solid var(--cb)';
+    b.style.fontWeight='400';
+  });
+  updateSprintDisplay();
+}
 
 function initSprint(){
-  sprintSeconds=1500; sprintRunning=false;
-  updateSprintDisplay();
+  if(!sprintRunning){
+    sprintSeconds=sprintTotalSeconds;
+    updateSprintDisplay();
+  }
 }
 
 function updateSprintDisplay(){
   const m=Math.floor(sprintSeconds/60);
   const s=sprintSeconds%60;
-  document.getElementById('sprint-timer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-  const pct=(1500-sprintSeconds)/1500*100;
-  document.getElementById('sprint-timer').style.color=pct>80?'var(--green)':pct>50?'var(--gold2)':'var(--gold)';
+  const timerEl=document.getElementById('sprint-timer');
+  const progressEl=document.getElementById('sprint-progress');
+  if(!timerEl) return;
+  timerEl.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const pct=sprintTotalSeconds>0?((sprintTotalSeconds-sprintSeconds)/sprintTotalSeconds*100):0;
+  // Color: gold→green as it progresses, red in last 5 min
+  const last5=sprintSeconds<=300&&sprintRunning;
+  timerEl.style.color=last5?'#f87171':pct>70?'var(--green)':pct>40?'var(--gold2)':'var(--gold)';
+  if(progressEl){
+    progressEl.style.width=pct+'%';
+    progressEl.style.background=last5?'linear-gradient(90deg,#f87171,#dc2626)':'linear-gradient(90deg,var(--gold),var(--gold2))';
+  }
 }
 
 function startSprint(){
   if(sprintRunning) return;
-  const topic=document.getElementById('sprint-topic').value.trim();
-  if(!topic){showToast('What are you studying?');return;}
-  sprintRunning=true;
-  document.getElementById('sprint-label').textContent='Stay focused on: '+topic+' 💪';
-  document.getElementById('sprint-message').textContent='';
-  document.getElementById('sprint-quiz-section').style.display='none';
-  sprintTimer=setInterval(async()=>{
+  const topic = document.getElementById('sprint-topic').value.trim();
+  if(!topic){showToast('What are you studying? 📚');return;}
+  if(sprintSeconds<=0||sprintSeconds===sprintTotalSeconds) sprintSeconds = sprintTotalSeconds;
+  if(sprintTotalSeconds<=0){ showToast('Set a duration first!'); return; }
+
+  sprintRunning = true;
+  const sprintTopic = topic; // capture topic in closure
+  document.getElementById('sprint-label').textContent = '🔥 Focusing on: '+sprintTopic;
+  document.getElementById('sprint-message').textContent = '';
+  document.getElementById('sprint-quiz-section').style.display = 'none';
+  document.getElementById('sprint-start-btn').textContent = '⏸ Running...';
+  document.getElementById('sprint-start-btn').style.opacity = '0.7';
+
+  if(sprintTimer) clearInterval(sprintTimer);
+
+  sprintTimer = setInterval(()=>{
     sprintSeconds--;
     updateSprintDisplay();
-    if(sprintSeconds<=0){
+    if(sprintSeconds <= 0){
       clearInterval(sprintTimer);
-      sprintRunning=false;
-      document.getElementById('sprint-label').textContent='Sprint Complete! 🎉';
+      sprintTimer = null;
+      sprintRunning = false;
+      document.getElementById('sprint-label').textContent = '🎉 Sprint Complete! Amazing work!';
+      document.getElementById('sprint-start-btn').textContent = '🏃 Start Again';
+      document.getElementById('sprint-start-btn').style.opacity = '1';
       launchConfetti();
       awardPoints('Study Sprint completed!', 5);
       showToast('Sprint done! +5 points 🎉');
-      // Generate quick quiz
-      if(GROQ_KEY && topic){
-        document.getElementById('sprint-quiz-section').style.display='block';
-        document.getElementById('sprint-quiz-content').innerHTML='<div style="color:var(--text2);font-size:.82rem">🤖 Generating your sprint quiz...</div>';
-        const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Generate 3 quick MCQ questions on "${topic}" for an OAU student. Return ONLY JSON array: [{"q":"...","opts":["A","B","C","D"],"ans":0}]`}],temperature:0.5,max_tokens:500})});
-        const data=await res.json();
-        try{
-          const qs=JSON.parse(data.choices[0].message.content.replace(/```json|```/g,'').trim());
-          document.getElementById('sprint-quiz-content').innerHTML=qs.map((q,i)=>`
-            <div style="margin-bottom:12px;padding:12px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--cb);">
-              <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:6px">${i+1}. ${q.q}</div>
-              ${q.opts.map((o,j)=>`<div style="font-size:.76rem;color:${j===q.ans?'var(--green)':'var(--text2)'};padding:3px 0">${['A','B','C','D'][j]}. ${o} ${j===q.ans?'✅':''}</div>`).join('')}
-            </div>`).join('');
-        }catch(e){document.getElementById('sprint-quiz-content').innerHTML='<div style="color:var(--text2);font-size:.8rem">Could not generate quiz</div>';}
-      }
+      // Generate quiz after sprint
+      generateSprintQuiz(sprintTopic);
     }
-  },1000);
+  }, 1000);
+}
+
+async function generateSprintQuiz(topic){
+  if(!GROQ_KEY || !topic) return;
+  document.getElementById('sprint-quiz-section').style.display = 'block';
+  document.getElementById('sprint-quiz-content').innerHTML = '<div style="color:var(--text2);font-size:.82rem;text-align:center;padding:10px">🤖 Generating your sprint quiz...</div>';
+  try{
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+      body: JSON.stringify({
+        model:'llama-3.3-70b-versatile',
+        messages:[{role:'user',content:`Generate 3 MCQ questions on "${topic}" for an OAU 100L student. Return ONLY valid JSON array with no markdown:\n[{"q":"question","opts":["A","B","C","D"],"ans":0}]`}],
+        temperature:0.5, max_tokens:500
+      })
+    });
+    const data = await res.json();
+    const raw = data.choices?.[0]?.message?.content||'[]';
+    const qs = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    document.getElementById('sprint-quiz-content').innerHTML = qs.map((q,i)=>`
+      <div style="margin-bottom:12px;padding:12px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--cb);">
+        <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:8px">${i+1}. ${q.q}</div>
+        ${q.opts.map((o,j)=>`
+          <div style="font-size:.76rem;padding:5px 8px;border-radius:7px;margin-bottom:4px;
+            background:${j===q.ans?'rgba(74,222,128,.1)':'rgba(255,255,255,.03)'};
+            border:1px solid ${j===q.ans?'rgba(74,222,128,.3)':'var(--cb)'};
+            color:${j===q.ans?'var(--green)':'var(--text2)'};">
+            ${['A','B','C','D'][j]}. ${o} ${j===q.ans?'✅':''}
+          </div>`).join('')}
+      </div>`).join('');
+  }catch(e){
+    document.getElementById('sprint-quiz-content').innerHTML = '<div style="color:var(--text2);font-size:.8rem;text-align:center">Could not generate quiz. Try again!</div>';
+  }
 }
 
 function stopSprint(){
   if(sprintTimer) clearInterval(sprintTimer);
-  sprintRunning=false; sprintSeconds=1500;
+  sprintRunning=false;
+  sprintSeconds=sprintTotalSeconds;
   updateSprintDisplay();
-  document.getElementById('sprint-label').textContent='Ready to sprint?';
+  document.getElementById('sprint-label').textContent='Set your duration and topic below, then start!';
+  document.getElementById('sprint-start-btn').textContent='🏃 Start Sprint';
+  document.getElementById('sprint-start-btn').style.opacity='1';
+  document.getElementById('sprint-quiz-section').style.display='none';
 }
 
 // ══ HOT TOPICS ══

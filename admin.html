@@ -678,37 +678,238 @@ Answer: A</code>
 
   <!-- ══ AI ASSISTANT PANEL ══ -->
   <div id="panel-aiadmin" class="panel">
-    <div class="sec-title">🤖 AI Admin Assistant</div>
+    <div class="sec-title">🤖 AI Command Center</div>
 
-    <div style="background:linear-gradient(135deg,#0d1e3d,#162d5a);border:1px solid var(--gold);border-radius:16px;padding:16px;margin-bottom:14px;">
-      <div style="font-size:.9rem;font-weight:700;color:var(--gold2);margin-bottom:6px">Your Personal Admin AI 🧠</div>
-      <div style="font-size:.76rem;color:var(--text2);line-height:1.7">I can help you manage BABSPHARM Cloud. Ask me anything about students, quizzes, announcements, platform management and more.</div>
+    <div style="background:linear-gradient(135deg,#0d1e3d,#162d5a);border:1px solid var(--gold);border-radius:16px;padding:16px;margin-bottom:14px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-20px;right:-20px;font-size:5rem;opacity:.05;">🤖</div>
+      <div style="font-size:.9rem;font-weight:700;color:var(--gold2);margin-bottom:4px">🧠 BABSPHARM AI Command Center</div>
+      <div style="font-size:.76rem;color:var(--text2);line-height:1.7">I read your live Firestore data and execute real actions. Not just advice — real results.</div>
+      <div id="ai-live-stats" style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;"></div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="card" style="margin-bottom:14px;">
-      <div class="card-title">⚡ Quick AI Actions</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-        <button onclick="adminAIQuick('How many students registered this week?')" class="btn btn-out" style="font-size:.74rem;">📊 Weekly signups</button>
-        <button onclick="adminAIQuick('Write an announcement encouraging students to study hard for upcoming exams')" class="btn btn-out" style="font-size:.74rem;">📢 Write announcement</button>
-        <button onclick="adminAIQuick('Generate 10 MCQ questions for CHM 101 on atomic structure at university level')" class="btn btn-out" style="font-size:.74rem;">❓ Generate questions</button>
-        <button onclick="adminAIQuick('Write a motivational message for pharmacy students facing exams')" class="btn btn-out" style="font-size:.74rem;">💪 Write motivation</button>
-        <button onclick="adminAIQuick('Suggest 5 new features I can add to improve student engagement on the platform')" class="btn btn-out" style="font-size:.74rem;">💡 Feature ideas</button>
-        <button onclick="adminAIQuick('Write a WhatsApp message to send to students about the new CBT exam feature')" class="btn btn-out" style="font-size:.74rem;">📱 WhatsApp message</button>
-        <button onclick="adminAIQuick('Generate 8 university level MCQ questions for PHY 101 on mechanics for Section A')" class="btn btn-out" style="font-size:.74rem;">⚡ PHY questions</button>
-        <button onclick="adminAIQuick('Generate 8 university level MCQ questions for MTH 101 on differentiation for Section B')" class="btn btn-out" style="font-size:.74rem;">📐 MTH questions</button>
+    <!-- Tab nav -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;" id="ai-tab-nav">
+      <button onclick="switchAITab('students',this)" class="ai-tab-btn on" style="padding:7px 14px;border-radius:20px;border:none;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:.76rem;font-weight:700;cursor:pointer;">👥 Students</button>
+      <button onclick="switchAITab('content',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;">📢 Content</button>
+      <button onclick="switchAITab('questions',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;">❓ Questions</button>
+      <button onclick="switchAITab('exams',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;">📝 Exams</button>
+      <button onclick="switchAITab('analytics',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;">📊 Analytics</button>
+      <button onclick="switchAITab('alerts',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;">🚨 Alerts</button>
+      <button onclick="switchAITab('campaign',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;">🎯 Campaigns</button>
+      <button onclick="switchAITab('autopilot',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid rgba(201,168,76,.4);background:rgba(201,168,76,.08);color:var(--gold2);font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">🤖 Autopilot</button>
+      <button onclick="switchAITab('doctor',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid rgba(74,222,128,.3);background:rgba(74,222,128,.06);color:#4ade80;font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">🏥 Site Doctor</button>
+      <button onclick="switchAITab('cleanup',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.06);color:#f87171;font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">🧹 User Cleanup</button>
+      <button onclick="switchAITab('chat',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;">💬 Chat</button>
+    </div>
+
+    <!-- STUDENTS TAB -->
+    <div id="ai-tab-students" class="ai-tab-panel">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <button onclick="adminAIAction('students')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📊 Full Report</button>
+        <button onclick="adminAIAction('top_students')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🏆 Top 10</button>
+        <button onclick="adminAIAction('inactive')" class="btn btn-out" style="font-size:.74rem;padding:10px;">😴 Inactive</button>
+        <button onclick="adminAIAction('give_points')" class="btn btn-out" style="font-size:.74rem;padding:10px;">⭐ Give Points</button>
+        <button onclick="adminAIAction('zero_points')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📉 Zero Points</button>
+        <button onclick="adminAIAction('new_students')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🆕 New This Week</button>
+        <button onclick="adminAIAction('dept_breakdown')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🏫 By Department</button>
+        <button onclick="adminAIAction('bulk_points')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🎁 Bulk Gift Points</button>
+        <button onclick="adminAIAction('student_search')" class="btn btn-out" style="font-size:.74rem;padding:10px;grid-column:span 2;">🔍 Search Student</button>
       </div>
     </div>
 
-    <!-- AI Chat -->
-    <div class="card">
-      <div class="card-title">💬 Chat with AI</div>
-      <div id="admin-ai-chat" style="min-height:250px;max-height:500px;overflow-y:auto;margin-bottom:12px;padding:4px;"></div>
+    <!-- CONTENT TAB -->
+    <div id="ai-tab-content" class="ai-tab-panel" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <button onclick="adminAIAction('announcement')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📢 Announcement</button>
+        <button onclick="adminAIAction('whatsapp')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📱 WhatsApp Post</button>
+        <button onclick="adminAIAction('motivation')" class="btn btn-out" style="font-size:.74rem;padding:10px;">💪 Motivations ×5</button>
+        <button onclick="adminAIAction('exam_tip')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📌 Exam Tips</button>
+        <button onclick="adminAIAction('hot_topic')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🔥 Hot Topic Alert</button>
+        <button onclick="adminAIAction('study_plan')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📅 Weekly Study Plan</button>
+        <button onclick="adminAIAction('telegram_post')" class="btn btn-out" style="font-size:.74rem;padding:10px;">✈️ Telegram Message</button>
+        <button onclick="adminAIAction('sotw')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🌟 Student of Week</button>
+      </div>
+    </div>
+
+    <!-- QUESTIONS TAB -->
+    <div id="ai-tab-questions" class="ai-tab-panel" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <button onclick="adminAIAction('questions_chm101')" class="btn btn-out" style="font-size:.74rem;padding:10px;">⚗️ CHM 101 ×10</button>
+        <button onclick="adminAIAction('questions_chm102')" class="btn btn-out" style="font-size:.74rem;padding:10px;">⚗️ CHM 102 ×10</button>
+        <button onclick="adminAIAction('questions_mth101')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📐 MTH 101 ×10</button>
+        <button onclick="adminAIAction('questions_mth102')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📐 MTH 102 ×10</button>
+        <button onclick="adminAIAction('questions_phy101')" class="btn btn-out" style="font-size:.74rem;padding:10px;">⚡ PHY 101 ×10</button>
+        <button onclick="adminAIAction('questions_phy102')" class="btn btn-out" style="font-size:.74rem;padding:10px;">⚡ PHY 102 ×10</button>
+        <button onclick="adminAIAction('questions_bulk')" class="btn btn-gold" style="font-size:.74rem;padding:10px;grid-column:span 2;">🚀 Generate ALL 60 Questions</button>
+      </div>
+      <div style="font-size:.72rem;color:var(--text2);text-align:center">All saved directly to PQ Bank</div>
+    </div>
+
+    <!-- EXAMS TAB -->
+    <div id="ai-tab-exams" class="ai-tab-panel" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <button onclick="adminAIAction('cbt_exam')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📝 Create CBT Exam</button>
+        <button onclick="adminAIAction('cbt_questions')" class="btn btn-out" style="font-size:.74rem;padding:10px;">❓ Fill Exam Questions</button>
+        <button onclick="adminAIAction('cbt_list')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📋 View All Exams</button>
+        <button onclick="adminAIAction('cbt_results')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📊 Exam Results</button>
+        <button onclick="adminAIAction('coupon')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🎟️ Create Coupon</button>
+        <button onclick="adminAIAction('coupon_list')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📋 View Coupons</button>
+      </div>
+    </div>
+
+    <!-- ANALYTICS TAB -->
+    <div id="ai-tab-analytics" class="ai-tab-panel" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <button onclick="adminAIAction('analyze')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📊 Full Analysis</button>
+        <button onclick="adminAIAction('quiz_stats')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📝 Quiz Stats</button>
+        <button onclick="adminAIAction('course_popular')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🔥 Popular Courses</button>
+        <button onclick="adminAIAction('daily_active')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📈 Daily Active</button>
+        <button onclick="adminAIAction('revenue_report')" class="btn btn-out" style="font-size:.74rem;padding:10px;">💰 Points Economy</button>
+        <button onclick="adminAIAction('growth_advice')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🚀 Growth Advice</button>
+      </div>
+    </div>
+
+    <!-- ALERTS TAB -->
+    <div id="ai-tab-alerts" class="ai-tab-panel" style="display:none;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <button onclick="adminAIAction('emergency')" class="btn btn-red" style="font-size:.74rem;padding:10px;grid-column:span 2;">🚨 Emergency Alert (All Students)</button>
+        <button onclick="adminAIAction('exam_countdown')" class="btn btn-out" style="font-size:.74rem;padding:10px;">⏱️ Set Exam Countdown</button>
+        <button onclick="adminAIAction('maintenance')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🔧 Maintenance Notice</button>
+        <button onclick="adminAIAction('exam_result_alert')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📣 Result Alert</button>
+        <button onclick="adminAIAction('deadline_alert')" class="btn btn-out" style="font-size:.74rem;padding:10px;">⚠️ Deadline Alert</button>
+      </div>
+    </div>
+
+    <!-- CAMPAIGNS TAB -->
+    <div id="ai-tab-campaign" class="ai-tab-panel" style="display:none;">
+      <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:10px;margin-bottom:10px;font-size:.74rem;color:#818cf8;">🎯 Campaigns = multi-step automated actions. One click does everything.</div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px;">
+        <button onclick="adminAIAction('campaign_launch')" class="btn btn-gold" style="font-size:.78rem;padding:12px;">🚀 Full Platform Launch Campaign</button>
+        <button onclick="adminAIAction('campaign_exam_prep')" class="btn btn-out" style="font-size:.78rem;padding:12px;">📚 Exam Preparation Campaign</button>
+        <button onclick="adminAIAction('campaign_engagement')" class="btn btn-out" style="font-size:.78rem;padding:12px;">💥 Re-Engagement Campaign (Inactive Students)</button>
+        <button onclick="adminAIAction('campaign_growth')" class="btn btn-out" style="font-size:.78rem;padding:12px;">📈 Referral Growth Campaign</button>
+        <button onclick="adminAIAction('campaign_reward')" class="btn btn-out" style="font-size:.78rem;padding:12px;">🏆 Top Student Reward Campaign</button>
+        <button onclick="adminAIAction('campaign_weekly')" class="btn btn-out" style="font-size:.78rem;padding:12px;">📅 Weekly Content Drop (Auto)</button>
+        <button onclick="adminAIAction('campaign_new_feature')" class="btn btn-out" style="font-size:.78rem;padding:12px;">✨ New Feature Announcement Campaign</button>
+        <button onclick="adminAIAction('campaign_custom')" class="btn btn-out" style="font-size:.78rem;padding:12px;">✍️ Custom Campaign (Describe what you want)</button>
+      </div>
+    </div>
+
+    <!-- AUTOPILOT TAB -->
+    <div id="ai-tab-autopilot" class="ai-tab-panel" style="display:none;">
+      <div style="background:linear-gradient(135deg,rgba(201,168,76,.1),rgba(201,168,76,.05));border:1px solid rgba(201,168,76,.3);border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:.86rem;font-weight:700;color:var(--gold2);margin-bottom:4px">🤖 AI Autopilot</div>
+        <div style="font-size:.74rem;color:var(--text2);line-height:1.6">Run full platform health checks and let AI automatically fix issues, fill content gaps, and optimize everything.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px;">
+        <button onclick="adminAIAction('autopilot_healthcheck')" class="btn btn-gold" style="font-size:.78rem;padding:12px;">🏥 Full Platform Health Check</button>
+        <button onclick="adminAIAction('autopilot_content_fill')" class="btn btn-out" style="font-size:.78rem;padding:12px;">📝 Auto-Fill All Content Gaps</button>
+        <button onclick="adminAIAction('autopilot_questions_all')" class="btn btn-out" style="font-size:.78rem;padding:12px;">❓ Auto-Generate 100 Questions (All Subjects)</button>
+        <button onclick="adminAIAction('autopilot_motivations_fill')" class="btn btn-out" style="font-size:.78rem;padding:12px;">💪 Auto-Fill 20 Motivations</button>
+        <button onclick="adminAIAction('autopilot_hot_topics_all')" class="btn btn-out" style="font-size:.78rem;padding:12px;">🔥 Auto-Set Hot Topics for All Courses</button>
+        <button onclick="adminAIAction('autopilot_weekly_report')" class="btn btn-out" style="font-size:.78rem;padding:12px;">📊 Generate Weekly Platform Report</button>
+        <button onclick="adminAIAction('autopilot_reactivate')" class="btn btn-out" style="font-size:.78rem;padding:12px;">😴 Auto Re-activate All Inactive Students</button>
+        <button onclick="adminAIAction('autopilot_exam_set')" class="btn btn-out" style="font-size:.78rem;padding:12px;">📝 Auto-Create Full Exam Set (All 6 Courses)</button>
+      </div>
+      <div id="autopilot-log" style="background:rgba(0,0,0,.3);border:1px solid var(--cb);border-radius:10px;padding:12px;font-size:.72rem;color:var(--green);font-family:monospace;min-height:60px;display:none;max-height:200px;overflow-y:auto;"></div>
+    </div>
+
+    <!-- SITE DOCTOR TAB -->
+    <div id="ai-tab-doctor" class="ai-tab-panel" style="display:none;">
+      <div style="background:linear-gradient(135deg,rgba(74,222,128,.08),rgba(16,185,129,.05));border:1px solid rgba(74,222,128,.25);border-radius:12px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:.86rem;font-weight:700;color:#4ade80;margin-bottom:4px">🏥 AI Site Doctor</div>
+        <div style="font-size:.74rem;color:var(--text2);line-height:1.6">Diagnoses and fixes real issues on your platform automatically. No technical knowledge needed.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px;">
+        <button onclick="adminAIAction('doctor_full')" class="btn btn-gold" style="font-size:.78rem;padding:12px;">🔍 Full Site Diagnosis & Auto-Fix</button>
+        <button onclick="adminAIAction('doctor_firebase')" class="btn btn-out" style="font-size:.78rem;padding:12px;">🔥 Fix Firebase Issues</button>
+        <button onclick="adminAIAction('doctor_points')" class="btn btn-out" style="font-size:.78rem;padding:12px;">⭐ Fix Points Problems</button>
+        <button onclick="adminAIAction('doctor_quizzes')" class="btn btn-out" style="font-size:.78rem;padding:12px;">📝 Fix Quiz/CBT Issues</button>
+        <button onclick="adminAIAction('doctor_ai_key')" class="btn btn-out" style="font-size:.78rem;padding:12px;">🤖 Verify AI (GROQ) Key</button>
+        <button onclick="adminAIAction('doctor_content')" class="btn btn-out" style="font-size:.78rem;padding:12px;">📋 Fix Empty Content Sections</button>
+        <button onclick="adminAIAction('doctor_duplicates')" class="btn btn-out" style="font-size:.78rem;padding:12px;">🗂️ Find & Remove Duplicates</button>
+        <button onclick="adminAIAction('doctor_orphans')" class="btn btn-out" style="font-size:.78rem;padding:12px;">👻 Remove Orphaned Data</button>
+        <button onclick="adminAIAction('doctor_cbt_empty')" class="btn btn-out" style="font-size:.78rem;padding:12px;">📝 Fill Empty CBT Exams</button>
+        <button onclick="adminAIAction('doctor_report')" class="btn btn-out" style="font-size:.78rem;padding:12px;">📄 Generate Issues Report</button>
+      </div>
+      <div id="doctor-log" style="background:rgba(0,0,0,.4);border:1px solid rgba(74,222,128,.2);border-radius:10px;padding:12px;font-family:monospace;font-size:.72rem;min-height:60px;display:none;max-height:250px;overflow-y:auto;"></div>
+    </div>
+
+    <!-- USER CLEANUP TAB -->
+    <div id="ai-tab-cleanup" class="ai-tab-panel" style="display:none;">
+      <div style="background:linear-gradient(135deg,rgba(248,113,113,.08),rgba(220,38,38,.05));border:1px solid rgba(248,113,113,.25);border-radius:12px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:.86rem;font-weight:700;color:#f87171;margin-bottom:4px">🧹 User Management & Cleanup</div>
+        <div style="font-size:.74rem;color:var(--text2);line-height:1.6">Remove inactive users, manage registrations, clean up your user base.</div>
+      </div>
+
+      <!-- Inactive user filter -->
+      <div style="background:var(--card);border:1px solid var(--cb);border-radius:12px;padding:14px;margin-bottom:10px;">
+        <div style="font-size:.8rem;font-weight:700;color:var(--text);margin-bottom:10px;">🎯 Find Inactive Users</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+          <span style="font-size:.76rem;color:var(--text2);">Not active for:</span>
+          <button onclick="setCleanupFilter(7,this)" class="cleanup-filter-btn" style="padding:5px 12px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">7 days</button>
+          <button onclick="setCleanupFilter(14,this)" class="cleanup-filter-btn" style="padding:5px 12px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">14 days</button>
+          <button onclick="setCleanupFilter(30,this)" id="cleanup-filter-default" class="cleanup-filter-btn" style="padding:5px 12px;border-radius:20px;border:none;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:700;">30 days</button>
+          <button onclick="setCleanupFilter(60,this)" class="cleanup-filter-btn" style="padding:5px 12px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">60 days</button>
+          <button onclick="setCleanupFilter(90,this)" class="cleanup-filter-btn" style="padding:5px 12px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">90 days</button>
+          <button onclick="setCleanupFilter(999,this)" class="cleanup-filter-btn" style="padding:5px 12px;border-radius:20px;border:1px solid rgba(248,113,113,.4);background:transparent;color:#f87171;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Never logged in</button>
+        </div>
+        <button onclick="loadInactiveUsers()" class="btn btn-out" style="width:100%;font-size:.76rem;">🔍 Find These Users</button>
+      </div>
+
+      <!-- Results -->
+      <div id="cleanup-results" style="display:none;background:var(--card);border:1px solid var(--cb);border-radius:12px;padding:14px;margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+          <div id="cleanup-count" style="font-size:.8rem;font-weight:700;color:var(--text)"></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button onclick="selectAllCleanup(true)" style="padding:4px 10px;background:rgba(255,255,255,.05);border:1px solid var(--cb);border-radius:8px;color:var(--text2);font-size:.7rem;cursor:pointer;font-family:'Outfit',sans-serif;">Select All</button>
+            <button onclick="selectAllCleanup(false)" style="padding:4px 10px;background:rgba(255,255,255,.05);border:1px solid var(--cb);border-radius:8px;color:var(--text2);font-size:.7rem;cursor:pointer;font-family:'Outfit',sans-serif;">Deselect All</button>
+          </div>
+        </div>
+        <div id="cleanup-user-list" style="max-height:350px;overflow-y:auto;"></div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button onclick="bulkActionCleanup('notify')" class="btn btn-out" style="flex:1;font-size:.74rem;min-width:120px;">📢 Notify Selected</button>
+          <button onclick="bulkActionCleanup('give_points')" class="btn btn-out" style="flex:1;font-size:.74rem;min-width:120px;">⭐ Give Points</button>
+          <button onclick="bulkActionCleanup('ban')" style="flex:1;padding:10px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:10px;color:#fbbf24;font-family:'Outfit',sans-serif;font-size:.74rem;cursor:pointer;min-width:120px;">🚫 Ban Selected</button>
+          <button onclick="bulkActionCleanup('delete')" style="flex:1;padding:10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:10px;color:#f87171;font-family:'Outfit',sans-serif;font-size:.74rem;cursor:pointer;min-width:120px;">🗑️ Delete Selected</button>
+        </div>
+      </div>
+
+      <!-- Other cleanup tools -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button onclick="adminAIAction('cleanup_zero_activity')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📉 Never Took a Quiz</button>
+        <button onclick="adminAIAction('cleanup_no_dept')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🏫 Missing Department</button>
+        <button onclick="adminAIAction('cleanup_banned')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🚫 View Banned Users</button>
+        <button onclick="adminAIAction('cleanup_stats')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📊 User Base Stats</button>
+        <button onclick="adminAIAction('cleanup_export')" class="btn btn-out" style="font-size:.74rem;padding:10px;grid-column:span 2;">📥 Export All Users (CSV)</button>
+      </div>
+    </div>
+
+    <!-- Result display -->
+    <div id="ai-action-result" style="display:none;background:var(--card);border:1px solid var(--gold);border-radius:14px;padding:16px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+        <div id="ai-action-title" style="font-size:.84rem;font-weight:700;color:var(--gold2)"></div>
+        <button onclick="document.getElementById('ai-action-result').style.display='none'" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:1rem;">✕</button>
+      </div>
+      <div id="ai-action-content"></div>
+      <div id="ai-action-buttons" style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;"></div>
+    </div>
+
+    <!-- CHAT TAB -->
+    <div id="ai-tab-chat" class="ai-tab-panel" style="display:none;">
+      <div style="font-size:.74rem;color:var(--text2);margin-bottom:10px;line-height:1.7;background:rgba(255,255,255,.03);border-radius:10px;padding:10px;">
+        💡 <b style="color:var(--gold2)">I can execute real actions from chat. Try:</b><br>
+        "Give 100 points to all students who haven't logged in this week"<br>
+        "Create 3 hot topics for CHM exam next week"<br>
+        "Generate 20 MTH 102 questions and save to PQ bank"<br>
+        "Send an emergency alert about tomorrow's exam venue change"<br>
+        "Create a coupon code CHAMP2024 worth 200 points"
+      </div>
+      <div id="admin-ai-chat" style="min-height:200px;max-height:500px;overflow-y:auto;margin-bottom:12px;padding:4px;"></div>
       <div style="display:flex;gap:8px;">
-        <textarea id="admin-ai-inp" placeholder="Ask your AI assistant anything..." style="flex:1;padding:10px 13px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.82rem;outline:none;resize:none;min-height:50px;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAdminAI();}"></textarea>
+        <textarea id="admin-ai-inp" placeholder="Tell me what to do on the platform..." style="flex:1;padding:10px 13px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.82rem;outline:none;resize:none;min-height:50px;" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAdminAI();}"></textarea>
         <button onclick="sendAdminAI()" style="background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;padding:10px 16px;cursor:pointer;font-size:1rem;align-self:flex-end;">➤</button>
       </div>
-      <div style="font-size:.7rem;color:var(--text2);margin-top:6px;">Press Enter to send • Shift+Enter for new line</div>
     </div>
   </div>
 
@@ -742,6 +943,31 @@ Answer: A</code>
         </div>
       </div>
       <button class="btn btn-gold" onclick="saveContact()">💾 Save Contact Info</button>
+    </div>
+
+    <!-- PQ Access Code -->
+    <div class="card" style="margin-bottom:14px;">
+      <div class="card-title">🔑 PQ Bank Access Codes</div>
+      <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;line-height:1.6">Set codes for the PQ Bank. Students need general code first, then each course has its own code.</div>
+      <div class="fg"><label>General Access Code (unlocks PQ Bank)</label>
+        <input type="text" id="pq-master-code" placeholder="BABSPQ2024" style="letter-spacing:2px;font-weight:700;text-transform:uppercase;text-align:center;"/>
+      </div>
+      <div style="font-size:.76rem;font-weight:600;color:var(--text2);margin-bottom:8px;margin-top:4px;">Per-Course Codes:</div>
+      <div class="row2">
+        <div class="fg"><label>⚗️ CHM 101</label><input type="text" id="pq-code-chm101" placeholder="e.g. CHM101" style="letter-spacing:1px;font-weight:700;text-transform:uppercase;text-align:center;"/></div>
+        <div class="fg"><label>⚗️ CHM 102</label><input type="text" id="pq-code-chm102" placeholder="e.g. CHM102" style="letter-spacing:1px;font-weight:700;text-transform:uppercase;text-align:center;"/></div>
+      </div>
+      <div class="row2">
+        <div class="fg"><label>📐 MTH 101</label><input type="text" id="pq-code-mth101" placeholder="e.g. MTH101" style="letter-spacing:1px;font-weight:700;text-transform:uppercase;text-align:center;"/></div>
+        <div class="fg"><label>📐 MTH 102</label><input type="text" id="pq-code-mth102" placeholder="e.g. MTH102" style="letter-spacing:1px;font-weight:700;text-transform:uppercase;text-align:center;"/></div>
+      </div>
+      <div class="row2">
+        <div class="fg"><label>⚡ PHY 101</label><input type="text" id="pq-code-phy101" placeholder="e.g. PHY101" style="letter-spacing:1px;font-weight:700;text-transform:uppercase;text-align:center;"/></div>
+        <div class="fg"><label>⚡ PHY 102</label><input type="text" id="pq-code-phy102" placeholder="e.g. PHY102" style="letter-spacing:1px;font-weight:700;text-transform:uppercase;text-align:center;"/></div>
+      </div>
+      <div style="font-size:.72rem;color:var(--text2);margin-bottom:10px;">💡 The general code also unlocks all courses. Leave course code empty to use general code only.</div>
+      <button class="btn btn-gold" onclick="savePQCodes()" style="width:100%;">💾 Save All PQ Codes</button>
+      <div id="pq-code-save-msg" style="display:none;margin-top:8px;font-size:.78rem;text-align:center;"></div>
     </div>
 
     <!-- Hot Topics -->
@@ -1217,7 +1443,7 @@ function showPanel(name,el){
   document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('on'));
   document.getElementById('panel-'+name).classList.add('on');
   if(el)el.classList.add('on');
-  ({motivations:loadMotivations,analytics:loadAnalytics,students:loadStudents,courses:loadCourses,questions:()=>{loadQCourses();loadBulkCourses();},privatequiz:()=>{loadPQList();loadHtmlQuizzes();},files:loadFiles,textbooks:loadAdminTextbooks,settings:()=>{loadSettings();loadBrevoSettings();loadPopupSettings();loadSpinSettings();loadCountdownSettings();loadSOTWSettings();loadDailyChallengeSettings();},dashboard:loadDashboard,messages:()=>{loadStudents();loadSentMessages();loadDeptStats();},subadmins:loadSubAdmins,coupons:loadCoupons,redemptions:loadRedemptions,cbt:()=>{loadCBTExams();loadHotTopicsAdmin();},aiadmin:()=>{},pqbank:()=>{loadAdminPQBank('chm101');}})[name]?.();
+  ({motivations:loadMotivations,analytics:loadAnalytics,students:loadStudents,courses:loadCourses,questions:()=>{loadQCourses();loadBulkCourses();},privatequiz:()=>{loadPQList();loadHtmlQuizzes();},files:loadFiles,textbooks:loadAdminTextbooks,settings:()=>{loadSettings();loadBrevoSettings();loadPopupSettings();loadSpinSettings();loadCountdownSettings();loadSOTWSettings();loadDailyChallengeSettings();loadPQCodes();},dashboard:loadDashboard,messages:()=>{loadStudents();loadSentMessages();loadDeptStats();},subadmins:loadSubAdmins,coupons:loadCoupons,redemptions:loadRedemptions,cbt:()=>{loadCBTExams();loadHotTopicsAdmin();},aiadmin:()=>{loadAILiveStats();},pqbank:()=>{loadAdminPQBank('chm101');}})[name]?.();
 }
 async function loadDashboard(){
   const snap=await db.collection('users').get();
@@ -2285,7 +2511,7 @@ async function loadAdminPQBank(subject){
   // Custom questions from Firestore
   let custom = [];
   try{
-    const snap = await db.collection('pqBank').where('subject','==',subject).orderBy('createdAt','desc').get();
+    const snap = await db.collection('pqBank').where('subject','==',subject).get();
     custom = snap.docs.map(d=>({id:d.id,...d.data(), isBuiltIn:false}));
   }catch(e){}
 
@@ -2576,13 +2802,46 @@ async function deleteCBTExam(id){
   loadCBTExams();
 }
 
-// ══ AI ADMIN ASSISTANT ══
-let adminAIHistory = [];
+// ══ AI COMMAND CENTER — TAB SWITCHING ══
+function switchAITab(tab, btn){
+  document.querySelectorAll('.ai-tab-panel').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.ai-tab-btn').forEach(b=>{
+    b.style.background='transparent';b.style.color='var(--text2)';
+    b.style.border='1px solid var(--cb)';b.style.fontWeight='400';
+  });
+  document.getElementById('ai-tab-'+tab).style.display='block';
+  btn.style.background='linear-gradient(135deg,var(--gold),var(--gold2))';
+  btn.style.color='var(--navy)';btn.style.border='none';btn.style.fontWeight='700';
+}
+
+// Load live stats on panel open
+async function loadAILiveStats(){
+  const el = document.getElementById('ai-live-stats');
+  if(!el) return;
+  try{
+    const [studSnap, quizSnap] = await Promise.all([
+      db.collection('users').get(),
+      db.collection('quizHistory').get()
+    ]);
+    const today = new Date().toDateString();
+    const students = studSnap.docs.map(d=>d.data());
+    const activeToday = students.filter(s=>s.lastSeen&&new Date(s.lastSeen).toDateString()===today).length;
+    el.innerHTML = [
+      {label:'Students',val:studSnap.size,color:'#818cf8'},
+      {label:'Active Today',val:activeToday,color:'#4ade80'},
+      {label:'Quiz Attempts',val:quizSnap.size,color:'#fb923c'},
+    ].map(s=>`<div style="background:rgba(255,255,255,.06);border-radius:8px;padding:6px 12px;text-align:center;">
+      <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:${s.color}">${s.val}</div>
+      <div style="font-size:.64rem;color:rgba(255,255,255,.5)">${s.label}</div>
+    </div>`).join('');
+  }catch(e){}
+}
+
 
 function appendAdminAIMsg(text, type){
   const chat = document.getElementById('admin-ai-chat');
   const div = document.createElement('div');
-  div.style.cssText=`margin-bottom:10px;padding:10px 13px;border-radius:12px;font-size:.8rem;line-height:1.7;${type==='user'?'background:rgba(201,168,76,.1);border:1px solid var(--cb);margin-left:15%;':'background:rgba(255,255,255,.04);border:1px solid var(--cb);margin-right:15%;'}`;
+  div.style.cssText=`margin-bottom:10px;padding:10px 13px;border-radius:12px;font-size:.8rem;line-height:1.7;${type==='user'?'background:rgba(201,168,76,.1);border:1px solid var(--cb);margin-left:15%;':'background:rgba(255,255,255,.04);border:1px solid var(--cb);margin-right:10%;'}`;
   if(type==='bot') div.innerHTML='<div style="font-size:.68rem;font-weight:700;color:var(--gold2);margin-bottom:4px">🤖 AI Assistant</div>'+text.replace(/\n/g,'<br>');
   else div.textContent=text;
   chat.appendChild(div);
@@ -2590,8 +2849,292 @@ function appendAdminAIMsg(text, type){
   return div;
 }
 
+function showActionResult(title, content, buttons=[]){
+  const panel = document.getElementById('ai-action-result');
+  document.getElementById('ai-action-title').textContent = title;
+  document.getElementById('ai-action-content').innerHTML = content;
+  const btnEl = document.getElementById('ai-action-buttons');
+  btnEl.innerHTML = buttons.map(b=>`<button onclick="${b.action}" class="btn ${b.primary?'btn-gold':'btn-out'}" style="font-size:.76rem;">${b.label}</button>`).join('');
+  panel.style.display = 'block';
+  panel.scrollIntoView({behavior:'smooth'});
+}
+
+// Quick action buttons
+async function adminAIAction(type){
+  const groqSnap = await db.collection('settings').doc('config').get();
+  const groqKey = groqSnap.exists ? groqSnap.data().groqKey : '';
+
+  if(type==='students'){
+    // Fetch real student data
+    const snap = await db.collection('users').get();
+    const students = snap.docs.map(d=>d.data());
+    const today = new Date().toDateString();
+    const activeToday = students.filter(s=>s.lastSeen&&new Date(s.lastSeen).toDateString()===today).length;
+    const depts = {};
+    students.forEach(s=>{ if(s.dept) depts[s.dept]=(depts[s.dept]||0)+1; });
+    const topDept = Object.entries(depts).sort((a,b)=>b[1]-a[1])[0];
+    const zeroPoints = students.filter(s=>(s.points||0)===0).length;
+    showActionResult('📊 Student Report', `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--gold2)">${students.length}</div>
+          <div style="font-size:.72rem;color:var(--text2)">Total Students</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:var(--green)">${activeToday}</div>
+          <div style="font-size:.72rem;color:var(--text2)">Active Today</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:900;color:#f87171">${zeroPoints}</div>
+          <div style="font-size:.72rem;color:var(--text2)">Zero Points</div>
+        </div>
+        <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px;text-align:center;">
+          <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:var(--gold2)">${topDept?topDept[0]:'—'}</div>
+          <div style="font-size:.72rem;color:var(--text2)">Top Department (${topDept?topDept[1]:0})</div>
+        </div>
+      </div>
+      <div style="font-size:.76rem;color:var(--text2)">All departments: ${Object.entries(depts).map(([d,n])=>`${d}: ${n}`).join(', ')}</div>
+    `);
+  }
+
+  else if(type==='announcement'){
+    if(!groqKey){showToast('Set GROQ key in settings first');return;}
+    showActionResult('📢 Generating Announcement...', '<div style="color:var(--text2);font-size:.8rem">AI is writing a powerful announcement...</div>');
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Write a powerful, motivating announcement for OAU 100L pharmacy and science students. Should encourage them to use BABSPHARM Cloud for study. Max 3 sentences. Warm but urgent tone. Include emojis.'}],max_tokens:200})
+    });
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content||'';
+    showActionResult('📢 Announcement Ready', `<div style="font-size:.84rem;color:var(--text);line-height:1.7;padding:10px;background:rgba(255,255,255,.04);border-radius:8px;">${text}</div>`,
+      [{label:'📢 Send to All Students', action:`sendGeneratedAnnouncement(\`${text.replace(/`/g,"'")}\`)`, primary:true},
+       {label:'📋 Copy', action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`}]);
+  }
+
+  else if(type==='questions_chm'||type==='questions_mth'||type==='questions_phy'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const subject = type==='questions_chm'?'CHM 101/102 Chemistry':type==='questions_mth'?'MTH 101/102 Mathematics':'PHY 101/102 Physics';
+    const subjectKey = type==='questions_chm'?'chm101':type==='questions_mth'?'mth101':'phy101';
+    showActionResult('⏳ Generating Questions...', '<div style="color:var(--text2)">AI is generating university-level questions...</div>');
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Generate 10 university-level MCQ questions for OAU 100L ${subject}. Return ONLY valid JSON array:\n[{"q":"question","opts":["A","B","C","D"],"ans":0,"exp":"explanation"}]\nans is 0-indexed. University standard, not O level.`}],max_tokens:2000,temperature:0.5})
+    });
+    const data = await res.json();
+    try{
+      const qs = JSON.parse((data.choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());
+      const preview = qs.slice(0,3).map((q,i)=>`<div style="font-size:.78rem;padding:8px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px;"><b>${i+1}.</b> ${q.q}<br><span style="color:var(--green)">Answer: ${['A','B','C','D'][q.ans]}. ${q.opts[q.ans]}</span></div>`).join('');
+      showActionResult(`✅ ${qs.length} Questions Generated`, `${preview}<div style="color:var(--text2);font-size:.74rem;margin-top:8px">...and ${Math.max(0,qs.length-3)} more questions ready</div>`,
+        [{label:`💾 Save All to PQ Bank`, action:`saveGeneratedQuestions(${JSON.stringify(qs).replace(/'/g,"\\'")},'${subjectKey}')`, primary:true},
+         {label:'📋 Copy JSON', action:`navigator.clipboard.writeText(\`${JSON.stringify(qs)}\`);showToast('Copied!')`}]);
+    }catch(e){showActionResult('❌ Error', 'Could not parse questions. Try again.');}
+  }
+
+  else if(type==='motivation'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Generate 5 motivational quotes for OAU pharmacy/science students. Return JSON:\n[{"emoji":"🔥","text":"main quote","sub":"short tagline","category":"exam"}]\ncategories: general, exam, mental health, faith, money'}],max_tokens:600,temperature:0.8})
+    });
+    const data = await res.json();
+    try{
+      const motivs = JSON.parse((data.choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());
+      const preview = motivs.map(m=>`<div style="padding:8px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px;font-size:.78rem;">${m.emoji} <b>${m.text}</b><br><span style="color:var(--text2)">${m.sub}</span></div>`).join('');
+      showActionResult('✨ Motivations Generated', preview,
+        [{label:'💾 Save All to Platform', action:`saveGeneratedMotivations(${JSON.stringify(motivs)})`, primary:true}]);
+    }catch(e){showActionResult('❌ Error', 'Try again.');}
+  }
+
+  else if(type==='give_points'){
+    const snap = await db.collection('users').orderBy('name').get();
+    const students = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const list = students.slice(0,20).map(s=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--cb);">
+        <div>
+          <div style="font-size:.78rem;font-weight:600;color:var(--text)">${s.name||'Unknown'}</div>
+          <div style="font-size:.7rem;color:var(--text2)">${s.email||''} • ${s.points||0} pts</div>
+        </div>
+        <button onclick="givePointsToStudent('${s.id}','${(s.name||'').replace(/'/g,"\\'")}',${s.points||0})" class="btn btn-gold" style="font-size:.72rem;padding:4px 10px;">+ Points</button>
+      </div>`).join('');
+    showActionResult('⭐ Give Points to Student', `<div style="max-height:300px;overflow-y:auto;">${list}</div>`);
+  }
+
+  else if(type==='inactive'){
+    const snap = await db.collection('users').get();
+    const students = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const weekAgo = Date.now() - 7*24*60*60*1000;
+    const inactive = students.filter(s=>{
+      if(!s.lastSeen) return true;
+      return new Date(s.lastSeen).getTime() < weekAgo;
+    }).slice(0,20);
+    const list = inactive.map(s=>`
+      <div style="padding:6px 0;border-bottom:1px solid var(--cb);">
+        <div style="font-size:.78rem;font-weight:600;color:var(--text)">${s.name||'Unknown'}</div>
+        <div style="font-size:.7rem;color:var(--red)">Last seen: ${s.lastSeen?new Date(s.lastSeen).toLocaleDateString():'Never'} • ${s.points||0} pts</div>
+      </div>`).join('');
+    showActionResult(`😴 ${inactive.length} Inactive Students (7+ days)`,
+      `<div style="max-height:300px;overflow-y:auto;">${list||'<div style="color:var(--text2)">No inactive students!</div>'}</div>`,
+      [{label:'📢 Send Them Reminder', action:`adminAIQuick('Write a re-engagement message for students who have not used the platform in over a week')`, primary:true}]
+    );
+  }
+
+  else if(type==='top_students'){
+    const snap = await db.collection('users').get();
+    const students = snap.docs.map(d=>d.data()).sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,10);
+    const medals = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
+    const list = students.map((s,i)=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--cb);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="font-size:1.2rem">${medals[i]}</span>
+          <div>
+            <div style="font-size:.8rem;font-weight:700;color:var(--text)">${s.name||'Unknown'}</div>
+            <div style="font-size:.7rem;color:var(--text2)">${s.dept||'No dept'} • ${s.email||''}</div>
+          </div>
+        </div>
+        <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:900;color:var(--gold2)">${s.points||0} pts</div>
+      </div>`).join('');
+    showActionResult('🏆 Top 10 Students',
+      `<div>${list||'<div style="color:var(--text2)">No students yet</div>'}</div>`,
+      [{label:'🎁 Reward Top Student', action:`adminAIQuick('Write a congratulations message for our top student and suggest a reward idea')`, primary:true}]
+    );
+  }
+
+  else if(type==='exam_tip'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    showActionResult('⏳ Generating exam tips...','<div style="color:var(--text2)">AI is writing exam tips...</div>');
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Generate 5 powerful exam tips for OAU 100L students. For each tip give: title and 2 sentence explanation. Nigerian context. Return JSON:\n[{"title":"tip title","body":"explanation","emoji":"🎯"}]'}],max_tokens:600,temperature:0.7})
+    });
+    const data = await res.json();
+    try{
+      const tips = JSON.parse((data.choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());
+      const preview = tips.map(t=>`<div style="padding:8px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px;font-size:.78rem;">${t.emoji} <b style="color:var(--gold2)">${t.title}</b><br><span style="color:var(--text2)">${t.body}</span></div>`).join('');
+      showActionResult('📌 Exam Tips Ready', preview,
+        [{label:'📢 Post as Announcement', action:`sendGeneratedAnnouncement(\`📌 EXAM TIPS\n\n${tips.map(t=>t.emoji+' '+t.title+': '+t.body).join('\n\n')}\`)`, primary:true},
+         {label:'📋 Copy', action:`navigator.clipboard.writeText(\`${tips.map(t=>t.emoji+' '+t.title+': '+t.body).join('\n\n')}\`);showToast('Copied!')`}]
+      );
+    }catch(e){showActionResult('❌ Error','Try again.');}
+  }
+
+  // Existing handlers continue below...
+  else if(type==='hot_topic'){
+    document.getElementById('admin-ai-inp').value = 'Set a hot topic alert for students about what to focus on for upcoming exams. Tell me what topic and I will add it.';
+    document.getElementById('admin-ai-inp').focus();
+    showPanel('aiadmin', document.querySelector('.sb-item'));
+  }
+
+  else if(type==='whatsapp'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Write a WhatsApp group message for OAU 100L students promoting BABSPHARM Cloud learning platform. Include: what it offers (AI tutors, CBT exams, past questions, motivation). Use emojis. Nigerian tone. Max 150 words.'}],max_tokens:300})
+    });
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content||'';
+    showActionResult('📱 WhatsApp Message Ready', `<div style="font-size:.82rem;color:var(--text);line-height:1.7;padding:10px;background:rgba(255,255,255,.04);border-radius:8px;white-space:pre-wrap;">${text}</div>`,
+      [{label:'📋 Copy Message', action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied! Paste on WhatsApp')`, primary:true}]);
+  }
+
+  else if(type==='coupon'){
+    document.getElementById('admin-ai-inp').value = 'Create a coupon code. Tell me: what should the code be, how many points, and any limit?';
+    document.getElementById('admin-ai-inp').focus();
+  }
+
+  else if(type==='analyze'){
+    // Full platform analysis
+    const [studSnap, quizSnap, pqSnap] = await Promise.all([
+      db.collection('users').get(),
+      db.collection('quizHistory').orderBy('date','desc').limit(50).get().catch(()=>({docs:[]})),
+      db.collection('pqBank').get().catch(()=>({docs:[]}))
+    ]);
+    const students = studSnap.docs.map(d=>d.data());
+    const quizzes = quizSnap.docs.map(d=>d.data());
+    const avgScore = quizzes.length ? Math.round(quizzes.reduce((s,q)=>s+(q.score/q.total*100),0)/quizzes.length) : 0;
+    const today = new Date().toDateString();
+    const activeToday = students.filter(s=>s.lastSeen&&new Date(s.lastSeen).toDateString()===today).length;
+    showActionResult('📊 Platform Analysis', `
+      <div style="font-size:.82rem;color:var(--text);line-height:1.8;">
+        <div>👥 <b style="color:var(--gold2)">${students.length}</b> total students, <b style="color:var(--green)">${activeToday}</b> active today</div>
+        <div>📝 <b style="color:var(--gold2)">${quizSnap.docs.length}</b> recent quiz attempts, avg score <b style="color:${avgScore>=50?'var(--green)':'var(--red)'}">${avgScore}%</b></div>
+        <div>📋 <b style="color:var(--gold2)">${pqSnap.docs.length}</b> custom PQ questions in bank</div>
+        <div>💰 Students with 0 points: <b style="color:var(--red)">${students.filter(s=>(s.points||0)===0).length}</b></div>
+        <div>🎓 Students with 100+ points: <b style="color:var(--green)">${students.filter(s=>(s.points||0)>=100).length}</b></div>
+        <div>📅 Registered this week: <b style="color:var(--gold2)">${students.filter(s=>{if(!s.createdAt)return false;const d=new Date(s.createdAt);return(Date.now()-d.getTime())<7*24*60*60*1000;}).length}</b></div>
+      </div>
+    `);
+  }
+
+  else if(type==='cbt_exam'){
+    document.getElementById('admin-ai-inp').value = 'Create a CBT exam. Tell me: title, course, access code, duration in minutes, how many sections, and questions per section.';
+    document.getElementById('admin-ai-inp').focus();
+  }
+
+  else if(type==='emergency'){
+    document.getElementById('admin-ai-inp').value = 'Send an emergency alert. Tell me what the alert should say and I will send it to all students immediately.';
+    document.getElementById('admin-ai-inp').focus();
+  }
+}
+
+// Helper: give points to student directly
+async function bulkGivePoints(pts){
+  const snap = await db.collection('users').get();
+  let count = 0;
+  for(const doc of snap.docs){
+    await doc.ref.set({points:(doc.data().points||0)+pts},{merge:true});
+    count++;
+  }
+  showToast(`✅ Gave ${pts} points to ${count} students!`);
+  document.getElementById('ai-action-result').style.display='none';
+}
+
+async function saveAllHotTopics(topics){
+  for(const t of topics){
+    await db.collection('hotTopics').add({topic:t.topic,course:t.course,urgency:t.urgency||'urgent',note:t.note||'',createdAt:new Date().toISOString()});
+  }
+  showToast(`🔥 ${topics.length} hot topics saved!`);
+  document.getElementById('ai-action-result').style.display='none';
+}
+
+async function givePointsToStudent(uid, name, currentPoints){
+  const pts = parseInt(prompt(`Give points to ${name} (currently ${currentPoints} pts)\nHow many points to add?`));
+  if(!pts||isNaN(pts)) return;
+  await db.collection('users').doc(uid).set({points: currentPoints+pts},{merge:true});
+  await db.collection('pointsHistory').add({uid, pts, reason:'Admin gift', date:new Date().toISOString()});
+  showToast(`✅ +${pts} points given to ${name}!`);
+  document.getElementById('ai-action-result').style.display='none';
+}
+
+// Helper: save generated questions to PQ bank
+async function saveGeneratedQuestions(questions, subject){
+  let saved = 0;
+  for(const q of questions){
+    if(!q.q||!q.opts) continue;
+    await db.collection('pqBank').add({subject, q:q.q, opts:q.opts, ans:q.ans||0, exp:q.exp||'', createdAt:new Date().toISOString()});
+    saved++;
+  }
+  showToast(`✅ ${saved} questions saved to PQ Bank!`);
+  document.getElementById('ai-action-result').style.display='none';
+}
+
+// Helper: save generated motivations
+async function saveGeneratedMotivations(motivations){
+  for(const m of motivations){
+    await db.collection('motivations').add({emoji:m.emoji||'✨', text:m.text, sub:m.sub||'', category:m.category||'general', createdAt:new Date().toISOString()});
+  }
+  showToast(`✅ ${motivations.length} motivations saved!`);
+  document.getElementById('ai-action-result').style.display='none';
+}
+
+// Helper: send generated announcement
+async function sendGeneratedAnnouncement(text){
+  await db.collection('announcements').add({title:'📢 Announcement', msg:text, createdAt:new Date().toISOString()});
+  showToast('✅ Announcement sent to all students!');
+  document.getElementById('ai-action-result').style.display='none';
+}
+
 function adminAIQuick(prompt){
-  document.getElementById('admin-ai-inp').value=prompt;
+  document.getElementById('admin-ai-inp').value = prompt;
   sendAdminAI();
 }
 
@@ -2603,74 +3146,226 @@ async function sendAdminAI(){
 
   const groqSnap = await db.collection('settings').doc('config').get();
   const groqKey = groqSnap.exists ? groqSnap.data().groqKey : '';
-  if(!groqKey){appendAdminAIMsg('❌ GROQ key not configured. Go to Settings → GROQ AI Key.','bot');return;}
+  if(!groqKey){appendAdminAIMsg('❌ GROQ key not set. Go to Settings first.','bot');return;}
 
   appendAdminAIMsg(msg,'user');
-  const typing = appendAdminAIMsg('Thinking... 🤔','bot');
+  const typing = appendAdminAIMsg('⏳ Working on it...','bot');
 
   try{
-    // Get platform stats for context
-    let statsContext = '';
+    // Gather full live platform data
+    let liveData = {students:[]};
     try{
-      const [studSnap, quizSnap] = await Promise.all([
+      const [studSnap,quizSnap,cbtSnap,motivSnap,hotSnap,coupSnap,annSnap] = await Promise.all([
         db.collection('users').get(),
-        db.collection('quizHistory').get()
+        db.collection('quizHistory').get(),
+        db.collection('cbtExams').get(),
+        db.collection('motivations').get(),
+        db.collection('hotTopics').get(),
+        db.collection('coupons').get(),
+        db.collection('announcements').get()
       ]);
-      statsContext = `Current platform stats: ${studSnap.size} total students, ${quizSnap.size} total quiz attempts.`;
+      const students = studSnap.docs.map(d=>({id:d.id,...d.data()}));
+      const today = new Date().toDateString();
+      liveData = {
+        totalStudents:students.length,
+        activeToday:students.filter(s=>s.lastSeen&&new Date(s.lastSeen).toDateString()===today).length,
+        newThisWeek:students.filter(s=>{if(!s.createdAt)return false;return(Date.now()-new Date(s.createdAt).getTime())<7*24*3600*1000;}).length,
+        zeroPoints:students.filter(s=>(s.points||0)===0).length,
+        top5:students.sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,5).map(s=>s.name+'('+( s.points||0)+'pts)').join(', '),
+        totalQuizAttempts:quizSnap.size,
+        avgScore:quizSnap.size?Math.round(quizSnap.docs.reduce((s,d)=>s+((d.data().score||0)/(d.data().total||1)*100),0)/quizSnap.size):0,
+        cbtExams:cbtSnap.size, activeCBT:cbtSnap.docs.filter(d=>d.data().active).length,
+        motivations:motivSnap.size, hotTopics:hotSnap.size,
+        activeCoupons:coupSnap.docs.filter(d=>d.data().active!==false).length,
+        announcements:annSnap.size, students
+      };
     }catch(e){}
 
-    adminAIHistory.push({role:'user', content:msg});
+    adminAIHistory.push({role:'user',content:msg});
 
-    const systemPrompt = `You are an intelligent admin assistant for BABSPHARM Cloud — an OAU student learning platform. You help the admin (Ayodeji Babalola) manage the platform effectively.
+    const systemPrompt = `You are BABS ADMIN AI — fully capable of executing real actions on BABSPHARM Cloud. Admin: Ayodeji Babalola.
 
-${statsContext}
+LIVE DATA: ${liveData.totalStudents} students, ${liveData.activeToday} active today, ${liveData.newThisWeek} new this week, ${liveData.zeroPoints} with 0 pts. Top 5: ${liveData.top5}. Quiz attempts: ${liveData.totalQuizAttempts}, avg score ${liveData.avgScore}%. CBT exams: ${liveData.cbtExams} (${liveData.activeCBT} active). Motivations: ${liveData.motivations}, Hot topics: ${liveData.hotTopics}, Coupons: ${liveData.activeCoupons}, Announcements: ${liveData.announcements}.
 
-Platform features: CBT exams, quiz system, AI tutors (CHM/MTH/PHY), student management, points system, coupon codes, announcements, video lessons, textbooks, files, leaderboard, past questions bank.
+YOU CAN EXECUTE THESE ACTIONS — include an ACTION block at the end of your reply when something should be done:
 
-You can help with:
-- Writing announcements and messages
-- Generating quiz questions (MCQ format for university 100L students)
-- Analyzing student performance
-- Suggesting platform improvements
-- Writing WhatsApp/Telegram messages to students
-- Creating motivational content
-- Answering platform management questions
+\`\`\`ACTION
+{"type":"ANNOUNCEMENT","title":"...","message":"..."}
+\`\`\`
+\`\`\`ACTION
+{"type":"EMERGENCY","title":"...","message":"..."}
+\`\`\`
+\`\`\`ACTION
+{"type":"MOTIVATION","emoji":"🔥","text":"...","sub":"...","category":"exam"}
+\`\`\`
+\`\`\`ACTION
+{"type":"HOT_TOPIC","topic":"...","course":"CHM 101","urgency":"urgent","note":"..."}
+\`\`\`
+\`\`\`ACTION
+{"type":"COUPON","code":"BABS50","points":50,"limit":200}
+\`\`\`
+\`\`\`ACTION
+{"type":"GENERATE_QUESTIONS","subject":"chm101","topic":"Atomic Structure","count":10}
+\`\`\`
+\`\`\`ACTION
+{"type":"SURPRISE_REWARD","search":"student name/email","points":30,"message":"Keep it up!"}
+\`\`\`
+\`\`\`ACTION
+{"type":"AWARD_POINTS","search":"student name/email","points":50,"reason":"..."}
+\`\`\`
+\`\`\`ACTION
+{"type":"CBT_EXAM","title":"...","course":"CHM 101","code":"CHM2025","duration":60,"sections":4,"qps":8}
+\`\`\`
 
-When generating MCQ questions, format them clearly:
-Q: [question]
-A) [option]
-B) [option]
-C) [option]
-D) [option]
-Answer: [letter]
-Explanation: [brief explanation]
+Only include ACTION block when something should be executed. For analysis, writing, or advice — respond normally.
 
-Be helpful, concise and professional.`;
+SUBJECTS for questions: chm101, chm102, mth101, mth102, phy101, phy102
+Be direct, powerful, action-oriented. You know this platform completely.`;
 
     const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
-      body:JSON.stringify({
-        model:'llama-3.3-70b-versatile',
-        messages:[{role:'system',content:systemPrompt},...adminAIHistory.slice(-10)],
-        temperature:0.7, max_tokens:1500
-      })
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'system',content:systemPrompt},...adminAIHistory.slice(-12)],temperature:0.65,max_tokens:1800})
     });
 
     const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content||'Sorry, try again.';
+    let reply = data.choices?.[0]?.message?.content||'Sorry, try again.';
     typing.remove();
-    const replyEl = appendAdminAIMsg(reply,'bot');
 
-    // Add copy button
-    const copyBtn = document.createElement('button');
+    // Parse ACTION block
+    let action = null;
+    const actionMatch = reply.match(/```ACTION\s*([\s\S]*?)```/);
+    if(actionMatch){
+      try{action=JSON.parse(actionMatch[1].trim());}catch(e){}
+      reply = reply.replace(/```ACTION[\s\S]*?```/g,'').trim();
+    }
+
+    const replyEl = appendAdminAIMsg(reply,'bot');
+    adminAIHistory.push({role:'assistant',content:reply});
+
+    // Copy button
+    const copyBtn=document.createElement('button');
     copyBtn.textContent='📋 Copy';
-    copyBtn.style.cssText='margin-top:8px;padding:4px 12px;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:8px;color:var(--gold);font-size:.72rem;cursor:pointer;font-family:"Outfit",sans-serif;';
+    copyBtn.style.cssText='margin-top:8px;margin-right:6px;padding:4px 12px;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:8px;color:var(--gold);font-size:.72rem;cursor:pointer;font-family:"Outfit",sans-serif;';
     copyBtn.onclick=()=>{navigator.clipboard.writeText(reply);showToast('Copied! ✅');};
     replyEl.appendChild(copyBtn);
 
-    adminAIHistory.push({role:'assistant', content:reply});
+    // Execute action if present
+    if(action) await executeAdminAIAction(action, replyEl, liveData.students||[]);
+
   }catch(e){typing.remove();appendAdminAIMsg('❌ Error: '+e.message,'bot');}
+}
+
+async function executeAdminAIAction(action, replyEl, students){
+  const labels={ANNOUNCEMENT:'📢 Send Announcement to All',EMERGENCY:'🚨 Send Emergency Alert',MOTIVATION:'💪 Save Motivation',HOT_TOPIC:'🔥 Add Hot Topic',COUPON:'🎟️ Create Coupon',GENERATE_QUESTIONS:'❓ Generate & Save Questions',SURPRISE_REWARD:'🎁 Send Surprise Reward',AWARD_POINTS:'🏅 Award Points to Student',CBT_EXAM:'📝 Create CBT Exam'};
+  if(!labels[action.type]) return;
+
+  const execDiv=document.createElement('div');
+  execDiv.style.cssText='margin-top:10px;padding:10px 12px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.3);border-radius:10px;';
+  execDiv.innerHTML='<div style="font-size:.72rem;color:var(--text2);margin-bottom:6px;">⚡ AI wants to execute:</div>';
+
+  const execBtn=document.createElement('button');
+  execBtn.className='btn btn-gold';
+  execBtn.style.fontSize='.78rem';
+  execBtn.textContent=labels[action.type];
+  execBtn.onclick=async()=>{
+    execBtn.disabled=true;execBtn.textContent='⏳ Executing...';
+    try{
+      await doExecuteAction(action,students);
+      execBtn.textContent='✅ Done!';
+      execBtn.style.background='linear-gradient(135deg,#16a34a,#15803d)';
+      showToast('✅ Done!');
+    }catch(e){execBtn.textContent='❌ Failed';execBtn.disabled=false;showToast('Error: '+e.message);}
+  };
+  execDiv.appendChild(execBtn);
+  replyEl.appendChild(execDiv);
+}
+
+async function doExecuteAction(action, students){
+  const ts = new Date().toISOString();
+
+  if(action.type==='ANNOUNCEMENT'){
+    await db.collection('announcements').add({title:action.title||'Announcement',msg:action.message||'',createdAt:ts});
+  }
+  else if(action.type==='EMERGENCY'){
+    await db.collection('settings').doc('emergency').set({title:action.title||'⚠️ Emergency',msg:action.message||'',active:true,sentAt:ts});
+    await db.collection('announcements').add({title:'🚨 '+(action.title||'Emergency'),msg:action.message||'',createdAt:ts});
+  }
+  else if(action.type==='MOTIVATION'){
+    await db.collection('motivations').add({emoji:action.emoji||'💪',text:action.text||'',sub:action.sub||'',category:action.category||'general',createdAt:ts});
+  }
+  else if(action.type==='HOT_TOPIC'){
+    await db.collection('hotTopics').add({topic:action.topic||'',course:action.course||'',urgency:action.urgency||'normal',note:action.note||'',examDate:action.examDate||'',createdAt:ts});
+  }
+  else if(action.type==='COUPON'){
+    const code=action.code||('BABS'+Math.random().toString(36).slice(2,6).toUpperCase());
+    await db.collection('coupons').doc(code).set({code,points:action.points||50,limit:action.limit||100,used:0,active:true,createdAt:ts});
+    showToast('🎟️ Coupon: '+code+' = '+action.points+' pts');
+  }
+  else if(action.type==='GENERATE_QUESTIONS'){
+    const groqSnap=await db.collection('settings').doc('config').get();
+    const groqKey=groqSnap.exists?groqSnap.data().groqKey:'';
+    if(!groqKey) throw new Error('GROQ key not set');
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Generate '+(action.count||10)+' university MCQ questions for OAU 100L '+(action.subject||'chm101')+' on "'+(action.topic||'general')+'". Return ONLY JSON: [{"q":"...","opts":["A","B","C","D"],"ans":0,"exp":"..."}]'}],max_tokens:2000,temperature:0.5})});
+    const d=await res.json();
+    const qs=JSON.parse((d.choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());
+    for(const q of qs){if(!q.q)continue;await db.collection('pqBank').add({subject:action.subject||'chm101',q:q.q,opts:q.opts,ans:q.ans||0,exp:q.exp||'',createdAt:ts});}
+    showToast('✅ '+qs.length+' questions saved!');
+  }
+  else if(action.type==='SURPRISE_REWARD'||action.type==='AWARD_POINTS'){
+    const search=(action.search||'').toLowerCase();
+    const match=students.find(s=>(s.name||'').toLowerCase().includes(search)||(s.email||'').toLowerCase().includes(search));
+    if(!match) throw new Error('Student "'+action.search+'" not found');
+    await db.collection('surpriseRewards').add({uid:match.uid||match.id,points:action.points||20,message:action.message||'You have a reward! 🎁',claimed:false,sentAt:ts});
+    showToast('🎁 Reward sent to '+match.name+'!');
+  }
+  else if(action.type==='CBT_EXAM'){
+    const code=(action.code||(action.course||'EXAM').replace(/\s/g,'').toUpperCase()+'2025');
+    await db.collection('cbtExams').add({title:action.title||'New Exam',course:action.course||'',code,duration:action.duration||60,sections:action.sections||4,qps:action.qps||8,instructions:action.instructions||'',active:false,createdAt:ts});
+    showToast('📝 CBT Exam created! Code: '+code);
+  }
+}
+
+// ══ PQ CODES ══
+async function savePQCodes(){
+  const master = document.getElementById('pq-master-code').value.trim().toUpperCase();
+  const courseCodes = {};
+  ['chm101','chm102','mth101','mth102','phy101','phy102'].forEach(s=>{
+    const val = document.getElementById('pq-code-'+s)?.value.trim().toUpperCase();
+    if(val) courseCodes[s] = val;
+  });
+  const msgEl = document.getElementById('pq-code-save-msg');
+  try{
+    await db.collection('settings').doc('pqAccess').set({
+      masterCode: master||'BABSPQ2024',
+      courseCodes,
+      updatedAt: new Date().toISOString()
+    });
+    msgEl.style.display='block';
+    msgEl.style.color='var(--green)';
+    msgEl.textContent='✅ PQ codes saved!';
+    setTimeout(()=>msgEl.style.display='none',3000);
+  }catch(e){
+    msgEl.style.display='block';
+    msgEl.style.color='var(--red)';
+    msgEl.textContent='❌ Error saving: '+e.message;
+  }
+}
+
+async function loadPQCodes(){
+  try{
+    const doc = await db.collection('settings').doc('pqAccess').get();
+    if(doc.exists){
+      const d = doc.data();
+      if(document.getElementById('pq-master-code'))
+        document.getElementById('pq-master-code').value = d.masterCode||'BABSPQ2024';
+      const cc = d.courseCodes||{};
+      ['chm101','chm102','mth101','mth102','phy101','phy102'].forEach(s=>{
+        const el = document.getElementById('pq-code-'+s);
+        if(el) el.value = cc[s]||'';
+      });
+    }
+  }catch(e){}
 }
 
 // ══ HOT TOPICS ══
@@ -3230,4 +3925,636 @@ async function removeSubAdmin(uid){
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 </script>
 </body>
-</html>
+</html
+// ── CAMPAIGNS ENGINE ──
+async function runCampaign(type, groqKey){
+  const log=[]; const addLog=(msg)=>{log.push('✅ '+msg);showActionResult('🎯 Campaign Running',log.map(l=>`<div style="font-size:.78rem;color:var(--green);padding:2px 0">${l}</div>`).join(''));};
+  showActionResult('🎯 Starting...','<div style="color:var(--text2)">Launching campaign...</div>');
+
+  const aiPost = async(prompt,maxT=200)=>{
+    const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompt}],max_tokens:maxT})});
+    return (await r.json()).choices?.[0]?.message?.content||'';
+  };
+  const aiJSON = async(prompt,maxT=600)=>{
+    const text = await aiPost(prompt,maxT);
+    return JSON.parse(text.replace(/```json|```/g,'').trim());
+  };
+
+  if(type==='campaign_launch'){
+    try{const t=await aiPost('Powerful launch announcement for BABSPHARM Cloud OAU. AI tutors, CBT, PQ bank. 4 sentences. Emojis.');await db.collection('announcements').add({title:'🚀 BABSPHARM Cloud is Here!',msg:t,createdAt:new Date().toISOString()});addLog('Launch announcement posted');}catch(e){}
+    try{const m=await aiJSON('3 motivations OAU students. JSON:[{"emoji":"🔥","text":"quote","sub":"tagline","category":"general"}]',300);for(const q of m)await db.collection('motivations').add({...q,createdAt:new Date().toISOString()});addLog(`${m.length} motivations added`);}catch(e){}
+    try{const t=await aiJSON('3 OAU exam hot topics. JSON:[{"topic":"","course":"CHM 101","urgency":"urgent","note":""}]',300);for(const q of t)await db.collection('hotTopics').add({...q,createdAt:new Date().toISOString()});addLog(`${t.length} hot topics set`);}catch(e){}
+    await db.collection('coupons').add({code:'LAUNCH100',pts:100,limit:200,used:0,active:true,createdAt:new Date().toISOString()});addLog('Coupon LAUNCH100=100pts');
+    let qc=0;for(const s of [{key:'chm101',n:'CHM 101'},{key:'mth101',n:'MTH 101'},{key:'phy101',n:'PHY 101'}]){try{const qs=await aiJSON(`5 MCQ for OAU ${s.n}. JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`,800);for(const q of qs)if(q.q){await db.collection('pqBank').add({subject:s.key,...q,createdAt:new Date().toISOString()});qc++;}}catch(e){}}
+    addLog(`${qc} questions added to PQ bank`);
+    addLog('🎉 LAUNCH CAMPAIGN COMPLETE!');
+  }
+  else if(type==='campaign_exam_prep'){
+    try{const t=await aiPost('Urgent exam prep announcement OAU 100L. Use AI tutors, PQ bank, CBT. Urgent but encouraging. 4 sentences. Emojis.');await db.collection('announcements').add({title:'⚠️ EXAM IS NEAR!',msg:t,createdAt:new Date().toISOString()});addLog('Exam alert sent');}catch(e){}
+    try{const tp=await aiJSON('6 hot exam topics OAU 100L one per course. JSON:[{"topic":"","course":"CHM 101","urgency":"urgent","note":""}]',500);for(const q of tp)await db.collection('hotTopics').add({...q,createdAt:new Date().toISOString()});addLog(`${tp.length} hot topics set`);}catch(e){}
+    try{const t=await aiPost('5 last-minute exam tips OAU. Time management, MCQ tricks, mental health. WhatsApp format. Emojis.',300);await db.collection('announcements').add({title:'📌 EXAM TIPS',msg:t,createdAt:new Date().toISOString()});addLog('Exam tips posted');}catch(e){}
+    await db.collection('coupons').add({code:'EXAM2024',pts:50,limit:500,used:0,active:true,createdAt:new Date().toISOString()});addLog('EXAM2024=50pts coupon created');
+    addLog('🎉 Exam prep campaign done!');
+  }
+  else if(type==='campaign_engagement'){
+    const snap=await db.collection('users').get();const weekAgo=Date.now()-7*24*60*60*1000;
+    const inactive=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>!s.lastSeen||new Date(s.lastSeen).getTime()<weekAgo);
+    let bc=0;for(const s of inactive.slice(0,50)){await db.collection('users').doc(s.id).set({points:(s.points||0)+30},{merge:true});bc++;}addLog(`+30pts to ${bc} inactive students`);
+    try{const t=await aiPost("Re-engagement msg for OAU students who haven't logged in recently. Bonus points waiting. Warm, Nigerian. 3 sentences. Emojis.");await db.collection('announcements').add({title:'👋 We Miss You! Bonus Inside',msg:t,createdAt:new Date().toISOString()});addLog('Announcement posted');}catch(e){}
+    await db.collection('coupons').add({code:'COMEBACK',pts:75,limit:inactive.length,used:0,active:true,createdAt:new Date().toISOString()});addLog('COMEBACK=75pts coupon');
+    addLog(`🎉 ${inactive.length} students targeted!`);
+  }
+  else if(type==='campaign_growth'){
+    try{const t=await aiPost('WhatsApp msg for OAU students to refer friends to BABSPHARM Cloud. 100pts per referral. FOMO. Nigerian. Max 120 words. Link: https://babspharm1-lgtm.github.io/BABSPHARM/');await db.collection('announcements').add({title:'💰 Earn Points for Every Friend!',msg:t,createdAt:new Date().toISOString()});addLog('Referral announcement posted');}catch(e){}
+    await db.collection('motivations').add({emoji:'💎',text:'Every friend you refer brings you closer to your goals',sub:'Help others, earn rewards',category:'general',createdAt:new Date().toISOString()});addLog('Referral motivation added');
+    await db.collection('coupons').add({code:'BRING2',pts:200,limit:100,used:0,active:true,createdAt:new Date().toISOString()});addLog('BRING2=200pts coupon');
+    addLog('🎉 Growth campaign launched!');
+  }
+  else if(type==='campaign_reward'){
+    const snap=await db.collection('users').get();const top3=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,3);
+    for(let i=0;i<top3.length;i++){await db.collection('users').doc(top3[i].id).set({points:(top3[i].points||0)+[500,300,200][i]},{merge:true});addLog(`+${[500,300,200][i]}pts to ${top3[i].name||'Unknown'} #${i+1}`);}
+    try{const names=top3.map((s,i)=>`${i+1}. ${s.name} (${s.points}pts)`).join(', ');const t=await aiPost(`Winners announcement. Top 3: ${names}. Celebrate. Encourage others. Nigerian energy. 4 sentences. Emojis.`);await db.collection('announcements').add({title:'🏆 LEADERBOARD WINNERS!',msg:t,createdAt:new Date().toISOString()});addLog('Winners posted');}catch(e){}
+    addLog('🎉 Reward campaign done!');
+  }
+  else if(type==='campaign_weekly'){
+    try{const m=await aiJSON('7 daily motivational quotes Mon-Sun OAU students. JSON:[{"emoji":"🔥","text":"quote","sub":"Monday energy","category":"general"}]',600);for(const q of m)await db.collection('motivations').add({...q,createdAt:new Date().toISOString()});addLog(`${m.length} daily motivations`);}catch(e){}
+    try{const t=await aiPost('Weekly study timetable OAU 100L Mon-Sun. CHM 101, MTH 101, PHY 101. Day + 2 topics + revision. Emojis.',350);await db.collection('announcements').add({title:"📅 This Week's Study Plan",msg:t,createdAt:new Date().toISOString()});addLog('Study plan posted');}catch(e){}
+    try{const tp=await aiJSON('3 weekly focus topics OAU 100L. JSON:[{"topic":"","course":"CHM 101","urgency":"normal","note":"study this week"}]',300);for(const q of tp)await db.collection('hotTopics').add({...q,createdAt:new Date().toISOString()});addLog(`${tp.length} focus topics set`);}catch(e){}
+    addLog('🎉 Weekly content drop done!');
+  }
+  else if(type==='campaign_new_feature'){
+    const feature=prompt('Feature to announce?')||'exciting new features';
+    try{const t=await aiPost(`Hype announcement for new feature: ${feature} on BABSPHARM Cloud OAU. 3 sentences. Emojis.`);await db.collection('announcements').add({title:`✨ New: ${feature}`,msg:t,createdAt:new Date().toISOString()});addLog('Announcement posted');}catch(e){}
+    addLog('🎉 Campaign live!');
+  }
+  else if(type==='campaign_custom'){
+    document.querySelectorAll('.ai-tab-btn').forEach(b=>{b.style.background='transparent';b.style.color='var(--text2)';b.style.border='1px solid var(--cb)';b.style.fontWeight='400';});
+    document.querySelectorAll('.ai-tab-panel').forEach(p=>p.style.display='none');
+    document.getElementById('ai-tab-chat').style.display='block';
+    document.getElementById('admin-ai-inp').value='Custom campaign goal: ';
+    document.getElementById('admin-ai-inp').focus();
+  }
+}
+
+// ── AUTOPILOT ENGINE ──
+async function runAutopilot(type, groqKey){
+  const aiPost=async(p,m=200)=>{const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:p}],max_tokens:m})});return (await r.json()).choices?.[0]?.message?.content||'';};
+  const aiJSON=async(p,m=600)=>{return JSON.parse((await aiPost(p,m)).replace(/```json|```/g,'').trim());};
+
+  if(type==='autopilot_healthcheck'){
+    const [studSnap,quizSnap,pqSnap,motSnap,cbtSnap,settingsSnap]=await Promise.all([db.collection('users').get(),db.collection('quizHistory').get().catch(()=>({size:0})),db.collection('pqBank').get().catch(()=>({size:0})),db.collection('motivations').get().catch(()=>({size:0})),db.collection('cbtExams').get().catch(()=>({size:0})),db.collection('settings').doc('config').get()]);
+    const hasGroq=settingsSnap.exists&&settingsSnap.data().groqKey;
+    const students=studSnap.docs.map(d=>d.data());const zeroPoints=students.filter(s=>(s.points||0)===0).length;
+    const issues=[];if(pqSnap.size<50)issues.push('Add more PQ questions');if(motSnap.size<5)issues.push('Add motivations');if(!hasGroq)issues.push('Set GROQ key');if(zeroPoints>10)issues.push(`${zeroPoints} students at 0pts`);
+    showActionResult('🏥 Platform Health',`<div style="font-size:.8rem;line-height:2.2;">${[['Students',studSnap.size,true],['Quiz Attempts',quizSnap.size,true],['PQ Questions',pqSnap.size,pqSnap.size>=50],['Motivations',motSnap.size,motSnap.size>=5],['CBT Exams',cbtSnap.size,true],['GROQ Key',hasGroq?'Set':'Missing',hasGroq],['0-Pts Students',zeroPoints,zeroPoints<=5]].map(([l,v,ok])=>`<div>${ok?'✅':'⚠️'} <b>${l}:</b> <span style="color:${ok?'var(--green)':'#fbbf24'}">${v}</span></div>`).join('')}${issues.length?`<div style="margin-top:10px;padding:8px;background:rgba(251,191,36,.08);border-radius:8px;font-size:.74rem;color:#fbbf24">Issues: ${issues.join(' · ')}</div>`:''}</div>`,issues.length?[{label:'🔧 Auto-Fix', action:"adminAIAction('autopilot_content_fill')", primary:true}]:[]);
+  }
+
+  else if(type==='autopilot_content_fill'){
+    const log=[];const addLog=(msg)=>{log.push('✅ '+msg);showActionResult('📝 Auto-Fill',log.map(l=>`<div style="font-size:.78rem;color:var(--green);padding:2px 0">${l}</div>`).join(''));};
+    try{const m=await aiJSON('10 motivational quotes OAU. JSON:[{"emoji":"🔥","text":"","sub":"","category":"general"}]',800);for(const q of m)await db.collection('motivations').add({...q,createdAt:new Date().toISOString()});addLog(`${m.length} motivations`);}catch(e){}
+    try{const t=await aiJSON('6 OAU exam hot topics. JSON:[{"topic":"","course":"CHM 101","urgency":"urgent","note":""}]',500);for(const q of t)await db.collection('hotTopics').add({...q,createdAt:new Date().toISOString()});addLog(`${t.length} hot topics`);}catch(e){}
+    try{const t=await aiPost('Welcome announcement BABSPHARM Cloud. AI tutors, CBT, PQ bank. 3 sentences. Emojis.');await db.collection('announcements').add({title:'👋 Welcome to BABSPHARM Cloud!',msg:t,createdAt:new Date().toISOString()});addLog('Announcement posted');}catch(e){}
+    addLog('🎉 Content gaps filled!');showToast('✅ Done!');
+  }
+
+  else if(type==='autopilot_questions_all'){
+    const logEl=document.getElementById('autopilot-log');logEl.style.display='block';logEl.innerHTML='';
+    showActionResult('❓ Generating 100 Questions...',logEl.outerHTML);
+    let total=0;
+    for(const s of [{key:'chm101',n:'CHM 101'},{key:'chm102',n:'CHM 102'},{key:'mth101',n:'MTH 101'},{key:'mth102',n:'MTH 102'},{key:'phy101',n:'PHY 101'},{key:'phy102',n:'PHY 102'}]){
+      logEl.innerHTML+=`<div>${new Date().toLocaleTimeString()} — ${s.n}...</div>`;logEl.scrollTop=logEl.scrollHeight;
+      for(let b=0;b<2;b++){try{const qs=await aiJSON(`8 university MCQ for OAU ${s.n}. ONLY JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`,1800);for(const q of qs)if(q.q){await db.collection('pqBank').add({subject:s.key,q:q.q,opts:q.opts,ans:q.ans||0,exp:q.exp||'',createdAt:new Date().toISOString()});total++;}}catch(e){}}
+      logEl.innerHTML+=`<div style="color:#4ade80">✓ ${s.n}</div>`;logEl.scrollTop=logEl.scrollHeight;
+    }
+    logEl.innerHTML+=`<div style="color:#fbbf24;font-weight:700">════ ${total} questions saved! ════</div>`;
+    showToast(`✅ ${total} questions!`);
+  }
+
+  else if(type==='autopilot_motivations_fill'){
+    let saved=0;
+    for(let b=0;b<2;b++){try{const m=await aiJSON('10 unique motivational quotes OAU. Mix exam, faith, hustle, Nigerian. Punchy. JSON:[{"emoji":"🔥","text":"max 15 words","sub":"max 8 words","category":"general"}]',800);for(const q of m){await db.collection('motivations').add({...q,createdAt:new Date().toISOString()});saved++;}}catch(e){}}
+    showActionResult(`✅ ${saved} Motivations!`,`<div style="text-align:center;padding:16px;"><div style="font-size:2rem">💪</div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:900;color:var(--green)">${saved} Motivations Saved</div></div>`);showToast(`✅ ${saved} motivations!`);
+  }
+
+  else if(type==='autopilot_hot_topics_all'){
+    try{const tp=await aiJSON('3 hot topics for each: CHM 101, CHM 102, MTH 101, MTH 102, PHY 101, PHY 102. Total 18. JSON:[{"topic":"","course":"CHM 101","urgency":"urgent","note":"why likely"}]',1500);for(const t of tp)await db.collection('hotTopics').add({...t,createdAt:new Date().toISOString()});showActionResult(`🔥 ${tp.length} Hot Topics!`,tp.map(t=>`<div style="padding:5px 0;border-bottom:1px solid var(--cb);font-size:.76rem;"><b style="color:#fb923c">${t.course}</b> — ${t.topic}</div>`).join(''));showToast(`🔥 ${tp.length} hot topics!`);}catch(e){showToast('Error - try again');}
+  }
+
+  else if(type==='autopilot_weekly_report'){
+    const [studSnap,quizSnap]=await Promise.all([db.collection('users').get(),db.collection('quizHistory').get().catch(()=>({docs:[],size:0}))]);
+    const students=studSnap.docs.map(d=>d.data());const today=new Date().toDateString();const weekAgo=Date.now()-7*24*60*60*1000;
+    showActionResult('⏳ Generating...','<div style="color:var(--text2)">Analyzing...</div>');
+    try{const text=await aiPost(`Weekly platform report BABSPHARM Cloud. Stats: ${studSnap.size} students, ${students.filter(s=>s.lastSeen&&new Date(s.lastSeen).toDateString()===today).length} active today, ${students.filter(s=>s.createdAt&&new Date(s.createdAt).getTime()>weekAgo).length} new this week, ${quizSnap.size} quiz attempts. Summary, wins, issues, 3 action items.`,600);showActionResult('📊 Weekly Report',`<div style="font-size:.8rem;color:var(--text);line-height:1.8;white-space:pre-wrap;">${text}</div>`,[{label:'📋 Copy',action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`,primary:true}]);}catch(e){}
+  }
+
+  else if(type==='autopilot_reactivate'){
+    const snap=await db.collection('users').get();const weekAgo=Date.now()-7*24*60*60*1000;
+    const inactive=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>!s.lastSeen||new Date(s.lastSeen).getTime()<weekAgo);
+    let count=0;for(const s of inactive){await db.collection('users').doc(s.id).set({points:(s.points||0)+50},{merge:true});count++;}
+    await db.collection('coupons').add({code:'RETURN50',pts:50,limit:count,used:0,active:true,createdAt:new Date().toISOString()});
+    showActionResult(`✅ ${count} Reactivated`,`<div style="text-align:center;padding:16px;"><div style="font-size:2rem">🎁</div><div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:var(--green)">+50pts to ${count} students</div><div style="color:var(--text2);font-size:.78rem">Coupon RETURN50 created</div></div>`,[{label:'📢 Notify',action:`sendGeneratedAnnouncement('Welcome back! 50 FREE bonus points on BABSPHARM Cloud! Code RETURN50 gives 50 more. Your AI tutors are ready!')`,primary:true}]);
+    showToast(`✅ ${count} students reactivated!`);
+  }
+
+  else if(type==='autopilot_exam_set'){
+    const log=[];const addLog=(msg)=>{log.push('✅ '+msg);showActionResult('📝 Building Exam Set',log.map(l=>`<div style="font-size:.78rem;color:var(--green);padding:2px 0">${l}</div>`).join(''));};
+    showActionResult('📝 Creating 6 exams...','<div style="color:var(--text2)">Starting...</div>');
+    for(const c of [{title:'CHM 101 First CA',course:'CHM 101',code:'CHM101CA1'},{title:'CHM 102 First CA',course:'CHM 102',code:'CHM102CA1'},{title:'MTH 101 First CA',course:'MTH 101',code:'MTH101CA1'},{title:'MTH 102 First CA',course:'MTH 102',code:'MTH102CA1'},{title:'PHY 101 First CA',course:'PHY 101',code:'PHY101CA1'},{title:'PHY 102 First CA',course:'PHY 102',code:'PHY102CA1'}]){
+      const ref=await db.collection('cbtExams').add({title:c.title,course:c.course,code:c.code,duration:30,sections:3,qps:8,instructions:'Answer all questions.',active:false,createdAt:new Date().toISOString()});
+      for(const sec of ['A','B','C']){try{const qs=await aiJSON(`8 MCQ for OAU 100L ${c.course} Section ${sec}. JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`,1500);for(const q of qs)if(q.q)await db.collection('cbtExams').doc(ref.id).collection('questions').add({...q,section:sec,createdAt:new Date().toISOString()});}catch(e){}}
+      addLog(`${c.title} — 3 sections done`);
+    }
+    addLog('🎉 All 6 exams ready! Activate in CBT Manager.');showToast('✅ 6 exams created!');
+  }
+}
+
+// ══ SITE DOCTOR ══
+function docLog(msg, color='#4ade80'){
+  const el = document.getElementById('doctor-log');
+  if(!el) return;
+  el.style.display = 'block';
+  el.innerHTML += `<div style="color:${color}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+async function runSiteDoctor(type, groqKey){
+  const logEl = document.getElementById('doctor-log');
+  if(logEl){ logEl.style.display='block'; logEl.innerHTML=''; }
+
+  if(type==='doctor_full'){
+    showActionResult('🔍 Full Site Diagnosis Running...','<div id="doctor-log" style="background:rgba(0,0,0,.4);border:1px solid rgba(74,222,128,.2);border-radius:10px;padding:12px;font-family:monospace;font-size:.72rem;min-height:100px;max-height:300px;overflow-y:auto;color:var(--text2);">Starting diagnosis...</div>');
+    const log=document.getElementById('doctor-log');
+    const addLog=(msg,c='#4ade80')=>{if(log){log.innerHTML+=`<div style="color:${c}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;log.scrollTop=log.scrollHeight;}};
+    const issues=[]; const fixes=[];
+
+    addLog('━━ Checking Firebase Collections ━━','#60a5fa');
+    // Check settings/config for GROQ key
+    const settingsSnap = await db.collection('settings').doc('config').get();
+    const hasGroq = settingsSnap.exists && settingsSnap.data().groqKey;
+    if(!hasGroq){addLog('❌ GROQ API key missing — AI features broken!','#f87171');issues.push('GROQ key missing');} else addLog('✓ GROQ key configured');
+
+    // Check users
+    const studSnap = await db.collection('users').get();
+    addLog(`✓ ${studSnap.size} users in database`);
+    const students = studSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const noEmail = students.filter(s=>!s.email).length;
+    if(noEmail>0){addLog(`⚠️ ${noEmail} users have no email address`,'#fbbf24');issues.push(`${noEmail} users missing email`);}
+    const zeroPoints = students.filter(s=>(s.points||0)===0).length;
+    if(zeroPoints>students.length*0.5){addLog(`⚠️ ${zeroPoints} users (${Math.round(zeroPoints/students.size*100)}%) have 0 points — engagement is low`,'#fbbf24');issues.push('Low engagement — many zero-point students');}
+
+    // Check PQ bank
+    const pqSnap = await db.collection('pqBank').get().catch(()=>({size:0,docs:[]}));
+    if(pqSnap.size<30){addLog(`❌ PQ Bank has only ${pqSnap.size} custom questions — needs more`,'#f87171');issues.push('PQ bank needs more questions');} else addLog(`✓ PQ Bank has ${pqSnap.size} custom questions`);
+
+    // Check motivations
+    const motSnap = await db.collection('motivations').get().catch(()=>({size:0}));
+    if(motSnap.size<5){addLog(`❌ Only ${motSnap.size} motivations — needs at least 10`,'#f87171');issues.push('Not enough motivations');} else addLog(`✓ ${motSnap.size} motivations`);
+
+    // Check CBT exams
+    const cbtSnap = await db.collection('cbtExams').get().catch(()=>({size:0,docs:[]}));
+    addLog(`✓ ${cbtSnap.size} CBT exams`);
+    let emptyExams=0;
+    for(const d of (cbtSnap.docs||[])){
+      const qSnap = await db.collection('cbtExams').doc(d.id).collection('questions').limit(1).get();
+      if(qSnap.empty){emptyExams++;issues.push(`CBT exam "${d.data().title}" has no questions`);}
+    }
+    if(emptyExams>0) addLog(`❌ ${emptyExams} CBT exams have NO questions!`,'#f87171');
+
+    // Check hot topics
+    const hotSnap = await db.collection('hotTopics').get().catch(()=>({size:0}));
+    if(hotSnap.size===0){addLog('⚠️ No hot topics set — students see nothing on Hot Topics page','#fbbf24');issues.push('No hot topics set');}
+    else addLog(`✓ ${hotSnap.size} hot topics`);
+
+    // Check announcements
+    const annSnap = await db.collection('announcements').get().catch(()=>({size:0}));
+    addLog(`✓ ${annSnap.size} announcements sent`);
+
+    // Check coupons
+    const couponSnap = await db.collection('coupons').get().catch(()=>({size:0}));
+    addLog(`✓ ${couponSnap.size} coupons created`);
+
+    addLog('━━ Diagnosis Complete ━━','#60a5fa');
+    addLog(issues.length===0 ? '🎉 No major issues found! Platform is healthy.' : `⚠️ Found ${issues.length} issues.`, issues.length===0?'#4ade80':'#fbbf24');
+
+    // Auto-fix what we can
+    if(issues.length>0 && groqKey){
+      addLog('━━ Auto-fixing issues ━━','#60a5fa');
+      if(issues.some(i=>i.includes('motivation'))){
+        addLog('Fixing: generating motivations...','#fbbf24');
+        try{
+          const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'10 motivational quotes OAU students. JSON:[{"emoji":"🔥","text":"quote","sub":"tagline","category":"general"}]'}],max_tokens:800})});
+          const m=JSON.parse((await r.json()).choices?.[0]?.message?.content.replace(/```json|```/g,'').trim()||'[]');
+          for(const q of m) await db.collection('motivations').add({...q,createdAt:new Date().toISOString()});
+          addLog(`✅ Fixed: added ${m.length} motivations`);
+          fixes.push(`Added ${m.length} motivations`);
+        }catch(e){addLog('Could not auto-fix motivations','#f87171');}
+      }
+      if(issues.some(i=>i.includes('hot topics'))){
+        addLog('Fixing: setting hot topics...','#fbbf24');
+        try{
+          const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'6 OAU exam hot topics. JSON:[{"topic":"","course":"CHM 101","urgency":"urgent","note":""}]'}],max_tokens:500})});
+          const t=JSON.parse((await r.json()).choices?.[0]?.message?.content.replace(/```json|```/g,'').trim()||'[]');
+          for(const q of t) await db.collection('hotTopics').add({...q,createdAt:new Date().toISOString()});
+          addLog(`✅ Fixed: set ${t.length} hot topics`);
+          fixes.push(`Set ${t.length} hot topics`);
+        }catch(e){}
+      }
+      if(issues.some(i=>i.includes('PQ bank'))){
+        addLog('Fixing: adding PQ questions...','#fbbf24');
+        let qAdded=0;
+        for(const s of [{key:'chm101',n:'CHM 101'},{key:'mth101',n:'MTH 101'},{key:'phy101',n:'PHY 101'}]){
+          try{
+            const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`5 MCQ for OAU ${s.n}. JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`}],max_tokens:800})});
+            const qs=JSON.parse(((await r.json()).choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());
+            for(const q of qs)if(q.q){await db.collection('pqBank').add({subject:s.key,...q,createdAt:new Date().toISOString()});qAdded++;}
+          }catch(e){}
+        }
+        addLog(`✅ Fixed: added ${qAdded} PQ questions`);
+        fixes.push(`Added ${qAdded} PQ questions`);
+      }
+      addLog('━━ Auto-fix complete ━━','#60a5fa');
+    }
+
+    showActionResult('🏥 Full Diagnosis Complete',
+      `<div style="margin-bottom:12px;">
+        <div style="font-size:.8rem;font-weight:700;color:${issues.length===0?'var(--green)':'#fbbf24'};margin-bottom:8px;">${issues.length===0?'✅ Platform is healthy!':'⚠️ '+issues.length+' issues found'}</div>
+        ${issues.map(i=>`<div style="font-size:.76rem;color:#f87171;padding:3px 0;">❌ ${i}</div>`).join('')}
+        ${fixes.length?`<div style="margin-top:8px;padding:8px;background:rgba(74,222,128,.06);border-radius:8px;">${fixes.map(f=>`<div style="font-size:.76rem;color:var(--green)">✅ Fixed: ${f}</div>`).join('')}</div>`:''}
+      </div>
+      <div id="doctor-log" style="background:rgba(0,0,0,.3);border-radius:8px;padding:8px;font-family:monospace;font-size:.68rem;color:var(--text2);max-height:150px;overflow-y:auto;">
+        ${logEl?logEl.innerHTML:'Diagnosis log here'}
+      </div>`,
+      issues.length>0&&!groqKey?[{label:'🔑 Set GROQ Key', action:"showPanel('settings',document.querySelector('.sb-item'))", primary:true}]:[]
+    );
+  }
+
+  else if(type==='doctor_firebase'){
+    showActionResult('🔥 Firebase Check','<div style="color:var(--text2)">Checking all Firestore collections...</div>');
+    const collections=['users','quizHistory','pqBank','motivations','hotTopics','announcements','coupons','cbtExams','settings','tutorProgress'];
+    const results=[];
+    for(const col of collections){
+      try{
+        const snap=await db.collection(col).limit(1).get();
+        results.push({col,ok:true,info:`accessible`});
+      }catch(e){
+        results.push({col,ok:false,info:e.message||'access error'});
+      }
+    }
+    showActionResult('🔥 Firebase Collections Status',
+      results.map(r=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--cb);font-size:.78rem;">
+        <span style="color:var(--text)">${r.ok?'✅':'❌'} ${r.col}</span>
+        <span style="color:${r.ok?'var(--green)':'var(--red)'};">${r.info}</span>
+      </div>`).join('')
+    );
+  }
+
+  else if(type==='doctor_points'){
+    const snap=await db.collection('users').get();
+    const students=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const negativePoints=students.filter(s=>(s.points||0)<0);
+    const missingPointsField=students.filter(s=>s.points===undefined||s.points===null);
+    const issues=[];
+    showActionResult('⭐ Points Health Check',`<div style="font-size:.8rem;line-height:2;color:var(--text);">
+      <div>Total students: <b style="color:var(--gold2)">${students.length}</b></div>
+      <div>With points field: <b style="color:var(--green)">${students.length-missingPointsField.length}</b></div>
+      <div>Missing points field: <b style="color:${missingPointsField.length>0?'var(--red)':'var(--green)'}">${missingPointsField.length}</b></div>
+      <div>Negative points: <b style="color:${negativePoints.length>0?'var(--red)':'var(--green)'}">${negativePoints.length}</b></div>
+      <div>Zero points: <b style="color:#fbbf24">${students.filter(s=>(s.points||0)===0).length}</b></div>
+      <div>Average points: <b style="color:var(--gold2)">${Math.round(students.reduce((s,st)=>s+(st.points||0),0)/students.length)}</b></div>
+    </div>`,
+    [
+      missingPointsField.length>0?{label:`🔧 Fix ${missingPointsField.length} Missing Points Fields`, action:`fixMissingPoints()`, primary:true}:null,
+      negativePoints.length>0?{label:`🔧 Fix ${negativePoints.length} Negative Points`, action:`fixNegativePoints()`, primary:false}:null
+    ].filter(Boolean));
+  }
+
+  else if(type==='doctor_quizzes'){
+    const cbtSnap=await db.collection('cbtExams').get().catch(()=>({docs:[]}));
+    const results=[];
+    for(const d of cbtSnap.docs){
+      const qSnap=await db.collection('cbtExams').doc(d.id).collection('questions').get();
+      results.push({id:d.id,title:d.data().title,code:d.data().code,active:d.data().active,qCount:qSnap.size,sections:['A','B','C','D'].filter(s=>qSnap.docs.some(q=>q.data().section===s))});
+    }
+    showActionResult(`📝 CBT Exam Status (${results.length} exams)`,
+      results.map(e=>`<div style="padding:8px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:.8rem;font-weight:700;color:var(--text)">${e.title}</div>
+            <div style="font-size:.7rem;color:var(--text2)">Code: <b style="color:var(--gold)">${e.code}</b> • <b style="color:${e.qCount>0?'var(--green)':'var(--red)'}">${e.qCount} questions</b> • ${e.active?'<span style="color:var(--green)">Active</span>':'<span style="color:var(--text2)">Inactive</span>'}</div>
+            <div style="font-size:.68rem;color:var(--text2)">Sections: ${e.sections.length>0?e.sections.join(', '):'<span style="color:var(--red)">NONE</span>'}</div>
+          </div>
+          ${e.qCount===0?`<button onclick="adminAIAction('doctor_fill_exam_${e.id}')" style="padding:3px 8px;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:6px;color:var(--gold);font-size:.68rem;cursor:pointer;font-family:'Outfit',sans-serif;">Auto-Fill</button>`:''}
+        </div>
+      </div>`).join('')||'<div style="color:var(--text2)">No CBT exams yet</div>'
+    );
+  }
+
+  else if(type.startsWith('doctor_fill_exam_')){
+    const examId=type.replace('doctor_fill_exam_','');
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const examDoc=await db.collection('cbtExams').doc(examId).get();
+    if(!examDoc.exists){showToast('Exam not found');return;}
+    const course=examDoc.data().course||'CHM 101';
+    showActionResult('⏳ Auto-Filling Exam Questions...','<div style="color:var(--text2)">Generating questions...</div>');
+    let saved=0;
+    for(const sec of ['A','B','C']){
+      try{
+        const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`8 MCQ for OAU 100L ${course} Section ${sec}. JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`}],max_tokens:1500,temperature:0.6})});
+        const qs=JSON.parse(((await r.json()).choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());
+        for(const q of qs)if(q.q){await db.collection('cbtExams').doc(examId).collection('questions').add({...q,section:sec,createdAt:new Date().toISOString()});saved++;}
+      }catch(e){}
+    }
+    showActionResult(`✅ Exam Filled: ${saved} questions added`,`<div style="text-align:center;padding:12px;"><div style="font-size:2rem">📝</div><div style="color:var(--green);font-weight:700">${saved} questions added to exam</div></div>`);
+    showToast(`✅ ${saved} questions added!`);
+  }
+
+  else if(type==='doctor_ai_key'){
+    const snap=await db.collection('settings').doc('config').get();
+    const key=snap.exists?snap.data().groqKey:'';
+    if(!key){
+      showActionResult('❌ GROQ Key Missing',`<div style="text-align:center;padding:16px;"><div style="font-size:2rem">🔑</div><div style="font-size:.84rem;color:var(--red);font-weight:700">GROQ API Key is not configured!</div><div style="font-size:.76rem;color:var(--text2);margin-top:6px">AI tutors, AI assistant, and all AI features are broken.</div></div>`,
+        [{label:'⚙️ Go to Settings', action:"showPanel('settings',document.querySelector('.sb-item'))", primary:true}]);
+    } else {
+      // Test the key
+      showActionResult('🔍 Testing GROQ Key...','<div style="color:var(--text2)">Sending test request...</div>');
+      try{
+        const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Say OK in one word.'}],max_tokens:5})});
+        const d=await r.json();
+        if(d.choices?.[0]){showActionResult('✅ GROQ Key Working!',`<div style="text-align:center;padding:16px;"><div style="font-size:2rem">🎉</div><div style="font-size:.84rem;color:var(--green);font-weight:700">GROQ API Key is valid and working!</div><div style="font-size:.72rem;color:var(--text2);margin-top:4px">Model: llama-3.3-70b-versatile</div></div>`);}
+        else showActionResult('❌ Key Failed',`<div style="color:var(--red)">${JSON.stringify(d)}</div>`);
+      }catch(e){showActionResult('❌ Connection Error',`<div style="color:var(--red)">${e.message}</div>`);}
+    }
+  }
+
+  else if(type==='doctor_content'){
+    const [pqSnap,motSnap,hotSnap,annSnap]=await Promise.all([db.collection('pqBank').get().catch(()=>({size:0})),db.collection('motivations').get().catch(()=>({size:0})),db.collection('hotTopics').get().catch(()=>({size:0})),db.collection('announcements').get().catch(()=>({size:0}))]);
+    const checks=[{name:'PQ Bank (custom)',count:pqSnap.size,min:20,fix:'autopilot_questions_all'},{name:'Motivations',count:motSnap.size,min:10,fix:'autopilot_motivations_fill'},{name:'Hot Topics',count:hotSnap.size,min:3,fix:'autopilot_hot_topics_all'},{name:'Announcements',count:annSnap.size,min:1,fix:'announcement'}];
+    showActionResult('📋 Content Health Check',
+      checks.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--cb);">
+        <div><div style="font-size:.78rem;color:var(--text)">${c.count>=c.min?'✅':'❌'} ${c.name}</div>
+        <div style="font-size:.7rem;color:var(--text2)">${c.count} items (min ${c.min} recommended)</div></div>
+        ${c.count<c.min?`<button onclick="adminAIAction('${c.fix}')" style="padding:3px 10px;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:8px;color:var(--gold);font-size:.7rem;cursor:pointer;font-family:'Outfit',sans-serif;">Fix →</button>`:''}
+      </div>`).join('')
+    );
+  }
+
+  else if(type==='doctor_duplicates'){
+    const snap=await db.collection('motivations').get().catch(()=>({docs:[]}));
+    const seen={};const dupes=[];
+    snap.docs.forEach(d=>{const t=d.data().text;if(t){if(seen[t])dupes.push({id:d.id,text:t});else seen[t]=d.id;}});
+    if(dupes.length===0){showActionResult('✅ No Duplicates',`<div style="text-align:center;padding:16px;color:var(--green)">No duplicate motivations found!</div>`);}
+    else{showActionResult(`🗂️ ${dupes.length} Duplicate Motivations`,dupes.map(d=>`<div style="padding:6px 0;border-bottom:1px solid var(--cb);font-size:.76rem;color:var(--text2)">${d.text.substring(0,60)}...</div>`).join(''),
+      [{label:`🗑️ Delete All Duplicates`, action:`deleteDuplicateMotivations(${JSON.stringify(dupes.map(d=>d.id))})`, primary:true}]);}
+  }
+
+  else if(type==='doctor_orphans'){
+    let orphans=0;
+    // Find quiz history with no matching user
+    const [quizSnap,userSnap]=await Promise.all([db.collection('quizHistory').limit(100).get().catch(()=>({docs:[]})),db.collection('users').get()]);
+    const userIds=new Set(userSnap.docs.map(d=>d.id));
+    const orphanQuizzes=quizSnap.docs.filter(d=>d.data().uid&&!userIds.has(d.data().uid));
+    orphans+=orphanQuizzes.length;
+    // Find tutorProgress with no user
+    const progSnap=await db.collection('tutorProgress').get().catch(()=>({docs:[]}));
+    const orphanProgress=progSnap.docs.filter(d=>!userIds.has(d.id));
+    orphans+=orphanProgress.length;
+    showActionResult(`👻 ${orphans} Orphaned Records`,`<div style="font-size:.8rem;line-height:2;color:var(--text);">
+      <div>Orphaned quiz history: <b style="color:${orphanQuizzes.length>0?'var(--red)':'var(--green)'}">${orphanQuizzes.length}</b></div>
+      <div>Orphaned tutor progress: <b style="color:${orphanProgress.length>0?'var(--red)':'var(--green)'}">${orphanProgress.length}</b></div>
+    </div>`,
+    orphans>0?[{label:'🗑️ Delete All Orphans', action:`deleteOrphans(${JSON.stringify([...orphanQuizzes.map(d=>({col:'quizHistory',id:d.id})),...orphanProgress.map(d=>({col:'tutorProgress',id:d.id}))])})`, primary:true}]:[]
+    );
+  }
+
+  else if(type==='doctor_cbt_empty'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const cbtSnap=await db.collection('cbtExams').get().catch(()=>({docs:[]}));
+    let filled=0;
+    showActionResult('⏳ Filling Empty CBT Exams...','<div style="color:var(--text2)">Checking and filling...</div>');
+    const log=[];const addLog=(msg)=>{log.push('✅ '+msg);showActionResult('📝 Filling Empty CBT Exams',log.map(l=>`<div style="font-size:.78rem;color:var(--green);padding:2px 0">${l}</div>`).join(''));};
+    for(const d of cbtSnap.docs){
+      const qSnap=await db.collection('cbtExams').doc(d.id).collection('questions').limit(1).get();
+      if(qSnap.empty){
+        const course=d.data().course||'CHM 101';
+        for(const sec of ['A','B','C']){
+          try{const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`8 MCQ OAU ${course} Section ${sec}. JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`}],max_tokens:1500})});const qs=JSON.parse(((await r.json()).choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());for(const q of qs)if(q.q){await db.collection('cbtExams').doc(d.id).collection('questions').add({...q,section:sec,createdAt:new Date().toISOString()});filled++;}}catch(e){}
+        }
+        addLog(`Filled: ${d.data().title} (${course})`);
+      }
+    }
+    if(filled===0) addLog('All exams already have questions!');
+    else addLog(`🎉 ${filled} questions added to empty exams!`);
+    showToast(`✅ ${filled} questions added!`);
+  }
+
+  else if(type==='doctor_report'){
+    const [studSnap,quizSnap,pqSnap,motSnap,hotSnap,cbtSnap,couponSnap]=await Promise.all([db.collection('users').get(),db.collection('quizHistory').get().catch(()=>({size:0})),db.collection('pqBank').get().catch(()=>({size:0})),db.collection('motivations').get().catch(()=>({size:0})),db.collection('hotTopics').get().catch(()=>({size:0})),db.collection('cbtExams').get().catch(()=>({size:0})),db.collection('coupons').get().catch(()=>({size:0}))]);
+    const students=studSnap.docs.map(d=>d.data());
+    const weekAgo=Date.now()-7*24*60*60*1000;
+    const report=`BABSPHARM CLOUD — SITE ISSUES REPORT
+Generated: ${new Date().toLocaleString()}
+════════════════════════════════════
+
+USERS
+• Total: ${studSnap.size}
+• Active this week: ${students.filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>weekAgo).length}
+• Zero points: ${students.filter(s=>(s.points||0)===0).length}
+• No department: ${students.filter(s=>!s.dept).length}
+• Average points: ${Math.round(students.reduce((s,st)=>s+(st.points||0),0)/studSnap.size)}
+
+CONTENT
+• Custom PQ questions: ${pqSnap.size} ${pqSnap.size<20?'⚠️ LOW':'✓'}
+• Motivations: ${motSnap.size} ${motSnap.size<5?'⚠️ LOW':'✓'}
+• Hot topics: ${hotSnap.size} ${hotSnap.size<3?'⚠️ LOW':'✓'}
+• CBT exams: ${cbtSnap.size}
+• Coupons: ${couponSnap.size}
+• Quiz attempts: ${quizSnap.size}
+
+RECOMMENDATIONS
+${pqSnap.size<20?'• Add more PQ questions (use Autopilot tab)':''} 
+${motSnap.size<5?'• Add more motivations (use Autopilot tab)':''}
+${hotSnap.size<3?'• Set hot topics for exam season':''}
+${students.filter(s=>(s.points||0)===0).length>studSnap.size*0.3?'• Many students have 0 points — run re-engagement campaign':''}`;
+
+    showActionResult('📄 Issues Report',`<div style="font-size:.76rem;color:var(--text);line-height:1.8;white-space:pre-wrap;background:rgba(0,0,0,.2);padding:12px;border-radius:8px;">${report}</div>`,
+      [{label:'📋 Copy Report', action:`navigator.clipboard.writeText(\`${report.replace(/`/g,"'")}\`);showToast('Copied!')`, primary:true}]);
+  }
+}
+
+// ══ USER CLEANUP ══
+let cleanupFilterDays = 30;
+let cleanupSelectedUsers = new Set();
+let cleanupUserData = [];
+
+function setCleanupFilter(days, btn){
+  cleanupFilterDays = days;
+  document.querySelectorAll('.cleanup-filter-btn').forEach(b=>{b.style.background='transparent';b.style.color='var(--text2)';b.style.border='1px solid var(--cb)';b.style.fontWeight='400';});
+  btn.style.background='linear-gradient(135deg,var(--gold),var(--gold2))';btn.style.color='var(--navy)';btn.style.border='none';btn.style.fontWeight='700';
+}
+
+async function loadInactiveUsers(){
+  const resultsEl=document.getElementById('cleanup-results');
+  const listEl=document.getElementById('cleanup-user-list');
+  const countEl=document.getElementById('cleanup-count');
+  resultsEl.style.display='block';
+  listEl.innerHTML='<div style="color:var(--text2);text-align:center;padding:10px">Loading...</div>';
+  cleanupSelectedUsers=new Set();
+  cleanupUserData=[];
+
+  const snap=await db.collection('users').get();
+  const cutoff = cleanupFilterDays===999 ? null : Date.now()-(cleanupFilterDays*24*60*60*1000);
+  cleanupUserData = snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>{
+    if(cleanupFilterDays===999) return !s.lastSeen && !s.createdAt;
+    if(!s.lastSeen) return true;
+    return new Date(s.lastSeen).getTime() < cutoff;
+  });
+
+  countEl.innerHTML = `Found <b style="color:var(--gold2)">${cleanupUserData.length}</b> users ${cleanupFilterDays===999?'who never logged in':`inactive for ${cleanupFilterDays}+ days`}`;
+  renderCleanupList();
+}
+
+function renderCleanupList(){
+  const listEl=document.getElementById('cleanup-user-list');
+  if(!cleanupUserData.length){listEl.innerHTML='<div style="color:var(--green);text-align:center;padding:10px">No users match this criteria!</div>';return;}
+  listEl.innerHTML=cleanupUserData.map(s=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--cb);">
+      <input type="checkbox" id="cu-${s.id}" ${cleanupSelectedUsers.has(s.id)?'checked':''} onchange="toggleCleanupUser('${s.id}',this.checked)"
+        style="width:16px;height:16px;cursor:pointer;accent-color:var(--gold)"/>
+      <div style="flex:1;">
+        <div style="font-size:.78rem;font-weight:600;color:var(--text)">${s.name||'Unknown'}</div>
+        <div style="font-size:.7rem;color:var(--text2)">${s.email||'no email'} • ${s.dept||'no dept'} • ${s.points||0}pts</div>
+        <div style="font-size:.68rem;color:var(--red)">Last seen: ${s.lastSeen?new Date(s.lastSeen).toLocaleDateString():'Never'}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        <button onclick="givePointsToStudent('${s.id}','${(s.name||'').replace(/'/g,"\\'")}',${s.points||0})" style="padding:2px 7px;background:rgba(201,168,76,.08);border:1px solid var(--cb);border-radius:5px;color:var(--gold);font-size:.66rem;cursor:pointer;font-family:'Outfit',sans-serif;">+pts</button>
+        <button onclick="deleteSingleUser('${s.id}','${(s.name||'').replace(/'/g,"\\'")}','${s.email||''}')" style="padding:2px 7px;background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2);border-radius:5px;color:#f87171;font-size:.66rem;cursor:pointer;font-family:'Outfit',sans-serif;">delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function toggleCleanupUser(id, checked){ if(checked) cleanupSelectedUsers.add(id); else cleanupSelectedUsers.delete(id); }
+function selectAllCleanup(select){ cleanupUserData.forEach(s=>{ cleanupSelectedUsers[select?'add':'delete'](s.id); const cb=document.getElementById('cu-'+s.id); if(cb) cb.checked=select; }); }
+
+async function bulkActionCleanup(action){
+  const ids=[...cleanupSelectedUsers];
+  if(!ids.length){showToast('Select users first');return;}
+  if(action==='delete'){
+    if(!confirm(`Permanently delete ${ids.length} users? This CANNOT be undone.`)) return;
+    let count=0;
+    for(const id of ids){
+      try{await db.collection('users').doc(id).delete();count++;}catch(e){}
+    }
+    showToast(`✅ Deleted ${count} users`);
+    loadInactiveUsers();
+  }
+  else if(action==='ban'){
+    let count=0;
+    for(const id of ids){try{await db.collection('users').doc(id).update({banned:true});count++;}catch(e){}}
+    showToast(`🚫 Banned ${count} users`);loadInactiveUsers();
+  }
+  else if(action==='give_points'){
+    const pts=parseInt(prompt(`Give how many points to ${ids.length} selected users?`));
+    if(!pts||isNaN(pts)) return;
+    for(const id of ids){
+      const user=cleanupUserData.find(u=>u.id===id);
+      try{await db.collection('users').doc(id).set({points:(user?.points||0)+pts},{merge:true});}catch(e){}
+    }
+    showToast(`✅ +${pts} points given to ${ids.length} users`);loadInactiveUsers();
+  }
+  else if(action==='notify'){
+    const msg=prompt('Message to send these users (saved as announcement):');
+    if(!msg) return;
+    await db.collection('announcements').add({title:'📢 Important Message',msg,createdAt:new Date().toISOString()});
+    showToast('✅ Announcement posted for all students');
+  }
+}
+
+async function deleteSingleUser(id, name, email){
+  if(!confirm(`Delete user: ${name} (${email})?\n\nThis cannot be undone.`)) return;
+  await db.collection('users').doc(id).delete();
+  showToast(`✅ ${name} deleted`);
+  cleanupUserData=cleanupUserData.filter(u=>u.id!==id);
+  cleanupSelectedUsers.delete(id);
+  renderCleanupList();
+  document.getElementById('cleanup-count').innerHTML=`Found <b style="color:var(--gold2)">${cleanupUserData.length}</b> users`;
+}
+
+// Cleanup extras
+async function runCleanupExtra(type){
+  if(type==='cleanup_zero_activity'){
+    const [usersSnap,quizSnap]=await Promise.all([db.collection('users').get(),db.collection('quizHistory').get().catch(()=>({docs:[]}))]);
+    const activeUIDs=new Set(quizSnap.docs.map(d=>d.data().uid).filter(Boolean));
+    const neverQuizzed=usersSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>!activeUIDs.has(s.id));
+    cleanupUserData=neverQuizzed;cleanupSelectedUsers=new Set();
+    document.getElementById('cleanup-results').style.display='block';
+    document.getElementById('cleanup-count').innerHTML=`<b style="color:var(--gold2)">${neverQuizzed.length}</b> users never took a quiz`;
+    renderCleanupList();
+  }
+  else if(type==='cleanup_no_dept'){
+    const snap=await db.collection('users').get();
+    const noDept=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>!s.dept||s.dept==='');
+    cleanupUserData=noDept;cleanupSelectedUsers=new Set();
+    document.getElementById('cleanup-results').style.display='block';
+    document.getElementById('cleanup-count').innerHTML=`<b style="color:var(--gold2)">${noDept.length}</b> users have no department`;
+    renderCleanupList();
+  }
+  else if(type==='cleanup_banned'){
+    const snap=await db.collection('users').where('banned','==',true).get();
+    const banned=snap.docs.map(d=>({id:d.id,...d.data()}));
+    cleanupUserData=banned;cleanupSelectedUsers=new Set();
+    document.getElementById('cleanup-results').style.display='block';
+    document.getElementById('cleanup-count').innerHTML=`<b style="color:var(--red)">${banned.length}</b> banned users`;
+    renderCleanupList();
+  }
+  else if(type==='cleanup_stats'){
+    const snap=await db.collection('users').get();
+    const students=snap.docs.map(d=>d.data());
+    const weekAgo=Date.now()-7*24*60*60*1000;
+    const monthAgo=Date.now()-30*24*60*60*1000;
+    showActionResult('📊 User Base Statistics',`<div style="font-size:.8rem;line-height:2.2;color:var(--text);">
+      <div>📊 Total users: <b style="color:var(--gold2)">${students.length}</b></div>
+      <div>✅ Active this week: <b style="color:var(--green)">${students.filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>weekAgo).length}</b></div>
+      <div>⚠️ Inactive 30+ days: <b style="color:#fbbf24">${students.filter(s=>!s.lastSeen||new Date(s.lastSeen).getTime()<monthAgo).length}</b></div>
+      <div>❌ Never logged in: <b style="color:var(--red)">${students.filter(s=>!s.lastSeen&&!s.createdAt).length}</b></div>
+      <div>🚫 Banned: <b style="color:var(--red)">${students.filter(s=>s.banned).length}</b></div>
+      <div>🏫 No department: <b style="color:#fbbf24">${students.filter(s=>!s.dept).length}</b></div>
+      <div>📝 Never quizzed: loading...</div>
+      <div>⭐ Average points: <b style="color:var(--gold2)">${Math.round(students.reduce((s,st)=>s+(st.points||0),0)/students.length)}</b></div>
+      <div>🎖️ Top scorer: <b style="color:var(--gold2)">${students.sort((a,b)=>(b.points||0)-(a.points||0))[0]?.name||'—'} (${students[0]?.points||0}pts)</b></div>
+    </div>`);
+  }
+  else if(type==='cleanup_export'){
+    const snap=await db.collection('users').get();
+    const students=snap.docs.map(d=>d.data());
+    const csv=['Name,Email,Department,Points,Last Seen,Joined',...students.map(s=>`"${s.name||''}","${s.email||''}","${s.dept||''}",${s.points||0},"${s.lastSeen?new Date(s.lastSeen).toLocaleDateString():'Never'}","${s.createdAt?new Date(s.createdAt).toLocaleDateString():'?'}"`)].join('\n');
+    const blob=new Blob([csv],{type:'text/csv'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='BABSPHARM_Users_'+new Date().toISOString().split('T')[0]+'.csv';a.click();URL.revokeObjectURL(url);
+    showToast(`✅ Exported ${students.length} users as CSV!`);
+  }
+}
+
+// Fix helpers
+async function fixMissingPoints(){
+  const snap=await db.collection('users').get();
+  let fixed=0;
+  for(const d of snap.docs){if(d.data().points===undefined||d.data().points===null){await d.ref.set({points:0},{merge:true});fixed++;}}
+  showToast(`✅ Fixed ${fixed} users with missing points field`);
+}
+async function fixNegativePoints(){
+  const snap=await db.collection('users').get();let fixed=0;
+  for(const d of snap.docs){if((d.data().points||0)<0){await d.ref.set({points:0},{merge:true});fixed++;}}
+  showToast(`✅ Fixed ${fixed} users with negative points`);
+}
+async function deleteDuplicateMotivations(ids){
+  if(!confirm(`Delete ${ids.length} duplicate motivations?`)) return;
+  for(const id of ids) await db.collection('motivations').doc(id).delete();
+  showToast(`✅ Deleted ${ids.length} duplicates`);
+}
+async function deleteOrphans(orphans){
+  if(!confirm(`Delete ${orphans.length} orphaned records?`)) return;
+  for(const o of orphans) await db.collection(o.col).doc(o.id).delete();
+  showToast(`✅ Deleted ${orphans.length} orphaned records`);
+}
+
+>
