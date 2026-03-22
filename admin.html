@@ -3190,8 +3190,8 @@ async function adminAIAction(type){
       const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Create a weekly study plan for OAU 100L students covering CHM 101, MTH 101, PHY 101. Mon-Sun, each day 2 topics + revision. Format with emojis.'}],max_tokens:400})});
       const text=(await r.json()).choices?.[0]?.message?.content||'';
       showActionResult('📅 Weekly Study Plan',`<div style="font-size:.8rem;color:var(--text);line-height:1.8;white-space:pre-wrap;">${text}</div>`,
-        [{label:'📢 Post to Students',action:"sendGeneratedAnnouncement('📅 WEEKLY STUDY PLAN\n\n'+text.replace(/`/g,"'")+')",primary:true},
-         {label:'📋 Copy',action:"navigator.clipboard.writeText('"+text.replace(/`/g,"'")+"');showToast('Copied!')"}]);
+        [{label:'📢 Post to Students',action:'sendGeneratedAnnouncement("📅 WEEKLY STUDY PLAN\n\n"+text.replace(/`/g,"\'"))',primary:true},
+         {label:'📋 Copy',action:'navigator.clipboard.writeText(text);showToast("Copied!")'}]);
     }catch(e){showActionResult('❌ Error','Try again.');}
   }
 
@@ -3202,7 +3202,7 @@ async function adminAIAction(type){
       const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Write a Telegram channel post for OAU 100L students about BABSPHARM Cloud. AI tutors, CBT exams, PQ bank. Bold key phrases with **text**. Link: https://babspharm1-lgtm.github.io/BABSPHARM/ Max 200 words.'}],max_tokens:350})});
       const text=(await r.json()).choices?.[0]?.message?.content||'';
       showActionResult('✈️ Telegram Post Ready',`<div style="font-size:.82rem;color:var(--text);line-height:1.7;white-space:pre-wrap;padding:10px;background:rgba(255,255,255,.04);border-radius:8px;">${text}</div>`,
-        [{label:'📋 Copy',action:"navigator.clipboard.writeText('"+text.replace(/`/g,"'")+"');showToast('Copied!')",primary:true}]);
+        [{label:'📋 Copy',action:'navigator.clipboard.writeText(text);showToast("Copied! Paste on Telegram")',primary:true}]);
     }catch(e){showActionResult('❌ Error','Try again.');}
   }
 
@@ -3214,8 +3214,8 @@ async function adminAIAction(type){
       `<div style="text-align:center;padding:16px;"><div style="font-size:2.5rem;margin-bottom:8px">🏆</div>
        <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:var(--gold2)">${top.name||'Unknown'}</div>
        <div style="font-size:.78rem;color:var(--text2)">${top.dept||'—'} • ${top.points||0} points</div></div>`,
-      [{label:'📢 Announce Winner',action:`sendGeneratedAnnouncement('🌟 STUDENT OF THE WEEK 🌟\\n\\nCongratulations to ${(top.name||'').replace(/'/g,"\\'")} for topping the leaderboard with ${top.points||0} points! 🎉\\n\\nKeep studying hard! 💪')`,primary:true},
-       {label:'🎁 Give Bonus Points',action:`givePointsToStudent('${top.id}','${(top.name||'').replace(/'/g,"\\'")}',${top.points||0})`,primary:false}]
+      [{label:'📢 Announce Winner',action:'sendGeneratedAnnouncement("🌟 STUDENT OF THE WEEK 🌟\n\nCongratulations to "+(top.name||"Unknown")+" for topping the leaderboard with "+(top.points||0)+" points! 🎉\n\nKeep studying hard! 💪")',primary:true},
+       {label:'🎁 Give Bonus Points',action:'givePointsToStudent("'+(top.id||'')+'","'+(top.name||'').replace(/"/g,"'")+'","'+(top.points||0)+'")',primary:false}]
     );
   }
 
