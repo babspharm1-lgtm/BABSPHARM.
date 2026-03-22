@@ -5739,17 +5739,30 @@ async function joinCBTExam(){
   const code = document.getElementById('cbt-access-code').value.trim().toUpperCase();
   if(!code){showToast('Enter exam code');return;}
 
-  const ok = await checkPointsBeforeQuiz();
-  if(!ok) return;
-
   const msgEl = document.getElementById('cbt-join-msg');
   msgEl.style.display='block';
   msgEl.innerHTML='<div style="text-align:center;padding:16px;color:var(--text2);font-size:.82rem">🔍 Finding your exam...</div>';
 
   try{
-    const snap = await db.collection('cbtExams').where('code','==',code).where('active','==',true).limit(1).get();
+    // Try compound query first, fall back to code-only if index missing
+    let snap;
+    try{
+      snap = await db.collection('cbtExams').where('code','==',code).where('active','==',true).limit(1).get();
+    }catch(indexErr){
+      // Compound index not built — search by code only then filter
+      const allSnap = await db.collection('cbtExams').where('code','==',code).limit(5).get();
+      const activeDocs = allSnap.docs.filter(d=>d.data().active===true);
+      snap = {empty: activeDocs.length===0, docs: activeDocs};
+    }
+
     if(snap.empty){
-      msgEl.innerHTML='<div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:10px;padding:14px;text-align:center;color:#f87171;font-size:.82rem">❌ Invalid or inactive exam code. Check with your admin.</div>';
+      // Check if exam exists but is inactive
+      const anySnap = await db.collection('cbtExams').where('code','==',code).limit(1).get().catch(()=>({empty:true}));
+      if(!anySnap.empty){
+        msgEl.innerHTML='<div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:10px;padding:14px;text-align:center;color:#f87171;font-size:.82rem">⏸ This exam is not active yet. Ask your admin to activate it.</div>';
+      } else {
+        msgEl.innerHTML='<div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:10px;padding:14px;text-align:center;color:#f87171;font-size:.82rem">❌ Invalid exam code. Check with your admin.</div>';
+      }
       return;
     }
 
@@ -5760,29 +5773,39 @@ async function joinCBTExam(){
     const qSnap = await db.collection('cbtExams').doc(examDoc.id).collection('questions').get();
     cbtQuestions = {};
     cbtAnswers = {};
-    cbtSections = ['A','B','C','D','E'].slice(0, cbtExamData.sections||4);
-
+    cbtSections = ['A','B','C','D','E'].slice(0, cbtExamData.sections||3);
     cbtSections.forEach(s => { cbtQuestions[s] = []; });
+
     qSnap.docs.forEach(d => {
       const q = {id:d.id, ...d.data()};
-      if(cbtQuestions[q.section]) cbtQuestions[q.section].push(q);
+      const sec = (q.section||'A').toUpperCase();
+      if(cbtQuestions[sec]) cbtQuestions[sec].push(q);
     });
 
+    // Check if exam actually has questions
+    const totalQ = Object.values(cbtQuestions).reduce((t,arr)=>t+arr.length,0);
+
     // Show exam info
-    msgEl.innerHTML=`
-      <div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);border-radius:14px;padding:16px;text-align:center;">
-        <div style="font-size:1.4rem;margin-bottom:8px">📝</div>
-        <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#a5b4fc;margin-bottom:6px">${cbtExamData.title}</div>
-        <div style="font-size:.78rem;color:var(--text2);margin-bottom:12px;line-height:1.6">
-          Course: ${cbtExamData.course} • Duration: ${cbtExamData.duration} minutes<br>
-          Sections: ${cbtSections.join(', ')} • Total Questions: ${qSnap.size}
-        </div>
-        ${cbtExamData.instructions ? '<div style="background:rgba(255,255,255,.05);border-radius:8px;padding:10px;font-size:.76rem;color:var(--text2);margin-bottom:12px;text-align:left;line-height:1.6">'+cbtExamData.instructions+'</div>' : ''}
-        <button onclick="startCBTExam()" class="btn btn-gold" style="width:100%;padding:14px;font-size:.9rem;">🚀 Start Exam Now</button>
-      </div>`;
+    msgEl.innerHTML = '<div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);border-radius:14px;padding:16px;text-align:center;">'
+      +'<div style="font-size:1.4rem;margin-bottom:8px">📝</div>'
+      +'<div style="font-family:Playfair Display,serif;font-size:1rem;font-weight:700;color:#a5b4fc;margin-bottom:6px">'+cbtExamData.title+'</div>'
+      +'<div style="font-size:.78rem;color:var(--text2);margin-bottom:12px;line-height:1.6">Course: '+cbtExamData.course+' • Duration: '+cbtExamData.duration+' minutes<br>Sections: '+cbtSections.join(', ')+' • Total Questions: '+totalQ+'</div>'
+      +(cbtExamData.instructions?'<div style="background:rgba(255,255,255,.05);border-radius:8px;padding:10px;font-size:.76rem;color:var(--text2);margin-bottom:12px;text-align:left;line-height:1.6">'+cbtExamData.instructions+'</div>':'')
+      +(totalQ===0?'<div style="color:#fbbf24;font-size:.78rem;margin-bottom:10px;">⚠️ This exam has no questions yet. Contact admin.</div>':'')
+      +'<button onclick="startCBTExam()" class="btn btn-gold" style="width:100%;padding:14px;font-size:.9rem;"'+(totalQ===0?' disabled style="opacity:.5"':'')+'">🚀 Start Exam Now</button>'
+      +'</div>';
+
+    const ok = await checkPointsBeforeQuiz().catch(()=>true);
+    if(!ok) return;
     deductPoints('CBT Exam attempt', 5);
+
   }catch(e){
-    msgEl.innerHTML='<div style="color:var(--red);font-size:.82rem;text-align:center;padding:10px">❌ Error loading exam. Try again.</div>';
+    console.error('CBT error:', e);
+    msgEl.innerHTML='<div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:10px;padding:14px;text-align:center;">'
+      +'<div style="color:#f87171;font-size:.82rem;margin-bottom:6px">❌ Error loading exam</div>'
+      +'<div style="color:var(--text2);font-size:.72rem;margin-bottom:10px;">'+( e.message||'Unknown error')+'</div>'
+      +'<button onclick="joinCBTExam()" class="btn btn-out" style="font-size:.78rem;">🔄 Try Again</button>'
+      +'</div>';
   }
 }
 
