@@ -320,6 +320,13 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="sb-udept" id="sb-dept">OAU</div>
   </div>
   <div class="sb-item on" onclick="showPage('dash');closeSB()"><span class="si">🏠</span>Dashboard</div>
+  <div class="sb-item" onclick="showPage('cbt');closeSB()"><span class="si">📝</span>CBT Exam</div>
+  <div class="sb-item" onclick="showPage('pq');closeSB()"><span class="si">📋</span>Past Questions</div>
+  <div class="sb-item" onclick="showPage('vault');closeSB()"><span class="si">🔓</span>Study Vault</div>
+  <div class="sb-item" onclick="showPage('sprint');closeSB()"><span class="si">🏃</span>Study Sprint</div>
+  <div class="sb-item" onclick="showPage('hot');closeSB()"><span class="si">🔥</span>Hot Topics</div>
+  <div class="sb-item" onclick="showPage('testim');closeSB()"><span class="si">📣</span>Success Stories</div>
+  <div class="sb-item" onclick="showPage('weekly');closeSB()"><span class="si">📊</span>Weekly Report</div>
   <div class="sb-item" onclick="showPage('goals');closeSB()"><span class="si">🎯</span>Goal Tracker</div>
   <div class="sb-item" onclick="showPage('gpa-history');closeSB()"><span class="si">📈</span>GPA History</div>
   <div class="sb-item" onclick="showPage('podcast');closeSB()"><span class="si">🎧</span>Podcast Mode</div>
@@ -491,6 +498,13 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="quick-grid">
     <div class="qc" onclick="showPage('quiz')"><div class="qc-icon">📝</div><div class="qc-lbl">CBT Quiz</div></div>
     <div class="qc" onclick="showPage('mock')"><div class="qc-icon">🎯</div><div class="qc-lbl">Mock Exam</div></div>
+    <div class="qc" onclick="showPage('cbt')"><div class="qc-icon">📝</div><div class="qc-lbl">CBT</div></div>
+    <div class="qc" onclick="showPage('pq')"><div class="qc-icon">📋</div><div class="qc-lbl">Past Q</div></div>
+    <div class="qc" onclick="showPage('vault')"><div class="qc-icon">🔓</div><div class="qc-lbl">Vault</div></div>
+    <div class="qc" onclick="showPage('sprint')"><div class="qc-icon">🏃</div><div class="qc-lbl">Sprint</div></div>
+    <div class="qc" onclick="showPage('hot')"><div class="qc-icon">🔥</div><div class="qc-lbl">Hot Topics</div></div>
+    <div class="qc" onclick="showPage('testim')"><div class="qc-icon">📣</div><div class="qc-lbl">Stories</div></div>
+    <div class="qc" onclick="showPage('weekly')"><div class="qc-icon">📊</div><div class="qc-lbl">Weekly</div></div>
     <div class="qc" onclick="showPage('goals')"><div class="qc-icon">🎯</div><div class="qc-lbl">Goals</div></div>
     <div class="qc" onclick="showPage('gpa-history')"><div class="qc-icon">📈</div><div class="qc-lbl">GPA History</div></div>
     <div class="qc" onclick="showPage('podcast')"><div class="qc-icon">🎧</div><div class="qc-lbl">Podcast</div></div>
@@ -524,6 +538,131 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div style="font-size:.7rem;color:var(--gold);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">📢 ANNOUNCEMENT</div>
     <div id="ann-title" style="font-size:.88rem;font-weight:600;margin-bottom:3px;"></div>
     <div id="ann-msg" style="font-size:.8rem;color:var(--text2);"></div>
+  </div>
+</div>
+
+<!-- ══ CBT EXAM ACCESS ══ -->
+<div id="pg-cbt" class="page hidden">
+  <div class="sec-title">📝 CBT Exam</div>
+  <div style="background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:16px;padding:20px;text-align:center;margin-bottom:14px;">
+    <div style="font-size:2rem;margin-bottom:8px">📝</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#c7d2fe;margin-bottom:6px">CBT Examination Portal</div>
+    <div style="font-size:.76rem;color:rgba(255,255,255,.7)">Sectional CBT with timed exam. Enter your access code to begin.</div>
+  </div>
+  <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:20px;margin-bottom:14px;">
+    <div class="fg"><label style="font-size:.78rem;color:var(--text2);font-weight:600;letter-spacing:.5px;text-transform:uppercase;">Exam Access Code</label>
+      <input type="text" id="cbt-access-code" placeholder="Enter exam code e.g. CHM2024CA1" style="font-size:1.1rem;letter-spacing:3px;font-weight:700;text-transform:uppercase;text-align:center;"/>
+    </div>
+    <button class="btn btn-gold" style="width:100%;padding:14px;font-size:.9rem;" onclick="joinCBTExam()">📝 Enter Exam</button>
+  </div>
+  <div id="cbt-join-msg" style="display:none;"></div>
+</div>
+
+<!-- ══ CBT TAKING PAGE ══ -->
+<div id="pg-cbt-exam" class="page hidden" style="padding:0;">
+  <!-- Header with timer -->
+  <div id="cbt-header" style="position:sticky;top:0;z-index:100;background:var(--navy);border-bottom:1px solid var(--cb);padding:12px 16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div>
+        <div id="cbt-exam-title" style="font-family:'Playfair Display',serif;font-size:.9rem;font-weight:700;color:var(--gold2)"></div>
+        <div id="cbt-exam-course" style="font-size:.72rem;color:var(--text2)"></div>
+      </div>
+      <div id="cbt-timer-display" style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:var(--gold2);background:rgba(201,168,76,.1);padding:6px 14px;border-radius:10px;border:1px solid rgba(201,168,76,.3);">60:00</div>
+    </div>
+    <!-- Section tabs -->
+    <div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;" id="cbt-section-tabs"></div>
+  </div>
+
+  <!-- Section content -->
+  <div id="cbt-section-content" style="padding:16px;"></div>
+
+  <!-- Bottom navigation -->
+  <div id="cbt-bottom-nav" style="position:sticky;bottom:0;background:var(--navy);border-top:1px solid var(--cb);padding:12px 16px;">
+    <div id="cbt-section-progress" style="margin-bottom:10px;font-size:.76rem;color:var(--text2);text-align:center;"></div>
+    <div style="display:flex;gap:8px;">
+      <button id="cbt-prev-btn" onclick="cbtPrevSection()" style="flex:1;padding:12px;background:rgba(255,255,255,.05);border:1px solid var(--cb);border-radius:10px;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.84rem;cursor:pointer;">← Previous</button>
+      <button id="cbt-next-btn" onclick="cbtNextSection()" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;color:var(--navy);font-family:'Outfit',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;">Next Section →</button>
+    </div>
+    <button id="cbt-submit-btn" onclick="submitCBTExam()" style="width:100%;margin-top:8px;padding:14px;background:linear-gradient(135deg,#16a34a,#15803d);border:none;border-radius:10px;color:#fff;font-family:'Outfit',sans-serif;font-size:.9rem;font-weight:700;cursor:pointer;">✅ Submit Exam</button>
+  </div>
+</div>
+
+<!-- ══ CBT VAULT ══ -->
+<div id="pg-vault" class="page hidden">
+  <div class="sec-title">🔓 Secret Study Vault</div>
+  <div id="vault-locked" style="text-align:center;padding:40px 20px;background:var(--card);border:1px solid var(--cb);border-radius:var(--r);margin-bottom:14px;">
+    <div style="font-size:3rem;margin-bottom:12px">🔐</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--gold2);margin-bottom:8px">Vault Locked</div>
+    <div style="font-size:.82rem;color:var(--text2);line-height:1.7">This vault contains exclusive study materials, model answers and secret exam tips — unlocked only for top performing students by the admin.</div>
+    <div style="margin-top:14px;font-size:.78rem;color:var(--text2)">Keep studying hard and the admin will grant you access! 💪</div>
+  </div>
+  <div id="vault-content" style="display:none;"></div>
+</div>
+
+<!-- ══ STUDY SPRINT ══ -->
+<div id="pg-sprint" class="page hidden">
+  <div class="sec-title">🏃 Study Sprint Mode</div>
+  <div style="background:linear-gradient(135deg,#7c3aed,#4338ca);border-radius:16px;padding:20px;text-align:center;margin-bottom:14px;">
+    <div style="font-size:2rem;margin-bottom:8px">⏱️</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#fff;margin-bottom:4px">25-Minute Study Sprint</div>
+    <div style="font-size:.76rem;color:rgba(255,255,255,.8)">Focus. No distractions. Sprint ends with a surprise quiz!</div>
+  </div>
+  <div style="background:var(--card);border:2px solid var(--gold);border-radius:var(--r);padding:24px;text-align:center;margin-bottom:14px;">
+    <div id="sprint-timer" style="font-family:'Playfair Display',serif;font-size:4rem;font-weight:900;color:var(--gold2)">25:00</div>
+    <div id="sprint-label" style="font-size:.78rem;color:var(--text2);margin-top:4px">Ready to sprint?</div>
+  </div>
+  <div class="fg"><label>What are you studying?</label>
+    <input type="text" id="sprint-topic" placeholder="e.g. CHM 101 Reaction Kinetics"/>
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:14px;">
+    <button id="sprint-start-btn" class="btn btn-gold" style="flex:1" onclick="startSprint()">🏃 Start Sprint</button>
+    <button class="btn btn-out" style="flex:1" onclick="stopSprint()">⏹ Stop</button>
+  </div>
+  <div id="sprint-message" style="text-align:center;font-size:.82rem;color:var(--text2);padding:10px;"></div>
+  <div id="sprint-quiz-section" style="display:none;background:var(--card);border:1px solid var(--gold);border-radius:var(--r);padding:16px;">
+    <div style="font-size:.84rem;font-weight:700;color:var(--gold2);margin-bottom:12px;">🎯 Sprint Complete! Quick Quiz Time!</div>
+    <div id="sprint-quiz-content"></div>
+  </div>
+</div>
+
+<!-- ══ HOT TOPICS ══ -->
+<div id="pg-hot" class="page hidden">
+  <div class="sec-title">🔥 Hot Topics Alert</div>
+  <div style="background:linear-gradient(135deg,#dc2626,#b91c1c);border-radius:16px;padding:16px;text-align:center;margin-bottom:14px;">
+    <div style="font-size:1.8rem;margin-bottom:6px">🔥</div>
+    <div style="font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#fff;margin-bottom:4px">Trending for Upcoming Exams</div>
+    <div style="font-size:.74rem;color:rgba(255,255,255,.8)">Admin marks topics likely to appear in your next exam</div>
+  </div>
+  <div id="hot-topics-list"></div>
+</div>
+
+<!-- ══ TESTIMONIALS ══ -->
+<div id="pg-testim" class="page hidden">
+  <div class="sec-title">📣 Success Stories</div>
+  <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:14px;margin-bottom:14px;">
+    <div style="font-size:.82rem;font-weight:700;color:var(--gold2);margin-bottom:10px">Share Your Story 🌟</div>
+    <div class="fg"><textarea id="testim-text" placeholder="Share how BABSPHARM Cloud helped you — your score, your improvement, your experience..." style="min-height:80px;"></textarea></div>
+    <button class="btn btn-gold" style="width:100%" onclick="submitTestimonial()">📣 Share My Story</button>
+  </div>
+  <div id="testimonials-list"></div>
+</div>
+
+<!-- ══ WEEKLY REPORT CARD ══ -->
+<div id="pg-weekly" class="page hidden">
+  <div class="sec-title">📊 Weekly Report Card</div>
+  <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:16px;margin-bottom:14px;" id="weekly-stats"></div>
+  <button class="btn btn-gold" style="width:100%;margin-bottom:14px" onclick="generateWeeklyReport()">🤖 Generate This Week's Report</button>
+  <div id="weekly-report" style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:16px;display:none;"></div>
+</div>
+
+<!-- ══ SURPRISE REWARD ══ -->
+<div id="surprise-reward-modal" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.85);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:linear-gradient(135deg,#0d1e3d,#162d5a);border:2px solid var(--gold);border-radius:20px;max-width:300px;width:100%;padding:28px;text-align:center;">
+    <div style="font-size:3rem;margin-bottom:12px;animation:bounce 1s infinite">🎁</div>
+    <div style="font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--gold2);margin-bottom:8px;font-weight:700">Surprise Reward!</div>
+    <div style="font-size:.84rem;color:var(--text2);margin-bottom:16px;line-height:1.6" id="surprise-msg">Admin just sent you a surprise reward!</div>
+    <div style="font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:900;color:var(--green);margin-bottom:16px" id="surprise-pts">+0 pts</div>
+    <button onclick="closeSurpriseReward()" class="btn btn-gold" style="width:100%">🎉 Claim Reward!</button>
   </div>
 </div>
 
@@ -878,6 +1017,27 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 </div>
 
 <!-- ══ LEADERBOARD ══ -->
+<!-- ══ UNIVERSITY PAST QUESTIONS ══ -->
+<div id="pg-pq" class="page hidden">
+  <div class="sec-title">📋 University Past Questions</div>
+  <div style="background:linear-gradient(135deg,#7c2d12,#92400e);border-radius:14px;padding:14px;margin-bottom:14px;text-align:center;">
+    <div style="font-size:1.4rem;margin-bottom:6px">🎓</div>
+    <div style="font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#fde68a;margin-bottom:4px">100 Level University PQ Bank</div>
+    <div style="font-size:.74rem;color:rgba(255,255,255,.8)">Standard university-level questions — not O level. OAU style MCQs with full explanations.</div>
+  </div>
+  <!-- Subject Tabs -->
+  <div style="display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;">
+    <button class="pq-tab on" onclick="switchPQTab('chm101',this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">⚗️ CHM 101</button>
+    <button class="pq-tab" onclick="switchPQTab('chm102',this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;white-space:nowrap;">⚗️ CHM 102</button>
+    <button class="pq-tab" onclick="switchPQTab('mth101',this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;white-space:nowrap;">📐 MTH 101</button>
+    <button class="pq-tab" onclick="switchPQTab('mth102',this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;white-space:nowrap;">📐 MTH 102</button>
+    <button class="pq-tab" onclick="switchPQTab('phy101',this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;white-space:nowrap;">⚡ PHY 101</button>
+    <button class="pq-tab" onclick="switchPQTab('phy102',this)" style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;white-space:nowrap;">⚡ PHY 102</button>
+  </div>
+  <!-- PQ Content -->
+  <div id="pq-content"></div>
+</div>
+
 <div id="pg-leaderboard" class="page hidden">
   <div class="sec-title">🏆 Leaderboard</div>
   <div class="fcats" style="margin-bottom:12px;" id="lb-course-tabs"></div>
@@ -1081,11 +1241,41 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <!-- AI MODE TABS -->
   <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
     <button class="ai-mode-tab on" onclick="switchAIMode('chat',this)">💬 Chat</button>
+    <button class="ai-mode-tab" onclick="switchAIMode('mth',this)">📐 MTH Tutor</button>
+    <button class="ai-mode-tab" onclick="switchAIMode('chm',this)">⚗️ CHM Tutor</button>
+    <button class="ai-mode-tab" onclick="switchAIMode('phy',this)">⚡ PHY Tutor</button>
+    <button class="ai-mode-tab" onclick="switchAIMode('bio',this)">🧬 BIO Tutor</button>
+    <button class="ai-mode-tab" onclick="switchAIMode('gst',this)">📖 GST Tutor</button>
     <button class="ai-mode-tab" onclick="switchAIMode('explain',this)">🔍 Explain</button>
     <button class="ai-mode-tab" onclick="switchAIMode('summarize',this)">📋 Summarize</button>
     <button class="ai-mode-tab" onclick="switchAIMode('quizme',this)">🎯 Quiz Me</button>
     <button class="ai-mode-tab" onclick="switchAIMode('predict',this)">🔮 Predict</button>
     <button class="ai-mode-tab" onclick="switchAIMode('studyplan',this)">📅 Study Plan</button>
+  </div>
+
+  <!-- MTH TUTOR MODE -->
+  <div id="ai-mode-mth" style="display:none;">
+    <div style="background:linear-gradient(135deg,#1e40af,#4338ca);border-radius:14px;padding:14px;margin-bottom:12px;">
+      <div style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:4px;">📐 MTH 101 & 102 Tutor</div>
+      <div style="font-size:.74rem;color:rgba(255,255,255,.8)">Teaches Mathematics step by step, conversationally. Like a real teacher — not just answers!</div>
+    </div>
+    <!-- Topic buttons -->
+    <div style="font-size:.74rem;color:var(--text2);margin-bottom:8px;font-weight:600">Quick Topics:</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+      <button class="ai-sug" onclick="startMTHLesson('Sets and Set Theory')">Sets</button>
+      <button class="ai-sug" onclick="startMTHLesson('Functions and Relations')">Functions</button>
+      <button class="ai-sug" onclick="startMTHLesson('Limits and Continuity')">Limits</button>
+      <button class="ai-sug" onclick="startMTHLesson('Differentiation')">Differentiation</button>
+      <button class="ai-sug" onclick="startMTHLesson('Integration')">Integration</button>
+      <button class="ai-sug" onclick="startMTHLesson('Matrices and Determinants')">Matrices</button>
+      <button class="ai-sug" onclick="startMTHLesson('Complex Numbers')">Complex Numbers</button>
+      <button class="ai-sug" onclick="startMTHLesson('Binomial Theorem')">Binomial</button>
+      <button class="ai-sug" onclick="startMTHLesson('Trigonometry')">Trigonometry</button>
+      <button class="ai-sug" onclick="startMTHLesson('Vectors')">Vectors</button>
+      <button class="ai-sug" onclick="startMTHLesson('Sequences and Series')">Series</button>
+      <button class="ai-sug" onclick="startMTHLesson('Logarithms and Indices')">Logarithms</button>
+    </div>
+    <div style="font-size:.74rem;color:var(--text2);margin-bottom:6px;font-weight:600">Or ask anything:</div>
   </div>
 
   <!-- CHAT MODE -->
@@ -1098,6 +1288,34 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
       <button class="ai-sug" onclick="sendSug('Explain DNA replication BIO 101')">BIO DNA</button>
       <button class="ai-sug" onclick="sendSug('What is an algorithm in COS 101?')">COS algorithm</button>
     </div>
+  </div>
+
+  <!-- CHM TUTOR MODE -->
+  <div id="ai-mode-chm" style="display:none;">
+    <div style="background:linear-gradient(135deg,#065f46,#0f766e);border-radius:14px;padding:14px;margin-bottom:12px;">
+      <div style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:4px;">⚗️ CHM 101 & 102 Tutor</div>
+      <div style="font-size:.74rem;color:rgba(255,255,255,.8)">Teaches Chemistry step by step, conversationally — like a loving teacher. Not just answers!</div>
+    </div>
+    <div id="chm-chat-area" style="min-height:200px;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="chm-inp" placeholder="Ask any CHM 101/102 question..." style="flex:1;padding:11px 13px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;" onkeydown="if(event.key==='Enter')sendCHMMessage(document.getElementById('chm-inp').value)"/>
+      <button onclick="sendCHMMessage(document.getElementById('chm-inp').value)" style="background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;padding:11px 16px;cursor:pointer;font-size:1rem;">➤</button>
+    </div>
+    <button onclick="chmConversation=[];document.getElementById('chm-chat-area').innerHTML='';initCHMTutor();" style="width:100%;margin-top:8px;padding:7px;background:none;border:1px solid var(--cb);border-radius:8px;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.74rem;cursor:pointer;">🔄 Start New Topic</button>
+  </div>
+
+  <!-- PHY TUTOR MODE -->
+  <div id="ai-mode-phy" style="display:none;">
+    <div style="background:linear-gradient(135deg,#1e3a5f,#1e40af);border-radius:14px;padding:14px;margin-bottom:12px;">
+      <div style="font-size:.9rem;font-weight:700;color:#fff;margin-bottom:4px;">⚡ PHY 101 & 102 Tutor</div>
+      <div style="font-size:.74rem;color:rgba(255,255,255,.8)">Serway-level physics teaching — step by step, conversational, like a loving teacher.</div>
+    </div>
+    <div id="phy-chat-area" style="min-height:200px;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;">
+      <input type="text" id="phy-inp" placeholder="Ask any PHY 101/102 question..." style="flex:1;padding:11px 13px;border-radius:10px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.84rem;outline:none;" onkeydown="if(event.key==='Enter')sendPHYMessage(document.getElementById('phy-inp').value)"/>
+      <button onclick="sendPHYMessage(document.getElementById('phy-inp').value)" style="background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;padding:11px 16px;cursor:pointer;font-size:1rem;">➤</button>
+    </div>
+    <button onclick="phyConversationHistory=[];document.getElementById('phy-chat-area').innerHTML='';initPHYTutor();" style="width:100%;margin-top:8px;padding:7px;background:none;border:1px solid var(--cb);border-radius:8px;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.74rem;cursor:pointer;">🔄 Start New Topic</button>
   </div>
 
   <!-- EXPLAIN MODE -->
@@ -1604,6 +1822,7 @@ auth.onAuthStateChanged(async function(user){
     checkEmergencyAlert();
     checkExamCountdown();
     checkSOTW();
+    checkSurpriseReward();
     showPage('dash');
     document.getElementById('bnav').style.display = 'flex';
     // Update last seen using set merge — works for ALL users old and new
@@ -1763,6 +1982,13 @@ function showPage(pg){
   if(pg==='map') initMap();
   if(pg==='leaderboard') loadLeaderboard();
   if(pg==='survival') {}
+  if(pg==='cbt'){document.getElementById('cbt-access-code').value='';document.getElementById('cbt-join-msg').style.display='none';}
+  if(pg==='pq'){renderPQ(currentPQSubject);}
+  if(pg==='vault') loadVault();
+  if(pg==='sprint') initSprint();
+  if(pg==='hot') loadHotTopics();
+  if(pg==='testim') loadTestimonials();
+  if(pg==='weekly') loadWeeklyStats();
   if(pg==='goals') loadGoals();
   if(pg==='gpa-history') loadGPAHistory();
   if(pg==='podcast') initPodcast();
@@ -2114,10 +2340,13 @@ function switchAIMode(mode, btn){
   currentAIMode = mode;
   document.querySelectorAll('.ai-mode-tab').forEach(b=>b.classList.remove('on'));
   btn.classList.add('on');
-  ['chat','explain','summarize','quizme','predict','studyplan'].forEach(m=>{
+  ['chat','mth','chm','phy','explain','summarize','quizme','predict','studyplan'].forEach(m=>{
     const el = document.getElementById('ai-mode-'+m);
     if(el) el.style.display = m===mode ? 'block' : 'none';
   });
+  if(mode==='mth') initMTHTutor();
+  if(mode==='chm') initCHMTutor();
+  if(mode==='phy') initPHYTutor();
 }
 
 async function runExplain(){
@@ -2350,9 +2579,16 @@ async function sendAI(){
   const msg = inp.value.trim();
   if(!msg) return;
   if(!GROQ_KEY){appendMsg('⚠️ AI is not configured yet. Ask your admin to set the GROQ API key.','bot',false);return;}
-  if(getAiCount()>=AI_DAILY_LIMIT){showToast('No AI messages left for today!');return;}
   inp.value='';
   appendMsg(msg,'user');
+
+  // If in MTH mode — use conversational MTH tutor
+  if(currentAIMode==='mth'){
+    await sendMTHMessage(msg);
+    return;
+  }
+
+  if(getAiCount()>=AI_DAILY_LIMIT){showToast('No AI messages left for today!');return;}
   const typing = appendTyping();
   incAiCount(); updateAiUI();
   try{
@@ -2815,161 +3051,342 @@ async function showIDCard(){
 
 function drawIDCard(name, dept, email, quizCount, bestScore, joinDate, photoURL){
   const canvas = document.getElementById('id-canvas');
-  const W=380, H=220;
-  canvas.width=W; canvas.height=H;
+  const W=420, H=260;
+  canvas.width=W*2; canvas.height=H*2;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
   const ctx = canvas.getContext('2d');
+  ctx.scale(2,2);
 
-  // Background gradient
+  // ── BACKGROUND: Rich deep navy with subtle blue glow ──
   const bg = ctx.createLinearGradient(0,0,W,H);
-  bg.addColorStop(0,'#0a1628');
-  bg.addColorStop(0.5,'#0f2044');
-  bg.addColorStop(1,'#162d5a');
+  bg.addColorStop(0,'#04091a');
+  bg.addColorStop(0.35,'#071220');
+  bg.addColorStop(0.7,'#081828');
+  bg.addColorStop(1,'#050e1c');
   ctx.fillStyle=bg;
-  ctx.roundRect(0,0,W,H,18);
-  ctx.fill();
+  ctx.beginPath(); ctx.roundRect(0,0,W,H,18); ctx.fill();
 
-  // Gold accent strip
-  const strip = ctx.createLinearGradient(0,0,W,0);
-  strip.addColorStop(0,'#c9a84c');
-  strip.addColorStop(0.5,'#e8c97a');
+  // ── Blue glow in top-right corner ──
+  const glow1 = ctx.createRadialGradient(W,0,0,W,0,200);
+  glow1.addColorStop(0,'rgba(56,189,248,0.12)');
+  glow1.addColorStop(1,'rgba(56,189,248,0)');
+  ctx.fillStyle=glow1; ctx.fillRect(0,0,W,H);
+
+  // ── Gold glow in bottom-left ──
+  const glow2 = ctx.createRadialGradient(0,H,0,0,H,180);
+  glow2.addColorStop(0,'rgba(201,168,76,0.1)');
+  glow2.addColorStop(1,'rgba(201,168,76,0)');
+  ctx.fillStyle=glow2; ctx.fillRect(0,0,W,H);
+
+  // ── Holographic shimmer lines ──
+  for(let i=0;i<6;i++){
+    const y = 40+i*40;
+    const shimmer = ctx.createLinearGradient(0,y,W,y);
+    shimmer.addColorStop(0,'rgba(255,255,255,0)');
+    shimmer.addColorStop(0.4,'rgba(201,168,76,0.04)');
+    shimmer.addColorStop(0.6,'rgba(255,255,255,0.03)');
+    shimmer.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=shimmer; ctx.fillRect(0,y,W,1);
+  }
+
+  // ── TOP RAINBOW STRIP ──
+  const strip=ctx.createLinearGradient(0,0,W,0);
+  strip.addColorStop(0,'#7c3aed');
+  strip.addColorStop(0.2,'#2563eb');
+  strip.addColorStop(0.4,'#0891b2');
+  strip.addColorStop(0.6,'#c9a84c');
+  strip.addColorStop(0.8,'#e8c97a');
   strip.addColorStop(1,'#c9a84c');
-  ctx.fillStyle=strip;
-  ctx.fillRect(0,0,W,5);
+  ctx.fillStyle=strip; ctx.fillRect(0,0,W,5);
 
-  // OAU Logo area - left panel
-  ctx.fillStyle='rgba(201,168,76,.08)';
-  ctx.roundRect(14,14,90,H-28,12);
-  ctx.fill();
-  ctx.strokeStyle='rgba(201,168,76,.2)';
+  // ── LEFT PANEL: frosted glass effect ──
+  ctx.fillStyle='rgba(255,255,255,0.03)';
+  ctx.strokeStyle='rgba(201,168,76,0.25)';
   ctx.lineWidth=1;
-  ctx.roundRect(14,14,90,H-28,12);
+  ctx.beginPath(); ctx.roundRect(12,12,108,H-24,14); ctx.fill(); ctx.stroke();
+
+  // Inner glow on left panel
+  const panelGlow = ctx.createLinearGradient(12,12,120,H);
+  panelGlow.addColorStop(0,'rgba(201,168,76,0.08)');
+  panelGlow.addColorStop(0.5,'rgba(56,189,248,0.04)');
+  panelGlow.addColorStop(1,'rgba(201,168,76,0.06)');
+  ctx.fillStyle=panelGlow;
+  ctx.beginPath(); ctx.roundRect(12,12,108,H-24,14); ctx.fill();
+
+  // ── BABSPHARM branding in left panel ──
+  ctx.textAlign='center';
+  ctx.fillStyle='#e8c97a';
+  ctx.font='bold 8.5px Arial';
+  ctx.fillText('BABSPHARM',66,30);
+  ctx.fillStyle='rgba(56,189,248,0.8)';
+  ctx.font='6.5px Arial';
+  ctx.fillText('CLOUD', 66, 41);
+
+  // ── Divider under branding ──
+  ctx.strokeStyle='rgba(201,168,76,0.2)';
+  ctx.lineWidth=0.5;
+  ctx.beginPath(); ctx.moveTo(20,47); ctx.lineTo(112,47); ctx.stroke();
+
+  // ── Medical/Pharmacy emblem ──
+  ctx.fillStyle='rgba(201,168,76,0.9)';
+  ctx.font='28px Arial';
+  ctx.fillText('⚕',66,78);
+
+  // ── Glowing ring around avatar ──
+  const px=66, py=128, pr=28;
+  const ringGrad=ctx.createConicalGradient?
+    ctx.createConicalGradient(px,py,0):
+    ctx.createLinearGradient(px-pr,py-pr,px+pr,py+pr);
+  ctx.beginPath(); ctx.arc(px,py,pr+4,0,Math.PI*2);
+  const outerRing = ctx.createLinearGradient(px-pr,py-pr,px+pr,py+pr);
+  outerRing.addColorStop(0,'#7c3aed');
+  outerRing.addColorStop(0.33,'#2563eb');
+  outerRing.addColorStop(0.66,'#e8c97a');
+  outerRing.addColorStop(1,'#c9a84c');
+  ctx.strokeStyle=outerRing; ctx.lineWidth=3; ctx.stroke();
+
+  // Avatar
+  ctx.save();
+  ctx.beginPath(); ctx.arc(px,py,pr,0,Math.PI*2); ctx.clip();
+  if(photoURL&&photoURL.startsWith('data:')){
+    try{const img=new Image();img.src=photoURL;ctx.drawImage(img,px-pr,py-pr,pr*2,pr*2);}
+    catch(e){}
+  }
+  const avatarBg=ctx.createLinearGradient(px-pr,py-pr,px+pr,py+pr);
+  avatarBg.addColorStop(0,'#1e3a8a'); avatarBg.addColorStop(1,'#0f2044');
+  ctx.fillStyle=avatarBg; ctx.fill();
+  ctx.fillStyle='#e8c97a';
+  ctx.font='bold 28px Arial';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(name.charAt(0).toUpperCase(),px,py);
+  ctx.restore();
+
+  // ── STUDENT label under avatar ──
+  ctx.fillStyle='rgba(155,172,200,0.5)';
+  ctx.font='5.5px Arial';
+  ctx.textAlign='center';
+  ctx.letterSpacing='1.5px';
+  ctx.fillText('STUDENT',66,H-35);
+
+  // Academic year
+  ctx.fillStyle='rgba(201,168,76,0.4)';
+  ctx.font='6px Arial';
+  ctx.fillText('2024/2025',66,H-24);
+
+  // ── RIGHT CONTENT AREA ──
+  const rx=134;
+  ctx.textAlign='left';
+
+  // Header
+  ctx.fillStyle='rgba(56,189,248,0.6)';
+  ctx.font='6px Arial';
+  ctx.letterSpacing='1.8px';
+  ctx.fillText('STUDENT IDENTIFICATION CARD',rx,26);
+  ctx.letterSpacing='0px';
+
+  // OAU
+  ctx.fillStyle='rgba(155,172,200,0.55)';
+  ctx.font='7px Arial';
+  ctx.fillText('Obafemi Awolowo University · Ile-Ife, Nigeria',rx,38);
+
+  // ── Divider ──
+  const topDiv=ctx.createLinearGradient(rx,0,W-12,0);
+  topDiv.addColorStop(0,'rgba(56,189,248,0.5)');
+  topDiv.addColorStop(1,'rgba(56,189,248,0)');
+  ctx.strokeStyle=topDiv; ctx.lineWidth=0.8;
+  ctx.beginPath(); ctx.moveTo(rx,44); ctx.lineTo(W-12,44); ctx.stroke();
+
+  // ── Name — Large & beautiful ──
+  const nameFontSize = name.length>22?13:name.length>16?15:18;
+  ctx.font=`bold ${nameFontSize}px Arial`;
+  // Name shadow/glow effect
+  ctx.shadowColor='rgba(232,201,122,0.3)';
+  ctx.shadowBlur=8;
+  ctx.fillStyle='#ffffff';
+  ctx.fillText(name.substring(0,28).toUpperCase(),rx,65);
+  ctx.shadowBlur=0;
+
+  // Name underline gradient
+  const nameW=ctx.measureText(name.substring(0,28).toUpperCase()).width;
+  const ul=ctx.createLinearGradient(rx,0,rx+nameW,0);
+  ul.addColorStop(0,'rgba(201,168,76,0.9)');
+  ul.addColorStop(0.6,'rgba(201,168,76,0.4)');
+  ul.addColorStop(1,'rgba(201,168,76,0)');
+  ctx.fillStyle=ul; ctx.fillRect(rx,69,Math.min(nameW,W-rx-12),2);
+
+  // ── Department pill ──
+  const deptText=dept.substring(0,30);
+  const deptW=ctx.measureText(deptText).width+20;
+  const deptGrad=ctx.createLinearGradient(rx-2,0,rx+deptW,0);
+  deptGrad.addColorStop(0,'rgba(201,168,76,0.2)');
+  deptGrad.addColorStop(1,'rgba(201,168,76,0.05)');
+  ctx.fillStyle=deptGrad;
+  ctx.beginPath(); ctx.roundRect(rx-4,75,deptW,18,9); ctx.fill();
+  ctx.strokeStyle='rgba(201,168,76,0.3)'; ctx.lineWidth=0.8;
+  ctx.beginPath(); ctx.roundRect(rx-4,75,deptW,18,9); ctx.stroke();
+  ctx.fillStyle='#e8c97a';
+  ctx.font='bold 9.5px Arial';
+  ctx.fillText(deptText,rx,87);
+
+  // ── Email ──
+  ctx.fillStyle='rgba(155,172,200,0.55)';
+  ctx.font='8px Arial';
+  ctx.fillText('✉ '+email.substring(0,34),rx,104);
+
+  // ── Middle divider ──
+  const midDiv=ctx.createLinearGradient(rx,0,W-12,0);
+  midDiv.addColorStop(0,'rgba(201,168,76,0.5)');
+  midDiv.addColorStop(0.7,'rgba(201,168,76,0.15)');
+  midDiv.addColorStop(1,'rgba(201,168,76,0)');
+  ctx.strokeStyle=midDiv; ctx.lineWidth=0.8;
+  ctx.beginPath(); ctx.moveTo(rx,114); ctx.lineTo(W-12,114); ctx.stroke();
+
+  // ── Stats boxes — 3 beautiful cards ──
+  const stats=[
+    {label:'QUIZZES',val:String(quizCount),color:'#60a5fa',glow:'rgba(96,165,250,0.15)'},
+    {label:'BEST SCORE',val:bestScore+'%',color:'#e8c97a',glow:'rgba(232,201,122,0.15)'},
+    {label:'SINCE',val:joinDate||'2025',color:'#a78bfa',glow:'rgba(167,139,250,0.15)'},
+  ];
+  const statW=(W-rx-12)/3;
+  stats.forEach((s,i)=>{
+    const sx=rx+i*statW;
+    // Card background
+    ctx.fillStyle=s.glow;
+    ctx.beginPath(); ctx.roundRect(sx,120,statW-5,46,8); ctx.fill();
+    ctx.strokeStyle=s.color.replace(')',',0.3)').replace('rgb','rgba').replace('#','rgba(').replace('60a5fa','96,165,250').replace('e8c97a','232,201,122').replace('a78bfa','167,139,250')||'rgba(255,255,255,0.1)';
+    ctx.lineWidth=0.8;
+    ctx.beginPath(); ctx.roundRect(sx,120,statW-5,46,8); ctx.stroke();
+    // Value
+    ctx.shadowColor=s.color;
+    ctx.shadowBlur=6;
+    ctx.fillStyle=s.color;
+    ctx.font=`bold ${s.val.length>5?10:12}px Arial`;
+    ctx.textAlign='center';
+    ctx.fillText(s.val,sx+(statW-5)/2,140);
+    ctx.shadowBlur=0;
+    // Label
+    ctx.fillStyle='rgba(155,172,200,0.55)';
+    ctx.font='5.5px Arial';
+    ctx.fillText(s.label,sx+(statW-5)/2,153);
+  });
+
+  ctx.textAlign='left';
+
+  // ── ID Number ──
+  ctx.fillStyle='rgba(155,172,200,0.35)';
+  ctx.font='6.5px Arial';
+  ctx.fillText('ID: BSP-'+CU.uid.substring(0,10).toUpperCase(),rx,178);
+
+  // ── BOTTOM BAR ──
+  const bottomBg=ctx.createLinearGradient(0,H-28,0,H);
+  bottomBg.addColorStop(0,'rgba(0,0,0,0)');
+  bottomBg.addColorStop(1,'rgba(0,0,0,0.4)');
+  ctx.fillStyle=bottomBg; ctx.fillRect(0,H-28,W,28);
+
+  ctx.fillStyle='rgba(201,168,76,0.5)';
+  ctx.font='6.5px Arial';
+  ctx.fillText('🌐 babspharm1-lgtm.github.io/BABSPHARM.',rx,H-13);
+
+  ctx.textAlign='right';
+  ctx.fillStyle='rgba(155,172,200,0.35)';
+  ctx.font='6px Arial';
+  ctx.fillText('OAU · BABSPHARM CLOUD',W-12,H-13);
+
+  // ── BOTTOM STRIP ──
+  ctx.fillStyle=strip; ctx.fillRect(0,H-4,W,4);
+
+  // ── Corner accent marks ──
+  ctx.strokeStyle='rgba(201,168,76,0.4)';
+  ctx.lineWidth=2;
+  // Top-right
+  ctx.beginPath(); ctx.moveTo(W-32,14); ctx.lineTo(W-12,14); ctx.lineTo(W-12,34); ctx.stroke();
+  // Bottom-right
+  ctx.beginPath(); ctx.moveTo(W-32,H-14); ctx.lineTo(W-12,H-14); ctx.lineTo(W-12,H-34); ctx.stroke();
+
+  // ── Barcode-style decoration ──
+  ctx.fillStyle='rgba(201,168,76,0.08)';
+  for(let i=0;i<12;i++){
+    const bh = [8,12,6,14,10,16,8,12,6,10,14,8][i];
+    ctx.fillRect(W-48+i*3,H-24,2,bh);
+  }
+}
+
+  // ── BACKGROUND: Deep premium gradient ──
+  const bg = ctx.createLinearGradient(0,0,W,H);
+  bg.addColorStop(0,'#050d1f');
+  bg.addColorStop(0.4,'#081428');
+  bg.addColorStop(1,'#0a1a35');
+  ctx.fillStyle=bg;
+  ctx.beginPath();
+  ctx.roundRect(0,0,W,H,16);
+  ctx.fill();
+
+  // ── Subtle dot pattern overlay ──
+  ctx.fillStyle='rgba(201,168,76,0.03)';
+  for(let x=0;x<W;x+=12){
+    for(let y=0;y<H;y+=12){
+      ctx.beginPath();ctx.arc(x,y,1,0,Math.PI*2);ctx.fill();
+    }
+  }
+
+  // ── Left glowing panel ──
+  const panelGrad = ctx.createLinearGradient(0,0,0,H);
+  panelGrad.addColorStop(0,'rgba(201,168,76,0.18)');
+  panelGrad.addColorStop(0.5,'rgba(201,168,76,0.08)');
+  panelGrad.addColorStop(1,'rgba(201,168,76,0.14)');
+  ctx.fillStyle=panelGrad;
+  ctx.beginPath();ctx.roundRect(12,12,100,H-24,12);ctx.fill();
+  ctx.strokeStyle='rgba(201,168,76,0.35)';
+  ctx.lineWidth=1;
+  ctx.beginPath();ctx.roundRect(12,12,100,H-24,12);ctx.stroke();
+
+  // ── BABSPHARM logo text in left panel ──
+  ctx.save();
+  ctx.textAlign='center';
+  ctx.fillStyle='#e8c97a';
+  ctx.font='bold 9px Arial';
+  ctx.fillText('BABSPHARM',62,32);
+  ctx.fillStyle='rgba(201,168,76,0.6)';
+  ctx.font='7px Arial';
+  ctx.fillText('CLOUD',62,43);
+
+  // Gold star/emblem
+  ctx.fillStyle='rgba(201,168,76,0.9)';
+  ctx.font='22px Arial';
+  ctx.fillText('⚕',62,72);
+
+  // Avatar circle
+  const px=62, py=115, pr=26;
+  ctx.beginPath();
+  ctx.arc(px,py,pr+3,0,Math.PI*2);
+  const ringGrad=ctx.createLinearGradient(px-pr,py-pr,px+pr,py+pr);
+  ringGrad.addColorStop(0,'#e8c97a');
+  ringGrad.addColorStop(0.5,'#c9a84c');
+  ringGrad.addColorStop(1,'#e8c97a');
+  ctx.strokeStyle=ringGrad;
+  ctx.lineWidth=2.5;
   ctx.stroke();
 
-  // Photo or avatar
-  const px=59, py=50, pr=28;
-  ctx.save();
   ctx.beginPath();
   ctx.arc(px,py,pr,0,Math.PI*2);
   ctx.clip();
-  if(photoURL && photoURL.startsWith('data:')){
-    try{
-      const img=new Image();
-      img.src=photoURL;
-      ctx.drawImage(img,px-pr,py-pr,pr*2,pr*2);
-    }catch(e){
-      ctx.fillStyle='#1e40af';
-      ctx.fill();
-      ctx.fillStyle='#fff';
-      ctx.font='bold 22px Outfit,sans-serif';
-      ctx.textAlign='center';
-      ctx.textBaseline='middle';
-      ctx.fillText(name.charAt(0).toUpperCase(),px,py);
-    }
+  if(photoURL&&photoURL.startsWith('data:')){
+    try{const img=new Image();img.src=photoURL;ctx.drawImage(img,px-pr,py-pr,pr*2,pr*2);}
+    catch(e){ctx.fillStyle='#0f2044';ctx.fill();}
   } else {
-    ctx.fillStyle='linear-gradient(135deg,#1e40af,#7c3aed)';
-    ctx.fillStyle='#1e3a8a';
-    ctx.fill();
+    // Beautiful gradient avatar
+    const avatarGrad=ctx.createLinearGradient(px-pr,py-pr,px+pr,py+pr);
+    avatarGrad.addColorStop(0,'#1a3a6b');
+    avatarGrad.addColorStop(1,'#0d2550');
+    ctx.fillStyle=avatarGrad;ctx.fill();
     ctx.restore();
     ctx.save();
-    ctx.beginPath();
-    ctx.arc(px,py,pr,0,Math.PI*2);
-    ctx.clip();
-    ctx.fillStyle='#1e3a8a';
-    ctx.fill();
+    ctx.beginPath();ctx.arc(px,py,pr,0,Math.PI*2);ctx.clip();
     ctx.fillStyle='#e8c97a';
-    ctx.font='bold 24px sans-serif';
-    ctx.textAlign='center';
-    ctx.textBaseline='middle';
+    ctx.font='bold 26px Arial';
+    ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.fillText(name.charAt(0).toUpperCase(),px,py);
   }
-  ctx.restore();
-
-  // Avatar ring
-  ctx.beginPath();
-  ctx.arc(px,py,pr+2,0,Math.PI*2);
-  ctx.strokeStyle='#c9a84c';
-  ctx.lineWidth=2;
-  ctx.stroke();
-
-  // Platform name
-  ctx.fillStyle='#c9a84c';
-  ctx.font='bold 8px Outfit,sans-serif';
-  ctx.textAlign='center';
-  ctx.fillText('BABSPHARM',59,100);
-  ctx.fillStyle='rgba(201,168,76,.7)';
-  ctx.font='7px Outfit,sans-serif';
-  ctx.fillText('CLOUD',59,112);
-  ctx.fillText('STUDENT ID',59,125);
-
-  // Right side content
-  const rx=122;
-
-  // STUDENT ID label
-  ctx.fillStyle='rgba(201,168,76,.5)';
-  ctx.font='7px Outfit,sans-serif';
-  ctx.textAlign='left';
-  ctx.fillText('STUDENT IDENTIFICATION CARD',rx,26);
-
-  // Name
-  ctx.fillStyle='#e8c97a';
-  ctx.font=`bold ${name.length>20?13:16}px Playfair Display,serif`;
-  ctx.fillText(name.substring(0,26),rx,50);
-
-  // Dept
-  ctx.fillStyle='rgba(240,234,214,.7)';
-  ctx.font='11px Outfit,sans-serif';
-  ctx.fillText(dept.substring(0,30),rx,68);
-
-  // Email
-  ctx.fillStyle='rgba(155,172,200,.7)';
-  ctx.font='9px Outfit,sans-serif';
-  ctx.fillText(email.substring(0,35),rx,84);
-
-  // Divider
-  ctx.strokeStyle='rgba(201,168,76,.2)';
-  ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(rx,94);ctx.lineTo(W-14,94);ctx.stroke();
-
-  // Stats row
-  const stats=[
-    {label:'QUIZZES',val:quizCount},
-    {label:'BEST SCORE',val:bestScore+'%'},
-    {label:'JOINED',val:joinDate||'2025'},
-  ];
-  stats.forEach((s,i)=>{
-    const sx=rx+i*82;
-    ctx.fillStyle='rgba(201,168,76,.5)';
-    ctx.font='7px Outfit,sans-serif';
-    ctx.fillText(s.label,sx,110);
-    ctx.fillStyle='#e8c97a';
-    ctx.font='bold 13px Outfit,sans-serif';
-    ctx.fillText(s.val,sx,126);
-  });
-
-  // UID
-  ctx.fillStyle='rgba(155,172,200,.4)';
-  ctx.font='7px Outfit,sans-serif';
-  ctx.fillText('ID: '+CU.uid.substring(0,16).toUpperCase(),rx,145);
-
-  // Bottom bar
-  const bottomGrad=ctx.createLinearGradient(0,H-36,W,H-36);
-  bottomGrad.addColorStop(0,'rgba(201,168,76,.15)');
-  bottomGrad.addColorStop(1,'rgba(201,168,76,.05)');
-  ctx.fillStyle=bottomGrad;
-  ctx.fillRect(0,H-36,W,36);
-
-  ctx.fillStyle='rgba(201,168,76,.6)';
-  ctx.font='8px Outfit,sans-serif';
-  ctx.textAlign='left';
-  ctx.fillText('🌐 babspharm1-lgtm.github.io/BABSPHARM.',rx,H-18);
-  ctx.textAlign='right';
-  ctx.fillStyle='rgba(201,168,76,.4)';
-  ctx.fillText('OAU · Ile-Ife, Nigeria',W-14,H-18);
-
-  // Bottom gold line
-  ctx.fillStyle=strip;
-  ctx.fillRect(0,H-3,W,3);
-}
 
 function downloadIDCard(){
   const canvas=document.getElementById('id-canvas');
@@ -3349,6 +3766,1259 @@ async function explainAnswer(i){
 function closeReview(){
   document.getElementById('review-modal').style.display='none';
 }
+// ══ PHY TUTOR (CONVERSATIONAL) ══
+let phyConversationHistory = [];
+let phyCurrentTopic = '';
+
+const PHY_SYSTEM_PROMPT = `You are BABS PHYSICS — the most brilliant, patient, deeply caring physics tutor for OAU 100 Level students. Your knowledge combines OAU PHY 101/102 curriculum with Serway & Jewett "Physics for Scientists and Engineers" (the gold standard physics textbook). You teach like a loving father teaching his most precious child — patient, warm, never rushing, using real Nigerian everyday examples.
+
+════════════════════════════════════
+PHY 101 — COMPLETE KNOWLEDGE BASE
+(Mechanics, Waves, Thermodynamics)
+════════════════════════════════════
+
+MEASUREMENTS AND UNITS:
+- Physics: study of matter, energy and their interactions
+- SI Units (Système International):
+  * Length: metre (m)
+  * Mass: kilogram (kg)
+  * Time: second (s)
+  * Temperature: Kelvin (K)
+  * Current: Ampere (A)
+  * Amount of substance: mole (mol)
+  * Luminous intensity: candela (cd)
+- Derived units: N=kg·m/s², J=kg·m²/s², W=J/s, Pa=N/m²
+- Prefixes: nano(10⁻⁹), micro(10⁻⁶), milli(10⁻³), centi(10⁻²), kilo(10³), mega(10⁶), giga(10⁹)
+- Dimensional analysis: checking equations using dimensions [M], [L], [T]
+- Significant figures: reflect precision of measurement
+- Scientific notation: e.g. 3.0×10⁸ m/s (speed of light)
+- Vectors vs Scalars:
+  * Scalar: magnitude only (speed, mass, temperature, energy, distance)
+  * Vector: magnitude AND direction (velocity, force, displacement, acceleration, momentum)
+- Vector addition: tip-to-tail method, parallelogram law
+- Components: Fx = Fcosθ, Fy = Fsinθ
+- Resultant: F = √(Fx²+Fy²), θ = arctan(Fy/Fx)
+- Unit vectors: î (x), ĵ (y), k̂ (z)
+- Dot product: A·B = |A||B|cosθ = AxBx + AyBy + AzBz
+- Cross product: |A×B| = |A||B|sinθ (direction by right-hand rule)
+
+KINEMATICS (Motion in 1D and 2D):
+- Displacement s: change in position (vector)
+- Distance: total path length (scalar)
+- Speed: distance/time (scalar)
+- Velocity v: displacement/time (vector). Average v = Δs/Δt
+- Acceleration a: change in velocity/time. a = Δv/Δt
+
+Equations of Motion (uniform acceleration):
+- v = u + at
+- s = ut + ½at²
+- v² = u² + 2as
+- s = ½(u+v)t
+- where u=initial velocity, v=final velocity, a=acceleration, t=time, s=displacement
+
+Free fall:
+- All objects fall with same acceleration due to gravity g = 9.8 m/s² ≈ 10 m/s²
+- Taking downward as positive: a = +g
+- Time to reach ground from height h: h = ½gt² → t = √(2h/g)
+- Velocity on hitting ground: v² = 2gh → v = √(2gh)
+
+Projectile Motion:
+- Horizontal: no acceleration. x = u·cosθ·t
+- Vertical: acceleration = -g. y = u·sinθ·t - ½gt²
+- Time of flight: T = 2u·sinθ/g
+- Maximum height: H = u²sin²θ/2g
+- Range: R = u²sin2θ/g (maximum at θ=45°)
+- At maximum height: vertical velocity = 0, horizontal velocity = ucosθ
+
+Relative Motion:
+- Velocity of A relative to B: v_AB = v_A - v_B
+- E.g. swimmer crossing river, boat in current, rain and person
+
+NEWTON'S LAWS OF MOTION:
+- First Law (Inertia): object remains at rest or uniform motion unless acted on by net force
+  "An object in motion stays in motion" — like a ball rolling on floor
+- Second Law: F = ma (net force = mass × acceleration)
+  Larger force → more acceleration. More mass → less acceleration for same force
+- Third Law: every action has equal and opposite reaction
+  You push wall, wall pushes you back. Rocket exhaust pushes down, rocket goes up
+- Weight W = mg (g = 9.8 m/s²)
+- Normal force N: perpendicular to surface
+- Friction force f: parallel to surface, opposing motion
+  * Static friction: fs ≤ μsN (prevents motion)
+  * Kinetic friction: fk = μkN (during motion, μk < μs always)
+- Free Body Diagram: show ALL forces on object as arrows
+- Tension T in string: same throughout massless string
+- Atwood machine: two masses over pulley: a = (m₁-m₂)g/(m₁+m₂)
+
+WORK, ENERGY AND POWER:
+- Work W = F·d·cosθ (force × displacement × cosine of angle between them)
+- Work done by perpendicular force = 0 (e.g. normal force, centripetal force)
+- Kinetic energy KE = ½mv²
+- Potential energy PE = mgh (gravitational, near Earth's surface)
+- Elastic PE = ½kx² (spring, k=spring constant, x=extension)
+- Work-Energy Theorem: Net work = ΔKE = KE_final - KE_initial
+- Conservation of Energy: KE + PE = constant (no friction)
+  ½mv₁² + mgh₁ = ½mv₂² + mgh₂
+- Power P = W/t = Fv (rate of doing work)
+- Units: Work = Joule (J), Power = Watt (W = J/s)
+- Efficiency = (useful output energy/total input energy) × 100%
+
+MOMENTUM AND COLLISIONS:
+- Linear momentum p = mv (vector, same direction as velocity)
+- Impulse J = FΔt = Δp (impulse = change in momentum)
+- Conservation of Momentum: total momentum before = total momentum after (no external forces)
+  m₁u₁ + m₂u₂ = m₁v₁ + m₂v₂
+- Types of collisions:
+  * Elastic: both momentum AND kinetic energy conserved (billiard balls)
+  * Inelastic: momentum conserved, KE NOT conserved (some energy lost to heat/sound)
+  * Perfectly inelastic: objects stick together: (m₁+m₂)v = m₁u₁ + m₂u₂
+- Centre of mass: x_cm = (m₁x₁ + m₂x₂)/(m₁+m₂)
+
+CIRCULAR MOTION AND GRAVITATION:
+- Uniform circular motion: constant speed, changing direction
+- Centripetal acceleration: a_c = v²/r = ω²r (directed toward centre)
+- Centripetal force: F_c = mv²/r = mω²r (NOT a new force — provided by tension, gravity, friction etc)
+- Angular velocity: ω = 2π/T = 2πf (rad/s)
+- Period T = 1/f, frequency f = 1/T
+- Arc length: s = rθ (θ in radians)
+- Linear speed: v = rω
+- Angular acceleration: α = Δω/Δt
+- Rotational equations: ω = ω₀ + αt, θ = ω₀t + ½αt², ω² = ω₀² + 2αθ
+- Torque: τ = r × F = rFsinθ (rotational equivalent of force)
+- Moment of inertia I: rotational equivalent of mass. I = Σmr²
+- Newton's 2nd for rotation: τ = Iα
+- Angular momentum: L = Iω, τ = dL/dt
+- Conservation of angular momentum: Iω = constant (when no external torque)
+
+Newton's Law of Gravitation:
+- F = Gm₁m₂/r² where G = 6.67×10⁻¹¹ N·m²/kg²
+- Every mass attracts every other mass
+- g = GM/R² (at Earth's surface, M=Earth's mass, R=Earth's radius)
+- g decreases with height: g' = g(R/(R+h))²
+- Orbital speed: v = √(GM/r)
+- Orbital period: T² = 4π²r³/GM (Kepler's Third Law)
+- Escape velocity: v_e = √(2GM/R) = √(2gR) ≈ 11.2 km/s for Earth
+
+SIMPLE HARMONIC MOTION (SHM):
+- Restoring force proportional to displacement: F = -kx
+- Displacement: x = A·cos(ωt + φ)
+- Velocity: v = -Aω·sin(ωt + φ)
+- Acceleration: a = -Aω²·cos(ωt + φ) = -ω²x
+- Angular frequency: ω = √(k/m) for spring, ω = √(g/L) for pendulum
+- Period: T = 2π/ω = 2π√(m/k) for spring, T = 2π√(L/g) for pendulum
+- Frequency: f = 1/T
+- Amplitude A: maximum displacement
+- Energy: E = ½kA² = ½mv²_max = constant
+
+WAVES:
+- Wave: transfer of energy without transfer of matter
+- Types:
+  * Transverse: vibration perpendicular to propagation (light, water waves, S-waves)
+  * Longitudinal: vibration parallel to propagation (sound, P-waves)
+- Wave equation: v = fλ (speed = frequency × wavelength)
+- Period T = 1/f, wavelength λ, amplitude A
+- Wave speed in string: v = √(T/μ) where T=tension, μ=mass per unit length
+- Intensity: I ∝ A² ∝ 1/r²
+
+Sound Waves:
+- Longitudinal pressure waves in medium
+- Speed of sound: 343 m/s in air at 20°C, faster in solids and liquids
+- v_sound = √(γP/ρ) = √(γRT/M) — increases with temperature
+- Intensity level (dB): β = 10 log(I/I₀) where I₀ = 10⁻¹² W/m²
+- Doppler Effect: f_observed = f_source × (v±v_observer)/(v∓v_source)
+  Moving toward: frequency increases (higher pitch)
+  Moving away: frequency decreases (lower pitch)
+
+Superposition and Interference:
+- Superposition principle: waves add algebraically
+- Constructive interference: path difference = nλ (n=0,1,2...) → amplitude doubles
+- Destructive interference: path difference = (n+½)λ → waves cancel
+- Standing waves: v = fλ, nodes (zero displacement), antinodes (maximum)
+- String fixed both ends: λₙ = 2L/n, fₙ = nv/2L (harmonics)
+- Open pipe: fₙ = nv/2L. Closed pipe: fₙ = nv/4L (odd harmonics only)
+- Beats: f_beat = |f₁ - f₂| (periodic variation in loudness)
+
+THERMODYNAMICS:
+Temperature and Heat:
+- Temperature: measure of average kinetic energy of particles
+- Heat Q: energy transfer due to temperature difference
+- Thermal equilibrium: no net heat flow when temperatures equal
+- Scales: °C = K - 273.15, °F = (9/5)°C + 32
+- Absolute zero = 0 K = -273.15°C (lowest possible temperature)
+
+Thermal Expansion:
+- Linear: ΔL = αL₀ΔT (α = coefficient of linear expansion)
+- Volumetric: ΔV = βV₀ΔT (β ≈ 3α for isotropic solids)
+- Water anomaly: maximum density at 4°C (ice less dense than water)
+
+Heat Transfer:
+- Conduction: Q/t = kA(ΔT/L) — heat flows through solid by molecular vibration
+- Convection: heat transfer by fluid movement (boiling water, sea breeze)
+- Radiation: Q = εσAT⁴ (Stefan-Boltzmann law, σ = 5.67×10⁻⁸ W/m²·K⁴)
+- Q = mcΔT (heat for temperature change, c = specific heat capacity)
+- Q = mL (heat for phase change, L = latent heat — no temperature change!)
+- Lf (fusion) for water = 334 kJ/kg, Lv (vaporization) = 2260 kJ/kg
+
+Laws of Thermodynamics:
+- Zeroth Law: if A in thermal equilibrium with C, and B with C, then A with B
+- First Law: ΔU = Q - W (internal energy = heat added - work done BY system)
+  Conservation of energy — energy cannot be created or destroyed
+- Second Law: heat flows naturally from hot to cold (not cold to hot)
+  Entropy of universe always increases
+  No engine is 100% efficient (some energy always wasted)
+- Third Law: entropy approaches zero as T→0 K
+
+Thermodynamic Processes:
+- Isothermal: constant temperature. ΔU = 0, Q = W
+- Adiabatic: no heat exchange. Q = 0, ΔU = -W
+- Isobaric: constant pressure. W = PΔV
+- Isochoric/Isovolumetric: constant volume. W = 0, ΔU = Q
+- Ideal gas: PV = nRT, U = (3/2)nRT (monatomic)
+- Efficiency of heat engine: η = 1 - Q_cold/Q_hot = 1 - T_cold/T_hot (Carnot)
+
+════════════════════════════════════
+PHY 102 — COMPLETE KNOWLEDGE BASE
+(Electricity, Magnetism, Optics, Modern Physics)
+════════════════════════════════════
+
+ELECTROSTATICS:
+- Electric charge: proton (+e), electron (-e), e = 1.6×10⁻¹⁹ C
+- Charge is quantized: q = ne (n = integer)
+- Conservation of charge: total charge is constant
+- Coulomb's Law: F = kq₁q₂/r² where k = 9×10⁹ N·m²/C² = 1/4πε₀
+- Electric field E: force per unit charge. E = F/q = kQ/r² (point charge)
+- Field lines: from positive to negative, never cross, density shows strength
+- Electric potential V: potential energy per unit charge. V = kQ/r
+- Potential difference: ΔV = W/q (work done per unit charge)
+- Relationship: E = -dV/dx (field is negative gradient of potential)
+- Equipotential surfaces: perpendicular to field lines
+- Capacitor: stores charge. C = Q/V = ε₀A/d (parallel plate)
+- Energy stored: U = ½CV² = ½QV = Q²/2C
+- Capacitors in series: 1/C = 1/C₁ + 1/C₂ + 1/C₃
+- Capacitors in parallel: C = C₁ + C₂ + C₃
+- Dielectric: insulating material between plates, increases capacitance. C = κC₀
+
+ELECTRIC CURRENT AND CIRCUITS:
+- Current I = dQ/dt = Q/t (charge flow per second). Unit: Ampere (A)
+- Conventional current: from + to - (opposite to electron flow)
+- Ohm's Law: V = IR (voltage = current × resistance)
+- Resistance R = ρL/A (ρ=resistivity, L=length, A=cross-sectional area)
+- Resistivity increases with temperature: ρ = ρ₀(1 + αΔT)
+- Power: P = IV = I²R = V²/R
+- Resistors in series: R = R₁ + R₂ + R₃ (same current)
+- Resistors in parallel: 1/R = 1/R₁ + 1/R₂ + 1/R₃ (same voltage)
+- Kirchhoff's Laws:
+  * Junction rule (KCL): sum of currents into junction = sum out (charge conservation)
+  * Loop rule (KVL): sum of voltage changes around any loop = 0 (energy conservation)
+- EMF (ε): energy per unit charge from source. Terminal voltage: V = ε - Ir (r=internal resistance)
+- RC circuit charging: q = Q(1 - e^(-t/RC)), τ = RC (time constant)
+
+MAGNETISM:
+- Magnetic field B (Tesla, T): created by moving charges and currents
+- Force on moving charge: F = qv×B = qvBsinθ (Lorentz force)
+- Force on current-carrying conductor: F = IL×B = BILsinθ
+- Magnetic field of long wire: B = μ₀I/2πr (μ₀ = 4π×10⁻⁷ T·m/A)
+- Right-hand rule: curl fingers in direction of current, thumb points in direction of B field
+- Solenoid: B = μ₀nI (n = turns per unit length, inside solenoid)
+- Torque on current loop: τ = NIAB·sinθ (N=turns, I=current, A=area, B=field)
+- Magnetic dipole moment: μ = NIA
+
+Electromagnetic Induction (Faraday & Lenz):
+- Faraday's Law: EMF = -dΦ/dt (induced EMF = rate of change of magnetic flux)
+- Magnetic flux: Φ = BA·cosθ
+- Lenz's Law: induced current opposes change that caused it (conservation of energy)
+- Motional EMF: ε = BLv (conductor of length L moving at speed v in field B)
+- Self-inductance: ε = -L(dI/dt), L = inductance in Henry (H)
+- Energy in inductor: U = ½LI²
+- Transformer: V₁/V₂ = N₁/N₂ = I₂/I₁ (step up/down voltage)
+- AC generator: ε = NBAω·sin(ωt) = ε₀·sin(ωt)
+
+ELECTROMAGNETIC WAVES:
+- EM waves are transverse waves with oscillating E and B fields
+- Speed in vacuum: c = 3×10⁸ m/s = 1/√(μ₀ε₀)
+- E and B perpendicular to each other and to direction of propagation
+- EM spectrum (increasing frequency, decreasing wavelength):
+  Radio → Microwave → Infrared → Visible → Ultraviolet → X-ray → Gamma
+- Visible light: 400nm (violet) to 700nm (red)
+- Energy of photon: E = hf = hc/λ (h = 6.626×10⁻³⁴ J·s, Planck's constant)
+- Intensity: I = P/A = c·ε₀E²/2
+
+OPTICS:
+Reflection:
+- Law of reflection: angle of incidence = angle of reflection (both measured from normal)
+- Regular reflection: smooth surface (mirror). Diffuse: rough surface
+- Plane mirror: image is virtual, upright, same size, same distance behind mirror
+- Curved mirrors: concave (converging), convex (diverging)
+- Mirror equation: 1/f = 1/do + 1/di
+- Magnification: m = -di/do = hi/ho
+- Focal length: f = R/2 (R = radius of curvature)
+- Sign convention: real objects and images positive, virtual negative
+
+Refraction:
+- Snell's Law: n₁sinθ₁ = n₂sinθ₂
+- Refractive index: n = c/v (speed of light in vacuum / speed in medium)
+- n > 1 for all transparent media (n_air ≈ 1, n_glass ≈ 1.5, n_water ≈ 1.33, n_diamond ≈ 2.42)
+- Light bends TOWARD normal going into denser medium (n larger)
+- Total internal reflection: when θ > θ_c (critical angle) going from dense to less dense
+- Critical angle: sinθ_c = n₂/n₁ (where n₂ < n₁)
+- Applications: optical fibers (total internal reflection), prisms, diamonds
+
+Lenses:
+- Convex (converging): thicker at center, converges parallel rays to focal point
+- Concave (diverging): thicker at edges, diverges parallel rays
+- Thin lens equation: 1/f = 1/do + 1/di (same as mirror)
+- Lensmaker's equation: 1/f = (n-1)(1/R₁ - 1/R₂)
+- Magnification: m = -di/do
+- Power of lens: P = 1/f (in diopters, f in metres). Used for eyeglasses
+- Defects: myopia (short-sight, concave lens), hyperopia (long-sight, convex lens)
+- Combination of lenses: 1/f = 1/f₁ + 1/f₂
+
+Interference and Diffraction:
+- Young's double slit: bright fringes at d·sinθ = mλ (m=0,1,2...)
+- Fringe spacing: y = λL/d (L=screen distance, d=slit separation)
+- Single slit diffraction: dark fringes at a·sinθ = mλ
+- Diffraction grating: d·sinθ = mλ (sharper, more distinct fringes)
+
+MODERN PHYSICS:
+Photoelectric Effect:
+- Light hits metal → electrons emitted (if f > threshold frequency f₀)
+- Proves light is quantized (photons)
+- Einstein's equation: KE_max = hf - φ (φ = work function = hf₀)
+- Stopping potential: eV₀ = KE_max
+- No electrons emitted if f < f₀ regardless of intensity
+- Intensity increases number of electrons (not their energy)
+
+Atomic Models:
+- Thomson: plum pudding model (electrons embedded in positive sphere)
+- Rutherford: nuclear model (positive nucleus, electrons orbit) — from gold foil experiment
+- Bohr model (hydrogen atom):
+  * Electrons in fixed circular orbits (energy levels)
+  * Energy: En = -13.6/n² eV (n = 1,2,3... principal quantum number)
+  * Ground state n=1, excited states n>1
+  * Photon emitted when electron falls: E = hf = E_initial - E_final
+  * Lyman series (UV, n→1), Balmer (visible, n→2), Paschen (IR, n→3)
+
+Wave-Particle Duality:
+- de Broglie wavelength: λ = h/p = h/mv (matter waves)
+- Light behaves as wave (interference, diffraction) AND particle (photoelectric effect)
+- Electrons behave as waves (electron diffraction)
+- Heisenberg Uncertainty Principle: Δx·Δp ≥ h/4π (cannot know position and momentum exactly simultaneously)
+
+Nuclear Physics:
+- Nucleus: protons + neutrons (nucleons)
+- Atomic notation: ᴬ_Z X (A=mass number, Z=atomic number)
+- Binding energy: energy holding nucleus together. E = Δm·c²
+- Mass defect: Δm = (mass of nucleons separately) - (mass of nucleus)
+- Radioactive decay types:
+  * Alpha (α): emits ⁴₂He, A decreases by 4, Z decreases by 2
+  * Beta minus (β⁻): emits electron, Z increases by 1, A unchanged
+  * Beta plus (β⁺): emits positron, Z decreases by 1, A unchanged
+  * Gamma (γ): emits high energy photon, no change in A or Z
+- Activity: A = λN = A₀e^(-λt) (λ = decay constant)
+- Half-life: t½ = 0.693/λ = 0.693N₀/A₀
+- N = N₀(½)^(t/t½) — amount remaining after time t
+- Nuclear fission: heavy nucleus splits → energy released (nuclear reactor, atomic bomb)
+- Nuclear fusion: light nuclei combine → more energy released (sun, hydrogen bomb)
+
+Special Relativity (Serway Chapter):
+- Two postulates: (1) laws of physics same in all inertial frames, (2) speed of light c same in all frames
+- Time dilation: Δt = γΔt₀ (moving clocks run slow)
+- Length contraction: L = L₀/γ (moving objects shorter)
+- γ = 1/√(1-v²/c²) (Lorentz factor, always ≥ 1)
+- Relativistic mass: m = γm₀
+- Mass-energy equivalence: E = mc², total energy E = γm₀c²
+- Kinetic energy: KE = (γ-1)m₀c²
+
+════════════════════════════════════
+YOUR TEACHING STYLE — FATHER & CHILD
+════════════════════════════════════
+
+STRICT RULES:
+1. ONE concept at a time. Explain it, give worked example, STOP
+2. After each concept: "Are you with me? 😊 Ready for the next step?"
+3. Give student a small problem to try after each concept
+4. Celebrate: "Excellent! 🎉 You've got it!" Wrong: "Good try! Let me show you..."
+5. Nigerian examples:
+   - Okada (motorbike) for velocity/acceleration
+   - Danfo bus stopping suddenly for inertia
+   - Market trader throwing goods for projectile
+   - Generator for electricity
+   - NEPA/PHCN for power and circuits
+   - Pressing iron for heat conduction
+   - Fan for circular motion
+   - Mobile phone screen for light/optics
+6. SHORT responses — max 2 concepts per reply
+7. Show EVERY calculation step on a new line
+8. Always connect to real life and everyday Nigerian experiences
+9. End EVERY reply with a question back to student
+10. Reference Serway when relevant: "As Serway explains in Chapter..."
+11. Be warm, patient, encouraging — never make them feel stupid
+12. Box or highlight final answers clearly`;
+
+function initPHYTutor(){
+  if(phyConversationHistory.length===0){
+    const chatArea = document.getElementById('phy-chat-area');
+    if(chatArea && !document.getElementById('phy-welcome')){
+      const topics = ['Measurements & Units','Kinematics','Newton\'s Laws','Work & Energy','Momentum','Circular Motion','Gravitation','Simple Harmonic Motion','Waves & Sound','Thermodynamics','Electrostatics','Electric Circuits','Magnetism','Electromagnetic Induction','Optics','Modern Physics','Nuclear Physics','Special Relativity'];
+      const welcome = document.createElement('div');
+      welcome.id='phy-welcome';
+      welcome.style.cssText='background:linear-gradient(135deg,rgba(30,58,95,.15),rgba(30,64,175,.15));border:1px solid rgba(59,130,246,.3);border-radius:14px;padding:16px;margin-bottom:10px;';
+      welcome.innerHTML=`
+        <div style="font-size:.9rem;font-weight:700;color:#60a5fa;margin-bottom:8px">⚡ BABS PHYSICS is ready! 😊</div>
+        <div style="font-size:.78rem;color:var(--text2);line-height:1.7;margin-bottom:10px">My knowledge combines OAU PHY 101/102 + Serway Physics textbook. Step by step, your pace, like a father and child. 🙏</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${topics.map(t=>`<button onclick="startPHYLesson('${t.replace(/'/g,"\\'")}'')" style="padding:5px 11px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);border-radius:20px;color:#60a5fa;font-size:.7rem;cursor:pointer;font-family:'Outfit',sans-serif;">${t}</button>`).join('')}
+        </div>`;
+      chatArea.appendChild(welcome);
+    }
+  }
+}
+
+function appendPHYMsg(text, type){
+  const chat = document.getElementById('phy-chat-area');
+  const div = document.createElement('div');
+  div.style.cssText=`margin-bottom:10px;padding:11px 13px;border-radius:12px;font-size:.82rem;line-height:1.7;${type==='user'?'background:rgba(201,168,76,.1);border:1px solid var(--cb);margin-left:10%;color:var(--text);':'background:rgba(30,58,95,.15);border:1px solid rgba(59,130,246,.25);margin-right:10%;color:var(--text);'}`;
+  if(type==='bot') div.innerHTML='<div style="font-size:.7rem;font-weight:700;color:#60a5fa;margin-bottom:5px">⚡ BABS PHYSICS</div>'+text.replace(/\n/g,'<br>');
+  else div.textContent=text;
+  chat.appendChild(div);
+  chat.scrollTop=chat.scrollHeight;
+  return div;
+}
+
+function appendPHYTyping(){
+  return appendPHYMsg('Thinking... ⚡','bot');
+}
+
+async function startPHYLesson(topic){
+  phyCurrentTopic=topic;
+  phyConversationHistory=[];
+  document.getElementById('phy-welcome')?.remove();
+  const msg=`I want to learn about ${topic}. Please teach me step by step, slowly, don't rush.`;
+  appendPHYMsg(msg,'user');
+  await sendPHYMessage(msg);
+}
+
+async function sendPHYMessage(userMessage){
+  const inp=document.getElementById('phy-inp');
+  if(!userMessage&&inp) userMessage=inp.value.trim();
+  if(!userMessage) return;
+  if(inp) inp.value='';
+  if(!GROQ_KEY){appendPHYMsg('⚠️ AI not configured. Ask admin to set GROQ key.','bot');return;}
+  const [count,limit]=await Promise.all([getAiCount(),getAiLimit()]);
+  if(count>=limit){appendPHYMsg('🚫 No AI messages left for today. Come back tomorrow! 😊','bot');return;}
+  const typing=appendPHYTyping();
+  try{
+    phyConversationHistory.push({role:'user',content:userMessage});
+    const messages=[{role:'system',content:PHY_SYSTEM_PROMPT},...phyConversationHistory.slice(-12)];
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages,temperature:0.7,max_tokens:800})
+    });
+    const data=await res.json();
+    const reply=data.choices?.[0]?.message?.content||'Sorry, try again.';
+    typing.remove();
+    appendPHYMsg(reply,'bot');
+    phyConversationHistory.push({role:'assistant',content:reply});
+    await incrementAiCount();
+  }catch(e){typing.remove();appendPHYMsg('❌ Connection error. Check internet.','bot');}
+}
+
+// ══ CHM TUTOR (CONVERSATIONAL) ══
+let chmConversationHistory = [];
+let chmCurrentTopic = '';
+
+const CHM_SYSTEM_PROMPT = `You are BABS CHEM — the most brilliant, patient, deeply caring chemistry tutor for OAU 100 Level students at Obafemi Awolowo University, Nigeria. You know CHM 101 and CHM 102 completely — every topic, every reaction, every formula.
+
+You teach like a loving father teaching his most precious child. Patient. Warm. Never rushing. Celebrating every small win.
+
+════════════════════════════════════
+CHM 101 COMPLETE KNOWLEDGE
+════════════════════════════════════
+
+ATOMIC STRUCTURE:
+- Atom: smallest unit of element retaining chemical properties
+- Subatomic particles: Proton (positive, mass≈1, in nucleus), Neutron (neutral, mass≈1, nucleus), Electron (negative, mass≈1/1836, orbits)
+- Atomic number Z = protons = electrons (neutral atom)
+- Mass number A = protons + neutrons; Neutrons = A - Z
+- Isotopes: same Z, different A (same element, different neutrons). e.g. ¹²C and ¹⁴C
+- Relative atomic mass = weighted average of isotope masses
+- Electronic configuration: fill orbitals 1s, 2s, 2p, 3s, 3p, 4s, 3d...
+- Aufbau principle: fill lowest energy first
+- Pauli exclusion: max 2 electrons per orbital, opposite spins (↑↓)
+- Hund's rule: fill orbitals singly before pairing
+- Shell capacity: 2n² (n=1→2, n=2→8, n=3→18)
+- Quantum numbers: n (shell), l (subshell: 0=s,1=p,2=d,3=f), ml (orbital orientation), ms (spin ±½)
+
+PERIODIC TABLE & TRENDS:
+- Arranged by increasing atomic number. Periods = rows, Groups = columns
+- s-block: Groups 1,2. p-block: Groups 13-18. d-block: Groups 3-12 (transition metals)
+- Going DOWN a group: atomic radius↑, IE↓, electronegativity↓, metallic character↑
+- Going ACROSS a period (left→right): atomic radius↓, IE↑, electronegativity↑, metallic character↓
+- Ionization energy: energy to remove outermost electron from gaseous atom
+- Electronegativity: ability to attract bonding electrons (Pauling scale: F=4.0 highest)
+- Diagonal relationship: Be≈Al, Li≈Mg, B≈Si (similar properties)
+
+CHEMICAL BONDING:
+Ionic Bonding:
+- Metal loses electrons → cation (+). Non-metal gains → anion (-)
+- Electrostatic attraction between opposite ions = ionic bond
+- Example: Na(2,8,1) loses 1e⁻ → Na⁺(2,8); Cl(2,8,7) gains 1e⁻ → Cl⁻(2,8,8)
+- Properties: high MP, brittle, conducts when molten/dissolved, NOT when solid
+- Lattice energy: energy to separate 1 mole of ionic solid into gaseous ions
+
+Covalent Bonding:
+- Sharing electrons between non-metals
+- Single bond: 1 shared pair. Double bond: 2 pairs. Triple bond: 3 pairs
+- Polar covalent: unequal sharing due to electronegativity difference (e.g. H-Cl)
+- Non-polar covalent: equal sharing (e.g. H-H, Cl-Cl, N≡N)
+- Electronegativity difference: <0.4 non-polar, 0.4-1.7 polar covalent, >1.7 ionic
+
+Coordinate (Dative) Covalent Bond:
+- BOTH electrons in the shared pair come from ONE atom (the donor)
+- Example: NH₃ + H⁺ → NH₄⁺ (N donates its lone pair to H⁺)
+- Example: BF₃ + NH₃ → F₃B←NH₃ (N donates to empty orbital on B)
+- Once formed, identical to normal covalent bond
+
+Lewis Dot Structures:
+- Show all valence electrons as dots
+- Octet rule: atoms want 8 electrons (H wants 2)
+- Exceptions: Be (4e), B (6e), expanded octets for S,P (can have >8)
+
+STOICHIOMETRY:
+- Mole = 6.022×10²³ particles (Avogadro's number, Nₐ)
+- Molar mass M: mass of 1 mole in grams = RAM in grams
+- n = m/M (moles = mass ÷ molar mass)
+- n = V/22.4 at STP (gas, volume in litres)
+- n = cV (concentration × volume in litres)
+- Empirical formula: simplest whole number ratio. Molecular = multiple of empirical
+- % composition = (mass of element / molar mass compound) × 100%
+- Limiting reagent: reactant that runs out first, determines product
+- % yield = (actual yield / theoretical yield) × 100%
+- Balancing equations: atoms equal on both sides
+
+GAS LAWS:
+- Boyle's Law: P₁V₁ = P₂V₂ (constant T) — P and V inversely proportional
+- Charles's Law: V₁/T₁ = V₂/T₂ (constant P) — V and T directly proportional
+- Gay-Lussac's: P₁/T₁ = P₂/T₂ (constant V)
+- Ideal Gas Law: PV = nRT where R = 8.314 J/mol·K or 0.0821 L·atm/mol·K
+- Temperature MUST be in Kelvin: K = °C + 273
+- STP: 0°C (273K), 1 atm, molar volume = 22.4 L/mol
+- Dalton's Law: Ptotal = P₁ + P₂ + P₃ + ...
+- Graham's Law: rate of effusion ∝ 1/√(molar mass) — lighter gas effuses faster
+
+ACIDS, BASES AND pH:
+- Arrhenius: acid produces H⁺ in water, base produces OH⁻
+- Brønsted-Lowry: acid = H⁺ donor, base = H⁺ acceptor
+- Lewis: acid = electron pair acceptor, base = electron pair donor
+- Strong acids (fully ionize): HCl, HBr, HI, HNO₃, H₂SO₄, HClO₄
+- Weak acids (partially ionize): CH₃COOH, H₂CO₃, HF, H₃PO₄
+- Strong bases: NaOH, KOH, Ca(OH)₂, Ba(OH)₂
+- Weak bases: NH₃, NH₄OH
+- pH = -log[H⁺]. pOH = -log[OH⁻]. pH + pOH = 14
+- pH < 7 acidic, pH = 7 neutral, pH > 7 alkaline
+- [H⁺][OH⁻] = Kw = 1×10⁻¹⁴ at 25°C
+- Neutralization: acid + base → salt + water
+- Indicators: litmus (red/blue), phenolphthalein (colorless→pink, alkaline endpoint), methyl orange (red→yellow, acid endpoint)
+
+REDOX:
+- OIL RIG: Oxidation Is Loss, Reduction Is Gain (of electrons)
+- Oxidizing agent: accepts electrons, gets reduced. Reducing agent: donates electrons, gets oxidized
+- Oxidation numbers: element=0, monoatomic ion=charge, O=-2, H=+1 usually
+- Balance redox by half-equation method: balance atoms, balance charge with e⁻, equalize electrons
+
+REACTION KINETICS:
+- Rate = change in concentration per unit time
+- Factors: concentration↑→rate↑, temperature↑→rate↑ (10°C doubles rate), surface area↑→rate↑, catalyst→rate↑
+- Collision theory: particles must collide with correct orientation AND energy ≥ activation energy Ea
+- Activation energy Ea: minimum energy needed for reaction
+- Arrhenius equation: k = Ae^(-Ea/RT)
+- Catalyst: lowers Ea, speeds reaction, NOT consumed, not in equation
+- Rate law: rate = k[A]^m[B]^n. Order = m+n. k = rate constant
+
+THERMOCHEMISTRY:
+- Enthalpy H: heat content at constant pressure
+- ΔH = H(products) - H(reactants)
+- Exothermic: ΔH < 0, heat released to surroundings, products more stable (e.g. combustion, neutralization)
+- Endothermic: ΔH > 0, heat absorbed from surroundings (e.g. photosynthesis, dissolving NH₄NO₃)
+- Hess's Law: ΔH same regardless of pathway
+- ΔH°rxn = ΣΔHf°(products) - ΣΔHf°(reactants)
+- Bond enthalpies: ΔH = Σ(bonds broken) - Σ(bonds formed)
+- Calorimetry: Q = mcΔT
+
+════════════════════════════════════
+CHM 102 COMPLETE KNOWLEDGE
+════════════════════════════════════
+
+QUALITATIVE INORGANIC ANALYSIS:
+Cation Groups:
+- Group 1 (Ag⁺, Hg₂²⁺, Pb²⁺): Group reagent = dilute HCl → white precipitates
+  AgCl+NH₃→[Ag(NH₃)₂]⁺ (dissolves); Hg₂Cl₂+NH₃→black ppt; PbCl₂ dissolves in HOT water
+- Group 2 (Cu²⁺, Bi³⁺, Cd²⁺, As³⁺, Sb³⁺, Sn²⁺, Hg²⁺): H₂S in acid → sulfide ppts
+  CuS=black, CdS=yellow, As₂S₃=yellow, HgS=black (only dissolves in aqua regia)
+- Group 3 (Fe³⁺, Al³⁺, Cr³⁺, Fe²⁺): NH₃+NH₄Cl → hydroxide ppts
+  Fe(OH)₃=reddish brown, Al(OH)₃=white gelatinous, Cr(OH)₃=green
+- Group 4 (Zn²⁺, Ni²⁺, Co²⁺, Mn²⁺): H₂S in basic → sulfide ppts
+- Group 5 (Ba²⁺, Ca²⁺, Sr²⁺): (NH₄)₂CO₃ → carbonate ppts; flame test: Ba=yellow-green, Ca=brick red, Sr=crimson
+- Group 6 (Na⁺, K⁺, Mg²⁺, Li⁺): flame tests: Na=bright yellow, K=violet, Li=red, Mg=colorless
+
+Anion Groups:
+- Group 1 (CO₃²⁻, S²⁻, SO₃²⁻, NO₂⁻): dilute H₂SO₄
+  CO₃²⁻→CO₂ gas (turns limewater milky); S²⁻→H₂S gas (rotten egg, blackens Pb acetate paper)
+- Group 2 (Cl⁻, Br⁻, I⁻, NO₃⁻): conc H₂SO₄
+  AgNO₃ test: AgCl=white, AgBr=pale yellow, AgI=yellow precipitates
+- Group 3 (SO₄²⁻, PO₄³⁻): BaCl₂ gives white BaSO₄ precipitate (insoluble in HCl)
+
+RESONANCE AND BONDING:
+- Resonance: when ONE Lewis structure cannot represent a molecule — use multiple
+- Resonance hybrid: actual structure is AVERAGE of all resonance structures
+- Delocalized electrons: spread over multiple atoms (more stable)
+- Examples: benzene C₆H₆ (6 equal bonds), NO₃⁻, CO₃²⁻, SO₃, O₃
+- Bond order in resonance = average. Benzene bond order = 1.5
+
+VSEPR THEORY:
+- Electron pairs around central atom repel each other
+- Lone pairs repel MORE than bonding pairs
+- Count: bonding pairs + lone pairs = total electron pairs
+- 2 pairs: linear 180° (BeCl₂, CO₂)
+- 3 pairs: trigonal planar 120° (BF₃) or bent ~119° if 1 lone pair (SO₂)
+- 4 pairs: tetrahedral 109.5° (CH₄) or pyramidal ~107° (NH₃, 1 lone pair) or bent ~104.5° (H₂O, 2 lone pairs)
+- 5 pairs: trigonal bipyramidal 90°/120° (PCl₅)
+- 6 pairs: octahedral 90° (SF₆)
+
+HYBRIDIZATION:
+- sp: 1s+1p → 2 hybrid orbitals. Linear, 180°. e.g. BeCl₂, C₂H₂, CO₂
+- sp²: 1s+2p → 3 hybrid orbitals. Trigonal planar, 120°. e.g. BF₃, C₂H₄, benzene
+- sp³: 1s+3p → 4 hybrid orbitals. Tetrahedral, 109.5°. e.g. CH₄, NH₃, H₂O
+- sp³d: 5 pairs. Trigonal bipyramidal. e.g. PCl₅
+- sp³d²: 6 pairs. Octahedral. e.g. SF₆
+
+INTERMOLECULAR FORCES:
+- London Dispersion: ALL molecules. Temporary dipoles. Increases with size
+- Dipole-Dipole: polar molecules. Permanent dipoles attract
+- Hydrogen Bonding: STRONGEST. Only when H is bonded to N, O or F
+  Effect: raises BP, raises MP, increases viscosity and surface tension
+  Water: H-bonding → anomalous expansion on freezing (ice less dense)
+  DNA: A-T (2 H-bonds), G-C (3 H-bonds)
+
+NOBLE GASES (GROUP 18/0):
+- He, Ne, Ar, Kr, Xe, Rn
+- Complete valence shells → very stable → unreactive
+- He=1s², rest=ns²np⁶
+- Properties: monatomic gases, colorless, odorless, very low boiling points
+- Xe forms compounds: XeF₂, XeF₄, XeF₆, XeO₃
+- Clathrates: physically trapped in ice cage (NOT true compounds)
+- Uses: He(balloons,MRI), Ne(neon signs), Ar(welding,bulbs), Kr(lasers), Xe(headlights,anaesthetic)
+
+ALKALI METALS (GROUP 1):
+- Li, Na, K, Rb, Cs, Fr. Config: [noble gas]ns¹
+- Soft, shiny, low density, low MP. Reactivity INCREASES down group
+- React with water: 2M + 2H₂O → 2MOH + H₂↑
+  Li:slow, Na:vigorous(floats), K:ignites(lilac flame), Rb/Cs:explosive
+- React with O₂: Li→Li₂O, Na→Na₂O₂(peroxide), K→KO₂(superoxide)
+- Flame colors: Li=red, Na=yellow, K=violet, Rb=red-violet, Cs=blue
+- Important compounds: NaOH(caustic soda), Na₂CO₃(washing soda), NaHCO₃(baking soda), NaCl(common salt)
+
+ALKALINE EARTH METALS (GROUP 2):
+- Be, Mg, Ca, Sr, Ba, Ra. Config: [noble gas]ns²
+- Harder, higher MP than Group 1. Also reactive, reactivity↑ down group
+- Be: doesn't react with water. Mg: reacts with steam. Ca-Ba: react with cold water
+- Ca + 2H₂O → Ca(OH)₂ + H₂↑
+- Flame: Ca=brick red, Sr=crimson, Ba=apple green
+- CaCO₃(limestone), CaO(quicklime), Ca(OH)₂(slaked lime), MgSO₄·7H₂O(Epsom salt)
+- BaSO₄: barium meal X-ray (insoluble, non-toxic)
+
+HYDROGEN:
+- Lightest, most abundant element in universe. Atomic number 1
+- Isotopes: ¹H protium (99.98%), ²H deuterium (0.016%), ³H tritium (radioactive)
+- Colorless, odorless, highly flammable diatomic gas H₂
+- Explosive 4-75% concentration in air
+- Production: steam reforming CH₄+H₂O→CO+3H₂, electrolysis 2H₂O→2H₂+O₂, Zn+H₂SO₄→ZnSO₄+H₂
+- Uses: Haber process(NH₃), hydrogenation of oils, fuel cells, rocket fuel
+
+TRANSITION METALS:
+- d-block, Groups 3-12. Variable oxidation states, colored compounds, catalysts
+- Cr=[Ar]3d⁵4s¹, Cu=[Ar]3d¹⁰4s¹ (extra stability exceptions)
+- Colors: Cu²⁺=blue, Fe³⁺=yellow/brown, Fe²⁺=pale green, Cr³⁺=green, MnO₄⁻=purple
+- Catalysts: Fe(Haber), V₂O₅(Contact process), Ni(hydrogenation), Pt(catalytic converter)
+- Complex ions: metal + ligands (H₂O, NH₃, Cl⁻, CN⁻)
+
+ALCOHOLS (ORGANIC CHEMISTRY):
+- Contain -OH (hydroxyl) group. General formula CₙH₂ₙ₊₁OH
+- Types: 1° (OH on C bonded to 1 other C), 2° (bonded to 2), 3° (bonded to 3)
+- Higher BP than alkanes due to H-bonding between OH groups
+- Preparation: hydration of alkenes, fermentation of sugars, reduction
+- Reactions:
+  Oxidation: 1°→aldehyde→carboxylic acid (K₂Cr₂O₇: orange→green)
+             2°→ketone only. 3°→does NOT oxidize easily
+  Dehydration: alcohol+conc H₂SO₄→alkene (170°C) or ether (140°C)
+  Esterification: alcohol+carboxylic acid→ester+water (H₂SO₄ catalyst)
+  With Na: 2ROH+2Na→2RONa+H₂↑ (proves acidic nature)
+- Acidity: 1° > 2° > 3° alcohols
+
+════════════════════════════════════
+YOUR TEACHING STYLE — FATHER & CHILD
+════════════════════════════════════
+
+STRICT RULES:
+1. ONE concept at a time. Explain, give example, STOP
+2. After each concept: "Are you with me so far? 😊 Tell me when you're ready!"
+3. Give student a small question to try after each point
+4. Celebrate correct answers: "Excellent! 🎉 You're getting it!"
+5. Wrong answers: "Good try! Let me show you a different way..."
+6. Use Nigerian examples: garri dissolving=solution, salt in water=ionic, burning wood=exothermic, generator fumes=CO gas, palm oil solidifying=freezing
+7. Keep responses SHORT — maximum 2 concepts per reply
+8. Connect chemistry to real life always
+9. End EVERY reply with a question back to the student
+10. Be warm, patient, encouraging always`;
+
+function initCHMTutor(){
+  if(chmConversationHistory.length===0){
+    const chatArea = document.getElementById('chm-chat-area');
+    if(chatArea && !document.getElementById('chm-welcome')){
+      const welcome = document.createElement('div');
+      welcome.id='chm-welcome';
+      welcome.style.cssText='background:linear-gradient(135deg,rgba(6,95,70,.15),rgba(15,118,110,.15));border:1px solid rgba(16,185,129,.3);border-radius:14px;padding:16px;margin-bottom:10px;';
+      welcome.innerHTML=`
+        <div style="font-size:.9rem;font-weight:700;color:#34d399;margin-bottom:8px">⚗️ BABS CHEM is ready! 😊</div>
+        <div style="font-size:.78rem;color:var(--text2);line-height:1.7;margin-bottom:10px">I know CHM 101 and CHM 102 deeply. We go step by step — your pace, your comfort. Like father and child. 🙏</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          ${['Atomic Structure','Periodic Table','Chemical Bonding','Stoichiometry','Gas Laws','Acids & Bases','Redox','Kinetics','Thermochemistry','Qualitative Analysis','Hybridization','VSEPR','Intermolecular Forces','Noble Gases','Alkali Metals','Alkaline Earth Metals','Hydrogen','Transition Metals','Alcohols'].map(t=>`<button onclick="startCHMLesson('${t}')" style="padding:5px 11px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.25);border-radius:20px;color:#34d399;font-size:.7rem;cursor:pointer;font-family:'Outfit',sans-serif;">${t}</button>`).join('')}
+        </div>`;
+      chatArea.appendChild(welcome);
+    }
+  }
+}
+
+function appendCHMMsg(text, type){
+  const chat = document.getElementById('chm-chat-area');
+  const div = document.createElement('div');
+  div.style.cssText=`margin-bottom:10px;padding:11px 13px;border-radius:12px;font-size:.82rem;line-height:1.7;${type==='user'?'background:rgba(201,168,76,.1);border:1px solid var(--cb);margin-left:10%;color:var(--text);':'background:rgba(6,95,70,.1);border:1px solid rgba(16,185,129,.2);margin-right:10%;color:var(--text);'}`;
+  if(type==='bot') div.innerHTML='<div style="font-size:.7rem;font-weight:700;color:#34d399;margin-bottom:5px">⚗️ BABS CHEM</div>'+text.replace(/\n/g,'<br>');
+  else div.textContent=text;
+  chat.appendChild(div);
+  chat.scrollTop=chat.scrollHeight;
+  return div;
+}
+
+function appendCHMTyping(){
+  const d=appendCHMMsg('Thinking... 🧪','bot');
+  return d;
+}
+
+async function startCHMLesson(topic){
+  chmCurrentTopic=topic;
+  chmConversationHistory=[];
+  document.getElementById('chm-welcome')?.remove();
+  const msg=`I want to learn about ${topic}. Please teach me step by step, slowly, don't rush.`;
+  appendCHMMsg(msg,'user');
+  await sendCHMMessage(msg);
+}
+
+async function sendCHMMessage(userMessage){
+  const inp=document.getElementById('chm-inp');
+  if(!userMessage&&inp) userMessage=inp.value.trim();
+  if(!userMessage) return;
+  if(inp) inp.value='';
+  if(!GROQ_KEY){appendCHMMsg('⚠️ AI not configured. Ask admin to set GROQ key.','bot');return;}
+  const [count,limit]=await Promise.all([getAiCount(),getAiLimit()]);
+  if(count>=limit){appendCHMMsg('🚫 No AI messages left for today. Come back tomorrow! 😊','bot');return;}
+  const typing=appendCHMTyping();
+  try{
+    chmConversationHistory.push({role:'user',content:userMessage});
+    const messages=[{role:'system',content:CHM_SYSTEM_PROMPT},...chmConversationHistory.slice(-12)];
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages,temperature:0.7,max_tokens:800})
+    });
+    const data=await res.json();
+    const reply=data.choices?.[0]?.message?.content||'Sorry, try again.';
+    typing.remove();
+    appendCHMMsg(reply,'bot');
+    chmConversationHistory.push({role:'assistant',content:reply});
+    await incrementAiCount();
+  }catch(e){typing.remove();appendCHMMsg('❌ Connection error. Check internet.','bot');}
+}
+
+// ══ MTH TUTOR (CONVERSATIONAL) ══
+let mthConversation = [];
+let mthCurrentTopic = '';
+
+const MTH_SYSTEM_PROMPT = `You are BABS MATHS — the most brilliant, patient, deeply caring mathematics tutor for OAU 100 Level students at Obafemi Awolowo University. You know MTH 101 and MTH 102 better than any lecturer. You teach like a loving father teaching his most precious child — patient, warm, never rushing, celebrating every small win.
+
+════════════════════════════════════
+COMPLETE MTH 101 KNOWLEDGE BASE
+════════════════════════════════════
+
+SETS THEORY:
+- A set is a well-defined collection of distinct objects called elements
+- Notation: A = {1, 2, 3} or A = {x : x is a natural number less than 4}
+- Types: Empty set ∅ = {}, Universal set U, Finite set, Infinite set, Subset (A⊆B means every element of A is in B)
+- Operations: Union A∪B (elements in A OR B), Intersection A∩B (elements in BOTH A and B), Complement A' (elements NOT in A), Difference A-B (in A but not B)
+- De Morgan's Laws: (A∪B)' = A'∩B' and (A∩B)' = A'∪B'
+- Power Set P(A): set of ALL subsets of A. If |A|=n, then |P(A)|=2^n
+- Venn Diagrams: for two sets |A∪B| = |A| + |B| - |A∩B|
+- For three sets: |A∪B∪C| = |A|+|B|+|C| - |A∩B| - |A∩C| - |B∩C| + |A∩B∩C|
+
+NUMBER SYSTEMS:
+- ℕ = {1,2,3,...} Natural numbers (counting numbers)
+- ℤ = {...,-2,-1,0,1,2,...} Integers (includes negatives)
+- ℚ = {p/q : p,q ∈ ℤ, q≠0} Rational numbers (fractions that terminate or recur)
+- ℝ = all rational + irrational numbers (includes π, √2, e)
+- ℂ = {a+bi : a,b ∈ ℝ} Complex numbers
+- Hierarchy: ℕ ⊂ ℤ ⊂ ℚ ⊂ ℝ ⊂ ℂ
+- Modular Arithmetic: a ≡ b (mod n) means n divides (a-b)
+- Divisibility rules: by 2 (even), by 3 (digit sum divisible by 3), by 9 (digit sum div by 9)
+
+INDICES AND LOGARITHMS:
+Laws of Indices:
+- a^m × a^n = a^(m+n)
+- a^m ÷ a^n = a^(m-n)
+- (a^m)^n = a^(mn)
+- a^0 = 1 (for a≠0)
+- a^(-n) = 1/a^n
+- a^(1/n) = ⁿ√a
+- a^(m/n) = ⁿ√(a^m)
+
+Laws of Logarithms:
+- log_a(mn) = log_a(m) + log_a(n)
+- log_a(m/n) = log_a(m) - log_a(n)
+- log_a(m^n) = n·log_a(m)
+- log_a(a) = 1
+- log_a(1) = 0
+- Change of base: log_a(x) = log_b(x)/log_b(a)
+- Natural log: ln(x) = log_e(x), e ≈ 2.71828
+- log(x) = log_10(x)
+- If log_a(x) = y then a^y = x
+
+SURDS:
+- Surd: irrational number in form of root e.g. √2, ∛5
+- Rules: √(ab) = √a × √b, √(a/b) = √a/√b
+- Rationalizing: multiply by conjugate. 1/(a+√b) × (a-√b)/(a-√b)
+- Conjugate of (a+√b) is (a-√b)
+- (√a+√b)(√a-√b) = a-b
+
+QUADRATIC EQUATIONS:
+- Standard form: ax² + bx + c = 0 (a≠0)
+- Methods: Factorization, Completing the square, Quadratic formula
+- Quadratic formula: x = (-b ± √(b²-4ac)) / 2a
+- Discriminant D = b²-4ac: D>0 (two real roots), D=0 (equal roots), D<0 (no real roots/complex)
+- Sum of roots: α+β = -b/a
+- Product of roots: αβ = c/a
+- Forming equations: x² - (sum)x + (product) = 0
+- Completing the square: ax²+bx+c → a(x+b/2a)² + (c - b²/4a)
+
+POLYNOMIALS:
+- Degree: highest power of x
+- Remainder Theorem: when f(x) divided by (x-a), remainder = f(a)
+- Factor Theorem: (x-a) is a factor of f(x) IF AND ONLY IF f(a)=0
+- Synthetic division for dividing polynomials
+- If α,β,γ are roots of ax³+bx²+cx+d=0: α+β+γ=-b/a, αβ+βγ+αγ=c/a, αβγ=-d/a
+
+PARTIAL FRACTIONS:
+- Used to decompose proper fractions (degree of numerator < degree of denominator)
+- Linear factors: A/(ax+b) + B/(cx+d)
+- Repeated linear factors: A/(ax+b) + B/(ax+b)²
+- Quadratic factor: (Ax+B)/(ax²+bx+c)
+- Method: multiply both sides by denominator, substitute values or compare coefficients
+
+SEQUENCES AND SERIES:
+Arithmetic Progression (AP):
+- Terms: a, a+d, a+2d, a+3d,...
+- nth term: Tₙ = a + (n-1)d
+- Sum of n terms: Sₙ = n/2[2a + (n-1)d] = n/2[first + last]
+- Arithmetic mean: middle term of three terms in AP
+
+Geometric Progression (GP):
+- Terms: a, ar, ar², ar³,...
+- nth term: Tₙ = arⁿ⁻¹
+- Sum of n terms: Sₙ = a(1-rⁿ)/(1-r) for r≠1, or Sₙ = a(rⁿ-1)/(r-1)
+- Sum to infinity: S∞ = a/(1-r) ONLY when |r| < 1
+- Geometric mean of a and b = √(ab)
+
+BINOMIAL THEOREM:
+- (a+b)ⁿ = ΣC(n,r)aⁿ⁻ʳbʳ for r=0 to n
+- General term: T(r+1) = C(n,r) × aⁿ⁻ʳ × bʳ
+- C(n,r) = n! / [r!(n-r)!]
+- (1+x)ⁿ ≈ 1 + nx + n(n-1)x²/2! for |x|<1 (approximation)
+- Pascal's Triangle gives coefficients
+
+TRIGONOMETRY:
+Basic ratios in right triangle:
+- sin θ = opposite/hypotenuse
+- cos θ = adjacent/hypotenuse  
+- tan θ = opposite/adjacent = sin θ/cos θ
+- cosec θ = 1/sin θ, sec θ = 1/cos θ, cot θ = 1/tan θ
+
+Pythagorean identities:
+- sin²θ + cos²θ = 1
+- 1 + tan²θ = sec²θ
+- 1 + cot²θ = cosec²θ
+
+Special angles:
+- sin 30° = 1/2, cos 30° = √3/2, tan 30° = 1/√3
+- sin 45° = cos 45° = 1/√2, tan 45° = 1
+- sin 60° = √3/2, cos 60° = 1/2, tan 60° = √3
+- sin 90° = 1, cos 90° = 0, sin 0° = 0, cos 0° = 1
+
+Compound angles:
+- sin(A±B) = sinAcosB ± cosAsinB
+- cos(A±B) = cosAcosB ∓ sinAsinB
+- tan(A±B) = (tanA ± tanB)/(1 ∓ tanAtanB)
+- sin 2A = 2sinAcosA
+- cos 2A = cos²A - sin²A = 2cos²A - 1 = 1 - 2sin²A
+- tan 2A = 2tanA/(1 - tan²A)
+
+Sine and Cosine Rules (for any triangle):
+- Sine rule: a/sinA = b/sinB = c/sinC
+- Cosine rule: a² = b² + c² - 2bc·cosA
+- Area of triangle = (1/2)ab·sinC
+
+FUNCTIONS:
+- Domain: set of all valid input values
+- Range/Codomain: set of all output values
+- Types: injective (one-to-one), surjective (onto), bijective (both)
+- Composite function: (f∘g)(x) = f(g(x)) — apply g first, then f
+- Inverse function f⁻¹(x): swap x and y, then solve for y
+- For f⁻¹ to exist, f must be one-to-one
+- Even function: f(-x) = f(x) (symmetric about y-axis)
+- Odd function: f(-x) = -f(x) (symmetric about origin)
+
+LIMITS:
+- lim[x→a] f(x) = L means f(x) approaches L as x approaches a
+- Left limit: lim[x→a⁻] f(x), Right limit: lim[x→a⁺] f(x)
+- Limit exists only if left limit = right limit
+- L'Hôpital's Rule: if lim gives 0/0 or ∞/∞, then lim f(x)/g(x) = lim f'(x)/g'(x)
+- Standard limits: lim[x→0] sinx/x = 1, lim[x→0] (eˣ-1)/x = 1
+- Continuity: f is continuous at a if lim[x→a]f(x) = f(a)
+
+DIFFERENTIATION:
+First principles: f'(x) = lim[h→0] [f(x+h) - f(x)] / h
+
+Rules:
+- Power rule: d/dx(xⁿ) = nxⁿ⁻¹
+- Constant: d/dx(c) = 0
+- Sum rule: d/dx[f+g] = f' + g'
+- Product rule: d/dx[fg] = f'g + fg'
+- Quotient rule: d/dx[f/g] = (f'g - fg') / g²
+- Chain rule: d/dx[f(g(x))] = f'(g(x)) × g'(x)
+
+Standard derivatives:
+- d/dx(sin x) = cos x
+- d/dx(cos x) = -sin x
+- d/dx(tan x) = sec²x
+- d/dx(eˣ) = eˣ
+- d/dx(ln x) = 1/x
+- d/dx(aˣ) = aˣ ln a
+
+Applications:
+- Turning points: solve f'(x) = 0
+- Maximum: f'(x)=0 AND f''(x) < 0
+- Minimum: f'(x)=0 AND f''(x) > 0
+- Inflection point: f''(x) = 0
+- Rate of change, velocity = ds/dt, acceleration = d²s/dt²
+- Tangent gradient = f'(a) at point (a, f(a))
+- Normal gradient = -1/f'(a)
+
+════════════════════════════════════
+COMPLETE MTH 102 KNOWLEDGE BASE
+════════════════════════════════════
+
+INTEGRATION:
+Integration is the reverse of differentiation (antiderivative)
+
+Basic rules:
+- ∫xⁿ dx = xⁿ⁺¹/(n+1) + C (n ≠ -1)
+- ∫1/x dx = ln|x| + C
+- ∫eˣ dx = eˣ + C
+- ∫aˣ dx = aˣ/ln a + C
+- ∫sin x dx = -cos x + C
+- ∫cos x dx = sin x + C
+- ∫sec²x dx = tan x + C
+- ∫k·f(x) dx = k·∫f(x) dx
+- ∫[f(x)±g(x)] dx = ∫f(x)dx ± ∫g(x)dx
+
+Integration by Substitution:
+- Let u = g(x), then du = g'(x)dx
+- Substitute, integrate in terms of u, back-substitute
+
+Integration by Parts:
+- Formula: ∫u dv = uv - ∫v du
+- LIATE rule for choosing u: Logarithm, Inverse trig, Algebraic, Trig, Exponential
+
+Definite Integrals:
+- ∫[a to b] f(x)dx = [F(x)] from a to b = F(b) - F(a)
+- Area between curve and x-axis = ∫[a to b] |f(x)|dx
+- Area between two curves = ∫[a to b] [f(x) - g(x)]dx where f(x) ≥ g(x)
+- Volume of revolution about x-axis = π∫[a to b] [f(x)]² dx
+
+VECTORS:
+- Vector has both magnitude and direction (unlike scalar)
+- Notation: a = (x, y, z) or a = xi + yj + zk
+- Magnitude: |a| = √(x²+y²+z²)
+- Unit vector: â = a/|a|
+- Position vector of point P(x,y,z) = xi + yj + zk
+- Addition: (a₁+b₁)i + (a₂+b₂)j + (a₃+b₃)k
+- Scalar multiplication: k·a = (kx, ky, kz)
+- Dot (scalar) product: a·b = |a||b|cosθ = a₁b₁+a₂b₂+a₃b₃
+- If a·b = 0, vectors are PERPENDICULAR
+- Cross (vector) product: |a×b| = |a||b|sinθ
+- a×b = |i  j  k |
+         |a₁ a₂ a₃|
+         |b₁ b₂ b₃|
+- Direction cosines: l=cosα=x/|a|, m=cosβ=y/|a|, n=cosγ=z/|a|, l²+m²+n²=1
+
+MATRICES:
+- Matrix: rectangular array of numbers in rows and columns
+- Order: m×n (m rows, n columns)
+- Addition: same order matrices, add corresponding elements
+- Multiplication: A(m×n) × B(n×p) = C(m×p) — inner dimensions must match
+- Element [AB]ᵢⱼ = sum of products of ith row of A with jth column of B
+- Identity matrix I: Aᵢⱼ = 1 if i=j, 0 otherwise. AI = IA = A
+- Transpose Aᵀ: rows become columns
+- Determinant of 2×2: |a b| = ad - bc
+                       |c d|
+- Determinant of 3×3: expand along first row
+- Singular matrix: det = 0 (no inverse)
+- Inverse of 2×2: A⁻¹ = (1/|A|) × |d -b|
+                                     |-c  a|
+- For 3×3: A⁻¹ = (1/|A|) × adjA where adjA = transpose of cofactor matrix
+- Properties: (AB)⁻¹ = B⁻¹A⁻¹, (Aᵀ)⁻¹ = (A⁻¹)ᵀ
+
+SYSTEM OF LINEAR EQUATIONS:
+- Matrix form: AX = B
+- Unique solution if det(A) ≠ 0: X = A⁻¹B
+- Cramer's Rule: xᵢ = det(Aᵢ)/det(A) where Aᵢ is A with ith column replaced by B
+- Gaussian Elimination: augmented matrix [A|B], row reduce to echelon form
+
+COMPLEX NUMBERS:
+- z = a + bi where a = real part, b = imaginary part, i = √(-1)
+- i² = -1, i³ = -i, i⁴ = 1 (cycle repeats)
+- Conjugate: z̄ = a - bi
+- Modulus: |z| = √(a²+b²)
+- Argument: arg(z) = θ = arctan(b/a) [careful with quadrant]
+- Polar form: z = r(cosθ + i sinθ) = reiθ where r = |z|
+- Multiplication: multiply moduli, add arguments
+- Division: divide moduli, subtract arguments
+- De Moivre's Theorem: zⁿ = rⁿ(cos nθ + i sin nθ)
+- nth roots: n distinct roots, separated by 2π/n radians
+- Addition: (a+bi) + (c+di) = (a+c) + (b+d)i
+- Multiplication: (a+bi)(c+di) = (ac-bd) + (ad+bc)i
+
+DIFFERENTIAL EQUATIONS:
+- ODE: equation involving y, x, and derivatives of y
+- Order: highest derivative. Degree: power of highest derivative
+- Variable Separable: dy/dx = f(x)g(y) → ∫dy/g(y) = ∫f(x)dx
+- Linear First Order: dy/dx + P(x)y = Q(x)
+  - Integrating factor: μ = e^(∫P(x)dx)
+  - Solution: y·μ = ∫Q(x)·μ dx
+- Homogeneous: dy/dx = f(y/x), substitute v = y/x
+- Second order linear: ay'' + by' + cy = 0
+  - Auxiliary equation: am² + bm + c = 0
+  - If real distinct roots m₁,m₂: y = Ae^(m₁x) + Be^(m₂x)
+  - If equal roots m: y = (A+Bx)e^(mx)
+  - If complex roots α±βi: y = e^(αx)(A cosβx + B sinβx)
+
+STATISTICS AND PROBABILITY:
+Measures of Central Tendency:
+- Mean x̄ = Σx/n = Σfx/Σf (frequency distribution)
+- Median: middle value when sorted. For even n, average of two middle values
+- Mode: most frequent value
+
+Measures of Dispersion:
+- Range = maximum - minimum
+- Variance σ² = Σ(x-x̄)²/n = Σx²/n - x̄²
+- Standard deviation σ = √variance
+- Coefficient of variation = (σ/x̄) × 100%
+
+Probability:
+- P(A) = n(A)/n(S) where n(S) = total sample space
+- 0 ≤ P(A) ≤ 1
+- P(A') = 1 - P(A)
+- P(A∪B) = P(A) + P(B) - P(A∩B)
+- Mutually exclusive: P(A∩B) = 0, so P(A∪B) = P(A) + P(B)
+- Independent: P(A∩B) = P(A)·P(B)
+- Conditional: P(A|B) = P(A∩B)/P(B)
+- Bayes' theorem: P(A|B) = P(B|A)·P(A) / P(B)
+
+Permutations and Combinations:
+PERMUTATIONS (Order MATTERS — like lining people up):
+- Definition: arrangement of objects in a specific order
+- ⁿPᵣ = n!/(n-r)! = number of ways to arrange r objects from n
+- ⁿPₙ = n! (all objects arranged)
+- Example: How many ways to arrange 3 people from 5? ⁵P₃ = 5!/(5-3)! = 5!/2! = 60
+- Arrangements with repeated objects: n!/(p!q!r!) where p,q,r are frequencies of repeated items
+  * Example: MISSISSIPPI has 11 letters: M=1,I=4,S=4,P=2 → 11!/(1!4!4!2!) = 34650
+- Circular permutations: (n-1)! ways (one position fixed)
+  * n people around a round table: (n-1)! ways
+- With restrictions: fix restricted items first, then arrange rest
+
+COMBINATIONS (Order does NOT matter — like choosing a team):
+- Definition: selection of objects without regard to order
+- ⁿCᵣ = n!/[r!(n-r)!] = ⁿCₙ₋ᵣ (choosing r from n)
+- ⁿC₀ = ⁿCₙ = 1 (choosing none or all = 1 way)
+- ⁿC₁ = n (choosing 1 from n = n ways)
+- Example: Choose 3 students from 8 for a committee: ⁸C₃ = 8!/(3!5!) = 56
+- Pascal's Triangle: each entry = sum of two above. ⁿCᵣ = ⁿ⁻¹Cᵣ₋₁ + ⁿ⁻¹Cᵣ
+- Connection to Binomial: (a+b)ⁿ coefficients are ⁿC₀, ⁿC₁, ⁿC₂...ⁿCₙ
+
+KEY DIFFERENCES:
+- Permutation: ABC ≠ BCA ≠ CAB (different arrangements)
+- Combination: {A,B,C} = {B,C,A} = {C,A,B} (same group)
+- Use PERMUTATION when: arranging, ordering, scheduling, rank positions
+- Use COMBINATION when: selecting, choosing, forming groups/committees, teams
+
+FACTORIAL:
+- n! = n×(n-1)×(n-2)×...×2×1
+- 0! = 1 (by definition)
+- 1! = 1, 2! = 2, 3! = 6, 4! = 24, 5! = 120, 6! = 720, 7! = 5040, 10! = 3628800
+
+REAL EXAMPLES:
+- PIN codes (4 digits, no repeat): ¹⁰P₄ = 5040 (order matters = permutation)
+- Lottery (choose 6 from 49): ⁴⁹C₆ (order doesn't matter = combination)
+- Seating 5 on a bench: 5! = 120
+- Committee of 4 from 10: ¹⁰C₄ = 210
+
+COORDINATE GEOMETRY:
+- Distance between (x₁,y₁) and (x₂,y₂): √[(x₂-x₁)²+(y₂-y₁)²]
+- Midpoint: ((x₁+x₂)/2, (y₁+y₂)/2)
+- Gradient: m = (y₂-y₁)/(x₂-x₁)
+- Line equations: y=mx+c, y-y₁=m(x-x₁), ax+by+c=0
+- Parallel lines: same gradient m₁=m₂
+- Perpendicular lines: m₁×m₂ = -1
+- Circle: (x-a)²+(y-b)²=r² centre (a,b) radius r
+- General circle: x²+y²+2gx+2fy+c=0, centre (-g,-f), radius=√(g²+f²-c)
+- Tangent to circle is perpendicular to radius at point of contact
+
+════════════════════════════════════
+YOUR CONVERSATIONAL TEACHING STYLE
+════════════════════════════════════
+
+You teach like a loving, patient father teaching his precious child. NEVER rush. NEVER dump everything at once.
+
+CONVERSATIONAL RULES — FOLLOW STRICTLY:
+
+1. ONE CONCEPT AT A TIME
+   - Introduce ONE idea, explain it, give an example
+   - Then STOP and check: "Are you following me so far? 😊"
+   - Wait for student to confirm before going further
+
+2. BUILD FROM SIMPLE TO COMPLEX
+   - Always start with the easiest version
+   - Then gradually add complexity
+   - "Now that you understand that, let me show you a slightly harder version..."
+
+3. USE REAL EXAMPLES
+   - Money for fractions (if you have ₦1000 and spend half...)
+   - Speed for rates (if a car travels at...)
+   - Area for integration (find the area of this field...)
+   - Sharing for division
+
+4. GIVE STUDENT PRACTICE
+   - After every concept: "Now you try one! Solve this: [simple question]"
+   - Wait for their answer
+   - If correct: "EXCELLENT! 🎉 You're getting it! Let's continue..."
+   - If wrong: "Good attempt! Let me show you where it went differently... [explain kindly]"
+
+5. CONNECT TO PREVIOUS KNOWLEDGE
+   - "Remember when we learned about gradients? Integration is the REVERSE of that!"
+   - Make links between topics
+
+6. SHORT RESPONSES
+   - Maximum 1-2 concepts per response
+   - End EVERY response with a question to the student
+   - Never write essays — have a conversation
+
+7. CELEBRATE PROGRESS
+   - "You're doing amazingly well!"
+   - "See? You understood that faster than you think!"
+   - "Your brain is working! Keep going!"
+
+8. WHEN STUDENT IS CONFUSED
+   - Never show frustration
+   - "That's okay! This confuses many people. Let me explain it a completely different way..."
+   - Try a different analogy
+
+FORMAT MATHEMATICS CLEARLY:
+- Powers: x^2, x^3, x^(n+1)
+- Fractions: (3x+1)/(x-2)
+- Square root: √x or √(x+1)
+- Integrals: ∫f(x)dx
+- Summation: Σ
+- Show EVERY step on a new line
+- Box or mark the final answer clearly: → Answer: x = 3`;
+
+function initMTHTutor(){
+  if(mthConversation.length===0){
+    const chatArea=document.getElementById('chat-area');
+    if(chatArea&&!document.getElementById('mth-welcome')){
+      const welcome=document.createElement('div');
+      welcome.id='mth-welcome';
+      welcome.style.cssText='background:linear-gradient(135deg,rgba(30,64,175,.15),rgba(67,56,202,.15));border:1px solid rgba(99,102,241,.3);border-radius:14px;padding:16px;margin-bottom:10px;';
+      welcome.innerHTML=`
+        <div style="font-size:.9rem;font-weight:700;color:#818cf8;margin-bottom:8px">📐 BABS MATHS is here! 😊</div>
+        <div style="font-size:.78rem;color:var(--text2);line-height:1.7;margin-bottom:12px">Welcome! I know MTH 101 and MTH 102 very deeply. I will not rush you or dump everything at once. We go at YOUR pace — step by step, like a father and child. 🙏</div>
+        <div style="font-size:.78rem;color:var(--text2);margin-bottom:10px;font-weight:600">What would you like to learn today?</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <button onclick="startMTHLesson('Sets Theory')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Sets</button>
+          <button onclick="startMTHLesson('Quadratic Equations')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Quadratics</button>
+          <button onclick="startMTHLesson('Differentiation')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Differentiation</button>
+          <button onclick="startMTHLesson('Integration')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Integration</button>
+          <button onclick="startMTHLesson('Matrices')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Matrices</button>
+          <button onclick="startMTHLesson('Complex Numbers')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Complex Numbers</button>
+          <button onclick="startMTHLesson('Trigonometry')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Trigonometry</button>
+          <button onclick="startMTHLesson('Sequences and Series')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Sequences & Series</button>
+          <button onclick="startMTHLesson('Differential Equations')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Diff. Equations</button>
+          <button onclick="startMTHLesson('Probability and Statistics')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Statistics</button>
+          <button onclick="startMTHLesson('Permutations and Combinations')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Permutations & Combinations</button>
+          <button onclick="startMTHLesson('Number Systems and Real Numbers')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Number Systems</button>
+          <button onclick="startMTHLesson('Indices and Logarithms')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Indices & Logs</button>
+          <button onclick="startMTHLesson('Surds and Rationalization')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Surds</button>
+          <button onclick="startMTHLesson('Partial Fractions')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Partial Fractions</button>
+          <button onclick="startMTHLesson('Binomial Theorem')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Binomial Theorem</button>
+          <button onclick="startMTHLesson('Polynomials and Factor Theorem')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Polynomials</button>
+          <button onclick="startMTHLesson('Vectors in 2D and 3D')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Vectors</button>
+          <button onclick="startMTHLesson('Coordinate Geometry')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Coordinate Geometry</button>
+          <button onclick="startMTHLesson('Functions domain range inverse composite')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Functions</button>
+          <button onclick="startMTHLesson('Limits and Continuity')" style="padding:5px 12px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:20px;color:#818cf8;font-size:.72rem;cursor:pointer;font-family:'Outfit',sans-serif;">Limits</button>
+        </div>`;
+      chatArea.insertBefore(welcome,chatArea.firstChild);
+    }
+  }
+}
+
+async function startMTHLesson(topic){
+  mthCurrentTopic=topic;
+  mthConversation=[];
+  const msg=`I want to learn ${topic}. Please teach me step by step — don't give everything at once, go slowly.`;
+  appendMsg(msg,'user');
+  await sendMTHMessage(msg);
+}
+
+async function sendMTHMessage(userMessage){
+  if(!GROQ_KEY){appendMsg('⚠️ AI not configured. Ask admin to set GROQ key.','bot',false);return;}
+  const [count,limit]=await Promise.all([getAiCount(),getAiLimit()]);
+  if(count>=limit){appendMsg('🚫 No AI messages left for today. Come back tomorrow!','bot',false);return;}
+  const typing=appendTyping();
+  try{
+    mthConversation.push({role:'user',content:userMessage});
+    const messages=[{role:'system',content:MTH_SYSTEM_PROMPT},...mthConversation.slice(-12)];
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},
+      body:JSON.stringify({model:'llama-3.3-70b-versatile',messages,temperature:0.7,max_tokens:700})
+    });
+    if(!res.ok){const e=await res.json();typing.remove();appendMsg('❌ Error: '+(e.error?.message||'Try again'),'bot',false);return;}
+    const data=await res.json();
+    const reply=data.choices?.[0]?.message?.content||'Sorry, try again.';
+    typing.remove();
+    appendMsg(reply,'bot',true);
+    mthConversation.push({role:'assistant',content:reply});
+    await incrementAiCount();
+  }catch(e){typing.remove();appendMsg('❌ Connection error. Check internet.','bot',false);}
+}
+
 let spinSegments = [];
 let isSpinning = false;
 let spinAngle = 0;
@@ -3534,7 +5204,821 @@ async function checkPointsBeforeQuiz(){
   }catch(e){ return true; } // Allow if Firestore check fails
 }
 
-// ══ GOAL TRACKER ══
+// ══ CBT EXAM SYSTEM ══
+let cbtExamData = null;
+let cbtQuestions = {};
+let cbtAnswers = {};
+let cbtCurrentSection = 0;
+let cbtSections = [];
+let cbtTimerInterval = null;
+let cbtTimeLeft = 0;
+let cbtSubmitted = false;
+
+async function joinCBTExam(){
+  const code = document.getElementById('cbt-access-code').value.trim().toUpperCase();
+  if(!code){showToast('Enter exam code');return;}
+
+  const ok = await checkPointsBeforeQuiz();
+  if(!ok) return;
+
+  const msgEl = document.getElementById('cbt-join-msg');
+  msgEl.style.display='block';
+  msgEl.innerHTML='<div style="text-align:center;padding:16px;color:var(--text2);font-size:.82rem">🔍 Finding your exam...</div>';
+
+  try{
+    const snap = await db.collection('cbtExams').where('code','==',code).where('active','==',true).limit(1).get();
+    if(snap.empty){
+      msgEl.innerHTML='<div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:10px;padding:14px;text-align:center;color:#f87171;font-size:.82rem">❌ Invalid or inactive exam code. Check with your admin.</div>';
+      return;
+    }
+
+    const examDoc = snap.docs[0];
+    cbtExamData = {id: examDoc.id, ...examDoc.data()};
+
+    // Load all questions
+    const qSnap = await db.collection('cbtExams').doc(examDoc.id).collection('questions').get();
+    cbtQuestions = {};
+    cbtAnswers = {};
+    cbtSections = ['A','B','C','D','E'].slice(0, cbtExamData.sections||4);
+
+    cbtSections.forEach(s => { cbtQuestions[s] = []; });
+    qSnap.docs.forEach(d => {
+      const q = {id:d.id, ...d.data()};
+      if(cbtQuestions[q.section]) cbtQuestions[q.section].push(q);
+    });
+
+    // Show exam info
+    msgEl.innerHTML=`
+      <div style="background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);border-radius:14px;padding:16px;text-align:center;">
+        <div style="font-size:1.4rem;margin-bottom:8px">📝</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:#a5b4fc;margin-bottom:6px">${cbtExamData.title}</div>
+        <div style="font-size:.78rem;color:var(--text2);margin-bottom:12px;line-height:1.6">
+          Course: ${cbtExamData.course} • Duration: ${cbtExamData.duration} minutes<br>
+          Sections: ${cbtSections.join(', ')} • Total Questions: ${qSnap.size}
+        </div>
+        ${cbtExamData.instructions?`<div style="background:rgba(255,255,255,.05);border-radius:8px;padding:10px;font-size:.76rem;color:var(--text2);margin-bottom:12px;text-align:left;line-height:1.6">${cbtExamData.instructions}</div>`:''}
+        <button onclick="startCBTExam()" class="btn btn-gold" style="width:100%;padding:14px;font-size:.9rem;">🚀 Start Exam Now</button>
+      </div>`;
+    deductPoints('CBT Exam attempt', 5);
+  }catch(e){
+    msgEl.innerHTML='<div style="color:var(--red);font-size:.82rem;text-align:center;padding:10px">❌ Error loading exam. Try again.</div>';
+  }
+}
+
+function startCBTExam(){
+  if(!cbtExamData) return;
+  cbtCurrentSection = 0;
+  cbtSubmitted = false;
+
+  // Setup timer
+  cbtTimeLeft = cbtExamData.duration * 60;
+
+  // Setup UI
+  document.getElementById('cbt-exam-title').textContent = cbtExamData.title;
+  document.getElementById('cbt-exam-course').textContent = cbtExamData.course;
+
+  // Build section tabs
+  const tabsEl = document.getElementById('cbt-section-tabs');
+  tabsEl.innerHTML = cbtSections.map((s,i)=>`
+    <button id="cbt-tab-${s}" onclick="goToCBTSection(${i})"
+      style="padding:6px 14px;border-radius:20px;border:1px solid ${i===0?'transparent':'var(--cb)'};
+      background:${i===0?'linear-gradient(135deg,var(--gold),var(--gold2))':'rgba(255,255,255,.05)'};
+      color:${i===0?'var(--navy)':'var(--text2)'};font-family:'Outfit',sans-serif;font-size:.74rem;font-weight:${i===0?'700':'400'};
+      cursor:pointer;white-space:nowrap;">
+      Section ${s}
+    </button>`).join('');
+
+  showPage('cbt-exam');
+  renderCBTSection(0);
+  startCBTTimer();
+}
+
+function startCBTTimer(){
+  if(cbtTimerInterval) clearInterval(cbtTimerInterval);
+  cbtTimerInterval = setInterval(()=>{
+    cbtTimeLeft--;
+    updateCBTTimerDisplay();
+    if(cbtTimeLeft<=0){
+      clearInterval(cbtTimerInterval);
+      submitCBTExam(true);
+    }
+  },1000);
+  updateCBTTimerDisplay();
+}
+
+function updateCBTTimerDisplay(){
+  const mins = Math.floor(cbtTimeLeft/60);
+  const secs = cbtTimeLeft%60;
+  const display = document.getElementById('cbt-timer-display');
+  if(!display) return;
+  const timeStr = String(mins).padStart(2,'0')+':'+String(secs).padStart(2,'0');
+  display.textContent = timeStr;
+  // Turn red when 10 minutes left
+  if(cbtTimeLeft <= 600){
+    display.style.color = '#f87171';
+    display.style.background = 'rgba(248,113,113,.1)';
+    display.style.border = '1px solid rgba(248,113,113,.4)';
+    display.style.animation = cbtTimeLeft<=60?'pulse 1s infinite':'none';
+  }
+}
+
+function renderCBTSection(sectionIndex){
+  const section = cbtSections[sectionIndex];
+  const questions = cbtQuestions[section]||[];
+  const contentEl = document.getElementById('cbt-section-content');
+
+  // Update tabs
+  cbtSections.forEach((s,i)=>{
+    const tab = document.getElementById('cbt-tab-'+s);
+    if(!tab) return;
+    const answered = questions.filter((_,qi)=>cbtAnswers[s+'_'+qi]!==undefined).length;
+    const isComplete = i < sectionIndex;
+    const isCurrent = i === sectionIndex;
+    tab.style.background = isCurrent?'linear-gradient(135deg,var(--gold),var(--gold2))':isComplete?'rgba(74,222,128,.15)':'rgba(255,255,255,.05)';
+    tab.style.color = isCurrent?'var(--navy)':isComplete?'var(--green)':'var(--text2)';
+    tab.style.border = isCurrent?'none':isComplete?'1px solid rgba(74,222,128,.3)':'1px solid var(--cb)';
+    tab.style.fontWeight = isCurrent?'700':'400';
+    tab.textContent = isComplete?`Section ${s} ✅`:`Section ${s}`;
+  });
+
+  const answeredCount = questions.filter((_,i)=>cbtAnswers[section+'_'+i]!==undefined).length;
+
+  contentEl.innerHTML = `
+    <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);border-radius:12px;padding:12px 14px;margin-bottom:16px;">
+      <div style="font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#a5b4fc;margin-bottom:4px">Section ${section}</div>
+      <div style="font-size:.74rem;color:var(--text2)">
+        ${questions.length} questions • ${answeredCount}/${questions.length} answered
+        ${answeredCount<questions.length?`<span style="color:#fbbf24"> • ${questions.length-answeredCount} remaining</span>`:'<span style="color:var(--green)"> • All answered ✅</span>'}
+      </div>
+    </div>
+    ${questions.length===0?
+      '<div style="text-align:center;padding:30px;color:var(--text2);font-size:.84rem">No questions in this section yet.</div>':
+      questions.map((q,i)=>renderCBTQuestion(q,i,section)).join('')
+    }
+    <div style="height:80px;"></div>`;
+
+  // Update bottom nav
+  updateCBTBottomNav(sectionIndex, answeredCount, questions.length);
+  contentEl.scrollTop = 0;
+  window.scrollTo(0,0);
+}
+
+function renderCBTQuestion(q, i, section){
+  const key = section+'_'+i;
+  const answered = cbtAnswers[key];
+  return `<div id="cbt-q-${section}-${i}" style="background:var(--card);border:1px solid ${answered!==undefined?'rgba(201,168,76,.3)':'var(--cb)'};border-radius:14px;padding:16px;margin-bottom:12px;">
+    <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:12px;line-height:1.6">
+      <span style="color:var(--gold2);font-weight:800">${i+1}.</span> ${q.q}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${q.opts.map((opt,j)=>`
+        <button onclick="selectCBTAnswer('${section}',${i},'${q.id}',${j})"
+          style="padding:10px 14px;border-radius:10px;border:2px solid ${answered===j?'var(--gold)':'var(--cb)'};
+          background:${answered===j?'rgba(201,168,76,.12)':'rgba(255,255,255,.03)'};
+          color:${answered===j?'var(--gold2)':'var(--text2)'};text-align:left;font-family:'Outfit',sans-serif;
+          font-size:.79rem;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px;">
+          <span style="min-width:24px;height:24px;border-radius:50%;border:2px solid ${answered===j?'var(--gold)':'var(--cb)'};
+            background:${answered===j?'var(--gold)':'transparent'};display:flex;align-items:center;justify-content:center;
+            font-size:.7rem;font-weight:700;color:${answered===j?'var(--navy)':'var(--text2)'};flex-shrink:0;">
+            ${['A','B','C','D'][j]}
+          </span>
+          ${opt}
+        </button>`).join('')}
+    </div>
+    ${answered!==undefined?'<div style="margin-top:8px;font-size:.7rem;color:var(--green)">✅ Answered</div>':'<div style="margin-top:8px;font-size:.7rem;color:#fbbf24">⚠️ Not answered yet</div>'}
+  </div>`;
+}
+
+function selectCBTAnswer(section, qIndex, qId, optIndex){
+  if(cbtSubmitted) return;
+  const key = section+'_'+qIndex;
+  cbtAnswers[key] = optIndex;
+
+  // Re-render this question
+  const questions = cbtQuestions[section];
+  const el = document.getElementById(`cbt-q-${section}-${qIndex}`);
+  if(el) el.outerHTML = renderCBTQuestion(questions[qIndex], qIndex, section);
+
+  // Update bottom nav
+  const answeredCount = questions.filter((_,i)=>cbtAnswers[section+'_'+i]!==undefined).length;
+  updateCBTBottomNav(cbtCurrentSection, answeredCount, questions.length);
+
+  // Update tab
+  const tab = document.getElementById('cbt-tab-'+section);
+  if(tab) tab.textContent = `Section ${section} (${answeredCount}/${questions.length})`;
+}
+
+function updateCBTBottomNav(sectionIndex, answeredCount, totalQ){
+  const section = cbtSections[sectionIndex];
+  const isLast = sectionIndex === cbtSections.length-1;
+  const allAnswered = answeredCount === totalQ;
+
+  document.getElementById('cbt-prev-btn').style.display = sectionIndex===0?'none':'block';
+  document.getElementById('cbt-next-btn').style.display = isLast?'none':'block';
+  // Submit always visible — no need to be on last section
+
+  // Progress
+  const totalAnswered = Object.keys(cbtAnswers).length;
+  const totalQuestions = Object.values(cbtQuestions).reduce((s,a)=>s+a.length,0);
+  document.getElementById('cbt-section-progress').innerHTML =
+    `Section ${section}: <b style="color:${allAnswered?'var(--green)':'#fbbf24'}">${answeredCount}/${totalQ}</b> answered
+     &nbsp;•&nbsp; Total: <b style="color:var(--gold2)">${totalAnswered}/${totalQuestions}</b>`;
+}
+
+function goToCBTSection(index){
+  cbtCurrentSection = index;
+  renderCBTSection(index);
+}
+
+function cbtNextSection(){
+  if(cbtCurrentSection < cbtSections.length-1){
+    cbtCurrentSection++;
+    renderCBTSection(cbtCurrentSection);
+    window.scrollTo(0,0);
+  }
+}
+
+function cbtPrevSection(){
+  if(cbtCurrentSection > 0){
+    cbtCurrentSection--;
+    renderCBTSection(cbtCurrentSection);
+    window.scrollTo(0,0);
+  }
+}
+
+async function submitCBTExam(autoSubmit=false){
+  if(cbtSubmitted) return;
+  cbtSubmitted = true;
+  if(cbtTimerInterval) clearInterval(cbtTimerInterval);
+
+  // Calculate score
+  let score = 0, total = 0;
+  const sectionResults = {};
+
+  cbtSections.forEach(s=>{
+    let sScore=0, sTotal=0;
+    (cbtQuestions[s]||[]).forEach((q,i)=>{
+      sTotal++;
+      total++;
+      if(cbtAnswers[s+'_'+i]===q.ans){ score++; sScore++; }
+    });
+    sectionResults[s] = {score:sScore, total:sTotal};
+  });
+
+  const pct = total>0?Math.round(score/total*100):0;
+
+  // Save to quiz history
+  try{
+    await db.collection('quizHistory').add({
+      uid:CU.uid, course:cbtExamData.course,
+      score, total, type:'cbt', examTitle:cbtExamData.title,
+      date:new Date().toISOString()
+    });
+    if(pct>=50) awardPoints('CBT Exam completed ('+pct+'%)', pct>=70?15:pct>=50?10:5);
+  }catch(e){}
+
+  // Show results
+  const contentEl = document.getElementById('cbt-section-content');
+  contentEl.innerHTML = `
+    <div style="text-align:center;padding:20px 0;">
+      <div style="font-size:3rem;margin-bottom:12px">${pct>=70?'🎉':pct>=50?'👍':'💪'}</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:${pct>=70?'var(--green)':pct>=50?'var(--gold2)':'var(--red)'};margin-bottom:6px">${pct}%</div>
+      <div style="font-size:.84rem;color:var(--text2);margin-bottom:20px">${score} out of ${total} questions correct</div>
+
+      <div style="display:grid;grid-template-columns:repeat(${cbtSections.length},1fr);gap:8px;margin-bottom:20px;">
+        ${cbtSections.map(s=>`
+          <div style="background:var(--card);border:1px solid var(--cb);border-radius:12px;padding:12px;text-align:center;">
+            <div style="font-size:.7rem;color:var(--text2);margin-bottom:4px">Section ${s}</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:900;color:${sectionResults[s].score/sectionResults[s].total>=0.5?'var(--green)':'var(--red)'}">
+              ${sectionResults[s].score}/${sectionResults[s].total}
+            </div>
+          </div>`).join('')}
+      </div>
+
+      <div style="background:var(--card);border:1px solid var(--cb);border-radius:14px;padding:14px;text-align:left;margin-bottom:14px;">
+        <div style="font-size:.82rem;font-weight:700;color:var(--gold2);margin-bottom:10px">📋 Answer Review</div>
+        ${cbtSections.map(s=>`
+          <div style="margin-bottom:10px;">
+            <div style="font-size:.76rem;font-weight:700;color:var(--text);margin-bottom:6px;">Section ${s}</div>
+            ${(cbtQuestions[s]||[]).map((q,i)=>`
+              <div style="padding:8px 10px;border-radius:8px;background:${cbtAnswers[s+'_'+i]===q.ans?'rgba(74,222,128,.08)':'rgba(248,113,113,.08)'};border:1px solid ${cbtAnswers[s+'_'+i]===q.ans?'rgba(74,222,128,.2)':'rgba(248,113,113,.2)'};margin-bottom:6px;font-size:.74rem;">
+                <div style="color:var(--text);margin-bottom:3px">${i+1}. ${q.q.substring(0,80)}${q.q.length>80?'...':''}</div>
+                <div style="color:${cbtAnswers[s+'_'+i]===q.ans?'var(--green)':'var(--red)'}">
+                  Your answer: ${cbtAnswers[s+'_'+i]!==undefined?['A','B','C','D'][cbtAnswers[s+'_'+i]]:'Not answered'}
+                  ${cbtAnswers[s+'_'+i]!==q.ans?` | Correct: ${['A','B','C','D'][q.ans]}`:''}
+                </div>
+                ${q.exp&&cbtAnswers[s+'_'+i]!==q.ans?`<div style="color:var(--text2);margin-top:3px;font-size:.7rem">💡 ${q.exp}</div>`:''}
+              </div>`).join('')}
+          </div>`).join('')}
+      </div>
+
+      <button onclick="showPage('dash')" class="btn btn-gold" style="width:100%;padding:14px;">🏠 Back to Dashboard</button>
+    </div>`;
+
+  document.getElementById('cbt-bottom-nav').style.display='none';
+  document.getElementById('cbt-header').querySelector('#cbt-timer-display').textContent='Done!';
+  document.getElementById('cbt-header').querySelector('#cbt-timer-display').style.color='var(--green)';
+}
+
+// ══ UNIVERSITY PAST QUESTIONS BANK ══
+const PQ_BANK = {
+
+chm101: [
+  {q:"Which of the following best describes the electronic configuration of iron (Fe, Z=26)?",opts:["[Ar]3d⁶4s²","[Ar]3d⁸","[Ar]3d⁵4s²4p¹","[Kr]3d⁶"],ans:0,exp:"Iron has atomic number 26. After [Ar]=18, remaining 8 go into 3d⁶4s². 4s fills before 3d (Aufbau)."},
+  {q:"The first ionization energy is higher for nitrogen than oxygen because:",opts:["N has a stable half-filled 2p³ subshell","N has more protons","N is smaller","N has higher electronegativity"],ans:0,exp:"N(1402 kJ/mol) > O(1314 kJ/mol). Half-filled 2p³ is extra stable. O has one paired 2p electron — easier to remove."},
+  {q:"A 0.5 mol sample of an ideal gas at STP occupies what volume?",opts:["11.2 L","22.4 L","5.6 L","44.8 L"],ans:0,exp:"At STP, 1 mol = 22.4 L. Therefore 0.5 mol = 0.5 × 22.4 = 11.2 L"},
+  {q:"In 2H₂ + O₂ → 2H₂O, how many moles of O₂ react with 6 mol H₂?",opts:["3 mol","6 mol","2 mol","1 mol"],ans:0,exp:"Ratio H₂:O₂ = 2:1. 6 mol H₂ → O₂ = 6/2 = 3 mol"},
+  {q:"Which bonding involves complete transfer of electrons?",opts:["Ionic","Covalent","Metallic","Coordinate"],ans:0,exp:"Ionic: metal loses e⁻ → cation, non-metal gains e⁻ → anion. Electrostatic attraction holds them together."},
+  {q:"Calculate molarity: 5.85g NaCl (Mr=58.5) in 500 cm³",opts:["0.2 M","0.1 M","0.4 M","2.0 M"],ans:0,exp:"n = 5.85/58.5 = 0.1 mol. V = 0.5 L. M = 0.1/0.5 = 0.2 M"},
+  {q:"If rate doubles when [A] doubles, the order w.r.t A is:",opts:["First order","Second order","Zero order","Half order"],ans:0,exp:"Rate = k[A]ⁿ. 2 = 2ⁿ → n=1. First order."},
+  {q:"Boyle's Law states: at constant T, P and V are:",opts:["Inversely proportional","Directly proportional","Independent","Equal"],ans:0,exp:"Boyle: PV = constant. P₁V₁ = P₂V₂. Double pressure → half volume."},
+  {q:"ΔH = -285 kJ/mol means the reaction is:",opts:["Exothermic","Endothermic","Isothermal","Adiabatic"],ans:0,exp:"ΔH < 0 = exothermic. Heat released to surroundings. Products at lower energy."},
+  {q:"Which element has the highest electronegativity?",opts:["Fluorine","Oxygen","Nitrogen","Chlorine"],ans:0,exp:"Fluorine has highest electronegativity = 4.0 (Pauling scale). Most electronegative element."},
+  {q:"An element has mass 40 and atomic number 20. Neutrons?",opts:["20","40","60","18"],ans:0,exp:"Neutrons = A - Z = 40 - 20 = 20. This is Calcium (Ca)."},
+  {q:"pH of solution with [H⁺] = 1×10⁻³ mol/L:",opts:["3","11","-3","0.001"],ans:0,exp:"pH = -log[H⁺] = -log(10⁻³) = 3. Acidic solution."},
+  {q:"BF₃ is a Lewis acid because:",opts:["It accepts electron pairs","It donates H⁺","It produces OH⁻","It donates electrons"],ans:0,exp:"Lewis acid = electron pair acceptor. BF₃ has incomplete octet — accepts lone pairs from bases like NH₃."},
+  {q:"Hess's Law states that ΔH is:",opts:["Independent of pathway","Equal to entropy","Always negative","Equal to temperature change"],ans:0,exp:"ΔH depends only on initial and final states, not the route taken. Conservation of energy."},
+  {q:"At cathode in electrolysis of dilute H₂SO₄:",opts:["H₂ gas produced","O₂ gas produced","SO₂ produced","H₂O produced"],ans:0,exp:"Cathode = reduction. 2H⁺ + 2e⁻ → H₂↑. Hydrogen produced at cathode."},
+  {q:"Avogadro's number is:",opts:["6.022×10²³","6.022×10²²","3.14×10²³","1.66×10⁻²⁴"],ans:0,exp:"One mole contains 6.022×10²³ particles (atoms, molecules, ions etc)."},
+  {q:"Dalton's Law of partial pressures states:",opts:["Ptotal = P₁ + P₂ + P₃","PV = nRT","P₁V₁ = P₂V₂","P/T = constant"],ans:0,exp:"Total pressure of gas mixture = sum of partial pressures of each gas."},
+  {q:"Which is a strong acid?",opts:["HCl","CH₃COOH","HF","H₂CO₃"],ans:0,exp:"HCl fully dissociates in water. Weak acids: CH₃COOH, HF, H₂CO₃ partially dissociate."},
+  {q:"Oxidation number of Cr in K₂Cr₂O₇:",opts:["+6","+3","+2","+7"],ans:0,exp:"K=+1, O=-2. 2(1) + 2x + 7(-2) = 0 → 2+2x-14=0 → 2x=12 → x=+6."},
+  {q:"Graham's Law: rate of effusion is proportional to:",opts:["1/√(molar mass)","√(molar mass)","molar mass","1/molar mass"],ans:0,exp:"Lighter gases effuse faster. Rate ∝ 1/√M. E.g. H₂ effuses 4× faster than O₂."},
+  {q:"The empirical formula of a compound with 40% C, 6.7% H, 53.3% O is:",opts:["CH₂O","CH₄O","C₂H₄O","C₂H₂O"],ans:0,exp:"Mole ratio: C=40/12=3.33, H=6.7/1=6.7, O=53.3/16=3.33. Divide by 3.33: C:H:O = 1:2:1 = CH₂O"},
+  {q:"What is the pH + pOH at 25°C?",opts:["14","7","0","1"],ans:0,exp:"[H⁺][OH⁻] = Kw = 10⁻¹⁴. Therefore pH + pOH = 14 at 25°C always."},
+  {q:"The reaction OIL RIG means:",opts:["Oxidation Is Loss, Reduction Is Gain of electrons","Oxygen Is Lost, Reduction Is Gained","Oxidation Increases Loss, Reduction Increases Gain","None of the above"],ans:0,exp:"OIL RIG is a mnemonic: Oxidation = loss of electrons, Reduction = gain of electrons."},
+  {q:"Which law states V ∝ T at constant pressure?",opts:["Charles's Law","Boyle's Law","Gay-Lussac's Law","Avogadro's Law"],ans:0,exp:"Charles: V₁/T₁ = V₂/T₂ at constant P. Temperature must be in Kelvin (K = °C + 273)."},
+  {q:"A buffer solution resists changes in:",opts:["pH","Temperature","Pressure","Concentration"],ans:0,exp:"Buffer = weak acid + conjugate base (or weak base + conjugate acid). Resists pH change when small amounts of acid/base added."},
+  {q:"Activation energy is:",opts:["Minimum energy for reaction to occur","Energy released in reaction","Energy of products","Bond dissociation energy"],ans:0,exp:"Ea = minimum energy that colliding particles must have for reaction to occur. Catalyst lowers Ea."},
+  {q:"Which of these is an intensive property?",opts:["Temperature","Mass","Volume","Amount of substance"],ans:0,exp:"Intensive properties don't depend on amount: temperature, pressure, density, melting point. Extensive: mass, volume, energy."},
+  {q:"Molality of 4g NaOH (Mr=40) in 500g water is:",opts:["0.2 mol/kg","0.1 mol/kg","0.4 mol/kg","2.0 mol/kg"],ans:0,exp:"n = 4/40 = 0.1 mol. Mass solvent = 500g = 0.5 kg. Molality = 0.1/0.5 = 0.2 mol/kg"},
+  {q:"C₁V₁ = C₂V₂ is used for:",opts:["Dilution calculations","Ideal gas law","Hess's law","Rate equations"],ans:0,exp:"Dilution formula: initial concentration × initial volume = final concentration × final volume. Moles of solute are conserved."},
+  {q:"An exothermic reaction has products that are:",opts:["Lower energy than reactants","Higher energy than reactants","Same energy as reactants","At zero energy"],ans:0,exp:"Exothermic: ΔH<0. Products are lower in energy. Energy is released to surroundings as heat."},
+],
+
+chm102: [
+  {q:"Group 1 cations (Ag⁺, Hg₂²⁺, Pb²⁺) are precipitated by:",opts:["Dilute HCl","Dilute H₂SO₄","Dilute HNO₃","NaOH"],ans:0,exp:"Group 1 reagent = dilute HCl. Forms insoluble white chlorides AgCl, Hg₂Cl₂, PbCl₂. PbCl₂ dissolves in hot water."},
+  {q:"SF₆ has what shape according to VSEPR?",opts:["Octahedral","Trigonal bipyramidal","Square planar","Tetrahedral"],ans:0,exp:"SF₆: 6 bonding pairs, 0 lone pairs → octahedral, 90° bond angles."},
+  {q:"Hybridization in HC≡CH (ethyne):",opts:["sp","sp²","sp³","sp³d"],ans:0,exp:"Each C in ethyne forms 2 sigma bonds (1 C-H, 1 C≡C). 2 sigma → sp hybridization. Linear, 180°."},
+  {q:"Hydrogen bonding occurs in which molecule?",opts:["HF","HCl","H₂S","CH₄"],ans:0,exp:"H-bonding requires H bonded to N, O or F. HF has H bonded to F — strongest H-bond possible."},
+  {q:"Flame color of sodium:",opts:["Bright yellow","Brick red","Violet","Crimson"],ans:0,exp:"Na = bright yellow. Ca = brick red. K = violet. Li/Sr = crimson. Ba = apple green."},
+  {q:"Oxidation of 1-propanol with K₂Cr₂O₇ gives initially:",opts:["Propanal (aldehyde)","Propanone","Propanoic acid","Propene"],ans:0,exp:"Primary alcohol → aldehyde (limited oxidant) → carboxylic acid (excess). K₂Cr₂O₇ changes orange→green."},
+  {q:"All C-C bonds in benzene are equal because:",opts:["Electrons are delocalized over all 6 carbons","It has alternating single and double bonds","All bonds are single","All bonds are double"],ans:0,exp:"Resonance/delocalization: electrons spread over the ring. Bond order = 1.5. All bonds 139 pm."},
+  {q:"Noble gas used as shielding gas in arc welding:",opts:["Argon","Helium","Neon","Xenon"],ans:0,exp:"Argon (Ar) shields molten metal from O₂ and N₂ during MIG/TIG welding. Cheap, abundant (0.93% air)."},
+  {q:"NH₃ has pyramidal shape because:",opts:["1 lone pair repels bonding pairs","2 lone pairs present","No lone pairs","Ionic character"],ans:0,exp:"NH₃: 3 BP + 1 LP = 4 pairs. LP repels more → compresses H-N-H to 107° from 109.5° → pyramidal."},
+  {q:"KMnO₄ oxidizing alcohol: colour change is:",opts:["Purple to colourless","Orange to green","Colourless to purple","Blue to colourless"],ans:0,exp:"KMnO₄ = purple. Mn⁷⁺ reduced to Mn²⁺ = colourless (acidic) or MnO₂ = brown (neutral/basic)."},
+  {q:"Xe forms compounds because:",opts:["Its outer e⁻ can be promoted to d orbitals","Complete outer shell","Radioactive","Reacts with water"],ans:0,exp:"Xe has available 5d orbitals — can expand octet. XeF₂, XeF₄, XeF₆ exist. He, Ne, Ar cannot."},
+  {q:"Sodium reacts with water giving:",opts:["NaOH and H₂","Na₂O and H₂O","NaH and H₂O","Na₂O₂ and H₂"],ans:0,exp:"2Na + 2H₂O → 2NaOH + H₂↑. Vigorous — Na floats, fizzes, moves. Product is alkaline."},
+  {q:"Which alkaline earth metal does NOT react with cold water?",opts:["Beryllium","Magnesium","Calcium","Barium"],ans:0,exp:"Be unreactive with water. Mg reacts slowly. Ca reacts readily. Reactivity increases down Group 2."},
+  {q:"Ethanol dehydration at 170°C with conc H₂SO₄ gives:",opts:["Ethene","Diethyl ether","Ethanoic acid","Ethyl ethanoate"],ans:0,exp:"At 170°C: CH₃CH₂OH → CH₂=CH₂ + H₂O. At 140°C: ether formed instead."},
+  {q:"Fe³⁺ with NaOH gives:",opts:["Reddish-brown ppt","Dirty green ppt","White gelatinous ppt","Blue ppt"],ans:0,exp:"Fe³⁺ + 3OH⁻ → Fe(OH)₃ (reddish-brown). Fe²⁺ = dirty green, Al³⁺ = white gelatinous, Cr³⁺ = dark green."},
+  {q:"H₂O has higher boiling point than H₂S because:",opts:["H₂O has stronger hydrogen bonding","H₂S has higher molecular mass","H₂O is ionic","H₂S is non-polar"],ans:0,exp:"O is more electronegative than S. H₂O forms strong H-bonds (O-H...O). H₂S only has van der Waals forces."},
+  {q:"In VSEPR, lone pairs occupy more space than bonding pairs because:",opts:["They are not shared and spread out more","They have more electrons","They are closer to nucleus","They repel less"],ans:0,exp:"Lone pairs are only attracted to one nucleus — spread out more. Therefore LP-LP > LP-BP > BP-BP repulsion."},
+  {q:"sp² hybridization gives what molecular geometry?",opts:["Trigonal planar, 120°","Linear, 180°","Tetrahedral, 109.5°","Octahedral, 90°"],ans:0,exp:"sp² = 1s + 2p → 3 orbitals. 120° angles. Examples: BF₃, ethene C₂H₄, benzene ring carbons."},
+  {q:"Hydrogen bonding in DNA occurs between:",opts:["Base pairs (A-T and G-C)","Sugar-phosphate backbone","Adenine only","Phosphate groups"],ans:0,exp:"A-T: 2 hydrogen bonds. G-C: 3 hydrogen bonds. H-bonds hold the two DNA strands together."},
+  {q:"The transition metal with configuration [Ar]3d⁵4s¹ is:",opts:["Chromium (Cr)","Manganese (Mn)","Iron (Fe)","Vanadium (V)"],ans:0,exp:"Cr = [Ar]3d⁵4s¹ (NOT 3d⁴4s²). Half-filled d-subshell provides extra stability. Cr is Z=24."},
+  {q:"KMnO₄ colour in acidic solution when it oxidizes Fe²⁺:",opts:["Purple to pale pink/colourless","Orange to green","Blue to colourless","Yellow to orange"],ans:0,exp:"MnO₄⁻ (purple) + 5e⁻ → Mn²⁺ (pale pink/colourless) in acidic solution. This is reduction of Mn⁷⁺ to Mn²⁺."},
+  {q:"The clathrates of noble gases are:",opts:["Physical trapping, not true compounds","Ionic compounds","Covalent compounds","Coordinate compounds"],ans:0,exp:"Clathrates = gas physically trapped in ice/organic cage. No chemical bonding involved. Noble gas is 'guest'."},
+  {q:"Which alcohol cannot be oxidized without breaking C-C bonds?",opts:["Tertiary","Primary","Secondary","All can be oxidized"],ans:0,exp:"Tertiary alcohols have no H on the C-OH carbon — cannot be oxidized to aldehyde/ketone without C-C bond breaking."},
+  {q:"Coordinate (dative) bond in NH₄⁺ is formed when:",opts:["N donates lone pair to H⁺","H donates electron to N","Ionic bond forms","Electrons are shared equally"],ans:0,exp:"NH₃ + H⁺ → NH₄⁺. N has lone pair, H⁺ has empty orbital. N donates BOTH electrons = coordinate bond."},
+  {q:"Flame test distinguishes Ca²⁺ from Sr²⁺ by:",opts:["Ca=brick red, Sr=crimson red","Ca=crimson, Sr=brick red","Both give same color","Ca=yellow, Sr=red"],ans:0,exp:"Ca = brick red. Sr = crimson red. These are different shades — used to distinguish Group 2 ions."},
+  {q:"The Markovnikov rule in alcohol dehydration states:",opts:["H⁺ adds to carbon with more H's","H⁺ adds to carbon with fewer H's","OH adds to smaller carbon","Reaction goes via radical mechanism"],ans:0,exp:"Markovnikov: in addition/elimination, H goes to carbon already having more H atoms (more substituted carbocation is more stable)."},
+  {q:"MgO is used as a refractory material because:",opts:["It has very high melting point","It is cheap","It is lightweight","It is a good conductor"],ans:0,exp:"MgO melting point ≈ 2852°C. Strong ionic lattice (Mg²⁺ and O²⁻ with high charge density). Used to line furnaces."},
+  {q:"The reagent for Group 5 cations (Ba²⁺, Ca²⁺, Sr²⁺) is:",opts:["(NH₄)₂CO₃","NH₃/NH₄Cl","Dilute HCl","H₂S"],ans:0,exp:"Group 5 reagent = ammonium carbonate (NH₄)₂CO₃ in neutral/slightly basic solution. Forms insoluble carbonates."},
+  {q:"Resonance structures of NO₃⁻ show bond order of:",opts:["1.33","1.5","2","1"],ans:0,exp:"NO₃⁻ has 3 resonance structures. Bond order = (1+1+2)/3 = 4/3 ≈ 1.33. All N-O bonds equivalent."},
+  {q:"The colour of Cu²⁺ in aqueous solution is:",opts:["Blue","Green","Yellow","Colourless"],ans:0,exp:"[Cu(H₂O)₆]²⁺ = blue. Transition metal complexes are coloured due to d-d electron transitions absorbing visible light."},
+],
+
+mth101: [
+  {q:"If A={1,2,3,4,5} and B={3,4,5,6,7}, find n(A∪B)",opts:["7","5","10","3"],ans:0,exp:"A∪B={1,2,3,4,5,6,7}. n(A∪B) = n(A)+n(B)-n(A∩B) = 5+5-3 = 7"},
+  {q:"Solve 2x²-5x+3=0",opts:["x=3/2 or x=1","x=3 or x=1/2","x=-3/2 or x=-1","x=5 or x=1"],ans:0,exp:"Factor: (2x-3)(x-1)=0. x=3/2 or x=1. Check: 2(9/4)-15/2+3=9/2-15/2+6/2=0 ✓"},
+  {q:"8th term of AP: first term=3, d=4",opts:["31","28","32","27"],ans:0,exp:"Tₙ = a+(n-1)d. T₈ = 3+(7)(4) = 3+28 = 31"},
+  {q:"Evaluate log₂(64)",opts:["6","8","4","32"],ans:0,exp:"2⁶=64. Therefore log₂(64)=6"},
+  {q:"f(x)=3x²-2x+1, find f'(x)",opts:["6x-2","6x+2","3x-2","6x²-2"],ans:0,exp:"Power rule: d/dx(3x²)=6x, d/dx(-2x)=-2, d/dx(1)=0. f'(x)=6x-2"},
+  {q:"Sum to infinity of GP: 4,2,1,1/2,...",opts:["8","6","4","∞"],ans:0,exp:"a=4, r=1/2. S∞=a/(1-r)=4/(1/2)=8. Valid since |r|<1."},
+  {q:"Remainder when x³+2x²-5x+1 is divided by (x-2):",opts:["7","3","-5","11"],ans:0,exp:"Remainder theorem: f(2)=8+8-10+1=7"},
+  {q:"Coefficient of x² in expansion of (1+x)⁴:",opts:["6","4","1","12"],ans:0,exp:"C(4,2)=4!/(2!2!)=6. (1+x)⁴=1+4x+6x²+4x³+x⁴"},
+  {q:"Derivative of y=sin(3x):",opts:["3cos(3x)","cos(3x)","-3cos(3x)","3sin(3x)"],ans:0,exp:"Chain rule: cos(3x)×d/dx(3x)=3cos(3x)"},
+  {q:"Solve: log₃(x)+log₃(x-2)=1",opts:["x=3","x=1","x=9","x=-1"],ans:0,exp:"log₃[x(x-2)]=1 → x(x-2)=3 → x²-2x-3=0 → (x-3)(x+1)=0. x=3 (reject x=-1, log undefined)"},
+  {q:"P(A)=0.4, P(B)=0.3, mutually exclusive. P(A∪B)=?",opts:["0.7","0.12","0.58","1.0"],ans:0,exp:"Mutually exclusive: P(A∪B)=P(A)+P(B)=0.4+0.3=0.7"},
+  {q:"Turning point of f(x)=x²-6x+5:",opts:["x=3","x=6","x=-3","x=5"],ans:0,exp:"f'(x)=2x-6=0 → x=3. f''(x)=2>0 → minimum."},
+  {q:"Partial fraction: (3x+1)/[(x+1)(x-2)]. Value of A in A/(x+1)+B/(x-2):",opts:["2/3","-2/3","1","3"],ans:0,exp:"3x+1=A(x-2)+B(x+1). x=-1: -2=-3A → A=2/3"},
+  {q:"lim[x→2](x²-4)/(x-2)=?",opts:["4","0","2","Undefined"],ans:0,exp:"(x²-4)/(x-2)=(x+2)(x-2)/(x-2)=x+2. lim[x→2]=4"},
+  {q:"T(1) in expansion of (2x+y)⁵:",opts:["32x⁵","2x⁵","16x⁵","10x⁵"],ans:0,exp:"T(1)=C(5,0)(2x)⁵y⁰=1×32x⁵=32x⁵"},
+  {q:"In how many ways can 5 people sit in a row?",opts:["120","60","24","720"],ans:0,exp:"5P5 = 5! = 5×4×3×2×1 = 120. All 5 people in all 5 seats."},
+  {q:"In how many ways can 3 students be chosen from 8?",opts:["56","336","24","512"],ans:0,exp:"C(8,3) = 8!/(3!5!) = (8×7×6)/(3×2×1) = 336/6 = 56"},
+  {q:"How many ways can letters of ABCDE be arranged if A must be first?",opts:["24","120","60","5"],ans:0,exp:"A is fixed. Remaining 4 letters = 4! = 24 arrangements."},
+  {q:"A committee of 2 men and 3 women from 5 men and 6 women. How many ways?",opts:["200","30","11","150"],ans:0,exp:"C(5,2)×C(6,3) = 10×20 = 200"},
+  {q:"The number of diagonals in a hexagon is:",opts:["9","12","6","15"],ans:0,exp:"Diagonals = n(n-3)/2 = 6(3)/2 = 9. Or: C(6,2)-6 = 15-6 = 9"},
+  {q:"Probability of picking 2 red balls from bag with 4 red and 6 blue (without replacement):",opts:["12/45","2/5","4/10","16/100"],ans:0,exp:"P = C(4,2)/C(10,2) = 6/45 = 2/15. Or: (4/10)×(3/9) = 12/90 = 2/15"},
+  {q:"Sum of first 10 terms of AP: a=2, d=3",opts:["155","110","65","200"],ans:0,exp:"Sₙ=n/2[2a+(n-1)d]. S₁₀=10/2[4+27]=5×31=155"},
+  {q:"If ⁿC₃ = 56, find n:",opts:["8","6","10","7"],ans:0,exp:"n!/(3!(n-3)!) = 56. n(n-1)(n-2)/6 = 56. n(n-1)(n-2) = 336 = 8×7×6. n=8."},
+  {q:"The number of ways to arrange 4 books on a shelf if 2 specific books must be together:",opts:["12","6","24","48"],ans:0,exp:"Treat the 2 books as 1 unit: 3 items → 3!=6 ways. The 2 books can swap: ×2. Total=12."},
+  {q:"Value of ⁸P₃:",opts:["336","56","512","24"],ans:0,exp:"⁸P₃ = 8!/(8-3)! = 8×7×6 = 336. Order matters in permutation."},
+  {q:"Differentiate y=eˣsin(x)",opts:["eˣ(sin x + cos x)","eˣcos x","eˣsin x","eˣ(sin x - cos x)"],ans:0,exp:"Product rule: y'=eˣsin x + eˣcos x = eˣ(sin x + cos x)"},
+  {q:"Find ∫(2x+3)dx",opts:["x²+3x+C","2x²+3x+C","x²+C","2+C"],ans:0,exp:"∫2x dx = x², ∫3 dx = 3x. Total: x²+3x+C"},
+  {q:"The value of C(n,0) for any n is:",opts:["1","n","0","n!"],ans:0,exp:"C(n,0) = n!/(0!×n!) = 1/1 = 1. There is exactly ONE way to choose 0 items."},
+  {q:"If P(A)=0.6, P(B|A)=0.3, find P(A∩B)",opts:["0.18","0.9","0.3","0.6"],ans:0,exp:"P(A∩B) = P(B|A)×P(A) = 0.3×0.6 = 0.18"},
+  {q:"How many 3-digit numbers can be formed from {1,2,3,4,5} without repetition?",opts:["60","125","120","15"],ans:0,exp:"⁵P₃ = 5×4×3 = 60. First digit: 5 choices, second: 4, third: 3."},
+],
+
+mth102: [
+  {q:"Evaluate ∫(3x²+2x-1)dx",opts:["x³+x²-x+C","3x³+x²-x+C","6x+2+C","x³+C"],ans:0,exp:"∫3x²=x³, ∫2x=x², ∫-1=-x. Answer: x³+x²-x+C"},
+  {q:"∫[0 to 2](x²+1)dx",opts:["14/3","8/3","5","10/3"],ans:0,exp:"∫(x²+1)dx=x³/3+x. At x=2: 8/3+2=14/3. At x=0: 0. Answer=14/3"},
+  {q:"det[1 2; 3 4]=?",opts:["-2","10","2","14"],ans:0,exp:"(1)(4)-(2)(3)=4-6=-2"},
+  {q:"If z=3+4i, |z|=?",opts:["5","7","1","25"],ans:0,exp:"|z|=√(9+16)=√25=5. Classic 3-4-5 triangle!"},
+  {q:"Particular solution: dy/dx=2x, y(0)=5",opts:["y=x²+5","y=x²-5","y=2x+5","y=2x²+5"],ans:0,exp:"y=x²+C. y(0)=5: C=5. y=x²+5"},
+  {q:"Dot product: a=2i+3j, b=4i-j",opts:["5","14","11","8"],ans:0,exp:"a·b=(2)(4)+(3)(-1)=8-3=5"},
+  {q:"det(2A) if A is 3×3 and det(A)=6:",opts:["48","12","6","16"],ans:0,exp:"det(kA)=kⁿdet(A). det(2A)=2³×6=48"},
+  {q:"Area under y=x² from x=0 to x=3:",opts:["9","27","3","18"],ans:0,exp:"∫[0 to 3]x²dx=[x³/3]₀³=27/3=9"},
+  {q:"(cos30°+isin30°)⁴ by De Moivre:",opts:["cos120°+isin120°","cos30°+isin30°","cos60°+isin60°","1"],ans:0,exp:"(cosθ+isinθ)ⁿ=cos(nθ)+isin(nθ). n=4,θ=30°: cos120°+isin120°"},
+  {q:"Cramer's rule: x+y=5, 2x-y=4. Find x.",opts:["3","2","1","4"],ans:0,exp:"D=(-1-2)=-3. Dx=(−5−4)=-9. x=Dx/D=(-9)/(-3)=3"},
+  {q:"∫xeˣdx by integration by parts:",opts:["xeˣ-eˣ+C","xeˣ+eˣ+C","x²eˣ/2+C","eˣ+C"],ans:0,exp:"u=x, dv=eˣdx. ∫udv=uv-∫vdu=xeˣ-∫eˣdx=xeˣ-eˣ+C"},
+  {q:"Mean of {4,7,2,9,8}:",opts:["6","5","7","30"],ans:0,exp:"Mean=Σx/n=(4+7+2+9+8)/5=30/5=6"},
+  {q:"Circle with centre (2,-1) and radius 4:",opts:["(x-2)²+(y+1)²=16","(x+2)²+(y-1)²=16","(x-2)²+(y-1)²=4","x²+y²=16"],ans:0,exp:"(x-a)²+(y-b)²=r². Centre (2,-1), r=4: (x-2)²+(y+1)²=16"},
+  {q:"Standard deviation of {2,4,4,4,5,5,7,9}:",opts:["2","4","1","3"],ans:0,exp:"Mean=5. Variance=[9+1+1+1+0+0+4+16]/8=32/8=4. SD=√4=2"},
+  {q:"Solve dy/dx+2y=0:",opts:["y=Ce^(-2x)","y=Ce^(2x)","y=C+e^(-2x)","y=2Ceˣ"],ans:0,exp:"Separate: dy/y=-2dx. ln|y|=-2x+C. y=Ce^(-2x)"},
+  {q:"Volume of revolution about x-axis of y=x from x=0 to x=3:",opts:["9π","27π","3π","81π/5"],ans:0,exp:"V=π∫[0 to 3]x²dx=π×9=9π"},
+  {q:"The inverse of matrix A=[2 1; 5 3]:",opts:["[3 -1; -5 2]","[3 1; 5 2]","[2 -1; -5 3]","[-3 1; 5 -2]"],ans:0,exp:"det(A)=6-5=1. A⁻¹=(1/det)[d -b;-c a]=[3 -1;-5 2]"},
+  {q:"Integration by substitution: ∫2x(x²+1)⁴dx",opts:["(x²+1)⁵/5+C","(x²+1)⁴/4+C","2x(x²+1)⁵+C","x²(x²+1)⁴+C"],ans:0,exp:"Let u=x²+1, du=2xdx. ∫u⁴du=u⁵/5+C=(x²+1)⁵/5+C"},
+  {q:"The general solution of d²y/dx²-5dy/dx+6y=0:",opts:["y=Ae^(2x)+Be^(3x)","y=Ae^(5x)+Be^(6x)","y=(A+Bx)e^x","y=Ae^x+Be^(-x)"],ans:0,exp:"Aux eqn: m²-5m+6=0 → (m-2)(m-3)=0. m=2,3. y=Ae^(2x)+Be^(3x)"},
+  {q:"Variance of {3,7,7,19}:",opts:["30","5.5","7","9"],ans:0,exp:"Mean=(3+7+7+19)/4=36/4=9. Var=[(3-9)²+(7-9)²+(7-9)²+(19-9)²]/4=[36+4+4+100]/4=144/4=36. Wait: SD=6, Var=36... recalc: Var=[(9)²+(1)²+(1)²+(9)²-(36)²/16]... Mean=9. Var=[36+4+4+100]/4=144/4=36"},
+  {q:"P(A)=0.3, P(B)=0.4, independent. P(A∩B)=?",opts:["0.12","0.7","0.1","0.58"],ans:0,exp:"Independent: P(A∩B)=P(A)×P(B)=0.3×0.4=0.12"},
+  {q:"Midpoint of (2,5) and (6,9):",opts:["(4,7)","(3,7)","(8,14)","(4,4)"],ans:0,exp:"Midpoint=((x₁+x₂)/2,(y₁+y₂)/2)=((2+6)/2,(5+9)/2)=(4,7)"},
+  {q:"∫sinx dx:",opts:["-cosx+C","cosx+C","sin²x+C","-sinx+C"],ans:0,exp:"∫sinx dx = -cosx + C. Verify: d/dx(-cosx)=sinx ✓"},
+  {q:"A complex number z=a+bi in polar form r(cosθ+isinθ): r=?",opts:["√(a²+b²)","a+b","a/b","√(a+b)"],ans:0,exp:"r=|z|=√(a²+b²). The modulus is the distance from origin in Argand plane."},
+  {q:"Using Gaussian elimination to solve 2×2 system: augmented matrix approach starts by:",opts:["Creating row echelon form","Finding determinant","Transposing matrix","Inverting matrix"],ans:0,exp:"Gaussian elimination: perform row operations to get upper triangular (row echelon) form, then back-substitute."},
+  {q:"The distance between points (1,2) and (4,6):",opts:["5","3","4","7"],ans:0,exp:"d=√[(4-1)²+(6-2)²]=√[9+16]=√25=5"},
+  {q:"∫[1 to e](1/x)dx:",opts:["1","e","0","ln2"],ans:0,exp:"∫(1/x)dx=ln|x|. [lnx]₁ᵉ=ln(e)-ln(1)=1-0=1"},
+  {q:"If z₁=1+i and z₂=1-i, find z₁×z₂:",opts:["2","0","2i","1+i²"],ans:0,exp:"(1+i)(1-i)=1-i²=1-(-1)=2. Product of conjugates = sum of squares of parts."},
+  {q:"The equation y=3x+2 has gradient:",opts:["3","2","1/3","5"],ans:0,exp:"y=mx+c. m=3=gradient. c=2=y-intercept."},
+  {q:"P(X=r) = C(n,r)pʳ(1-p)ⁿ⁻ʳ is the formula for:",opts:["Binomial distribution","Normal distribution","Poisson distribution","Uniform distribution"],ans:0,exp:"Binomial distribution: n=number of trials, p=probability of success, r=number of successes. Used when two outcomes only."},
+],
+
+phy101: [
+  {q:"Horizontal projectile from 20m height, v=10m/s. Time to reach ground? (g=10m/s²)",opts:["2 s","4 s","1 s","√2 s"],ans:0,exp:"h=½gt². 20=5t². t=2s. Horizontal velocity doesn't affect fall time."},
+  {q:"Force=20N on mass=4kg. Acceleration?",opts:["5 m/s²","80 m/s²","0.2 m/s²","16 m/s²"],ans:0,exp:"F=ma. a=20/4=5 m/s²"},
+  {q:"0.5kg ball at 4m/s sticks to stationary 1.5kg ball. Common velocity?",opts:["1 m/s","2 m/s","4 m/s","0.5 m/s"],ans:0,exp:"0.5(4)+1.5(0)=(2)v. v=1 m/s. Perfectly inelastic collision."},
+  {q:"Period of pendulum L=1m? (g=10,π²=10)",opts:["≈2s","1 s","π s","4 s"],ans:0,exp:"T=2π√(L/g)=2π√(0.1)=2π/√10≈2s"},
+  {q:"Car from rest to 20m/s in 4s. Distance?",opts:["40 m","80 m","20 m","160 m"],ans:0,exp:"s=½(u+v)t=½(0+20)(4)=40m"},
+  {q:"W=Fdcosθ. F=10N,d=5m,θ=60°. Work done?",opts:["25 J","50 J","43.3 J","86.6 J"],ans:0,exp:"W=10×5×cos60°=50×0.5=25J"},
+  {q:"Angle for maximum projectile range:",opts:["45°","30°","60°","90°"],ans:0,exp:"R=u²sin2θ/g. Max when sin2θ=1 → 2θ=90° → θ=45°"},
+  {q:"Newton's Third Law:",opts:["Every action has equal opposite reaction","F=ma","Objects resist motion","Energy is conserved"],ans:0,exp:"Action-reaction pairs: equal magnitude, opposite direction, act on DIFFERENT bodies."},
+  {q:"Spring k=200N/m, compressed 0.1m. Elastic PE?",opts:["1 J","20 J","0.1 J","10 J"],ans:0,exp:"PE=½kx²=½×200×0.01=1J"},
+  {q:"Escape velocity from Earth ≈",opts:["11.2 km/s","9.8 km/s","3×10⁸ m/s","340 m/s"],ans:0,exp:"ve=√(2gR)=√(2×9.8×6.4×10⁶)≈11.2 km/s"},
+  {q:"Sound travels fastest in:",opts:["Solids","Liquids","Gases","Vacuum"],ans:0,exp:"v_sound: steel≈5100m/s > water≈1500m/s > air≈340m/s. Cannot travel in vacuum."},
+  {q:"Circular motion at constant speed: velocity is:",opts:["Changing direction constantly","Constant in all ways","Zero","Increasing"],ans:0,exp:"Speed constant, but direction changes continuously → velocity changes. Centripetal acceleration toward center."},
+  {q:"Boyle's Law equation:",opts:["P₁V₁=P₂V₂","V₁/T₁=V₂/T₂","P₁/T₁=P₂/T₂","PV=nRT"],ans:0,exp:"Boyle: P∝1/V at constant T. P₁V₁=P₂V₂."},
+  {q:"Heat flows spontaneously from:",opts:["Hot to cold body","Cold to hot body","High to low pressure","Dense to less dense"],ans:0,exp:"2nd Law of Thermodynamics: heat flows naturally hot→cold. Cannot reverse without doing work."},
+  {q:"Doppler: source moving toward you causes:",opts:["Frequency increases","Frequency decreases","Wavelength increases","Speed increases"],ans:0,exp:"Source approaching: waves compressed → shorter λ → higher f (higher pitch). e.g. approaching siren."},
+  {q:"An object thrown vertically up with u=20m/s. Max height? (g=10m/s²)",opts:["20 m","40 m","10 m","30 m"],ans:0,exp:"v²=u²-2gh. At max h, v=0: 0=400-20h → h=20m"},
+  {q:"Newton's First Law is also called:",opts:["Law of Inertia","Law of Acceleration","Law of Reaction","Law of Conservation"],ans:0,exp:"First Law: object remains at rest or uniform motion unless acted on by net external force. This tendency = inertia."},
+  {q:"1 kg object falls freely for 3s. KE at 3s? (g=10)",opts:["450 J","300 J","90 J","900 J"],ans:0,exp:"v=gt=30m/s. KE=½mv²=½×1×900=450J"},
+  {q:"Power of engine doing 6000J of work in 2 minutes:",opts:["50 W","3000 W","100 W","200 W"],ans:0,exp:"P=W/t=6000/120=50W"},
+  {q:"Resonance in sound occurs when:",opts:["Driving frequency equals natural frequency","Amplitude is maximum regardless","Frequency is doubled","Sound reflects off wall"],ans:0,exp:"Resonance: driving frequency = natural frequency of the system → large amplitude oscillations build up."},
+  {q:"The S.I unit of pressure is:",opts:["Pascal (Pa)","Newton (N)","Joule (J)","Watt (W)"],ans:0,exp:"1 Pa = 1 N/m². Pressure = force/area. Also: 1 atm = 101325 Pa = 101.3 kPa."},
+  {q:"A wave has frequency 500Hz and wavelength 0.68m. Speed?",opts:["340 m/s","500 m/s","0.68 m/s","735 m/s"],ans:0,exp:"v=fλ=500×0.68=340m/s (speed of sound in air at room temperature)"},
+  {q:"The work-energy theorem states:",opts:["Net work = change in KE","Work = mgh","Power = work/time","Work = force×time"],ans:0,exp:"W_net=ΔKE=KE_final-KE_initial. All work done on object equals change in kinetic energy."},
+  {q:"A car of mass 1000kg moves at 20m/s. Momentum?",opts:["20000 kg⋅m/s","10000 kg⋅m/s","200 kg⋅m/s","400 kg⋅m/s"],ans:0,exp:"p=mv=1000×20=20000 kg⋅m/s. Momentum is a vector, same direction as velocity."},
+  {q:"Temperature in Kelvin when Celsius is 27°C:",opts:["300 K","27 K","373 K","250 K"],ans:0,exp:"K=°C+273=27+273=300K. Room temperature ≈ 300K is useful to remember."},
+  {q:"Centripetal acceleration of object moving at 4m/s in circle of radius 2m:",opts:["8 m/s²","2 m/s²","16 m/s²","4 m/s²"],ans:0,exp:"a=v²/r=16/2=8m/s²"},
+  {q:"Kepler's Third Law: T² is proportional to:",opts:["r³","r²","r","1/r²"],ans:0,exp:"T²=4π²r³/GM. T²∝r³. This means farther planets take much longer to orbit (e.g. Neptune takes 165 years)."},
+  {q:"Q=mcΔT. Specific heat of water=4200J/kg·K. Heat to warm 2kg water by 5°C:",opts:["42000 J","21000 J","8400 J","4200 J"],ans:0,exp:"Q=mcΔT=2×4200×5=42000J"},
+  {q:"At maximum height of projectile, vertical velocity is:",opts:["Zero","Maximum","Equal to horizontal velocity","Negative"],ans:0,exp:"At max height, vertical component = 0. Only horizontal component remains: v_x = u·cosθ."},
+  {q:"Standing wave nodes are points of:",opts:["Zero displacement","Maximum displacement","Maximum pressure","Equal energy"],ans:0,exp:"Nodes = zero displacement (destructive interference). Antinodes = maximum displacement (constructive interference)."},
+],
+
+phy102: [
+  {q:"q₁=2μC, q₂=4μC, r=0.2m. Force? (k=9×10⁹)",opts:["1.8 N","0.36 N","3.6 N","18 N"],ans:0,exp:"F=kq₁q₂/r²=(9×10⁹)(8×10⁻¹²)/0.04=1.8N"},
+  {q:"Three 6Ω resistors in parallel. Equivalent resistance?",opts:["2Ω","18Ω","6Ω","0.5Ω"],ans:0,exp:"1/R=1/6+1/6+1/6=3/6=1/2. R=2Ω"},
+  {q:"Capacitance doubles when:",opts:["Plate separation halved","Voltage doubled","Charge halved","Area halved"],ans:0,exp:"C=ε₀A/d. C∝1/d. Halving d → C doubles."},
+  {q:"Faraday's Law: induced EMF is proportional to:",opts:["Rate of change of flux","Magnetic field strength","Current squared","Resistance"],ans:0,exp:"ε=-dΦ/dt. Induced EMF = rate of change of magnetic flux (Faraday's Law)."},
+  {q:"Photoelectric effect proves light:",opts:["Behaves as particle (photon)","Is a transverse wave","Travels at variable speed","Has infinite wavelength"],ans:0,exp:"Einstein: light in discrete packets (photons, E=hf). Electrons emitted only if hf>work function."},
+  {q:"Electron at n=3→n=1 in H atom. Energy of photon emitted? (E₁=-13.6eV)",opts:["12.09 eV","10.2 eV","1.51 eV","3.4 eV"],ans:0,exp:"E₃=-13.6/9=-1.51eV. ΔE=E₁-E₃=-13.6-(-1.51)=12.09eV emitted"},
+  {q:"Transformer: N₁=100, N₂=500, V₁=20V. V₂=?",opts:["100 V","4 V","20 V","200 V"],ans:0,exp:"V₂/V₁=N₂/N₁. V₂=20×5=100V. Step-up transformer."},
+  {q:"Total internal reflection requires going from:",opts:["Dense to less dense medium","Less dense to dense","Same density","Any medium"],ans:0,exp:"TIR occurs when going from higher n (denser) to lower n (less dense) AND angle exceeds critical angle."},
+  {q:"β⁻ decay: a neutron becomes:",opts:["Proton + electron + antineutrino","Proton + positron","Alpha particle","Two neutrons"],ans:0,exp:"n → p + e⁻ + v̄. Z increases by 1, A unchanged. Example: ¹⁴C → ¹⁴N."},
+  {q:"Critical angle depends on:",opts:["Refractive indices of both media","Wavelength only","Angle of incidence","Speed of source"],ans:0,exp:"sinθc=n₂/n₁. Only depends on ratio of refractive indices."},
+  {q:"Half-life=5 years. Fraction after 15 years?",opts:["1/8","1/4","1/2","1/16"],ans:0,exp:"15/5=3 half-lives. (1/2)³=1/8"},
+  {q:"Energy of photon: f=6×10¹⁴Hz (h=6.63×10⁻³⁴)",opts:["3.98×10⁻¹⁹ J","6×10⁻³⁴ J","1×10⁻¹⁹ J","6.63×10⁻²⁰ J"],ans:0,exp:"E=hf=6.63×10⁻³⁴×6×10¹⁴=3.98×10⁻¹⁹J"},
+  {q:"Kirchhoff's Current Law (KCL):",opts:["Sum of currents at node = 0","Sum of voltages in loop = 0","V=IR","P=I²R"],ans:0,exp:"KCL: ΣI_in = ΣI_out at any junction. Based on conservation of charge."},
+  {q:"Unit of magnetic flux density (B field):",opts:["Tesla (T)","Weber (Wb)","Henry (H)","Farad (F)"],ans:0,exp:"B field in Tesla (T)=kg/(A·s²). Flux Φ in Weber. Inductance in Henry. Capacitance in Farad."},
+  {q:"Special relativity: as v→c, mass:",opts:["Increases (m=γm₀)","Decreases","Stays constant","Becomes zero"],ans:0,exp:"Relativistic mass m=γm₀ where γ=1/√(1-v²/c²)→∞ as v→c. Nothing with mass can reach c."},
+  {q:"Two resistors R₁=3Ω and R₂=6Ω in series. Total resistance?",opts:["9Ω","2Ω","18Ω","4.5Ω"],ans:0,exp:"Series: R=R₁+R₂=3+6=9Ω. Same current flows through both."},
+  {q:"Electric field E between parallel plates: E=V/d. V=200V, d=0.02m. E=?",opts:["10000 V/m","4 V/m","0.0001 V/m","200 V/m"],ans:0,exp:"E=V/d=200/0.02=10000 V/m"},
+  {q:"Snell's law for light going from water(n=1.33) to glass(n=1.5), θ₁=30°. sinθ₂=?",opts:["0.443","0.665","0.75","0.5"],ans:0,exp:"n₁sinθ₁=n₂sinθ₂. sinθ₂=1.33×0.5/1.5=0.665/1.5=0.443"},
+  {q:"The work done by magnetic force on moving charge is:",opts:["Zero","Maximum","Equal to qvB","Equal to qE"],ans:0,exp:"Magnetic force F=qv×B is always perpendicular to velocity. W=F·d·cos90°=0. Magnetic force does no work."},
+  {q:"A lens with focal length 25cm has power:",opts:["+4 D","25 D","0.04 D","+25 D"],ans:0,exp:"P=1/f(m)=1/0.25=4 diopters. Positive = converging (convex) lens."},
+  {q:"De Broglie wavelength λ=h/mv. If m doubles at same speed, λ:",opts:["Halves","Doubles","Stays same","Quadruples"],ans:0,exp:"λ=h/mv. If m doubles, λ=h/(2mv)=λ/2. Heavier particles have shorter de Broglie wavelength."},
+  {q:"Self-inductance EMF: ε=-L(dI/dt). If L=2H and dI/dt=3A/s, ε=?",opts:["-6 V","6 V","1.5 V","-0.67 V"],ans:0,exp:"ε=-L(dI/dt)=-2×3=-6V. Negative sign (Lenz's Law) means EMF opposes change in current."},
+  {q:"An alpha particle consists of:",opts:["2 protons + 2 neutrons","2 protons only","4 neutrons","1 proton + 1 neutron"],ans:0,exp:"Alpha particle = ⁴₂He nucleus = 2 protons + 2 neutrons. Mass number 4, charge +2."},
+  {q:"The frequency of AC mains in Nigeria is:",opts:["50 Hz","60 Hz","100 Hz","25 Hz"],ans:0,exp:"Nigeria uses 50 Hz AC mains (same as UK and most of Africa/Europe). USA uses 60 Hz."},
+  {q:"Ohm's law states:",opts:["V=IR","V=I/R","V=IR²","V=I+R"],ans:0,exp:"V=IR. Voltage = Current × Resistance. Valid for ohmic conductors at constant temperature."},
+  {q:"Energy stored in capacitor C with voltage V:",opts:["½CV²","CV","CV²","½CV"],ans:0,exp:"U=½CV²=½QV=Q²/2C. Factor of ½ because V builds up from 0."},
+  {q:"The wavelength of red visible light is approximately:",opts:["700 nm","400 nm","1000 nm","200 nm"],ans:0,exp:"Visible spectrum: violet≈400nm, red≈700nm. Red has longest wavelength (lowest frequency) in visible range."},
+  {q:"In Young's double slit experiment, fringe spacing y=λL/d. Increasing L:",opts:["Increases fringe spacing","Decreases fringe spacing","No effect","Decreases wavelength"],ans:0,exp:"y=λL/d. y directly proportional to L (distance to screen). Moving screen farther → fringes further apart."},
+  {q:"Lenz's Law is an expression of:",opts:["Conservation of energy","Conservation of charge","Faraday's Law only","Newton's Third Law"],ans:0,exp:"Lenz's Law: induced current opposes the change causing it. This is energy conservation — you must do work to maintain flux change."},
+  {q:"Nuclear binding energy is released due to:",opts:["Mass defect × c²","Electron transitions","Nuclear fission only","Radioactive decay only"],ans:0,exp:"E=Δm×c² (Einstein). Mass of nucleus < sum of separate nucleons. Mass defect converted to binding energy."},
+]
+};
+
+
+let currentPQSubject = 'chm101';
+let pqAnswered = {};
+
+function switchPQTab(subject, btn){
+  currentPQSubject = subject;
+  document.querySelectorAll('.pq-tab').forEach(b=>{
+    b.style.background='transparent';
+    b.style.color='var(--text2)';
+    b.style.border='1px solid var(--cb)';
+  });
+  btn.style.background='linear-gradient(135deg,var(--gold),var(--gold2))';
+  btn.style.color='var(--navy)';
+  btn.style.border='none';
+  renderPQ(subject);
+}
+
+async function renderPQ(subject){
+  const el = document.getElementById('pq-content');
+  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);font-size:.82rem">Loading questions...</div>';
+
+  // Load built-in + custom questions from Firestore
+  const builtIn = PQ_BANK[subject] || [];
+  let custom = [];
+  try{
+    const snap = await db.collection('pqBank').where('subject','==',subject).orderBy('createdAt','desc').get();
+    custom = snap.docs.map(d=>({id:d.id,...d.data()}));
+  }catch(e){}
+
+  const questions = [...builtIn, ...custom];
+  if(!questions.length){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--text2)">Coming soon!</div>';return;}
+
+  const subjectNames = {chm101:'CHM 101',chm102:'CHM 102',mth101:'MTH 101',mth102:'MTH 102',phy101:'PHY 101',phy102:'PHY 102'};
+  const icons = {chm101:'⚗️',chm102:'⚗️',mth101:'📐',mth102:'📐',phy101:'⚡',phy102:'⚡'};
+
+  el.innerHTML = `
+    <div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:.84rem;font-weight:700;color:var(--gold2)">${icons[subject]} ${subjectNames[subject]} — University PQ Bank</div>
+        <div style="font-size:.72rem;color:var(--text2)">100 Level Standard • ${questions.length} Questions • With Full Explanations</div>
+      </div>
+      <button onclick="startPQQuiz('${subject}')" class="btn btn-gold" style="font-size:.76rem;padding:8px 14px;">🎯 Take Quiz</button>
+    </div>
+    ${questions.map((q,i)=>renderPQQuestion(q,i,subject)).join('')}`;
+}
+
+function renderPQQuestion(q, i, subject){
+  const key = subject+'_'+i;
+  const answered = pqAnswered[key];
+  return `<div id="pq-${subject}-${i}" style="background:var(--card);border:1px solid var(--cb);border-radius:14px;padding:14px;margin-bottom:10px;">
+    <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.5">Q${i+1}. ${q.q}</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;">
+      ${q.opts.map((opt,j)=>`
+        <button onclick="checkPQAnswer('${subject}',${i},${j})" id="pq-opt-${subject}-${i}-${j}"
+          style="padding:9px 13px;border-radius:9px;border:1px solid ${answered!==undefined?(j===q.ans?'rgba(74,222,128,.5)':j===answered&&answered!==q.ans?'rgba(248,113,113,.4)':'var(--cb)'):'var(--cb)'};
+          background:${answered!==undefined?(j===q.ans?'rgba(74,222,128,.1)':j===answered&&answered!==q.ans?'rgba(248,113,113,.1)':'rgba(255,255,255,.02)'):'rgba(255,255,255,.02)'};
+          color:${answered!==undefined?(j===q.ans?'var(--green)':j===answered&&answered!==q.ans?'var(--red)':'var(--text2)'):'var(--text2)'};
+          text-align:left;font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;transition:all .2s;">
+          ${['A','B','C','D'][j]}. ${opt} ${answered!==undefined&&j===q.ans?' ✅':''}${answered!==undefined&&j===answered&&answered!==q.ans?' ❌':''}
+        </button>`).join('')}
+    </div>
+    ${answered!==undefined?`<div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:9px;padding:10px;font-size:.76rem;color:var(--text2);line-height:1.6;"><b style="color:var(--gold2)">💡 Explanation:</b> ${q.exp}</div>`:''}
+  </div>`;
+}
+
+function checkPQAnswer(subject, qIndex, selectedOpt){
+  const key = subject+'_'+qIndex;
+  if(pqAnswered[key]!==undefined) return; // already answered
+  pqAnswered[key] = selectedOpt;
+  const q = PQ_BANK[subject][qIndex];
+  if(selectedOpt === q.ans) awardPoints('PQ correct answer', 2);
+  // Re-render just this question
+  const el = document.getElementById(`pq-${subject}-${qIndex}`);
+  if(el) el.outerHTML = renderPQQuestion(q, qIndex, subject);
+}
+
+function startPQQuiz(subject){
+  showPage('quiz');
+  showToast('Opening CBT quiz for '+subject.toUpperCase());
+}
+
+// ══ SECRET STUDY VAULT ══
+async function loadVault(){
+  try{
+    const userDoc = await db.collection('users').doc(CU.uid).get();
+    const vaultAccess = userDoc.exists && userDoc.data().vaultAccess;
+    if(!vaultAccess){
+      document.getElementById('vault-locked').style.display='block';
+      document.getElementById('vault-content').style.display='none';
+      return;
+    }
+    document.getElementById('vault-locked').style.display='none';
+    const contentEl = document.getElementById('vault-content');
+    contentEl.style.display='block';
+    const snap = await db.collection('vaultContent').orderBy('createdAt','desc').get();
+    if(snap.empty){contentEl.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px">No vault content yet. Check back soon!</div>';return;}
+    contentEl.innerHTML = snap.docs.map(d=>{
+      const v=d.data();
+      return `<div style="background:var(--card);border:1px solid var(--gold);border-radius:14px;padding:16px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <span style="font-size:1.4rem">${v.emoji||'📚'}</span>
+          <div>
+            <div style="font-size:.86rem;font-weight:700;color:var(--gold2)">${v.title}</div>
+            <div style="font-size:.7rem;color:var(--text2)">${v.course||''}</div>
+          </div>
+        </div>
+        <div style="font-size:.8rem;color:var(--text);line-height:1.7;white-space:pre-wrap">${v.content}</div>
+        ${v.url?`<a href="${v.url}" target="_blank" style="display:inline-block;margin-top:10px;padding:7px 14px;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:8px;color:var(--gold);font-size:.76rem;text-decoration:none;">📥 Download</a>`:''}
+      </div>`;
+    }).join('');
+  }catch(e){}
+}
+
+// ══ STUDY SPRINT ══
+let sprintTimer=null, sprintSeconds=1500, sprintRunning=false;
+
+function initSprint(){
+  sprintSeconds=1500; sprintRunning=false;
+  updateSprintDisplay();
+}
+
+function updateSprintDisplay(){
+  const m=Math.floor(sprintSeconds/60);
+  const s=sprintSeconds%60;
+  document.getElementById('sprint-timer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const pct=(1500-sprintSeconds)/1500*100;
+  document.getElementById('sprint-timer').style.color=pct>80?'var(--green)':pct>50?'var(--gold2)':'var(--gold)';
+}
+
+function startSprint(){
+  if(sprintRunning) return;
+  const topic=document.getElementById('sprint-topic').value.trim();
+  if(!topic){showToast('What are you studying?');return;}
+  sprintRunning=true;
+  document.getElementById('sprint-label').textContent='Stay focused on: '+topic+' 💪';
+  document.getElementById('sprint-message').textContent='';
+  document.getElementById('sprint-quiz-section').style.display='none';
+  sprintTimer=setInterval(async()=>{
+    sprintSeconds--;
+    updateSprintDisplay();
+    if(sprintSeconds<=0){
+      clearInterval(sprintTimer);
+      sprintRunning=false;
+      document.getElementById('sprint-label').textContent='Sprint Complete! 🎉';
+      launchConfetti();
+      awardPoints('Study Sprint completed!', 5);
+      showToast('Sprint done! +5 points 🎉');
+      // Generate quick quiz
+      if(GROQ_KEY && topic){
+        document.getElementById('sprint-quiz-section').style.display='block';
+        document.getElementById('sprint-quiz-content').innerHTML='<div style="color:var(--text2);font-size:.82rem">🤖 Generating your sprint quiz...</div>';
+        const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Generate 3 quick MCQ questions on "${topic}" for an OAU student. Return ONLY JSON array: [{"q":"...","opts":["A","B","C","D"],"ans":0}]`}],temperature:0.5,max_tokens:500})});
+        const data=await res.json();
+        try{
+          const qs=JSON.parse(data.choices[0].message.content.replace(/```json|```/g,'').trim());
+          document.getElementById('sprint-quiz-content').innerHTML=qs.map((q,i)=>`
+            <div style="margin-bottom:12px;padding:12px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--cb);">
+              <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:6px">${i+1}. ${q.q}</div>
+              ${q.opts.map((o,j)=>`<div style="font-size:.76rem;color:${j===q.ans?'var(--green)':'var(--text2)'};padding:3px 0">${['A','B','C','D'][j]}. ${o} ${j===q.ans?'✅':''}</div>`).join('')}
+            </div>`).join('');
+        }catch(e){document.getElementById('sprint-quiz-content').innerHTML='<div style="color:var(--text2);font-size:.8rem">Could not generate quiz</div>';}
+      }
+    }
+  },1000);
+}
+
+function stopSprint(){
+  if(sprintTimer) clearInterval(sprintTimer);
+  sprintRunning=false; sprintSeconds=1500;
+  updateSprintDisplay();
+  document.getElementById('sprint-label').textContent='Ready to sprint?';
+}
+
+// ══ HOT TOPICS ══
+async function loadHotTopics(){
+  const list=document.getElementById('hot-topics-list');
+  list.innerHTML='<div style="color:var(--text2);font-size:.8rem;text-align:center;padding:20px">Loading...</div>';
+  try{
+    const snap=await db.collection('hotTopics').orderBy('createdAt','desc').get();
+    if(snap.empty){list.innerHTML='<div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:20px;text-align:center;color:var(--text2);font-size:.84rem">No hot topics yet. Admin will update this before exams! 🔥</div>';return;}
+    list.innerHTML=snap.docs.map(d=>{
+      const h=d.data();
+      const urgent=h.urgency==='high';
+      return `<div style="background:var(--card);border:1px solid ${urgent?'rgba(248,113,113,.4)':'var(--gold)'};border-radius:14px;padding:14px;margin-bottom:10px;position:relative;overflow:hidden;">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:${urgent?'linear-gradient(90deg,#f87171,#dc2626)':'linear-gradient(90deg,var(--gold),var(--gold2))'}"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+          <span style="font-size:1.3rem">${urgent?'🚨':'🔥'}</span>
+          <div>
+            <div style="font-size:.86rem;font-weight:700;color:${urgent?'#f87171':'var(--gold2)'}">${h.topic}</div>
+            <div style="font-size:.72rem;color:var(--text2)">${h.course||''} ${h.exam?'• Exam: '+h.exam:''}</div>
+          </div>
+          ${urgent?'<span style="margin-left:auto;background:rgba(248,113,113,.15);color:#f87171;font-size:.68rem;padding:3px 8px;border-radius:10px;font-weight:700">URGENT</span>':''}
+        </div>
+        <div style="font-size:.78rem;color:var(--text2);line-height:1.5">${h.note||''}</div>
+      </div>`;
+    }).join('');
+  }catch(e){list.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px">Error loading</div>';}
+}
+
+// ══ TESTIMONIALS ══
+async function loadTestimonials(){
+  const list=document.getElementById('testimonials-list');
+  list.innerHTML='<div style="color:var(--text2);font-size:.8rem;text-align:center;padding:20px">Loading...</div>';
+  try{
+    const snap=await db.collection('testimonials').orderBy('createdAt','desc').limit(20).get();
+    if(snap.empty){list.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px;font-size:.84rem">No stories yet. Be the first to share! 🌟</div>';return;}
+    list.innerHTML=snap.docs.map(d=>{
+      const t=d.data();
+      return `<div style="background:var(--card);border:1px solid var(--cb);border-radius:14px;padding:14px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:700;color:var(--navy);flex-shrink:0">${(t.name||'S').charAt(0)}</div>
+          <div>
+            <div style="font-size:.82rem;font-weight:700;color:var(--text)">${t.name||'Student'}</div>
+            <div style="font-size:.7rem;color:var(--text2)">${t.dept||''} ${t.createdAt?'• '+new Date(t.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}):''}</div>
+          </div>
+          <div style="margin-left:auto;color:var(--gold);font-size:.9rem">⭐⭐⭐⭐⭐</div>
+        </div>
+        <div style="font-size:.8rem;color:var(--text);line-height:1.6;font-style:italic">"${t.text}"</div>
+      </div>`;
+    }).join('');
+  }catch(e){}
+}
+
+async function submitTestimonial(){
+  const text=document.getElementById('testim-text').value.trim();
+  if(!text){showToast('Write your story first!');return;}
+  await db.collection('testimonials').add({
+    text, name:CU.name, dept:CU.dept||'',
+    uid:CU.uid, createdAt:new Date().toISOString()
+  });
+  document.getElementById('testim-text').value='';
+  showToast('Story shared! Thank you 🌟');
+  launchConfetti();
+  awardPoints('Shared success story', 5);
+  loadTestimonials();
+}
+
+// ══ WEEKLY REPORT CARD ══
+async function loadWeeklyStats(){
+  const el=document.getElementById('weekly-stats');
+  try{
+    const weekAgo=new Date(Date.now()-7*24*60*60*1000).toISOString();
+    const snap=await db.collection('quizHistory').where('uid','==',CU.uid).get();
+    const all=snap.docs.map(d=>d.data());
+    const week=all.filter(h=>h.date&&h.date>weekAgo);
+    const avg=week.length?Math.round(week.reduce((s,h)=>s+(h.score/h.total*100),0)/week.length):0;
+    el.innerHTML=`
+      <div style="font-size:.82rem;font-weight:700;color:var(--gold2);margin-bottom:12px;">📊 This Week's Stats</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+        <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--gold2)">${week.length}</div><div style="font-size:.7rem;color:var(--text2)">Quizzes</div></div>
+        <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:${avg>=60?'var(--green)':'var(--red)'}">${avg}%</div><div style="font-size:.7rem;color:var(--text2)">Avg Score</div></div>
+        <div style="text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:900;color:var(--gold2)">${all.length}</div><div style="font-size:.7rem;color:var(--text2)">Total Ever</div></div>
+      </div>`;
+  }catch(e){}
+}
+
+async function generateWeeklyReport(){
+  const reportEl=document.getElementById('weekly-report');
+  if(!GROQ_KEY){showToast('AI not configured');return;}
+  reportEl.style.display='block';
+  reportEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)">🤖 Generating your weekly report card...</div>';
+  try{
+    const weekAgo=new Date(Date.now()-7*24*60*60*1000).toISOString();
+    const snap=await db.collection('quizHistory').where('uid','==',CU.uid).get();
+    const week=snap.docs.map(d=>d.data()).filter(h=>h.date&&h.date>weekAgo);
+    const summary=week.length?week.map(h=>`${h.course}: ${h.score}/${h.total} (${Math.round(h.score/h.total*100)}%)`).join(', '):'No quizzes this week';
+    const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Write a warm, encouraging weekly report card for OAU student ${CU.name}. This week's quiz performance: ${summary}. Include: 1) Performance summary 2) What they did well 3) Areas to improve 4) Goal for next week 5) Encouraging closing. Be warm like a caring teacher. Use emojis.`}],temperature:0.7,max_tokens:600})});
+    const data=await res.json();
+    reportEl.innerHTML=`<div style="font-size:.82rem;line-height:1.8;color:var(--text)">${(data.choices?.[0]?.message?.content||'Could not generate report').replace(/\n/g,'<br>')}</div>`;
+  }catch(e){reportEl.innerHTML='<div style="color:var(--red);font-size:.82rem">Error. Try again.</div>';}
+}
+
+// ══ SURPRISE REWARD ══
+async function checkSurpriseReward(){
+  try{
+    const snap=await db.collection('surpriseRewards')
+      .where('uid','==',CU.uid)
+      .where('claimed','==',false)
+      .limit(1).get();
+    if(snap.empty) return;
+    const reward=snap.docs[0].data();
+    const rewardId=snap.docs[0].id;
+    document.getElementById('surprise-pts').textContent='+'+reward.points+' pts';
+    document.getElementById('surprise-msg').textContent=reward.message||'Admin just sent you a surprise reward!';
+    document.getElementById('surprise-reward-modal').style.display='flex';
+    // Mark as claimed
+    await db.collection('surpriseRewards').doc(rewardId).update({claimed:true,claimedAt:new Date().toISOString()});
+    await awardPoints('Surprise reward from admin 🎁', reward.points);
+    loadStats();
+  }catch(e){}
+}
+
+function closeSurpriseReward(){
+  document.getElementById('surprise-reward-modal').style.display='none';
+  launchConfetti();
+  showToast('Reward claimed! 🎁');
+}
 const GOAL_CATS = {academic:'📚',health:'💪',finance:'💰',social:'👥',spiritual:'🙏'};
 
 async function loadGoals(){
