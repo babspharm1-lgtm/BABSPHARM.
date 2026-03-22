@@ -1,68 +1,44 @@
-// BABSPHARM Cloud Service Worker v1.0
-const CACHE_NAME = 'babspharm-v1';
-const STATIC_ASSETS = [
-  './',
-  './index.html',
-  './reset.html',
-  'https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap',
-  'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js',
-  'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js',
-  'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js',
-];
+// BABSPHARM Cloud — Service Worker v2.5.0
+const CACHE_VERSION = 'babspharm-v2.5.0';
+const CACHE_NAME = CACHE_VERSION;
 
-// Install - cache static assets
+// Skip waiting immediately on install
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(STATIC_ASSETS).catch(err => {
-        console.log('Cache install error:', err);
-      });
-    })
-  );
   self.skipWaiting();
 });
 
-// Activate - clean old caches
+// Delete ALL old caches on activate
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    )
+    caches.keys().then(names =>
+      Promise.all(names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n)))
+    ).then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
-// Fetch - serve from cache, fallback to network
+// Network First — always try network, cache only for offline
 self.addEventListener('fetch', event => {
-  // Skip non-GET and Firebase/API requests
-  if (event.request.method !== 'GET') return;
-  const url = event.request.url;
-  if (url.includes('firestore.googleapis.com') ||
-      url.includes('identitytoolkit') ||
-      url.includes('api.groq.com') ||
-      url.includes('api.brevo.com')) return;
+  if(event.request.method !== 'GET') return;
+  const url = new URL(event.request.url);
+  // Never intercept Firebase, Groq, or external APIs
+  if(url.hostname.includes('firebase') || url.hostname.includes('firestore') ||
+     url.hostname.includes('googleapis') || url.hostname.includes('groq.com') ||
+     url.hostname.includes('gstatic.com') || url.hostname.includes('jsdelivr')) return;
 
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(response => {
-        // Cache successful responses
-        if (response && response.status === 200 && response.type !== 'opaque') {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+    fetch(event.request)
+      .then(res => {
+        if(res && res.status === 200){
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(event.request, clone));
         }
-        return response;
-      }).catch(() => {
-        // Offline fallback for HTML pages
-        if (event.request.destination === 'document') {
-          return caches.match('./index.html');
-        }
-      });
-    })
+        return res;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
 
-// Listen for messages from app
+// Handle skip waiting message
 self.addEventListener('message', event => {
-  if (event.data === 'skipWaiting') self.skipWaiting();
+  if(event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });

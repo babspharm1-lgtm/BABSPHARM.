@@ -7,6 +7,11 @@
 <meta name="theme-color" content="#0a1628"/>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
+<!-- Cache busting — forces browser to always fetch latest version -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<meta name="version" content="2.5.0"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -1783,8 +1788,25 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=>{
     navigator.serviceWorker.register('./sw.js')
-      .then(reg=>console.log('SW registered'))
+      .then(reg=>{
+        // Force check for updates every time
+        reg.update();
+        // When a new SW is waiting, activate it immediately
+        reg.addEventListener('updatefound', ()=>{
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', ()=>{
+            if(newWorker.state === 'installed' && navigator.serviceWorker.controller){
+              // New version available — skip waiting and reload
+              newWorker.postMessage({type:'SKIP_WAITING'});
+            }
+          });
+        });
+      })
       .catch(err=>console.log('SW error:', err));
+    // Reload when new SW takes control
+    navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+      window.location.reload();
+    });
   });
 }
 
@@ -6442,43 +6464,99 @@ async function renderPQ(subject, topic){
     custom = snap.docs.map(d=>({id:d.id,...d.data()}));
   }catch(e){}
 
-  let questions = [...builtIn, ...custom];
+  // Assign topic to built-in questions by evenly distributing across topics
+  const topics = PQ_TOPICS[subject]||[];
+  const qPerTopic = topics.length > 0 ? Math.ceil(builtIn.length / topics.length) : builtIn.length;
+  const builtInWithTopics = builtIn.map((q,i)=>({
+    ...q,
+    topic: topics[Math.floor(i / qPerTopic)] || topics[topics.length-1] || 'General'
+  }));
 
-  // Filter by topic if not "all"
+  // Custom questions use their stored topic field or fall back to text matching
+  const customWithTopics = custom.map(q=>({
+    ...q,
+    topic: q.topic || matchTopicByText(q.q, topics) || 'General'
+  }));
+
+  let allQuestions = [...builtInWithTopics, ...customWithTopics];
+
+  // Filter by selected topic
   if(topic && topic !== 'all'){
-    // Match topic keywords against question text
-    const topicLower = topic.toLowerCase();
-    questions = questions.filter((q,i)=>{
-      // Built-in questions — match by index range based on topic
-      if(i < builtIn.length){
-        const topicIdx = (PQ_TOPICS[subject]||[]).indexOf(topic);
-        if(topicIdx>=0){
-          const qPerTopic = Math.ceil(builtIn.length/(PQ_TOPICS[subject].length));
-          const start = topicIdx * qPerTopic;
-          const end = start + qPerTopic;
-          return i >= start && i < end;
-        }
-      }
-      // Custom questions — match by topic field or text
-      return (q.topic||'').toLowerCase()===topicLower || q.q.toLowerCase().includes(topicLower);
-    });
+    allQuestions = allQuestions.filter(q => q.topic === topic);
   }
 
   window.pqCurrentQuestions = window.pqCurrentQuestions||{};
-  window.pqCurrentQuestions[subject] = [...builtIn,...custom];
+  window.pqCurrentQuestions[subject] = allQuestions;
 
   const c = PQ_COURSES[subject];
-  if(!questions.length){
-    el.innerHTML=`<div style="text-align:center;padding:30px;color:var(--text2);font-size:.84rem">No questions for "${topic}" yet.</div>`;
+  if(!allQuestions.length){
+    el.innerHTML='<div style="text-align:center;padding:30px;color:var(--text2);font-size:.84rem">No questions for "'+topic+'" yet.</div>';
     return;
   }
 
-  el.innerHTML=`
-    <div style="background:${c.bg};border:1px solid ${c.border};border-radius:12px;padding:10px 14px;margin-bottom:12px;">
-      <div style="font-size:.8rem;font-weight:700;color:${c.color}">${c.icon} ${c.name} ${topic!=='all'?'— '+topic:''}</div>
-      <div style="font-size:.7rem;color:var(--text2);margin-top:2px">${questions.length} questions • Tap an option to answer • +2 pts for correct answer</div>
-    </div>
-    ${questions.map((q,i)=>renderPQQuestion(q,i,subject)).join('')}`;
+  // If showing ALL topics, group them by topic with headers
+  if(topic === 'all' && topics.length > 0){
+    const grouped = {};
+    allQuestions.forEach(q => {
+      const t = q.topic || 'General';
+      if(!grouped[t]) grouped[t] = [];
+      grouped[t].push(q);
+    });
+
+    let html = '<div style="background:'+c.bg+';border:1px solid '+c.border+';border-radius:12px;padding:10px 14px;margin-bottom:12px;">'
+      + '<div style="font-size:.8rem;font-weight:700;color:'+c.color+'">'+c.icon+' '+c.name+' — All Topics</div>'
+      + '<div style="font-size:.7rem;color:var(--text2);margin-top:2px">'+allQuestions.length+' questions • Tap any topic tab to focus • +2 pts per correct answer</div>'
+      + '</div>';
+
+    let globalIndex = 0;
+    for(const topicName of topics){
+      const topicQs = grouped[topicName] || [];
+      if(!topicQs.length) continue;
+      html += '<div style="margin-bottom:6px;margin-top:14px;">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
+        + '<div style="flex:1;height:1px;background:var(--cb);"></div>'
+        + '<span style="padding:4px 14px;border-radius:20px;background:'+c.bg+';border:1px solid '+c.border+';color:'+c.color+';font-size:.72rem;font-weight:700;white-space:nowrap;">'+topicName+'</span>'
+        + '<div style="flex:1;height:1px;background:var(--cb);"></div>'
+        + '</div></div>';
+      topicQs.forEach(q => {
+        html += renderPQQuestion(q, globalIndex, subject);
+        globalIndex++;
+      });
+    }
+    // Add any "General" or unmatched questions at the end
+    const general = grouped['General'] || [];
+    if(general.length){
+      html += '<div style="margin-bottom:6px;margin-top:14px;">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
+        + '<div style="flex:1;height:1px;background:var(--cb);"></div>'
+        + '<span style="padding:4px 14px;border-radius:20px;background:var(--card);border:1px solid var(--cb);color:var(--text2);font-size:.72rem;font-weight:700;">General</span>'
+        + '<div style="flex:1;height:1px;background:var(--cb);"></div>'
+        + '</div></div>';
+      general.forEach(q => {
+        html += renderPQQuestion(q, globalIndex, subject);
+        globalIndex++;
+      });
+    }
+    el.innerHTML = html;
+  } else {
+    // Single topic view
+    el.innerHTML = '<div style="background:'+c.bg+';border:1px solid '+c.border+';border-radius:12px;padding:10px 14px;margin-bottom:12px;">'
+      + '<div style="font-size:.8rem;font-weight:700;color:'+c.color+'">'+c.icon+' '+c.name+(topic!=='all'?' — '+topic:'')+'</div>'
+      + '<div style="font-size:.7rem;color:var(--text2);margin-top:2px">'+allQuestions.length+' questions • +2 pts for correct answer</div>'
+      + '</div>'
+      + allQuestions.map((q,i)=>renderPQQuestion(q,i,subject)).join('');
+  }
+}
+
+// Helper: match question text to a topic
+function matchTopicByText(questionText, topics){
+  if(!questionText || !topics.length) return null;
+  const qLower = questionText.toLowerCase();
+  for(const t of topics){
+    const keywords = t.toLowerCase().split(/[\s&\/,]+/).filter(k=>k.length>3);
+    if(keywords.some(k => qLower.includes(k))) return t;
+  }
+  return null;
 }
 
 function renderPQQuestion(q, i, subject){

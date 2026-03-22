@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>BABSPHARM Admin</title>
 <meta name="theme-color" content="#0a1628"/>
+<!-- Cache busting — forces browser to always fetch latest version -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<meta http-equiv="Pragma" content="no-cache"/>
+<meta http-equiv="Expires" content="0"/>
+<meta name="version" content="2.5.0"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -693,6 +698,13 @@ Answer: A</code>
       <button onclick="switchAITab('autopilot',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid rgba(201,168,76,.4);background:rgba(201,168,76,.08);color:var(--gold2);font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">🤖 Autopilot</button>
       <button onclick="switchAITab('doctor',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid rgba(74,222,128,.3);background:rgba(74,222,128,.06);color:#4ade80;font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">🏥 Site Doctor</button>
       <button onclick="switchAITab('cleanup',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid rgba(248,113,113,.3);background:rgba(248,113,113,.06);color:#f87171;font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">🧹 User Cleanup</button>
+      <button onclick="switchAITab('powertools',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid rgba(168,85,247,.4);background:rgba(168,85,247,.08);color:#c084fc;font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">⚡ Power Tools</button>
+      <button onclick="switchAITab('intelligence',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.06);color:#fbbf24;font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">🧠 Intelligence</button>
+      <button onclick="switchAITab('comms',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid rgba(56,189,248,.3);background:rgba(56,189,248,.06);color:#38bdf8;font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">📡 Comms</button>
+      <button onclick="switchAITab('gamify',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid rgba(251,113,133,.3);background:rgba(251,113,133,.06);color:#fb7185;font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">🎮 Gamify</button>
+      <button onclick="switchAITab('bizintel',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid rgba(52,211,153,.3);background:rgba(52,211,153,.06);color:#34d399;font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">📊 Business</button>
+      <button onclick="switchAITab('contentfactory',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid rgba(249,115,22,.3);background:rgba(249,115,22,.06);color:#fb923c;font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">🤖 AI Content</button>
+      <button onclick="switchAITab('automation',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid rgba(99,102,241,.3);background:rgba(99,102,241,.06);color:#818cf8;font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">⚙️ Automation</button>
       <button onclick="switchAITab('chat',this)" class="ai-tab-btn" style="padding:7px 14px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.76rem;cursor:pointer;">💬 Chat</button>
     </div>
 
@@ -736,7 +748,33 @@ Answer: A</code>
         <button onclick="adminAIAction('questions_phy102')" class="btn btn-out" style="font-size:.74rem;padding:10px;">⚡ PHY 102 ×10</button>
         <button onclick="adminAIAction('questions_bulk')" class="btn btn-gold" style="font-size:.74rem;padding:10px;grid-column:span 2;">🚀 Generate ALL 60 Questions</button>
       </div>
-      <div style="font-size:.72rem;color:var(--text2);text-align:center">All saved directly to PQ Bank</div>
+      <div style="font-size:.72rem;color:var(--text2);text-align:center;margin-bottom:12px">All saved directly to PQ Bank</div>
+
+      <!-- Paste Questions Section -->
+      <div style="background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.2);border-radius:12px;padding:14px;margin-bottom:10px;">
+        <div style="font-size:.82rem;font-weight:700;color:#4ade80;margin-bottom:8px;">📋 Paste Questions → AI Formats & Saves</div>
+        <div style="font-size:.74rem;color:var(--text2);margin-bottom:10px;line-height:1.6">Paste any question(s) in any format — raw text, numbered list, MCQ format. AI will extract and save to the course you choose.</div>
+        <select id="pq-paste-course" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.78rem;outline:none;margin-bottom:8px;">
+          <option value="chm101">⚗️ CHM 101</option>
+          <option value="chm102">⚗️ CHM 102</option>
+          <option value="mth101">📐 MTH 101</option>
+          <option value="mth102">📐 MTH 102</option>
+          <option value="phy101">⚡ PHY 101</option>
+          <option value="phy102">⚡ PHY 102</option>
+        </select>
+        <textarea id="pq-paste-text" placeholder="Paste your question(s) here in ANY format:&#10;&#10;e.g. 1. What is the molarity of...&#10;A) 0.2 M  B) 0.4 M  C) 0.1 M  D) 1.0 M&#10;Answer: A&#10;&#10;Or just paste raw question text and AI will format it." style="width:100%;min-height:120px;padding:10px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.78rem;outline:none;resize:vertical;box-sizing:border-box;margin-bottom:8px;"></textarea>
+        <button onclick="adminAIAction('pq_paste')" class="btn btn-gold" style="width:100%;font-size:.78rem;">🤖 AI Extract & Save to PQ Bank</button>
+      </div>
+
+      <!-- Delete PQ Section -->
+      <div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:12px;padding:14px;">
+        <div style="font-size:.82rem;font-weight:700;color:#f87171;margin-bottom:8px;">🗑️ Delete PQ Questions</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <button onclick="adminAIAction('pq_delete_search')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🔍 Search & Delete</button>
+          <button onclick="adminAIAction('pq_delete_course')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📚 Browse by Course</button>
+          <button onclick="adminAIAction('pq_delete_all_course')" style="padding:10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:10px;color:#f87171;font-family:'Outfit',sans-serif;font-size:.74rem;cursor:pointer;grid-column:span 2;">🗑️ Delete ALL Custom Questions for a Course</button>
+        </div>
+      </div>
     </div>
 
     <!-- EXAMS TAB -->
@@ -877,6 +915,186 @@ Answer: A</code>
         <button onclick="adminAIAction('cleanup_stats')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📊 User Base Stats</button>
         <button onclick="adminAIAction('cleanup_export')" class="btn btn-out" style="font-size:.74rem;padding:10px;grid-column:span 2;">📥 Export All Users (CSV)</button>
       </div>
+    </div>
+
+    <!-- POWER TOOLS TAB -->
+    <div id="ai-tab-powertools" class="ai-tab-panel" style="display:none;">
+      <div style="background:linear-gradient(135deg,rgba(168,85,247,.1),rgba(139,92,246,.05));border:1px solid rgba(168,85,247,.3);border-radius:12px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:.86rem;font-weight:700;color:#c084fc;margin-bottom:4px">⚡ Power Tools</div>
+        <div style="font-size:.74rem;color:var(--text2);line-height:1.6">Unique tools you won't find anywhere else. Deep AI-powered operations on your platform.</div>
+      </div>
+
+      <!-- PQ Intelligence -->
+      <div style="font-size:.74rem;font-weight:700;color:#c084fc;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">📋 PQ Intelligence</div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:14px;">
+        <button onclick="adminAIAction('pq_duplicates')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🔍 Duplicate Question Finder — Scan & Remove Similar Questions</button>
+        <button onclick="adminAIAction('pq_quality_check')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">✅ PQ Quality Checker — AI Reviews All Questions for Errors</button>
+        <button onclick="adminAIAction('pq_difficulty_tag')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🎯 Difficulty Tagger — Tag Every Question Easy/Medium/Hard</button>
+        <button onclick="adminAIAction('pq_topic_fix')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🏷️ Auto-Fix Topics — Assign Correct Topic to All Questions</button>
+      </div>
+
+      <!-- Exam Tools -->
+      <div style="font-size:.74rem;font-weight:700;color:#c084fc;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">📄 Exam Paper Generator</div>
+      <div style="background:var(--card);border:1px solid var(--cb);border-radius:12px;padding:14px;margin-bottom:14px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <div style="flex:1;min-width:140px;">
+            <label style="font-size:.72rem;color:var(--text2);display:block;margin-bottom:4px;">Course</label>
+            <select id="exam-paper-course" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.76rem;outline:none;">
+              <option value="chm101">⚗️ CHM 101</option>
+              <option value="chm102">⚗️ CHM 102</option>
+              <option value="mth101">📐 MTH 101</option>
+              <option value="mth102">📐 MTH 102</option>
+              <option value="phy101">⚡ PHY 101</option>
+              <option value="phy102">⚡ PHY 102</option>
+              <option value="mixed">🎓 Mixed (All Courses)</option>
+            </select>
+          </div>
+          <div style="flex:1;min-width:100px;">
+            <label style="font-size:.72rem;color:var(--text2);display:block;margin-bottom:4px;">Questions</label>
+            <select id="exam-paper-count" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.76rem;outline:none;">
+              <option value="20">20 Questions</option>
+              <option value="30" selected>30 Questions</option>
+              <option value="40">40 Questions</option>
+              <option value="50">50 Questions</option>
+              <option value="60">60 Questions</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <div style="flex:1;">
+            <label style="font-size:.72rem;color:var(--text2);display:block;margin-bottom:4px;">Exam Title</label>
+            <input type="text" id="exam-paper-title" placeholder="e.g. CHM 101 First CA 2024/2025" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.76rem;outline:none;box-sizing:border-box;"/>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <div style="flex:1;min-width:120px;">
+            <label style="font-size:.72rem;color:var(--text2);display:block;margin-bottom:4px;">Duration</label>
+            <input type="text" id="exam-paper-duration" placeholder="e.g. 1 Hour" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.76rem;outline:none;box-sizing:border-box;"/>
+          </div>
+          <div style="flex:1;min-width:120px;">
+            <label style="font-size:.72rem;color:var(--text2);display:block;margin-bottom:4px;">Include</label>
+            <select id="exam-paper-include" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.76rem;outline:none;">
+              <option value="both">Questions + Answer Key</option>
+              <option value="questions">Questions Only</option>
+              <option value="key">Answer Key Only</option>
+            </select>
+          </div>
+        </div>
+        <button onclick="adminAIAction('exam_paper_generate')" class="btn btn-gold" style="width:100%;font-size:.82rem;padding:12px;">📄 Generate Exam Paper</button>
+      </div>
+
+      <!-- Unique Tools -->
+      <div style="font-size:.74rem;font-weight:700;color:#c084fc;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">🔮 Unique AI Tools</div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;">
+        <button onclick="adminAIAction('ai_question_reviewer')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🤖 Question Reviewer — Paste a Question, AI Grades It</button>
+        <button onclick="adminAIAction('topic_weakness_map')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🗺️ Topic Weakness Map — Where Students Struggle Most</button>
+        <button onclick="adminAIAction('student_atrisk')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">⚠️ At-Risk Students — AI Identifies Who Needs Help</button>
+        <button onclick="adminAIAction('platform_score')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🏆 Platform Score — Rate Your Platform Out of 100</button>
+        <button onclick="adminAIAction('data_backup')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">💾 Data Backup — Export All Data as JSON</button>
+        <button onclick="adminAIAction('smart_announcement')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🧠 Smart Announcement — AI Writes Based on Live Data</button>
+      </div>
+    </div>
+
+    <!-- INTELLIGENCE TAB -->
+    <div id="ai-tab-intelligence" class="ai-tab-panel" style="display:none;">
+      <div style="background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(251,191,36,.04));border:1px solid rgba(251,191,36,.3);border-radius:12px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:.86rem;font-weight:700;color:#fbbf24;margin-bottom:3px;">🧠 Student Intelligence</div>
+        <div style="font-size:.74rem;color:var(--text2);">Predict, detect, and act on student behaviour before problems arise.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;">
+        <button onclick="adminAIAction('intel_predict_scores')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🔮 Predict Who Will Fail Next Exam</button>
+        <button onclick="adminAIAction('intel_burnout')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🔥 Detect Student Burnout Signals</button>
+        <button onclick="adminAIAction('intel_nudge')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">💬 Generate Smart Nudge Messages per Student</button>
+        <button onclick="adminAIAction('intel_segments')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">👥 Auto-Segment Students (Top / Mid / Struggling)</button>
+        <button onclick="adminAIAction('intel_report_card')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">📋 Generate Individual Student Report Card</button>
+        <button onclick="adminAIAction('intel_compare')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">⚖️ Compare This Week vs Last Week Performance</button>
+      </div>
+    </div>
+
+    <!-- COMMS TAB -->
+    <div id="ai-tab-comms" class="ai-tab-panel" style="display:none;">
+      <div style="background:linear-gradient(135deg,rgba(56,189,248,.1),rgba(56,189,248,.04));border:1px solid rgba(56,189,248,.3);border-radius:12px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:.86rem;font-weight:700;color:#38bdf8;margin-bottom:3px;">📡 Communication Hub</div>
+        <div style="font-size:.74rem;color:var(--text2);">Multi-channel messaging tools for WhatsApp, broadcasts and scheduling.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:12px;">
+        <button onclick="adminAIAction('comms_whatsapp_pack')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">📱 Generate 7-Day WhatsApp Content Pack</button>
+        <button onclick="adminAIAction('comms_broadcast')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">📢 Targeted Broadcast by Department</button>
+        <button onclick="adminAIAction('comms_exam_countdown')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">⏳ Daily Exam Countdown Messages (7 days)</button>
+        <button onclick="adminAIAction('comms_personalized')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">✉️ Personalized Message to Top 10 Students</button>
+        <button onclick="adminAIAction('comms_win_back')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🔄 Win-Back Series (3 messages for inactive students)</button>
+        <button onclick="adminAIAction('comms_social_caption')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">📸 Generate Instagram/Twitter Caption</button>
+      </div>
+    </div>
+
+    <!-- GAMIFY TAB -->
+    <div id="ai-tab-gamify" class="ai-tab-panel" style="display:none;">
+      <div style="background:linear-gradient(135deg,rgba(251,113,133,.1),rgba(251,113,133,.04));border:1px solid rgba(251,113,133,.3);border-radius:12px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:.86rem;font-weight:700;color:#fb7185;margin-bottom:3px;">🎮 Gamification Engine</div>
+        <div style="font-size:.74rem;color:var(--text2);">Create challenges, tournaments and prizes that keep students coming back.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;">
+        <button onclick="adminAIAction('gamify_challenge')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🏆 Create Weekly Challenge (with prize)</button>
+        <button onclick="adminAIAction('gamify_tournament')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">⚔️ Launch Subject Tournament (CHM vs MTH vs PHY)</button>
+        <button onclick="adminAIAction('gamify_streak')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🔥 Award Streak Bonuses (3/7/14 day logins)</button>
+        <button onclick="adminAIAction('gamify_prize_draw')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🎰 Run Prize Draw Among Active Students</button>
+        <button onclick="adminAIAction('gamify_badge')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🥇 Create Custom Achievement Badge</button>
+        <button onclick="adminAIAction('gamify_double_points')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">💰 Launch Double Points Weekend</button>
+      </div>
+    </div>
+
+    <!-- BUSINESS INTELLIGENCE TAB -->
+    <div id="ai-tab-bizintel" class="ai-tab-panel" style="display:none;">
+      <div style="background:linear-gradient(135deg,rgba(52,211,153,.1),rgba(52,211,153,.04));border:1px solid rgba(52,211,153,.3);border-radius:12px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:.86rem;font-weight:700;color:#34d399;margin-bottom:3px;">📊 Business Intelligence</div>
+        <div style="font-size:.74rem;color:var(--text2);">Growth forecasting, retention analysis and monetization opportunities.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;">
+        <button onclick="adminAIAction('biz_growth_forecast')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">📈 Growth Forecast — Next 30 Days Prediction</button>
+        <button onclick="adminAIAction('biz_retention')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🔒 Retention Analysis — Who Will Churn</button>
+        <button onclick="adminAIAction('biz_monetize')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">💰 Monetization Ideas for BABSPHARM Cloud</button>
+        <button onclick="adminAIAction('biz_competitor')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🔍 Competitive Edge Analysis</button>
+        <button onclick="adminAIAction('biz_cohort')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">📅 Cohort Analysis — This Semester's Students</button>
+        <button onclick="adminAIAction('biz_action_plan')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">📋 30-Day Action Plan Based on Current Data</button>
+      </div>
+    </div>
+
+    <!-- AI CONTENT FACTORY TAB -->
+    <div id="ai-tab-contentfactory" class="ai-tab-panel" style="display:none;">
+      <div style="background:linear-gradient(135deg,rgba(249,115,22,.1),rgba(249,115,22,.04));border:1px solid rgba(249,115,22,.3);border-radius:12px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:.86rem;font-weight:700;color:#fb923c;margin-bottom:3px;">🤖 AI Content Factory</div>
+        <div style="font-size:.74rem;color:var(--text2);">Auto-generate notes, summaries, flashcards and study materials for students.</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--cb);border-radius:10px;padding:12px;margin-bottom:10px;">
+        <label style="font-size:.74rem;color:var(--text2);display:block;margin-bottom:6px;">Topic / Subject</label>
+        <input type="text" id="content-topic" placeholder="e.g. Ionic Bonding, Integration by Parts, Newton's Laws..." style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.78rem;outline:none;box-sizing:border-box;"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button onclick="adminAIAction('content_notes')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📝 Study Notes</button>
+        <button onclick="adminAIAction('content_summary')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📄 1-Page Summary</button>
+        <button onclick="adminAIAction('content_flashcards')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🃏 Flashcard Set</button>
+        <button onclick="adminAIAction('content_mnemonics')" class="btn btn-out" style="font-size:.74rem;padding:10px;">🧠 Mnemonics & Tricks</button>
+        <button onclick="adminAIAction('content_common_errors')" class="btn btn-out" style="font-size:.74rem;padding:10px;">⚠️ Common Exam Errors</button>
+        <button onclick="adminAIAction('content_formula_sheet')" class="btn btn-out" style="font-size:.74rem;padding:10px;">📐 Formula Sheet</button>
+        <button onclick="adminAIAction('content_story')" class="btn btn-out" style="font-size:.74rem;padding:10px;grid-column:span 2;">📖 Story-Based Explanation (Nigerian Context)</button>
+      </div>
+    </div>
+
+    <!-- AUTOMATION TAB -->
+    <div id="ai-tab-automation" class="ai-tab-panel" style="display:none;">
+      <div style="background:linear-gradient(135deg,rgba(99,102,241,.1),rgba(99,102,241,.04));border:1px solid rgba(99,102,241,.3);border-radius:12px;padding:12px;margin-bottom:12px;">
+        <div style="font-size:.86rem;font-weight:700;color:#818cf8;margin-bottom:3px;">⚙️ Platform Automation</div>
+        <div style="font-size:.74rem;color:var(--text2);">Set things running automatically — daily tasks, weekly routines, smart triggers.</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr;gap:8px;margin-bottom:10px;">
+        <button onclick="adminAIAction('auto_daily_routine')" class="btn btn-gold" style="font-size:.78rem;padding:12px;text-align:left;">🌅 Run Daily Routine (motivation + hot topic + tips)</button>
+        <button onclick="adminAIAction('auto_weekly_routine')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">📅 Run Weekly Routine (study plan + leaderboard + campaign)</button>
+        <button onclick="adminAIAction('auto_exam_season')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">📚 Activate Exam Season Mode (all-in alerts)</button>
+        <button onclick="adminAIAction('auto_new_semester')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🎓 New Semester Setup (reset + welcome + content load)</button>
+        <button onclick="adminAIAction('auto_milestone')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🏅 Celebrate Platform Milestone (students count)</button>
+        <button onclick="adminAIAction('auto_cleanup_routine')" class="btn btn-out" style="font-size:.78rem;padding:12px;text-align:left;">🧹 Run Platform Cleanup (old data, duplicates, orphans)</button>
+      </div>
+      <div id="automation-log" style="display:none;background:rgba(0,0,0,.4);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:12px;font-family:monospace;font-size:.72rem;color:#818cf8;max-height:200px;overflow-y:auto;"></div>
     </div>
 
     <!-- Result display -->
@@ -2534,36 +2752,94 @@ function renderAdminPQList(questions){
     listEl.innerHTML='<div style="color:var(--text2);font-size:.8rem;text-align:center;padding:20px">No questions yet for this subject.</div>';
     return;
   }
-  listEl.innerHTML = questions.map((q,i)=>`
-    <div style="background:rgba(255,255,255,.03);border:1px solid ${q.isBuiltIn?'rgba(99,102,241,.25)':'rgba(201,168,76,.25)'};border-radius:12px;padding:14px;margin-bottom:10px;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-        <div style="flex:1;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="font-size:.68rem;padding:2px 8px;border-radius:10px;font-weight:700;${q.isBuiltIn?'background:rgba(99,102,241,.15);color:#818cf8;':'background:rgba(201,168,76,.15);color:var(--gold2);'}">
-              ${q.isBuiltIn?'🔒 Built-in':'✏️ Custom'}
-            </span>
-            <span style="font-size:.68rem;color:var(--text2)">Q${i+1}</span>
-          </div>
-          <div style="font-size:.8rem;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.5">${q.q}</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;">
-            ${q.opts.map((opt,j)=>`
-              <div style="font-size:.72rem;padding:4px 8px;border-radius:6px;
-                background:${j===q.ans?'rgba(74,222,128,.1)':'rgba(255,255,255,.03)'};
-                border:1px solid ${j===q.ans?'rgba(74,222,128,.3)':'var(--cb)'};
-                color:${j===q.ans?'var(--green)':'var(--text2)'};">
-                ${['A','B','C','D'][j]}. ${opt} ${j===q.ans?'✅':''}
-              </div>`).join('')}
-          </div>
-          ${q.exp ? '<div style="font-size:.72rem;color:var(--text2);background:rgba(201,168,76,.06);border-radius:6px;padding:5px 8px;">💡 '+q.exp+'</div>' : ''}
-        </div>
-        <div style="flex-shrink:0;">
-          ${q.isBuiltIn
-            ? '<span style="font-size:.68rem;color:var(--text2);font-style:italic;">System</span>'
-            : '<button onclick="deletePQBankQuestion(\''+q.id+'\')" class="btn btn-red btn-sm">🗑 Delete</button>'
-          }
-        </div>
-      </div>
-    </div>`).join('');
+
+  const subject = adminPQSubject || 'chm101';
+  const PQ_TOPICS_ADMIN = {
+    chm101:['Atomic Structure','Periodic Table','Ionic Bonding','Covalent Bonding','Stoichiometry','Gas Laws','Acids & Bases','Redox','Reaction Kinetics','Thermochemistry'],
+    chm102:['Qualitative Analysis','Resonance','VSEPR','Hybridization','Intermolecular Forces','Noble Gases','Alkali Metals','Alkaline Earth Metals','Hydrogen','Transition Metals','Alcohols'],
+    mth101:['Sets Theory','Number Systems','Indices & Logs','Surds','Quadratics','Polynomials','Partial Fractions','Sequences & Series','Binomial Theorem','Trigonometry','Functions','Limits','Differentiation','Permutations & Combinations'],
+    mth102:['Integration','Definite Integrals','Vectors','Matrices','Complex Numbers','Differential Equations','Statistics','Probability','Coordinate Geometry'],
+    phy101:['Measurements & Units','Kinematics','Newtons Laws','Work & Energy','Momentum','Circular Motion','Gravitation','SHM','Waves & Sound','Thermodynamics'],
+    phy102:['Electrostatics','Electric Circuits','Capacitors','Magnetism','EM Induction','Optics','Modern Physics','Nuclear Physics','Special Relativity']
+  };
+  const topics = PQ_TOPICS_ADMIN[subject] || [];
+
+  // Assign topics to built-in questions by even distribution
+  const builtInQs = questions.filter(q=>q.isBuiltIn);
+  const customQs = questions.filter(q=>!q.isBuiltIn);
+  const qPerTopic = topics.length > 0 ? Math.ceil(builtInQs.length / topics.length) : builtInQs.length;
+
+  const builtInWithTopics = builtInQs.map((q,i)=>({
+    ...q, _topic: topics[Math.floor(i/qPerTopic)] || topics[topics.length-1] || 'General'
+  }));
+
+  // Custom: use stored topic or try to match
+  const customWithTopics = customQs.map(q=>{
+    let matched = q.topic || '';
+    if(!matched){
+      const qLow = (q.q||'').toLowerCase();
+      for(const t of topics){
+        const kws = t.toLowerCase().split(/[\s&\/,]+/).filter(k=>k.length>3);
+        if(kws.some(k=>qLow.includes(k))){ matched=t; break; }
+      }
+    }
+    return {...q, _topic: matched||'Custom (No Topic)'};
+  });
+
+  // Group by topic
+  const grouped = {};
+  const allWithTopics = [...builtInWithTopics, ...customWithTopics];
+
+  // Maintain topic order
+  for(const t of topics) grouped[t] = [];
+  grouped['Custom (No Topic)'] = [];
+
+  allWithTopics.forEach(q => {
+    const t = q._topic;
+    if(!grouped[t]) grouped[t] = [];
+    grouped[t].push(q);
+  });
+
+  // Build HTML with topic headers
+  let html = '';
+  let globalIdx = 0;
+  const orderedTopics = [...topics, 'Custom (No Topic)'];
+
+  for(const topicName of orderedTopics){
+    const topicQs = grouped[topicName];
+    if(!topicQs || !topicQs.length) continue;
+
+    html += '<div style="display:flex;align-items:center;gap:8px;margin:16px 0 10px;">'
+      + '<div style="flex:1;height:1px;background:var(--cb);"></div>'
+      + '<span style="padding:4px 14px;border-radius:20px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);color:var(--gold2);font-size:.72rem;font-weight:700;white-space:nowrap;">📚 '+topicName+' ('+topicQs.length+')</span>'
+      + '<div style="flex:1;height:1px;background:var(--cb);"></div>'
+      + '</div>';
+
+    topicQs.forEach(q => {
+      globalIdx++;
+      html += '<div style="background:rgba(255,255,255,.03);border:1px solid '+(q.isBuiltIn?'rgba(99,102,241,.25)':'rgba(201,168,76,.25)')+';border-radius:12px;padding:14px;margin-bottom:8px;">'
+        + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">'
+        + '<div style="flex:1;">'
+        + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+        + '<span style="font-size:.68rem;padding:2px 8px;border-radius:10px;font-weight:700;'+(q.isBuiltIn?'background:rgba(99,102,241,.15);color:#818cf8;':'background:rgba(201,168,76,.15);color:var(--gold2);')+'">'+(q.isBuiltIn?'🔒 Built-in':'✏️ Custom')+'</span>'
+        + '<span style="font-size:.68rem;color:var(--text2)">Q'+globalIdx+'</span>'
+        + '</div>'
+        + '<div style="font-size:.8rem;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.5">'+q.q+'</div>'
+        + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;">'
+        + (q.opts||[]).map((opt,j)=>'<div style="font-size:.72rem;padding:4px 8px;border-radius:6px;background:'+(j===q.ans?'rgba(74,222,128,.1)':'rgba(255,255,255,.03)')+';border:1px solid '+(j===q.ans?'rgba(74,222,128,.3)':'var(--cb)')+';color:'+(j===q.ans?'var(--green)':'var(--text2)')+';">'+['A','B','C','D'][j]+'. '+opt+(j===q.ans?' ✅':'')+'</div>').join('')
+        + '</div>'
+        + (q.exp ? '<div style="font-size:.72rem;color:var(--text2);background:rgba(201,168,76,.06);border-radius:6px;padding:5px 8px;">💡 '+q.exp+'</div>' : '')
+        + '</div>'
+        + '<div style="flex-shrink:0;">'
+        + (q.isBuiltIn
+          ? '<span style="font-size:.68rem;color:var(--text2);font-style:italic;">System</span>'
+          : '<button onclick="deletePQBankQuestion(\''+q.id+'\')" class="btn btn-red btn-sm">🗑 Delete</button>')
+        + '</div>'
+        + '</div></div>';
+    });
+  }
+
+  listEl.innerHTML = html || '<div style="color:var(--text2);text-align:center;padding:20px">No questions found.</div>';
 }
 
 function filterAdminPQ(query){
@@ -3219,7 +3495,848 @@ async function adminAIAction(type){
     );
   }
 
-  // ── MISSING QUESTIONS HANDLERS ──
+  // ── PQ PASTE — AI extracts & saves ──
+  else if(type==='pq_paste'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const course = document.getElementById('pq-paste-course')?.value || 'chm101';
+    const rawText = document.getElementById('pq-paste-text')?.value?.trim();
+    if(!rawText){showToast('Paste some questions first!');return;}
+
+    const courseNames = {chm101:'CHM 101',chm102:'CHM 102',mth101:'MTH 101',mth102:'MTH 102',phy101:'PHY 101',phy102:'PHY 102'};
+    showActionResult('🤖 AI Extracting Questions...','<div style="color:var(--text2);font-size:.82rem;">Reading and formatting your pasted questions...</div>');
+
+    try{
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+        body: JSON.stringify({
+          model:'llama-3.3-70b-versatile',
+          messages:[{role:'user',content:`Extract MCQ questions from this text and format them for an OAU 100L ${courseNames[course]} PQ bank.
+
+TEXT:
+${rawText}
+
+Return ONLY a valid JSON array. For each question:
+- "q": the question text (clean, no numbering)
+- "opts": array of exactly 4 options (just the text, no A/B/C/D prefix)
+- "ans": index of correct answer (0=A, 1=B, 2=C, 3=D)
+- "exp": brief explanation (if available, else write a short one)
+
+If you cannot identify a complete MCQ, still create one from the available info.
+Return ONLY the JSON array, no other text.`}],
+          max_tokens:3000,
+          temperature:0.2
+        })
+      });
+      const raw = (await r.json()).choices?.[0]?.message?.content||'[]';
+      let questions;
+      try{ questions = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+      catch(e){ 
+        showActionResult('❌ Could not parse questions','<div style="color:var(--text2)">AI could not extract questions from the pasted text. Try pasting in a clearer MCQ format:<br><br><b>1. Question text?</b><br>A) Option 1<br>B) Option 2<br>C) Option 3<br>D) Option 4<br>Answer: A</div>');
+        return;
+      }
+
+      if(!questions.length){
+        showActionResult('❌ No Questions Found','<div style="color:var(--text2)">Paste questions in MCQ format with options and answer.</div>');
+        return;
+      }
+
+      // Show preview with confirm
+      showActionResult(`✅ ${questions.length} Questions Extracted`,
+        `<div style="font-size:.78rem;color:var(--gold2);margin-bottom:8px;">Course: ${courseNames[course]}</div>`+
+        questions.map((q,i)=>`
+          <div style="padding:10px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:8px;border:1px solid var(--cb);">
+            <div style="font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:6px;">Q${i+1}: ${q.q}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;">
+              ${(q.opts||[]).map((opt,j)=>`<div style="font-size:.7rem;padding:3px 6px;border-radius:5px;background:${j===q.ans?'rgba(74,222,128,.1)':'rgba(255,255,255,.03)'};border:1px solid ${j===q.ans?'rgba(74,222,128,.3)':'var(--cb)'};color:${j===q.ans?'var(--green)':'var(--text2)'};">${['A','B','C','D'][j]}. ${opt} ${j===q.ans?'✅':''}</div>`).join('')}
+            </div>
+            ${q.exp?`<div style="font-size:.7rem;color:var(--text2);margin-top:4px;padding:4px 6px;background:rgba(201,168,76,.06);border-radius:5px;">💡 ${q.exp}</div>`:''}
+          </div>`).join(''),
+        [{label:`💾 Save All ${questions.length} to ${courseNames[course]}`, action:`confirmPasteSave(${JSON.stringify(questions).replace(/'/g,"\\'")}, '${course}')`, primary:true},
+         {label:'✏️ Clear & Re-paste', action:"document.getElementById('pq-paste-text').value='';document.getElementById('ai-action-result').style.display='none'"}]
+      );
+
+    }catch(e){showActionResult('❌ Error',e.message||'Try again.');}
+  }
+
+  // ── PQ DELETE — Search & Delete ──
+  else if(type==='pq_delete_search'){
+    const query = prompt('Search for questions to delete (keyword):')?.trim();
+    if(!query) return;
+    showActionResult('🔍 Searching...','<div style="color:var(--text2)">Loading questions...</div>');
+    try{
+      const snap = await db.collection('pqBank').get();
+      const results = snap.docs
+        .map(d=>({id:d.id,...d.data()}))
+        .filter(q=>(q.q||'').toLowerCase().includes(query.toLowerCase()) ||
+                    (q.opts||[]).some(o=>o.toLowerCase().includes(query.toLowerCase())));
+      if(!results.length){
+        showActionResult('🔍 No Results',`<div style="color:var(--text2)">No custom PQ questions found matching "${query}"</div>`);
+        return;
+      }
+      showActionResult(`🔍 ${results.length} Questions Found`,
+        results.slice(0,20).map(q=>`
+          <div style="padding:10px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:8px;border:1px solid var(--cb);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+              <div style="flex:1;">
+                <div style="font-size:.72rem;color:var(--gold2);margin-bottom:4px;">${(q.subject||'').toUpperCase()}</div>
+                <div style="font-size:.78rem;font-weight:700;color:var(--text);">${q.q}</div>
+                <div style="font-size:.7rem;color:var(--green);margin-top:3px;">✅ Ans: ${['A','B','C','D'][q.ans||0]}. ${(q.opts||[])[q.ans||0]||''}</div>
+              </div>
+              <button onclick="deletePQBankItem('${q.id}','${(q.q||'').replace(/'/g,"\\'").substring(0,30)}...',this)" style="padding:4px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:8px;color:#f87171;font-size:.7rem;cursor:pointer;font-family:'Outfit',sans-serif;flex-shrink:0;">🗑 Delete</button>
+            </div>
+          </div>`).join('')
+      );
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  // ── PQ DELETE — Browse by Course ──
+  else if(type==='pq_delete_course'){
+    const courseNames = {chm101:'⚗️ CHM 101',chm102:'⚗️ CHM 102',mth101:'📐 MTH 101',mth102:'📐 MTH 102',phy101:'⚡ PHY 101',phy102:'⚡ PHY 102'};
+    const course = prompt('Which course? Type: chm101, chm102, mth101, mth102, phy101, or phy102')?.toLowerCase().trim();
+    if(!course || !courseNames[course]){showToast('Invalid course code');return;}
+    showActionResult('📚 Loading...','<div style="color:var(--text2)">Fetching questions...</div>');
+    try{
+      const snap = await db.collection('pqBank').where('subject','==',course).get();
+      if(snap.empty){
+        showActionResult(`${courseNames[course]} — No Custom Questions`,`<div style="color:var(--text2)">No custom questions found. Built-in questions cannot be deleted here.</div>`);
+        return;
+      }
+      const questions = snap.docs.map(d=>({id:d.id,...d.data()}));
+      showActionResult(`${courseNames[course]} — ${questions.length} Custom Questions`,
+        `<div style="font-size:.74rem;color:var(--text2);margin-bottom:10px;">Built-in questions cannot be deleted. Only custom (Firestore) questions shown.</div>`+
+        questions.map((q,i)=>`
+          <div style="padding:10px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:8px;border:1px solid var(--cb);">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+              <div style="flex:1;">
+                <div style="font-size:.78rem;font-weight:700;color:var(--text);">Q${i+1}: ${q.q}</div>
+                <div style="font-size:.7rem;color:var(--green);margin-top:3px;">✅ Ans: ${['A','B','C','D'][q.ans||0]}. ${(q.opts||[])[q.ans||0]||''}</div>
+              </div>
+              <button onclick="deletePQBankItem('${q.id}','Q${i+1}',this)" style="padding:4px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:8px;color:#f87171;font-size:.7rem;cursor:pointer;font-family:'Outfit',sans-serif;flex-shrink:0;">🗑</button>
+            </div>
+          </div>`).join(''),
+        [{label:`🗑️ Delete ALL ${questions.length} Questions`, action:`deleteAllPQForCourse('${course}','${courseNames[course]}')`, primary:false}]
+      );
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  // ── PQ DELETE — All for a course ──
+  else if(type==='pq_delete_all_course'){
+    const courseNames = {chm101:'CHM 101',chm102:'CHM 102',mth101:'MTH 101',mth102:'MTH 102',phy101:'PHY 101',phy102:'PHY 102'};
+    const course = prompt('Delete ALL custom questions for which course?\nType: chm101, chm102, mth101, mth102, phy101, or phy102')?.toLowerCase().trim();
+    if(!course || !courseNames[course]){showToast('Invalid course code');return;}
+    await deleteAllPQForCourse(course, courseNames[course]);
+  }
+
+  // ══ POWER TOOLS ══
+  else if(type==='pq_duplicates'){
+    showActionResult('🔍 Scanning for Duplicates...','<div style="color:var(--text2)">Reading all PQ bank questions...</div>');
+    try{
+      const snap = await db.collection('pqBank').get();
+      if(snap.empty){showActionResult('✅ No Custom Questions','<div style="color:var(--text2)">PQ bank is empty.</div>');return;}
+      const all = snap.docs.map(d=>({id:d.id,...d.data()}));
+      const seen = {};
+      const exactDupes = [];
+      all.forEach(q=>{
+        const key = (q.q||'').toLowerCase().trim();
+        if(seen[key]) exactDupes.push({keep:seen[key],remove:q});
+        else seen[key]=q;
+      });
+      if(!exactDupes.length){
+        showActionResult('✅ No Duplicates!','<div style="text-align:center;padding:16px;"><div style="font-size:2rem">🎉</div><div style="font-size:.84rem;font-weight:700;color:var(--green)">PQ Bank is clean!</div><div style="font-size:.76rem;color:var(--text2);margin-top:4px">'+all.length+' questions scanned, zero duplicates found.</div></div>');
+        return;
+      }
+      let html = '<div style="font-size:.78rem;color:#f87171;font-weight:700;margin-bottom:10px;">Found '+exactDupes.length+' exact duplicates in '+all.length+' custom questions:</div>';
+      exactDupes.forEach(d=>{
+        html += '<div style="padding:10px;background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:8px;margin-bottom:6px;">'
+          +'<div style="font-size:.76rem;color:var(--text);margin-bottom:6px;">'+d.remove.q.substring(0,90)+'...</div>'
+          +'<div style="display:flex;gap:6px;align-items:center;">'
+          +'<span style="font-size:.7rem;color:var(--text2);">'+((d.remove.subject||'?').toUpperCase())+'</span>'
+          +'<button onclick="removeDuplicate(\''+d.remove.id+'\',this)" style="padding:2px 10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:6px;color:#f87171;font-size:.7rem;cursor:pointer;font-family:Outfit,sans-serif;">🗑 Remove</button>'
+          +'</div></div>';
+      });
+      html += '<button onclick="removeAllDuplicates('+JSON.stringify(exactDupes.map(d=>d.remove.id))+')" style="width:100%;margin-top:6px;padding:10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:10px;color:#f87171;font-family:Outfit,sans-serif;font-size:.78rem;cursor:pointer;font-weight:700;">🗑 Remove ALL '+exactDupes.length+' Duplicates at Once</button>';
+      showActionResult('🔍 Duplicate Scan Complete', html);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='pq_quality_check'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const subject = prompt('Quality check for which course?\n(chm101, chm102, mth101, mth102, phy101, phy102)')?.toLowerCase().trim();
+    if(!subject) return;
+    showActionResult('✅ Running Quality Check...','<div style="color:var(--text2)">AI reviewing questions...</div>');
+    const snap = await db.collection('pqBank').where('subject','==',subject).get();
+    const builtIn = (PQ_BANK[subject]||[]).slice(0,8);
+    const custom = snap.docs.map(d=>d.data()).slice(0,7);
+    const sample = [...builtIn,...custom].slice(0,15);
+    if(!sample.length){showActionResult('❌ No Questions','<div style="color:var(--text2)">No questions for this course.</div>');return;}
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Review these OAU 100L MCQ questions. For each: (1) Is the answer correct? (2) Are options clear? (3) Verdict: GOOD / NEEDS EDIT / ERROR\n\n'+sample.map((q,i)=>(i+1)+'. '+q.q+'\nOptions: '+(q.opts||[]).map((o,j)=>String.fromCharCode(65+j)+') '+o).join(', ')+'\nStated Answer: '+String.fromCharCode(65+(q.ans||0))).join('\n\n')}],max_tokens:1200})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      showActionResult('✅ Quality Check ('+sample.length+' questions)','<div style="font-size:.78rem;color:var(--text);line-height:1.9;white-space:pre-wrap;">'+text+'</div>');
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='pq_difficulty_tag'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const subject=prompt('Tag difficulty for which course?\n(chm101, chm102, mth101, mth102, phy101, phy102)')?.toLowerCase().trim();
+    if(!subject) return;
+    showActionResult('🎯 Tagging Difficulty...','<div style="color:var(--text2)">AI analysing questions...</div>');
+    try{
+      const snap=await db.collection('pqBank').where('subject','==',subject).get();
+      const questions=snap.docs.map(d=>({id:d.id,...d.data()}));
+      if(!questions.length){showActionResult('❌ No Custom Questions','<div style="color:var(--text2)">No Firestore questions to tag for this course.</div>');return;}
+      const log=[];const addLog=(msg)=>{log.push(msg);showActionResult('🎯 Tagging Progress',log.map(l=>'<div style="font-size:.76rem;color:var(--green);padding:2px 0">✅ '+l+'</div>').join(''));};
+      let tagged=0;
+      for(let i=0;i<Math.min(questions.length,50);i+=10){
+        const batch=questions.slice(i,i+10);
+        const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Rate these OAU 100L MCQ questions as Easy, Medium, or Hard. Return ONLY JSON:\n'+JSON.stringify(batch.map((q,j)=>({idx:j,q:q.q.substring(0,80)})))+'\nReturn: [{"idx":0,"difficulty":"Easy"},...]'}],max_tokens:400,temperature:0.2})});
+        try{const ratings=JSON.parse(((await r.json()).choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());for(const rating of ratings){const q=batch[rating.idx];if(q&&rating.difficulty){await db.collection('pqBank').doc(q.id).update({difficulty:rating.difficulty});tagged++;}}}catch(e){}
+        addLog('Tagged questions '+(i+1)+'-'+(i+batch.length));
+      }
+      addLog('🎉 Done! '+tagged+' questions tagged.');showToast('✅ '+tagged+' tagged!');
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='pq_topic_fix'){
+    const subject=prompt('Auto-fix topics for:\n(chm101, chm102, mth101, mth102, phy101, phy102)')?.toLowerCase().trim();
+    if(!subject) return;
+    const PQ_TOPICS_MAP={chm101:['Atomic Structure','Periodic Table','Ionic Bonding','Covalent Bonding','Stoichiometry','Gas Laws','Acids & Bases','Redox','Reaction Kinetics','Thermochemistry'],chm102:['Qualitative Analysis','Resonance','VSEPR','Hybridization','Intermolecular Forces','Noble Gases','Alkali Metals','Alkaline Earth Metals','Hydrogen','Transition Metals','Alcohols'],mth101:['Sets Theory','Number Systems','Indices & Logs','Surds','Quadratics','Polynomials','Partial Fractions','Sequences & Series','Binomial Theorem','Trigonometry','Functions','Limits','Differentiation','Permutations & Combinations'],mth102:['Integration','Definite Integrals','Vectors','Matrices','Complex Numbers','Differential Equations','Statistics','Probability','Coordinate Geometry'],phy101:['Measurements & Units','Kinematics','Newtons Laws','Work & Energy','Momentum','Circular Motion','Gravitation','SHM','Waves & Sound','Thermodynamics'],phy102:['Electrostatics','Electric Circuits','Capacitors','Magnetism','EM Induction','Optics','Modern Physics','Nuclear Physics','Special Relativity']};
+    const topics=PQ_TOPICS_MAP[subject];if(!topics){showToast('Invalid course');return;}
+    showActionResult('🏷️ Auto-Fixing Topics...','<div style="color:var(--text2)">Matching questions to topics...</div>');
+    const snap=await db.collection('pqBank').where('subject','==',subject).get();
+    let fixed=0;
+    for(const doc of snap.docs){const q=doc.data().q||'';const qLow=q.toLowerCase();let matched='';for(const t of topics){const kws=t.toLowerCase().split(/[\s&\/,]+/).filter(k=>k.length>3);if(kws.some(k=>qLow.includes(k))){matched=t;break;}}if(matched&&doc.data().topic!==matched){await doc.ref.update({topic:matched});fixed++;}}
+    showActionResult('🏷️ Topics Fixed!','<div style="text-align:center;padding:16px;"><div style="font-size:2rem">🏷️</div><div style="font-family:Playfair Display,serif;font-size:1.1rem;font-weight:900;color:var(--green)">'+fixed+' Questions Updated</div></div>');
+    showToast('✅ '+fixed+' questions updated!');
+  }
+
+  else if(type==='exam_paper_generate'){
+    const course=document.getElementById('exam-paper-course')?.value||'chm101';
+    const count=parseInt(document.getElementById('exam-paper-count')?.value||'30');
+    const title=document.getElementById('exam-paper-title')?.value?.trim()||'OAU Examination';
+    const duration=document.getElementById('exam-paper-duration')?.value?.trim()||'1 Hour';
+    const include=document.getElementById('exam-paper-include')?.value||'both';
+    const courseNames={chm101:'CHM 101 — General Chemistry',chm102:'CHM 102 — Organic & Physical Chemistry',mth101:'MTH 101 — Elementary Mathematics I',mth102:'MTH 102 — Elementary Mathematics II',phy101:'PHY 101 — General Physics I',phy102:'PHY 102 — General Physics II',mixed:'Mixed Sciences'};
+    showActionResult('📄 Building Exam Paper...','<div style="color:var(--text2)">Selecting and formatting questions...</div>');
+    let pool=[];
+    const subjects=course==='mixed'?['chm101','mth101','phy101']:[course];
+    for(const s of subjects){
+      const builtIn=(PQ_BANK[s]||[]).map(q=>({...q,subject:s}));
+      try{const snap=await db.collection('pqBank').where('subject','==',s).get();pool.push(...builtIn,...snap.docs.map(d=>({id:d.id,...d.data()})));}
+      catch(e){pool.push(...builtIn);}
+    }
+    pool.sort(()=>Math.random()-0.5);
+    const selected=pool.slice(0,Math.min(count,pool.length));
+    if(!selected.length){showActionResult('❌ No Questions','<div style="color:var(--text2)">No questions available.</div>');return;}
+    const answerKey=selected.map(q=>String.fromCharCode(65+(q.ans||0)));
+    const paper='<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>body{font-family:Times New Roman,serif;max-width:750px;margin:0 auto;padding:30px;font-size:13px;line-height:1.5;color:#000}.hdr{text-align:center;border-bottom:3px double #000;padding-bottom:12px;margin-bottom:18px}.uni{font-size:15px;font-weight:bold;text-transform:uppercase;letter-spacing:1px}.course{font-size:13px;font-weight:bold;margin-top:5px}.meta{display:flex;justify-content:space-between;font-size:12px;margin-top:8px}.inst{background:#f5f5f5;border:1px solid #ccc;padding:10px;margin-bottom:18px;font-size:12px}.q{margin-bottom:14px;page-break-inside:avoid}.qt{font-weight:bold;margin-bottom:5px}.opts{display:grid;grid-template-columns:1fr 1fr;gap:3px 20px;margin-left:15px;font-size:12.5px}.sh{background:#000;color:#fff;padding:4px 10px;font-weight:bold;margin:18px 0 10px;text-transform:uppercase;letter-spacing:1px;font-size:12px}.ak{margin-top:28px;border-top:3px double #000;padding-top:14px}.ag{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;font-size:12px}.ac{text-align:center;border:1px solid #ccc;padding:3px}.an{font-size:10px;color:#666}@media print{.np{display:none}}</style></head><body>'
+      +'<div class="hdr"><div class="uni">Obafemi Awolowo University, Ile-Ife</div><div class="uni" style="font-size:12px">Faculty of Pharmacy / Basic Sciences</div><div class="course">'+title+'</div><div class="course" style="font-weight:normal">'+courseNames[course]+'</div><div class="meta"><span><b>Duration:</b> '+duration+'</span><span><b>Questions:</b> '+selected.length+'</span><span><b>Marks:</b> '+selected.length+'</span></div></div>'
+      +'<div class="inst"><b>INSTRUCTIONS:</b> Answer ALL questions. Each carries ONE mark. Shade the correct letter on the answer sheet. Unauthorized materials are strictly prohibited.</div>'
+      +(include!=='key'?'<div class="sh">Section A — Objective Questions ('+selected.length+' Marks)</div>'+selected.map((q,i)=>'<div class="q"><div class="qt">'+(i+1)+'. '+q.q+'</div><div class="opts">'+((q.opts||[]).map((o,j)=>'<div>'+String.fromCharCode(65+j)+'. '+o+'</div>').join(''))+'</div></div>').join(''):'')
+      +(include!=='questions'?'<div class="ak"><div class="sh" style="margin-top:0">Answer Key — Examiner Only</div><div class="ag">'+answerKey.map((a,i)=>'<div class="ac"><div class="an">'+(i+1)+'</div><b>'+a+'</b></div>').join('')+'</div>'+(include==='both'?'<div style="margin-top:14px;font-size:11px;"><b>Explanations:</b><br>'+selected.map((q,i)=>q.exp?'<div style="margin-top:5px"><b>'+(i+1)+'.</b> '+q.exp+'</div>':'').join('')+'</div>':'')+'</div>':'')
+      +'<div class="np" style="text-align:center;margin-top:20px;"><button onclick="window.print()" style="padding:10px 24px;background:#0a1628;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">🖨️ Print / Save PDF</button></div></body></html>';
+    const w=window.open('','_blank','width=800,height=900,scrollbars=yes');
+    if(w){w.document.write(paper);w.document.close();}
+    showActionResult('📄 Exam Paper Generated!','<div style="text-align:center;padding:16px;"><div style="font-size:2rem">📄</div><div style="font-family:Playfair Display,serif;font-size:1rem;font-weight:700;color:var(--green)">'+selected.length+' Question Paper Ready</div><div style="font-size:.76rem;color:var(--text2);margin-top:6px">A new window opened — click Print to save as PDF.<br>If blocked, allow popups for this site.</div></div>',
+      [{label:'🔄 Different Questions',action:"adminAIAction('exam_paper_generate')",primary:false}]);
+  }
+
+  else if(type==='ai_question_reviewer'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const q=prompt('Paste the question to review:');if(!q) return;
+    const opts=prompt('Paste options (separate each with | )\ne.g. Ionic|Covalent|Metallic|Coordinate');if(!opts) return;
+    const ans=prompt('Correct answer? (A/B/C/D):')?.toUpperCase();if(!ans) return;
+    showActionResult('🤖 Reviewing...','<div style="color:var(--text2)">AI grading your question...</div>');
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Review this OAU 100L MCQ:\n\nQuestion: '+q+'\nOptions: '+opts+'\nStated Answer: '+ans+'\n\nAssess:\n1. Is the stated answer correct? (verify)\n2. Are options plausible and distinct?\n3. Is the wording clear?\n4. Topic and difficulty (Easy/Medium/Hard)\n5. Verdict: APPROVED / NEEDS EDIT / REJECTED\n6. Suggested improvement if needed\n\nBe direct and specific.'}],max_tokens:600})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      showActionResult('🤖 Question Review','<div style="font-size:.8rem;color:var(--text);line-height:1.8;white-space:pre-wrap;">'+text+'</div>');
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='topic_weakness_map'){
+    showActionResult('🗺️ Loading...','<div style="color:var(--text2)">Analysing quiz history...</div>');
+    try{
+      const snap=await db.collection('quizHistory').limit(300).get();
+      const history=snap.docs.map(d=>d.data());
+      if(!history.length){showActionResult('📊 No Data','<div style="color:var(--text2)">No quiz attempts yet.</div>');return;}
+      const courseStats={};
+      history.forEach(h=>{const c=h.course||h.subject||'Unknown';if(!courseStats[c])courseStats[c]={attempts:0,totalScore:0,totalQ:0};courseStats[c].attempts++;courseStats[c].totalScore+=(h.score||0);courseStats[c].totalQ+=(h.total||10);});
+      const sorted=Object.entries(courseStats).map(([c,s])=>({course:c,avg:Math.round(s.totalScore/s.totalQ*100),attempts:s.attempts})).sort((a,b)=>a.avg-b.avg);
+      let html='<div style="font-size:.78rem;color:var(--text2);margin-bottom:12px;">Based on '+history.length+' quiz attempts:</div>';
+      sorted.forEach(s=>{const color=s.avg>=70?'var(--green)':s.avg>=50?'#fbbf24':'#f87171';html+='<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:.78rem;color:var(--text);font-weight:600;">'+s.course+'</span><span style="font-size:.76rem;color:'+color+';font-weight:700;">'+s.avg+'% avg</span></div><div style="background:rgba(255,255,255,.06);border-radius:20px;height:8px;"><div style="background:'+color+';height:100%;border-radius:20px;width:'+Math.min(s.avg,100)+'%;"></div></div><div style="font-size:.68rem;color:var(--text2);margin-top:2px;">'+s.attempts+' attempts</div></div>';});
+      if(sorted[0])html+='<div style="margin-top:12px;padding:10px;background:rgba(248,113,113,.06);border-radius:8px;font-size:.76rem;color:#f87171;"><b>⚠️ Weakest:</b> '+sorted[0].course+' ('+sorted[0].avg+'% avg) — Add more practice questions!</div>';
+      showActionResult('🗺️ Topic Weakness Map',html,[{label:'🔥 Set Hot Topic',action:"adminAIAction('hot_topic')",primary:true}]);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='student_atrisk'){
+    showActionResult('⚠️ Identifying At-Risk...','<div style="color:var(--text2)">Analysing students...</div>');
+    const snap=await db.collection('users').get();
+    const students=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const weekAgo=Date.now()-7*24*60*60*1000;const monthAgo=Date.now()-30*24*60*60*1000;
+    const atRisk=students.filter(s=>{const score=((s.points||0)===0?2:0)+(!s.lastSeen||new Date(s.lastSeen).getTime()<monthAgo?3:new Date(s.lastSeen).getTime()<weekAgo?1:0)+(!s.dept?1:0);s._risk=score;return score>=2;}).sort((a,b)=>b._risk-a._risk);
+    const riskLabel=s=>s._risk>=5?'🔴 High':s._risk>=3?'🟡 Medium':'🟠 Low';
+    showActionResult('⚠️ '+atRisk.length+' At-Risk Students',
+      '<div style="font-size:.74rem;color:var(--text2);margin-bottom:10px;">Risk factors: 0 points, inactive 30+ days, no department.</div>'
+      +atRisk.slice(0,15).map(s=>'<div style="padding:8px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:.78rem;font-weight:600;color:var(--text);">'+( s.name||'Unknown')+'</div><div style="font-size:.7rem;color:var(--text2);">Last: '+(s.lastSeen?new Date(s.lastSeen).toLocaleDateString():'Never')+' • '+(s.points||0)+' pts</div></div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;"><span style="font-size:.68rem;font-weight:700;">'+riskLabel(s)+'</span><button onclick="givePointsToStudent(\''+s.id+'\',\''+(s.name||'').replace(/'/g,"\\'")+'\','+(s.points||0)+')" style="padding:2px 8px;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:5px;color:var(--gold);font-size:.66rem;cursor:pointer;font-family:Outfit,sans-serif;">+pts</button></div></div>').join(''),
+      [{label:'💥 Re-Engagement Campaign',action:"adminAIAction('campaign_engagement')",primary:true}]);
+  }
+
+  else if(type==='platform_score'){
+    showActionResult('🏆 Calculating Score...','<div style="color:var(--text2)">Analysing all metrics...</div>');
+    const [studSnap,quizSnap,pqSnap,motSnap,hotSnap,cbtSnap,annSnap]=await Promise.all([db.collection('users').get(),db.collection('quizHistory').get().catch(()=>({size:0,docs:[]})),db.collection('pqBank').get().catch(()=>({size:0})),db.collection('motivations').get().catch(()=>({size:0})),db.collection('hotTopics').get().catch(()=>({size:0})),db.collection('cbtExams').get().catch(()=>({size:0})),db.collection('announcements').get().catch(()=>({size:0}))]);
+    const students=studSnap.docs.map(d=>d.data());const weekAgo=Date.now()-7*24*60*60*1000;
+    const activeRate=studSnap.size>0?students.filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>weekAgo).length/studSnap.size:0;
+    const engRate=studSnap.size>0?students.filter(s=>(s.points||0)>0).length/studSnap.size:0;
+    const metrics=[{name:'Student Count',score:Math.min(studSnap.size/100*20,20),max:20,val:studSnap.size+' students'},{name:'Weekly Active Rate',score:Math.round(activeRate*20),max:20,val:Math.round(activeRate*100)+'%'},{name:'Engagement',score:Math.round(engRate*15),max:15,val:Math.round(engRate*100)+'%'},{name:'Quiz Attempts',score:Math.min(Math.round(quizSnap.size/(studSnap.size||1)*15),15),max:15,val:quizSnap.size+' attempts'},{name:'PQ Bank',score:Math.min(pqSnap.size,10),max:10,val:pqSnap.size+' custom q'},{name:'Motivations',score:Math.min(motSnap.size,5),max:5,val:motSnap.size},{name:'Hot Topics',score:Math.min(hotSnap.size*2,5),max:5,val:hotSnap.size},{name:'CBT Exams',score:Math.min(cbtSnap.size*2,5),max:5,val:cbtSnap.size},{name:'Announcements',score:Math.min(annSnap.size,5),max:5,val:annSnap.size}];
+    const total=metrics.reduce((s,m)=>s+m.score,0);const grade=total>=80?'A':total>=65?'B':total>=50?'C':'D';const color=total>=80?'var(--green)':total>=65?'#4ade80':total>=50?'#fbbf24':'#f87171';
+    let html='<div style="text-align:center;padding:14px;margin-bottom:14px;background:var(--card);border-radius:12px;"><div style="font-family:Playfair Display,serif;font-size:3rem;font-weight:900;color:'+color+';">'+total+'<span style="font-size:1rem;color:var(--text2);">/100</span></div><div style="font-size:1.1rem;font-weight:700;color:'+color+';">Grade '+grade+'</div><div style="font-size:.74rem;color:var(--text2);margin-top:4px;">'+(total>=80?'Excellent! 🎉':total>=65?'Good, room to grow':total>=50?'Average — needs work':'Needs serious attention')+'</div></div>';
+    metrics.forEach(m=>{const pct=m.max>0?m.score/m.max*100:0;html+='<div style="margin-bottom:8px;"><div style="display:flex;justify-content:space-between;margin-bottom:3px;"><span style="font-size:.74rem;color:var(--text);">'+m.name+'</span><span style="font-size:.74rem;color:var(--text2);">'+m.val+' <b style="color:var(--gold2);">+'+Math.round(m.score)+'/'+m.max+'</b></span></div><div style="background:rgba(255,255,255,.06);border-radius:20px;height:5px;"><div style="background:linear-gradient(90deg,var(--gold),var(--gold2));height:100%;border-radius:20px;width:'+pct+'%;"></div></div></div>';});
+    showActionResult('🏆 Platform Score',html,[{label:'🚀 Auto-Fix Issues',action:"adminAIAction('autopilot_content_fill')",primary:true}]);
+  }
+
+  else if(type==='data_backup'){
+    showActionResult('💾 Exporting...','<div style="color:var(--text2)">Reading all collections...</div>');
+    try{
+      const [studSnap,pqSnap,quizSnap,motSnap,hotSnap,annSnap,cbtSnap]=await Promise.all([db.collection('users').get(),db.collection('pqBank').get().catch(()=>({docs:[]})),db.collection('quizHistory').limit(500).get().catch(()=>({docs:[]})),db.collection('motivations').get().catch(()=>({docs:[]})),db.collection('hotTopics').get().catch(()=>({docs:[]})),db.collection('announcements').get().catch(()=>({docs:[]})),db.collection('cbtExams').get().catch(()=>({docs:[]}))]);
+      const backup={exportedAt:new Date().toISOString(),platform:'BABSPHARM Cloud',collections:{users:studSnap.docs.map(d=>({id:d.id,...d.data()})),pqBank:pqSnap.docs.map(d=>({id:d.id,...d.data()})),quizHistory:quizSnap.docs.map(d=>({id:d.id,...d.data()})),motivations:motSnap.docs.map(d=>({id:d.id,...d.data()})),hotTopics:hotSnap.docs.map(d=>({id:d.id,...d.data()})),announcements:annSnap.docs.map(d=>({id:d.id,...d.data()})),cbtExams:cbtSnap.docs.map(d=>({id:d.id,...d.data()}))},summary:{users:studSnap.size,pqBank:pqSnap.docs.length,quizHistory:quizSnap.docs.length,motivations:motSnap.docs.length}};
+      const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='BABSPHARM_Backup_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(url);
+      showActionResult('💾 Backup Downloaded!','<div style="text-align:center;padding:16px;"><div style="font-size:2rem">✅</div><div style="font-family:Playfair Display,serif;font-size:1rem;font-weight:700;color:var(--green)">Data Exported!</div><div style="font-size:.76rem;color:var(--text2);margin-top:8px;">'+Object.entries(backup.summary).map(([k,v])=>'<b>'+k+':</b> '+v+' records').join('<br>')+'</div></div>');
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='smart_announcement'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    showActionResult('🧠 Generating Smart Announcement...','<div style="color:var(--text2)">Reading live data...</div>');
+    try{
+      const [studSnap,quizSnap,hotSnap]=await Promise.all([db.collection('users').get(),db.collection('quizHistory').limit(100).get().catch(()=>({size:0})),db.collection('hotTopics').limit(3).get().catch(()=>({docs:[]}))]);
+      const students=studSnap.docs.map(d=>d.data());const weekAgo=Date.now()-7*24*60*60*1000;
+      const activeToday=students.filter(s=>s.lastSeen&&new Date(s.lastSeen).toDateString()===new Date().toDateString()).length;
+      const inactive=students.filter(s=>!s.lastSeen||new Date(s.lastSeen).getTime()<weekAgo).length;
+      const hotTopics=hotSnap.docs.map(d=>d.data().topic).join(', ')||'(no hot topics set)';
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Write a smart, data-driven announcement for BABSPHARM Cloud students based on this LIVE data:\n\n- Total students: '+studSnap.size+'\n- Active today: '+activeToday+'\n- Inactive this week: '+inactive+'\n- Quiz attempts: '+quizSnap.size+'\n- Current hot topics: '+hotTopics+'\n\nAddress engagement levels, reference hot topics, motivate inactive students, celebrate active ones. Nigerian tone. Emojis. Max 5 sentences.'}],max_tokens:300})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      showActionResult('🧠 Smart Announcement Ready','<div style="font-size:.84rem;color:var(--text);line-height:1.7;padding:12px;background:rgba(255,255,255,.04);border-radius:8px;">'+text+'</div>',
+        [{label:'📢 Post Now',action:'sendGeneratedAnnouncement(\''+text.replace(/'/g,"\\'")+'\');',primary:true},{label:'📋 Copy',action:'navigator.clipboard.writeText(\''+text.replace(/'/g,"\\'")+'\');showToast(\'Copied!\');',primary:false}]);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+
+  // ══ INTELLIGENCE HANDLERS ══
+  else if(type==='intel_predict_scores'){
+    showActionResult('🔮 Predicting...','<div style="color:var(--text2)">Analysing patterns...</div>');
+    const [studSnap,quizSnap] = await Promise.all([db.collection('users').get(), db.collection('quizHistory').limit(500).get().catch(()=>({docs:[]}))]);
+    const students = studSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const quizByUser = {};
+    quizSnap.docs.forEach(d=>{ const q=d.data(); if(q.uid){ if(!quizByUser[q.uid]) quizByUser[q.uid]=[]; quizByUser[q.uid].push(q); }});
+    const weekAgo = Date.now()-7*24*60*60*1000;
+    const predictions = students.map(s=>{
+      const quizzes = quizByUser[s.id]||[];
+      const avgScore = quizzes.length ? Math.round(quizzes.reduce((t,q)=>t+(q.score/(q.total||10)*100),0)/quizzes.length) : 0;
+      const isActive = s.lastSeen && new Date(s.lastSeen).getTime()>weekAgo;
+      const hasPoints = (s.points||0)>0;
+      const risk = (!isActive?30:0)+(avgScore<40?30:avgScore<60?15:0)+(!hasPoints?20:0)+(quizzes.length===0?20:0);
+      return {...s, avgScore, quizCount:quizzes.length, failRisk:Math.min(risk,100)};
+    }).filter(s=>s.failRisk>40).sort((a,b)=>b.failRisk-a.failRisk);
+    const riskColor = r => r>=80?'#f87171':r>=60?'#fbbf24':'#fb923c';
+    showActionResult('🔮 Failure Risk Prediction',
+      '<div style="font-size:.74rem;color:var(--text2);margin-bottom:10px;">Students with >40% predicted failure risk based on activity, quiz scores and engagement:</div>'
+      +predictions.slice(0,15).map(s=>`<div style="padding:10px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px;border-left:3px solid ${riskColor(s.failRisk)};">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div><div style="font-size:.78rem;font-weight:700;color:var(--text);">${s.name||'Unknown'} <span style="color:var(--text2);font-size:.7rem;">• ${s.dept||'—'}</span></div>
+          <div style="font-size:.7rem;color:var(--text2);">Avg score: ${s.avgScore}% • Quizzes: ${s.quizCount} • Points: ${s.points||0}</div></div>
+          <div style="text-align:right;"><div style="font-size:.8rem;font-weight:900;color:${riskColor(s.failRisk)};">${s.failRisk}%</div><div style="font-size:.64rem;color:var(--text2);">fail risk</div></div>
+        </div></div>`).join(''),
+      [{label:'📢 Send Alert to These Students', action:"adminAIAction('comms_win_back')", primary:true},
+       {label:'🎁 Give Bonus Points to All', action:`bulkGivePoints(30)`, primary:false}]
+    );
+  }
+
+  else if(type==='intel_burnout'){
+    const snap = await db.collection('users').get();
+    const students = snap.docs.map(d=>({id:d.id,...d.data()}));
+    const weekAgo=Date.now()-7*24*60*60*1000, twoWeeksAgo=Date.now()-14*24*60*60*1000;
+    const burnout = students.filter(s=>{
+      if(!s.lastSeen) return false;
+      const last=new Date(s.lastSeen).getTime();
+      return last<weekAgo && last>twoWeeksAgo && (s.points||0)>50; // was active, now dropped off
+    });
+    showActionResult('🔥 Burnout Detection',
+      `<div style="font-size:.78rem;color:#fbbf24;margin-bottom:10px;">⚠️ ${burnout.length} students show burnout signals — were active but suddenly stopped last 7-14 days:</div>`
+      +burnout.slice(0,12).map(s=>`<div style="padding:8px;background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;margin-bottom:6px;display:flex;justify-content:space-between;">
+        <div><div style="font-size:.78rem;font-weight:700;color:var(--text);">${s.name||'Unknown'}</div>
+        <div style="font-size:.7rem;color:var(--text2);">Last seen: ${new Date(s.lastSeen).toLocaleDateString()} • ${s.points||0} pts</div></div>
+        <button onclick="givePointsToStudent('${s.id}','${(s.name||'').replace(/'/g,"\\'")}',${s.points||0})" style="padding:3px 8px;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:6px;color:var(--gold);font-size:.7rem;cursor:pointer;font-family:Outfit,sans-serif;">Re-engage</button>
+      </div>`).join('')||'<div style="color:var(--green)">No burnout signals detected!</div>',
+      [{label:'💬 Send Recovery Messages', action:"adminAIAction('comms_win_back')", primary:true}]
+    );
+  }
+
+  else if(type==='intel_nudge'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const snap=await db.collection('users').get();
+    const students=snap.docs.map(d=>d.data()).filter(s=>s.name);
+    const weekAgo=Date.now()-7*24*60*60*1000;
+    const sample=students.sort(()=>Math.random()-0.5).slice(0,5);
+    showActionResult('⏳ Generating Nudges...','<div style="color:var(--text2)">Writing personalized messages...</div>');
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Write a short, personalized WhatsApp nudge message for each of these OAU students. Make each unique, warm, encouraging, Nigerian tone. Address them by first name. Max 2 sentences each.\n\n'+sample.map((s,i)=>(i+1)+'. '+s.name+', Dept: '+(s.dept||'Unknown')+', Points: '+(s.points||0)+', Last active: '+(s.lastSeen?new Date(s.lastSeen).toLocaleDateString():'Never')).join('\n')}],max_tokens:600})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      showActionResult('💬 Personalized Nudges',`<div style="font-size:.82rem;color:var(--text);line-height:1.9;white-space:pre-wrap;">${text}</div>`,
+        [{label:'📋 Copy All', action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`, primary:true}]);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='intel_segments'){
+    const snap=await db.collection('users').get();
+    const students=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const sorted=students.sort((a,b)=>(b.points||0)-(a.points||0));
+    const third=Math.ceil(sorted.length/3);
+    const top=sorted.slice(0,third), mid=sorted.slice(third,third*2), struggling=sorted.slice(third*2);
+    const seg=(arr,label,color,emoji)=>`<div style="margin-bottom:14px;">
+      <div style="font-size:.8rem;font-weight:700;color:${color};margin-bottom:6px;">${emoji} ${label} (${arr.length} students)</div>
+      ${arr.slice(0,5).map(s=>`<div style="font-size:.74rem;padding:4px 8px;background:rgba(255,255,255,.03);border-radius:6px;margin-bottom:3px;display:flex;justify-content:space-between;"><span>${s.name||'Unknown'} <span style="color:var(--text2);">• ${s.dept||'—'}</span></span><b style="color:${color};">${s.points||0}pts</b></div>`).join('')}
+      ${arr.length>5?`<div style="font-size:.7rem;color:var(--text2);margin-top:4px;">...and ${arr.length-5} more</div>`:''}
+    </div>`;
+    showActionResult('👥 Student Segments',
+      seg(top,'Top Performers','var(--green)','🥇')+seg(mid,'Mid-Tier','#fbbf24','🥈')+seg(struggling,'Needs Support','#f87171','⚠️'));
+  }
+
+  else if(type==='intel_report_card'){
+    const email=prompt('Enter student email or name to generate report:');
+    if(!email) return;
+    const snap=await db.collection('users').get();
+    const student=snap.docs.map(d=>({id:d.id,...d.data()})).find(s=>(s.email||'').toLowerCase().includes(email.toLowerCase())||(s.name||'').toLowerCase().includes(email.toLowerCase()));
+    if(!student){showActionResult('❌ Not Found','<div style="color:var(--text2)">Student not found. Try a different name or email.</div>');return;}
+    const quizSnap=await db.collection('quizHistory').where('uid','==',student.id).get().catch(()=>({docs:[]}));
+    const quizzes=quizSnap.docs.map(d=>d.data());
+    const avgScore=quizzes.length?Math.round(quizzes.reduce((t,q)=>t+(q.score/(q.total||10)*100),0)/quizzes.length):0;
+    const courses={};quizzes.forEach(q=>{if(q.course)courses[q.course]=(courses[q.course]||0)+1;});
+    showActionResult('📋 Student Report Card',
+      `<div style="background:linear-gradient(135deg,var(--navy),var(--navy2));border-radius:12px;padding:16px;margin-bottom:12px;">
+        <div style="font-size:1rem;font-weight:900;font-family:'Playfair Display',serif;color:var(--gold2);">${student.name||'Unknown'}</div>
+        <div style="font-size:.76rem;color:var(--text2);margin-top:2px;">${student.email||''} • ${student.dept||'No department'}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        ${[['⭐ Points',student.points||0,'var(--gold2)'],['📝 Quizzes',quizzes.length,'#818cf8'],['📊 Avg Score',avgScore+'%',avgScore>=60?'var(--green)':'#f87171'],['📅 Last Active',student.lastSeen?new Date(student.lastSeen).toLocaleDateString():'Never','var(--text2)']].map(([l,v,c])=>`<div style="background:rgba(255,255,255,.04);border-radius:8px;padding:10px;text-align:center;"><div style="font-size:.9rem;font-weight:900;font-family:'Playfair Display',serif;color:${c};">${v}</div><div style="font-size:.64rem;color:var(--text2);">${l}</div></div>`).join('')}
+      </div>
+      <div style="font-size:.76rem;color:var(--text);">Active courses: ${Object.keys(courses).join(', ')||'None yet'}</div>`
+    );
+  }
+
+  else if(type==='intel_compare'){
+    const snap=await db.collection('users').get();
+    const students=snap.docs.map(d=>d.data());
+    const now=Date.now(), weekAgo=now-7*24*60*60*1000, twoWeeksAgo=now-14*24*60*60*1000;
+    const thisWeek=students.filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>weekAgo).length;
+    const lastWeek=students.filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>twoWeeksAgo&&new Date(s.lastSeen).getTime()<=weekAgo).length;
+    const diff=thisWeek-lastWeek;
+    const newThisWeek=students.filter(s=>s.createdAt&&new Date(s.createdAt).getTime()>weekAgo).length;
+    const newLastWeek=students.filter(s=>s.createdAt&&new Date(s.createdAt).getTime()>twoWeeksAgo&&new Date(s.createdAt).getTime()<=weekAgo).length;
+    showActionResult('⚖️ Week-on-Week Comparison',
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        ${[['Active Users',lastWeek,thisWeek],['New Registrations',newLastWeek,newThisWeek]].map(([l,prev,curr])=>{
+          const d=curr-prev; const c=d>0?'var(--green)':d<0?'#f87171':'var(--text2)';
+          return `<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px;">
+            <div style="font-size:.72rem;color:var(--text2);margin-bottom:6px;">${l}</div>
+            <div style="font-size:.8rem;color:var(--text2);">Last week: <b>${prev}</b></div>
+            <div style="font-size:.8rem;color:var(--text);">This week: <b>${curr}</b></div>
+            <div style="font-size:.82rem;font-weight:700;color:${c};margin-top:4px;">${d>0?'+':''}${d} (${d>0?'📈':d<0?'📉':'➡️'})</div>
+          </div>`;}).join('')}
+      </div>
+      <div style="padding:10px;background:rgba(255,255,255,.03);border-radius:8px;font-size:.78rem;color:var(--text);">
+        ${diff>0?'✅ Activity is up! Keep going — post more content to maintain momentum.':diff<0?'⚠️ Activity dropped. Run a re-engagement campaign or post a hot topic.':'➡️ Activity is stable. Try a challenge or announcement to spike engagement.'}
+      </div>`
+    );
+  }
+
+  // ══ COMMS HANDLERS ══
+  else if(type==='comms_whatsapp_pack'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    showActionResult('⏳ Creating 7-Day Pack...','<div style="color:var(--text2)">AI writing daily messages...</div>');
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Create a 7-day WhatsApp content pack for BABSPHARM Cloud OAU student group. Each day should have a different angle: Mon=motivation, Tue=study tip, Wed=hot topic alert, Thu=quiz challenge, Fri=fun fact, Sat=leaderboard reminder, Sun=week ahead prep. Nigerian tone. Each max 3 sentences. Include emojis. Format clearly with DAY labels.'}],max_tokens:1000})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      showActionResult('📱 7-Day WhatsApp Pack',`<div style="font-size:.8rem;color:var(--text);line-height:1.9;white-space:pre-wrap;">${text}</div>`,
+        [{label:'📋 Copy All 7 Days', action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`, primary:true}]);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='comms_broadcast'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const dept=prompt('Which department to target? (e.g. Pharmacy, Science, all departments)');
+    if(!dept) return;
+    showActionResult('⏳ Writing...','<div style="color:var(--text2)">Crafting targeted message...</div>');
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Write a targeted broadcast message specifically for OAU ${dept} department students using BABSPHARM Cloud. Reference their specific courses (Pharmacy: CHM, PCY; Science: MTH, PHY, CHM). Nigerian tone. Warm and direct. 3 sentences max. Emojis.`}],max_tokens:200})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      const snap=await db.collection('users').where('dept','==',dept).get();
+      showActionResult(`📢 Broadcast for ${dept} (${snap.size} students)`,
+        `<div style="font-size:.84rem;line-height:1.7;padding:12px;background:rgba(255,255,255,.04);border-radius:8px;">${text}</div>`,
+        [{label:'📢 Post as Announcement', action:`sendGeneratedAnnouncement('${text.replace(/'/g,"\\'")}')`, primary:true},
+         {label:'📋 Copy', action:`navigator.clipboard.writeText('${text.replace(/'/g,"\\'")}');showToast('Copied!')`, primary:false}]);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='comms_exam_countdown'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const exam=prompt('What exam? (e.g. CHM 101 First CA)');
+    const days=parseInt(prompt('How many days until exam?')||'7');
+    if(!exam) return;
+    showActionResult('⏳ Writing 7 messages...','<div style="color:var(--text2)">Generating countdown series...</div>');
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Create a ${days}-day countdown message series for ${exam} exam at OAU. Each day different tone: urgent, encouraging, tip-focused, motivational. Show days counting down (Day ${days}, Day ${days-1}...). Nigerian energy. Short, punchy. Emojis. Each max 2 sentences.`}],max_tokens:800})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      showActionResult(`⏳ ${days}-Day Countdown: ${exam}`,`<div style="font-size:.8rem;color:var(--text);line-height:1.9;white-space:pre-wrap;">${text}</div>`,
+        [{label:'📋 Copy All', action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`, primary:true}]);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='comms_personalized'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const snap=await db.collection('users').get();
+    const top10=snap.docs.map(d=>d.data()).sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,10);
+    showActionResult('⏳ Writing...','<div style="color:var(--text2)">Generating personal messages...</div>');
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Write a short personal congratulatory WhatsApp message for each of these top 10 BABSPHARM Cloud students. Address by first name. Mention their rank and points. Warm, celebratory, Nigerian. Max 2 sentences each.\n\n'+top10.map((s,i)=>`${i+1}. ${s.name}, ${s.points||0} points`).join('\n')}],max_tokens:700})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      showActionResult('✉️ Top 10 Personal Messages',`<div style="font-size:.8rem;color:var(--text);line-height:1.9;white-space:pre-wrap;">${text}</div>`,
+        [{label:'📋 Copy All', action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`, primary:true}]);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='comms_win_back'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    showActionResult('⏳ Writing Win-Back Series...','<div style="color:var(--text2)">Generating 3-message series...</div>');
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Write a 3-message win-back WhatsApp series for OAU students who have been inactive on BABSPHARM Cloud. Message 1: gentle reminder, Message 2: FOMO (what they are missing), Message 3: special offer (free points or bonus). Space them 2 days apart. Nigerian energy. Direct. Emojis. Each max 3 sentences.'}],max_tokens:600})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      showActionResult('🔄 Win-Back Series (3 Messages)',`<div style="font-size:.8rem;color:var(--text);line-height:1.9;white-space:pre-wrap;">${text}</div>`,
+        [{label:'📢 Post Message 1 Now', action:`sendGeneratedAnnouncement('${text.substring(0,200).replace(/'/g,"\\'")}...')`, primary:true},
+         {label:'📋 Copy All 3', action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`, primary:false}]);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='comms_social_caption'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const platform=prompt('Which platform? (Instagram / Twitter / TikTok / LinkedIn):')||'Instagram';
+    showActionResult('⏳ Writing...','<div style="color:var(--text2)">Crafting social media caption...</div>');
+    try{
+      const snap=await db.collection('users').get();
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Write a ${platform} caption for BABSPHARM Cloud — OAU student learning platform with ${snap.size} students. Features: AI tutors, CBT exams, PQ bank, leaderboard. Optimized for ${platform} with relevant hashtags. Nigerian + global audience. Viral-worthy. Include call to action.`}],max_tokens:300})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      showActionResult(`📸 ${platform} Caption`,`<div style="font-size:.82rem;color:var(--text);line-height:1.7;white-space:pre-wrap;padding:12px;background:rgba(255,255,255,.04);border-radius:8px;">${text}</div>`,
+        [{label:'📋 Copy', action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`, primary:true}]);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  // ══ GAMIFY HANDLERS ══
+  else if(type==='gamify_challenge'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const subject=prompt('Challenge subject? (e.g. CHM 101, MTH 101, or leave blank for general):')||'general knowledge';
+    const prize=prompt('Prize? (e.g. 200 bonus points):')||'200 bonus points';
+    showActionResult('⏳ Creating Challenge...','<div style="color:var(--text2)">Setting up weekly challenge...</div>');
+    const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Create a weekly quiz challenge announcement for BABSPHARM Cloud OAU students. Subject: ${subject}. Prize: ${prize}. Include: challenge name, rules (attempt in app), how to win, deadline (Friday). Nigerian energy. Exciting. Emojis. Max 5 sentences.`}],max_tokens:250})});
+    const text=(await r.json()).choices?.[0]?.message?.content||'';
+    await db.collection('announcements').add({title:'🏆 WEEKLY CHALLENGE!',msg:text,createdAt:new Date().toISOString()});
+    await db.collection('coupons').add({code:'CHALLENGE'+Date.now().toString().slice(-4),pts:parseInt(prize)||200,limit:1,used:0,active:true,createdAt:new Date().toISOString()});
+    showActionResult('🏆 Challenge Launched!',`<div style="font-size:.84rem;line-height:1.7;padding:12px;background:rgba(255,255,255,.04);border-radius:8px;">${text}</div><div style="font-size:.74rem;color:var(--green);margin-top:8px;">✅ Announcement posted + prize coupon created!</div>`);
+    showToast('✅ Challenge live!');
+  }
+
+  else if(type==='gamify_tournament'){
+    showActionResult('⏳ Launching Tournament...','<div style="color:var(--text2)">Setting up subject tournament...</div>');
+    const snap=await db.collection('users').get();
+    const students=snap.docs.map(d=>d.data());
+    const depts={};students.forEach(s=>{if(s.dept)depts[s.dept]=(depts[s.dept]||0)+1;});
+    // Create tournament announcement
+    const msg='⚔️ SUBJECT TOURNAMENT IS HERE! 🔥\n\nWhich course reigns supreme? CHM vs MTH vs PHY!\n\nRules:\n✅ Take quizzes in any subject this week\n✅ Top scorer per subject wins 500 points\n✅ Department with highest avg wins bonus\n✅ Tournament ends Sunday midnight\n\n👉 Log in NOW and start grinding! 💪\n\nMay the best student WIN! 🏆';
+    await db.collection('announcements').add({title:'⚔️ SUBJECT TOURNAMENT!',msg,createdAt:new Date().toISOString()});
+    for(const subj of ['CHM','MTH','PHY']){
+      await db.collection('hotTopics').add({topic:'Tournament — '+subj+' Leaderboard',course:subj+' 101',urgency:'urgent',note:'Weekly tournament active — score high!',createdAt:new Date().toISOString()});
+    }
+    showActionResult('⚔️ Tournament Launched!',`<div style="font-size:.82rem;color:var(--text);line-height:1.7;white-space:pre-wrap;">${msg}</div><div style="font-size:.74rem;color:var(--green);margin-top:8px;">✅ Announcement posted + hot topics set for CHM, MTH and PHY!</div>`);
+    showToast('⚔️ Tournament is live!');
+  }
+
+  else if(type==='gamify_streak'){
+    const snap=await db.collection('users').get();
+    const students=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const now=Date.now();
+    let bonuses={day3:0,day7:0,day14:0};
+    // Simple streak estimate based on lastSeen recency
+    for(const s of students){
+      if(!s.lastSeen) continue;
+      const daysSince=Math.floor((now-new Date(s.lastSeen).getTime())/(24*60*60*1000));
+      if(daysSince<=3){ await db.collection('users').doc(s.id).set({points:(s.points||0)+50},{merge:true}); bonuses.day3++; }
+      else if(daysSince<=7){ await db.collection('users').doc(s.id).set({points:(s.points||0)+30},{merge:true}); bonuses.day7++; }
+      else if(daysSince<=14){ await db.collection('users').doc(s.id).set({points:(s.points||0)+10},{merge:true}); bonuses.day14++; }
+    }
+    await db.collection('announcements').add({title:'🔥 STREAK BONUSES AWARDED!',msg:'Streak bonuses just dropped! 🔥\n\n🥇 3-day streak: +50 bonus points\n🥈 7-day streak: +30 bonus points\n🥉 14-day streak: +10 bonus points\n\nCheck your points balance! Keep logging in daily for bigger rewards. 💪',createdAt:new Date().toISOString()});
+    showActionResult('🔥 Streak Bonuses Awarded!',`<div style="font-size:.8rem;line-height:2;color:var(--text);">
+      <div>🥇 3-day streak: <b style="color:var(--green);">${bonuses.day3} students</b> got +50 pts</div>
+      <div>🥈 7-day streak: <b style="color:#fbbf24;">${bonuses.day7} students</b> got +30 pts</div>
+      <div>🥉 14-day streak: <b style="color:#fb923c;">${bonuses.day14} students</b> got +10 pts</div>
+    </div><div style="font-size:.74rem;color:var(--green);margin-top:8px;">✅ Announcement posted!</div>`);
+    showToast('🔥 Streak bonuses awarded!');
+  }
+
+  else if(type==='gamify_prize_draw'){
+    const snap=await db.collection('users').get();
+    const weekAgo=Date.now()-7*24*60*60*1000;
+    const eligible=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>weekAgo&&(s.points||0)>0);
+    if(!eligible.length){showActionResult('❌ No Eligible Students','<div style="color:var(--text2)">No active students found for the draw.</div>');return;}
+    const winner=eligible[Math.floor(Math.random()*eligible.length)];
+    const prize=parseInt(prompt('Prize for winner (bonus points):')||'300');
+    await db.collection('users').doc(winner.id).set({points:(winner.points||0)+prize},{merge:true});
+    await db.collection('announcements').add({title:'🎰 PRIZE DRAW WINNER!',msg:'🎰 PRIZE DRAW RESULTS ARE IN!\n\nCongratulations to our lucky winner:\n\n🏆 '+winner.name+' ('+winner.dept+')\n\nYou just won '+prize+' BONUS POINTS! 🎉\n\nThank you to all '+ eligible.length+' eligible students who participated. Keep being active — more draws coming! 💪',createdAt:new Date().toISOString()});
+    showActionResult('🎰 Prize Draw Complete!',`<div style="text-align:center;padding:16px;"><div style="font-size:2.5rem;">🏆</div><div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:var(--gold2);">${winner.name}</div><div style="font-size:.8rem;color:var(--text2);margin-top:4px;">${winner.dept||'—'} • Won ${prize} bonus points!</div><div style="font-size:.74rem;color:var(--green);margin-top:8px;">✅ Points awarded + announcement posted!<br>Draw pool: ${eligible.length} active students</div></div>`);
+    showToast('🎰 Winner: '+winner.name+'!');
+  }
+
+  else if(type==='gamify_badge'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const badgeName=prompt('Badge name? (e.g. Chemistry Master, Math Wizard):')||'Star Student';
+    const criteria=prompt('Criteria? (e.g. scored 80%+ on CHM quiz, or top 10 this week):');
+    if(!criteria) return;
+    showActionResult('⏳ Creating Badge...','<div style="color:var(--text2)">Designing badge announcement...</div>');
+    const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Create an exciting announcement for a new achievement badge called "${badgeName}" on BABSPHARM Cloud. Criteria to earn it: ${criteria}. Make it feel prestigious. Nigerian energy. Tell students how to earn it. Max 4 sentences. Emojis.`}],max_tokens:200})});
+    const text=(await r.json()).choices?.[0]?.message?.content||'';
+    await db.collection('announcements').add({title:'🥇 NEW BADGE: '+badgeName.toUpperCase(),msg:text,createdAt:new Date().toISOString()});
+    await db.collection('badges').add({name:badgeName,criteria,emoji:'🥇',createdAt:new Date().toISOString()}).catch(()=>{});
+    showActionResult('🥇 Badge Created!',`<div style="font-size:.84rem;line-height:1.7;padding:12px;background:rgba(255,255,255,.04);border-radius:8px;">${text}</div><div style="font-size:.74rem;color:var(--green);margin-top:8px;">✅ Announcement posted!</div>`);
+    showToast('🥇 Badge launched!');
+  }
+
+  else if(type==='gamify_double_points'){
+    const endDate=prompt('Double points until? (e.g. Sunday 11:59PM):')||'Sunday midnight';
+    const msg='💰 DOUBLE POINTS WEEKEND IS HERE! 🔥\n\nEvery quiz you take this weekend earns DOUBLE POINTS!\n\n🎯 How to earn:\n✅ Take any quiz in the app\n✅ Points automatically doubled\n✅ Offer ends: '+endDate+'\n\nThis is your chance to CLIMB the leaderboard fast! 🚀\n\nLog in NOW → 👉 https://babspharm1-lgtm.github.io/BABSPHARM/';
+    await db.collection('announcements').add({title:'💰 DOUBLE POINTS WEEKEND!',msg,createdAt:new Date().toISOString()});
+    await db.collection('settings').doc('doublePoints').set({active:true,endDate,startedAt:new Date().toISOString()});
+    showActionResult('💰 Double Points Active!',`<div style="font-size:.82rem;color:var(--text);line-height:1.7;white-space:pre-wrap;">${msg}</div><div style="font-size:.74rem;color:var(--green);margin-top:8px;">✅ Announcement posted! Remember to disable when weekend ends.</div>`,
+      [{label:'🛑 Disable Double Points', action:"db.collection('settings').doc('doublePoints').set({active:false});showToast('✅ Double points disabled')", primary:false}]);
+    showToast('💰 Double points weekend active!');
+  }
+
+  // ══ BUSINESS INTELLIGENCE HANDLERS ══
+  else if(type==='biz_growth_forecast'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const snap=await db.collection('users').get();
+    const students=snap.docs.map(d=>d.data());
+    const now=Date.now(), weekAgo=now-7*24*60*60*1000, monthAgo=now-30*24*60*60*1000;
+    const newThisWeek=students.filter(s=>s.createdAt&&new Date(s.createdAt).getTime()>weekAgo).length;
+    const newLastMonth=students.filter(s=>s.createdAt&&new Date(s.createdAt).getTime()>monthAgo).length;
+    showActionResult('⏳ Forecasting...','<div style="color:var(--text2)">AI running growth model...</div>');
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Analyse this Nigerian ed-tech platform growth data and forecast the next 30 days:\n\nTotal students: ${snap.size}\nNew this week: ${newThisWeek}\nNew this month: ${newLastMonth}\nActive this week: ${students.filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>weekAgo).length}\n\nProvide: (1) Projected student count in 30 days, (2) Growth rate, (3) Top 3 actions to accelerate growth, (4) Realistic target to aim for. Be specific with numbers.`}],max_tokens:500})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      showActionResult('📈 30-Day Growth Forecast',`<div style="font-size:.8rem;color:var(--text);line-height:1.8;white-space:pre-wrap;">${text}</div>`);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='biz_retention'){
+    const snap=await db.collection('users').get();
+    const students=snap.docs.map(d=>d.data());
+    const now=Date.now();
+    const segments=[{label:'Active (last 7 days)',days:7},{label:'At risk (8-30 days)',days:30},{label:'Churned (31-90 days)',days:90},{label:'Lost (90+ days)',days:9999}];
+    const data=segments.map(seg=>{
+      const count=students.filter(s=>{
+        if(!s.lastSeen) return seg.days===9999;
+        const d=Math.floor((now-new Date(s.lastSeen).getTime())/(24*60*60*1000));
+        return seg.label==='Active (last 7 days)'?d<=7:seg.label==='At risk (8-30 days)'?d>7&&d<=30:seg.label==='Churned (31-90 days)'?d>30&&d<=90:d>90;
+      }).length;
+      return {...seg,count,pct:Math.round(count/students.length*100)};
+    });
+    const colors=['var(--green)','#fbbf24','#fb923c','#f87171'];
+    showActionResult('🔒 Retention Analysis',
+      data.map((s,i)=>`<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:.78rem;color:var(--text);">${s.label}</span><b style="color:${colors[i]};font-size:.78rem;">${s.count} (${s.pct}%)</b></div><div style="background:rgba(255,255,255,.06);border-radius:20px;height:8px;"><div style="background:${colors[i]};height:100%;border-radius:20px;width:${s.pct}%;"></div></div></div>`).join('')
+      +`<div style="margin-top:12px;padding:10px;background:rgba(255,255,255,.03);border-radius:8px;font-size:.76rem;color:var(--text2);">Retention health: <b style="color:${data[0].pct>30?'var(--green)':data[0].pct>15?'#fbbf24':'#f87171'}">${data[0].pct>30?'Good':'Needs work'}</b> — ${data[0].pct}% active rate. Target is >40% weekly active.</div>`);
+  }
+
+  else if(type==='biz_monetize'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const snap=await db.collection('users').get();
+    showActionResult('⏳ Generating Ideas...','<div style="color:var(--text2)">AI analysing monetization opportunities...</div>');
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`BABSPHARM Cloud is a free OAU student learning platform with ${snap.size} students, AI tutors, CBT exams, and PQ bank. Suggest 5 practical monetization strategies that:\n1. Won't alienate students (they're Nigerian undergrads)\n2. Can work with current features\n3. Are realistic for a small ed-tech startup\n4. Could generate income within 3 months\n\nBe specific with pricing, implementation steps, and realistic revenue estimates.`}],max_tokens:700})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      showActionResult('💰 Monetization Ideas',`<div style="font-size:.8rem;color:var(--text);line-height:1.8;white-space:pre-wrap;">${text}</div>`);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='biz_competitor'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    showActionResult('⏳ Analysing...','<div style="color:var(--text2)">AI identifying competitive advantages...</div>');
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Analyse the competitive position of BABSPHARM Cloud — an OAU-specific learning platform with AI tutors, CBT exams, PQ bank, gamification (points, leaderboard, spin wheel), and 337+ students. Compare against: general study apps (Quizlet, Anki), Nigerian platforms (Myschool.ng, Teststreams), and WhatsApp study groups. Identify: unique advantages, gaps to fill, and 3 key differentiators to amplify in marketing.'}],max_tokens:600})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      showActionResult('🔍 Competitive Edge Analysis',`<div style="font-size:.8rem;color:var(--text);line-height:1.8;white-space:pre-wrap;">${text}</div>`);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  else if(type==='biz_cohort'){
+    const snap=await db.collection('users').get();
+    const students=snap.docs.map(d=>d.data());
+    const now=Date.now(), semesterStart=new Date(new Date().getFullYear(),8,1).getTime(); // Sept 1
+    const thisSemester=students.filter(s=>s.createdAt&&new Date(s.createdAt).getTime()>semesterStart);
+    const weekAgo=now-7*24*60*60*1000;
+    showActionResult('📅 Cohort Analysis',
+      `<div style="font-size:.8rem;line-height:2;color:var(--text);">
+        <div>📊 This semester cohort: <b style="color:var(--gold2);">${thisSemester.length} students</b></div>
+        <div>✅ Still active (last 7 days): <b style="color:var(--green);">${thisSemester.filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>weekAgo).length}</b></div>
+        <div>💰 Earned points: <b style="color:var(--gold2);">${thisSemester.filter(s=>(s.points||0)>0).length}</b></div>
+        <div>📉 Zero points: <b style="color:#f87171;">${thisSemester.filter(s=>(s.points||0)===0).length}</b></div>
+        <div>📱 Retention rate: <b style="color:${thisSemester.length>0?Math.round(thisSemester.filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>weekAgo).length/thisSemester.length*100):0}%">${thisSemester.length>0?Math.round(thisSemester.filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>weekAgo).length/thisSemester.length*100):0}%</b></div>
+        <div>🏆 Avg points: <b style="color:var(--gold2);">${thisSemester.length?Math.round(thisSemester.reduce((s,st)=>s+(st.points||0),0)/thisSemester.length):0}</b></div>
+      </div>`);
+  }
+
+  else if(type==='biz_action_plan'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const [studSnap,quizSnap]=await Promise.all([db.collection('users').get(),db.collection('quizHistory').get().catch(()=>({size:0}))]);
+    const students=studSnap.docs.map(d=>d.data());
+    const weekAgo=Date.now()-7*24*60*60*1000;
+    showActionResult('⏳ Building Action Plan...','<div style="color:var(--text2)">AI generating 30-day roadmap...</div>');
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Create a concrete 30-day action plan for BABSPHARM Cloud admin. Current stats:\n- ${studSnap.size} students\n- ${students.filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>weekAgo).length} active this week\n- ${students.filter(s=>(s.points||0)===0).length} with zero points\n- ${quizSnap.size} total quiz attempts\n\nProvide: Week 1, Week 2, Week 3, Week 4 action items. Be specific — what to post, what to build, what campaigns to run. Focus on reaching 500 students and 70% weekly active rate.`}],max_tokens:700})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      showActionResult('📋 30-Day Action Plan',`<div style="font-size:.8rem;color:var(--text);line-height:1.8;white-space:pre-wrap;">${text}</div>`,
+        [{label:'📋 Copy Plan', action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`, primary:true}]);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  // ══ AI CONTENT FACTORY HANDLERS ══
+  else if(type==='content_notes'||type==='content_summary'||type==='content_flashcards'||type==='content_mnemonics'||type==='content_common_errors'||type==='content_formula_sheet'||type==='content_story'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const topic=document.getElementById('content-topic')?.value?.trim();
+    if(!topic){showToast('Enter a topic first!');return;}
+    const prompts={
+      content_notes:`Write comprehensive study notes on "${topic}" for OAU 100L students. Structure with: Definition, Key concepts (numbered), Important formulas/reactions, Common exam questions on this topic, Quick memory tips. Use clear headers. Nigerian examples where relevant.`,
+      content_summary:`Write a 1-page exam-ready summary of "${topic}" for OAU 100L. Cover: what it is, why it matters, key equations/reactions, 3 most likely exam question types with brief answers. Ultra-concise. Every sentence must be exam-relevant.`,
+      content_flashcards:`Create 10 flashcard pairs for "${topic}" for OAU 100L. Format each as:\n[FRONT]: Question or term\n[BACK]: Answer or definition\n\nMake them exam-focused. Cover definitions, formulas, processes and common calculations.`,
+      content_mnemonics:`Create memory tricks, mnemonics and shortcuts for "${topic}" for OAU 100L students. Include: acronyms, rhymes, visual associations, number patterns, Nigerian cultural references to make concepts stick. The more creative the better.`,
+      content_common_errors:`List the 10 most common student mistakes on "${topic}" in OAU exams. For each: the mistake, why students make it, the correct approach, and how to avoid it. Direct and specific.`,
+      content_formula_sheet:`Create a formula/reaction cheat sheet for "${topic}" for OAU 100L. List every formula, equation, or reaction needed. Include: the formula, what each variable means, units, and a quick example. Format clearly for quick reference.`,
+      content_story:`Explain "${topic}" as a story set in Nigeria. Make the concepts come alive through everyday Nigerian life — use markets, danfo buses, NEPA, parties, food, etc. Make it entertaining AND educational. At the end, list the 5 key points the story covered.`
+    };
+    const titles={content_notes:'📝 Study Notes',content_summary:'📄 1-Page Summary',content_flashcards:'🃏 Flashcard Set',content_mnemonics:'🧠 Mnemonics & Tricks',content_common_errors:'⚠️ Common Exam Errors',content_formula_sheet:'📐 Formula Sheet',content_story:'📖 Story-Based Explanation'};
+    showActionResult('⏳ Generating '+titles[type]+'...','<div style="color:var(--text2)">AI creating content for: '+topic+'</div>');
+    try{
+      const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:prompts[type]}],max_tokens:1200,temperature:0.7})});
+      const text=(await r.json()).choices?.[0]?.message?.content||'';
+      showActionResult(titles[type]+': '+topic,`<div style="font-size:.8rem;color:var(--text);line-height:1.8;white-space:pre-wrap;">${text}</div>`,
+        [{label:'📢 Post to Students', action:`sendGeneratedAnnouncement('${titles[type].replace(/'/g,"\\'")} — ${topic.replace(/'/g,"\\'")}\n\n${text.substring(0,300).replace(/'/g,"\\'")}...')`, primary:false},
+         {label:'📋 Copy', action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`, primary:true}]);
+    }catch(e){showActionResult('❌ Error',e.message);}
+  }
+
+  // ══ AUTOMATION HANDLERS ══
+  else if(type==='auto_daily_routine'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const logEl=document.getElementById('automation-log');
+    if(logEl){logEl.style.display='block';logEl.innerHTML='';}
+    const addLog=(msg)=>{if(logEl){logEl.innerHTML+='<div>['+new Date().toLocaleTimeString()+'] '+msg+'</div>';logEl.scrollTop=logEl.scrollHeight;}};
+    showActionResult('🌅 Running Daily Routine...','<div id="automation-log" style="background:rgba(0,0,0,.4);border-radius:8px;padding:10px;font-family:monospace;font-size:.72rem;color:#818cf8;min-height:80px;">Starting...</div>');
+    addLog('Generating daily motivation...');
+    try{
+      const r1=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Write a powerful daily motivation for OAU students. Nigerian energy. Max 2 sentences. Emojis.'}],max_tokens:100})});
+      const motiv=(await r1.json()).choices?.[0]?.message?.content||'';
+      await db.collection('motivations').add({emoji:'🌅',text:motiv,sub:'Daily motivation',category:'general',createdAt:new Date().toISOString()});
+      addLog('✅ Motivation added: '+motiv.substring(0,50)+'...');
+    }catch(e){addLog('⚠️ Motivation skipped');}
+    addLog('Setting daily hot topic...');
+    try{
+      const r2=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Give 1 OAU exam hot topic for today. JSON: {"topic":"name","course":"CHM 101","urgency":"urgent","note":"brief reason"}'}],max_tokens:100})});
+      const t=JSON.parse((await r2.json()).choices?.[0]?.message?.content.replace(/```json|```/g,'').trim()||'{}');
+      if(t.topic) await db.collection('hotTopics').add({...t,createdAt:new Date().toISOString()});
+      addLog('✅ Hot topic set: '+(t.topic||'done'));
+    }catch(e){addLog('⚠️ Hot topic skipped');}
+    addLog('Posting daily tip...');
+    try{
+      const r3=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Write 1 exam tip for OAU 100L students. Today tone. Nigerian. 2 sentences. Emojis.'}],max_tokens:100})});
+      const tip=(await r3.json()).choices?.[0]?.message?.content||'';
+      await db.collection('announcements').add({title:'💡 Daily Tip',msg:tip,createdAt:new Date().toISOString()});
+      addLog('✅ Daily tip posted');
+    }catch(e){addLog('⚠️ Tip skipped');}
+    addLog('════ Daily routine complete! ════');
+    showToast('✅ Daily routine done!');
+  }
+
+  else if(type==='auto_weekly_routine'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const log=[];const addLog=(msg)=>{log.push(msg);showActionResult('📅 Weekly Routine Running',log.map(l=>'<div style="font-size:.76rem;color:#818cf8;padding:2px 0">'+l+'</div>').join(''));};
+    showActionResult('📅 Starting...','<div style="color:var(--text2)">Running weekly routine...</div>');
+    // Study plan
+    try{const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Create this week study timetable for OAU 100L. Mon-Sun, CHM 101, MTH 101, PHY 101. Brief, emojis.'}],max_tokens:250})});const t=(await r.json()).choices?.[0]?.message?.content||'';await db.collection('announcements').add({title:"📅 This Week's Study Plan",msg:t,createdAt:new Date().toISOString()});addLog('✅ Weekly study plan posted');}catch(e){addLog('⚠️ Study plan skipped');}
+    // Leaderboard
+    const snap=await db.collection('users').get();const top3=snap.docs.map(d=>d.data()).sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,3);
+    await db.collection('announcements').add({title:'🏆 Weekly Leaderboard!',msg:'🏆 TOP STUDENTS THIS WEEK!\n\n'+top3.map((s,i)=>['🥇','🥈','🥉'][i]+' '+s.name+' — '+(s.points||0)+' pts').join('\n')+'\n\nKeep pushing! Leaderboard updates every week! 💪',createdAt:new Date().toISOString()});
+    addLog('✅ Leaderboard posted: '+(top3[0]?.name||'—')+' leads!');
+    // Re-engagement coupon
+    await db.collection('coupons').add({code:'WEEK'+new Date().toISOString().slice(0,10).replace(/-/g,''),pts:40,limit:200,used:0,active:true,createdAt:new Date().toISOString()});
+    addLog('✅ Weekly coupon created');
+    addLog('🎉 Weekly routine complete!');
+    showToast('✅ Weekly routine done!');
+  }
+
+  else if(type==='auto_exam_season'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const log=[];const addLog=(msg)=>{log.push(msg);showActionResult('📚 Exam Season Mode',log.map(l=>'<div style="font-size:.76rem;color:#818cf8;padding:2px 0">'+l+'</div>').join(''));};
+    showActionResult('📚 Activating Exam Season...','<div style="color:var(--text2)">All systems go...</div>');
+    await db.collection('announcements').add({title:'⚠️ EXAM SEASON IS HERE!',msg:'⚠️ EXAM SEASON OFFICIALLY ACTIVATED! 🔥\n\nAll AI tutors are on standby. PQ bank is fully loaded. CBT exams are live.\n\nYour study strategy:\n1️⃣ AI Tutor → Learn each topic\n2️⃣ PQ Bank → Practice past questions\n3️⃣ CBT Exam → Test yourself\n4️⃣ Repeat until exam day!\n\nYou can do this! 💪 Log in NOW!',createdAt:new Date().toISOString()});
+    addLog('✅ Exam season alert posted');
+    try{const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Give 6 exam season hot topics for OAU 100L, 2 per CHM 101, MTH 101, PHY 101. JSON: [{"topic":"","course":"CHM 101","urgency":"urgent","note":""}]'}],max_tokens:600})});const topics=JSON.parse((await r.json()).choices?.[0]?.message?.content.replace(/```json|```/g,'').trim()||'[]');for(const t of topics)await db.collection('hotTopics').add({...t,createdAt:new Date().toISOString()});addLog('✅ '+topics.length+' exam hot topics set');}catch(e){addLog('⚠️ Hot topics skipped');}
+    await db.collection('coupons').add({code:'EXAMBOOST',pts:75,limit:500,used:0,active:true,createdAt:new Date().toISOString()});
+    addLog('✅ EXAMBOOST coupon (75pts) created');
+    await db.collection('settings').doc('examSeason').set({active:true,startedAt:new Date().toISOString()});
+    addLog('🎉 Exam season mode fully activated!');
+    showToast('📚 Exam season mode is ON!');
+  }
+
+  else if(type==='auto_new_semester'){
+    if(!groqKey){showToast('Set GROQ key first');return;}
+    const semester=prompt('Semester name? (e.g. 2024/2025 Rain Semester):')||'New Semester';
+    const log=[];const addLog=(msg)=>{log.push(msg);showActionResult('🎓 New Semester Setup',log.map(l=>'<div style="font-size:.76rem;color:#818cf8;padding:2px 0">'+l+'</div>').join(''));};
+    showActionResult('🎓 Setting up New Semester...','<div style="color:var(--text2)">Preparing platform...</div>');
+    try{const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Write a warm welcome announcement for ${semester} at BABSPHARM Cloud. Welcome returning students, encourage new ones. Mention AI tutors, PQ bank, CBT exams. Nigerian energy. Emojis. 4 sentences.`}],max_tokens:200})});const t=(await r.json()).choices?.[0]?.message?.content||'';await db.collection('announcements').add({title:'🎓 Welcome to '+semester+'!',msg:t,createdAt:new Date().toISOString()});addLog('✅ Welcome announcement posted');}catch(e){addLog('⚠️ Welcome skipped');}
+    await db.collection('coupons').add({code:'NEWSEM'+Date.now().toString().slice(-3),pts:100,limit:500,used:0,active:true,createdAt:new Date().toISOString()});
+    addLog('✅ New semester welcome coupon (100pts) created');
+    await db.collection('settings').doc('currentSemester').set({name:semester,startedAt:new Date().toISOString()});
+    addLog('✅ Semester name updated in settings');
+    addLog('🎉 New semester setup complete!');
+    showToast('🎓 New semester activated!');
+  }
+
+  else if(type==='auto_milestone'){
+    const snap=await db.collection('users').get();
+    const count=snap.size;
+    const milestone=count>=500?500:count>=400?400:count>=300?300:count>=200?200:count>=100?100:50;
+    if(count<milestone){showActionResult('⏳ Not Yet','<div style="color:var(--text2)">You have '+count+' students. Next milestone is '+milestone+'.</div>');return;}
+    const msg='🎉 WE HIT '+count+' STUDENTS! 🎉\n\nBABSPHARM Cloud just reached a MAJOR milestone! Thank you to every single student who joined, studied, and trusted us with your education.\n\n'+count+' students means '+count+' futures we are shaping together. This is just the beginning! 🚀\n\nShare this platform with your coursemates — let us keep growing! 💪\n\n👉 https://babspharm1-lgtm.github.io/BABSPHARM/';
+    await db.collection('announcements').add({title:'🎉 '+count+' STUDENTS MILESTONE!',msg,createdAt:new Date().toISOString()});
+    const students=snap.docs.map(d=>({id:d.id,...d.data()}));
+    for(const s of students) await db.collection('users').doc(s.id).set({points:(s.points||0)+25},{merge:true});
+    showActionResult('🎉 Milestone Celebrated!',`<div style="text-align:center;padding:16px;"><div style="font-size:2.5rem;">🎉</div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:900;color:var(--gold2);">${count} Students!</div><div style="font-size:.78rem;color:var(--text2);margin-top:6px;">✅ Celebration announcement posted<br>+25 bonus points given to ALL students!</div></div>`);
+    showToast('🎉 Milestone celebrated — +25pts to everyone!');
+  }
+
+  else if(type==='auto_cleanup_routine'){
+    const log=[];const addLog=(msg)=>{log.push(msg);showActionResult('🧹 Cleanup Running',log.map(l=>'<div style="font-size:.76rem;color:#818cf8;padding:2px 0">'+l+'</div>').join(''));};
+    showActionResult('🧹 Starting Cleanup...','<div style="color:var(--text2)">Scanning...</div>');
+    // Remove duplicate motivations
+    try{const mSnap=await db.collection('motivations').get();const seen={};let dupes=0;for(const d of mSnap.docs){const k=(d.data().text||'').toLowerCase().trim();if(seen[k]){await d.ref.delete();dupes++;}else seen[k]=true;}addLog('✅ Removed '+dupes+' duplicate motivations');}catch(e){addLog('⚠️ Motivations check skipped');}
+    // Remove old hot topics (>30 days)
+    try{const monthAgo=new Date(Date.now()-30*24*60*60*1000).toISOString();const hSnap=await db.collection('hotTopics').where('createdAt','<',monthAgo).get();let removed=0;for(const d of hSnap.docs){await d.ref.delete();removed++;}addLog('✅ Removed '+removed+' old hot topics');}catch(e){addLog('⚠️ Hot topics cleanup skipped');}
+    // Remove orphaned quiz history
+    try{const uSnap=await db.collection('users').get();const uids=new Set(uSnap.docs.map(d=>d.id));const qSnap=await db.collection('quizHistory').limit(200).get();let orphans=0;for(const d of qSnap.docs){if(d.data().uid&&!uids.has(d.data().uid)){await d.ref.delete();orphans++;}}addLog('✅ Removed '+orphans+' orphaned quiz records');}catch(e){addLog('⚠️ Quiz cleanup skipped');}
+    addLog('🎉 Platform cleanup complete!');
+    showToast('✅ Cleanup done!');
+  }
+
+
   else if(type==='questions_bulk'){
     if(!groqKey){showToast('Set GROQ key first');return;}
     showActionResult('🚀 Generating ALL 60 Questions...','<div style="color:var(--text2)">This may take 2-3 minutes...</div>');
@@ -3435,6 +4552,68 @@ async function adminAIAction(type){
 }
 
 // Helper: give points to student directly
+// ── PQ BANK HELPERS ──
+async function confirmPasteSave(questions, subject){
+  const courseNames = {chm101:'CHM 101',chm102:'CHM 102',mth101:'MTH 101',mth102:'MTH 102',phy101:'PHY 101',phy102:'PHY 102'};
+  let saved = 0;
+  for(const q of questions){
+    if(!q.q || !q.opts || q.opts.length < 2) continue;
+    while(q.opts.length < 4) q.opts.push('N/A');
+    await db.collection('pqBank').add({
+      subject, q:q.q, opts:q.opts.slice(0,4),
+      ans: Math.min(q.ans||0, 3),
+      exp: q.exp||'',
+      createdAt: new Date().toISOString()
+    });
+    saved++;
+  }
+  showToast('✅ '+saved+' questions saved to '+courseNames[subject]+'!');
+  document.getElementById('ai-action-result').style.display='none';
+  const ta = document.getElementById('pq-paste-text');
+  if(ta) ta.value = '';
+  if(typeof loadAdminPQBank === 'function') loadAdminPQBank(subject);
+}
+
+async function deletePQBankItem(id, label, btn){
+  if(!confirm('Delete question: "'+label+'"?\n\nThis cannot be undone.')) return;
+  try{
+    await db.collection('pqBank').doc(id).delete();
+    showToast('✅ Question deleted!');
+    if(btn){
+      const card = btn.closest('div[style*="margin-bottom:8px"]') || btn.parentElement?.parentElement;
+      if(card) card.remove();
+    }
+    if(typeof adminPQSubject !== 'undefined') loadAdminPQBank(adminPQSubject);
+  }catch(e){showToast('❌ Error: '+e.message);}
+}
+
+async function deleteAllPQForCourse(course, courseName){
+  const snap = await db.collection('pqBank').where('subject','==',course).get();
+  if(snap.empty){showToast('No custom questions for '+courseName);return;}
+  if(!confirm('Delete ALL '+snap.size+' custom questions for '+courseName+'?\n\nBuilt-in questions are NOT affected.\nThis CANNOT be undone.')) return;
+  let deleted = 0;
+  for(const doc of snap.docs){await doc.ref.delete();deleted++;}
+  showToast('✅ Deleted '+deleted+' questions from '+courseName);
+  document.getElementById('ai-action-result').style.display='none';
+  if(typeof loadAdminPQBank === 'function') loadAdminPQBank(course);
+}
+
+async function removeDuplicate(id, btn){
+  try{
+    await db.collection('pqBank').doc(id).delete();
+    showToast('✅ Duplicate removed!');
+    if(btn){ const card = btn.closest('div[style*="border-radius:8px"]'); if(card) card.remove(); }
+  }catch(e){showToast('❌ Error: '+e.message);}
+}
+
+async function removeAllDuplicates(ids){
+  if(!confirm('Remove all '+ids.length+' duplicate questions?\nOriginals are kept. This cannot be undone.')) return;
+  let removed=0;
+  for(const id of ids){ try{ await db.collection('pqBank').doc(id).delete(); removed++; }catch(e){} }
+  showToast('✅ Removed '+removed+' duplicates!');
+  document.getElementById('ai-action-result').style.display='none';
+}
+
 async function bulkGivePoints(pts){
   const snap = await db.collection('users').get();
   let count = 0;
