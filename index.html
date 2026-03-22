@@ -345,6 +345,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="sb-item" onclick="showPage('quiz');closeSB()"><span class="si">📝</span>CBT Quiz</div>
   <div class="sb-item" onclick="showPage('mock');closeSB()"><span class="si">🎯</span>Mock Exam</div>
   <div class="sb-item" onclick="showPage('history');closeSB()"><span class="si">📊</span>Quiz History</div>
+  <div class="sb-item" onclick="showPage('cbt-history');closeSB()"><span class="si">📈</span>Exam History</div>
   <div class="sb-item" onclick="showPage('progress');closeSB()"><span class="si">📈</span>My Progress</div>
   <div class="sb-item" onclick="showPage('gpa');closeSB()"><span class="si">🎓</span>GPA Calculator</div>
   <div class="sb-item" onclick="showPage('map');closeSB()"><span class="si">🌍</span>Campus Map</div>
@@ -523,6 +524,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="qc" onclick="showPage('files')"><div class="qc-icon">📁</div><div class="qc-lbl">Downloads</div></div>
     <div class="qc" onclick="showPage('ai')"><div class="qc-icon">🤖</div><div class="qc-lbl">AI Tutor</div></div>
     <div class="qc" onclick="showPage('history')"><div class="qc-icon">📊</div><div class="qc-lbl">Quiz History</div></div>
+    <div class="qc" onclick="showPage('cbt-history')"><div class="qc-icon">📈</div><div class="qc-lbl">Exam History</div></div>
     <div class="qc" onclick="showPage('progress')"><div class="qc-icon">📈</div><div class="qc-lbl">My Progress</div></div>
     <div class="qc" onclick="showPage('gpa')"><div class="qc-icon">🎓</div><div class="qc-lbl">GPA Calc</div></div>
     <div class="qc" onclick="showPage('map')"><div class="qc-icon">🌍</div><div class="qc-lbl">Campus Map</div></div>
@@ -1613,6 +1615,46 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   </div>
 </div>
 
+<!-- ══ CBT EXAM HISTORY PAGE ══ -->
+<div id="pg-cbt-history" class="page hidden">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <button onclick="showPage('dash')" style="background:rgba(255,255,255,.06);border:1px solid var(--cb);border-radius:10px;padding:6px 12px;color:var(--text2);font-size:.8rem;cursor:pointer;font-family:'Outfit',sans-serif;">← Back</button>
+    <div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:var(--gold2);">📈 Exam History</div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div id="cbth-summary" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;"></div>
+
+  <!-- Score Trend Chart -->
+  <div style="background:var(--card);border:1px solid var(--cb);border-radius:14px;padding:14px;margin-bottom:14px;">
+    <div style="font-size:.8rem;font-weight:700;color:var(--gold2);margin-bottom:10px;">📊 Score Trend</div>
+    <div id="cbth-trend" style="position:relative;height:80px;display:flex;align-items:flex-end;gap:4px;"></div>
+    <div id="cbth-trend-labels" style="display:flex;gap:4px;margin-top:4px;"></div>
+  </div>
+
+  <!-- Filter -->
+  <div style="display:flex;gap:8px;margin-bottom:12px;overflow-x:auto;padding-bottom:4px;">
+    <button onclick="filterCBTHistory('all',this)" class="cbth-filter-btn" style="padding:6px 14px;border-radius:20px;border:none;background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);font-family:'Outfit',sans-serif;font-size:.74rem;font-weight:700;cursor:pointer;white-space:nowrap;">All</button>
+    <button onclick="filterCBTHistory('pass',this)" class="cbth-filter-btn" style="padding:6px 14px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.74rem;cursor:pointer;white-space:nowrap;">✅ Passed</button>
+    <button onclick="filterCBTHistory('fail',this)" class="cbth-filter-btn" style="padding:6px 14px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.74rem;cursor:pointer;white-space:nowrap;">❌ Failed</button>
+    <button onclick="filterCBTHistory('best',this)" class="cbth-filter-btn" style="padding:6px 14px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.74rem;cursor:pointer;white-space:nowrap;">🏆 Best</button>
+  </div>
+
+  <!-- History List -->
+  <div id="cbth-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+  <!-- Attempt Detail Modal -->
+  <div id="cbth-detail-modal" style="display:none;position:fixed;inset:0;z-index:9600;background:rgba(0,0,0,.9);overflow-y:auto;padding:16px;">
+    <div style="max-width:520px;margin:0 auto;background:#0d1e3d;border:1px solid rgba(201,168,76,.3);border-radius:20px;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#1a1060,#0d1e3d);padding:16px;display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:900;color:var(--gold2);" id="cbthd-title">Exam Review</div>
+        <button onclick="document.getElementById('cbth-detail-modal').style.display='none'" style="background:rgba(255,255,255,.1);border:none;border-radius:50%;width:30px;height:30px;color:var(--text2);cursor:pointer;font-size:1rem;">✕</button>
+      </div>
+      <div id="cbth-detail-body" style="padding:16px;"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ MOCK EXAM PAGE ══ -->
 <div id="pg-mock" class="page hidden">
   <div class="sec-title">Mock Exam Mode</div>
@@ -1786,27 +1828,49 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 <script>
 // ══ SERVICE WORKER & OFFLINE MODE ══
 if('serviceWorker' in navigator){
-  window.addEventListener('load', ()=>{
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg=>{
-        // Force check for updates every time
-        reg.update();
-        // When a new SW is waiting, activate it immediately
-        reg.addEventListener('updatefound', ()=>{
-          const newWorker = reg.installing;
-          newWorker.addEventListener('statechange', ()=>{
-            if(newWorker.state === 'installed' && navigator.serviceWorker.controller){
-              // New version available — skip waiting and reload
-              newWorker.postMessage({type:'SKIP_WAITING'});
-            }
-          });
+  window.addEventListener('load', async ()=>{
+    try{
+      const reg = await navigator.serviceWorker.register('./sw.js');
+      reg.update();
+
+      // Auto-reload when new SW takes control
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+        if(!refreshing){ refreshing=true; window.location.reload(); }
+      });
+
+      reg.addEventListener('updatefound', ()=>{
+        const nw = reg.installing;
+        nw.addEventListener('statechange', ()=>{
+          if(nw.state==='installed' && navigator.serviceWorker.controller){
+            nw.postMessage({type:'SKIP_WAITING'});
+          }
         });
-      })
-      .catch(err=>console.log('SW error:', err));
-    // Reload when new SW takes control
-    navigator.serviceWorker.addEventListener('controllerchange', ()=>{
-      window.location.reload();
-    });
+      });
+    }catch(e){}
+
+    // ── Auto version check ──
+    // Compares version.json on server vs last seen version in localStorage
+    // If different → clears cache and reloads to serve fresh files
+    try{
+      const res = await fetch('./version.json?t='+Date.now(), {cache:'no-store'});
+      if(res.ok){
+        const {version} = await res.json();
+        const lastVersion = localStorage.getItem('babspharm_version');
+        if(lastVersion && lastVersion !== version){
+          // New version detected — clear SW cache and reload
+          localStorage.setItem('babspharm_version', version);
+          if('caches' in window){
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+          }
+          console.log('[BABSPHARM] New version '+version+' — reloading...');
+          window.location.reload(true);
+        } else {
+          localStorage.setItem('babspharm_version', version);
+        }
+      }
+    }catch(e){}
   });
 }
 
@@ -2097,6 +2161,7 @@ function showPage(pg){
   if(pg==='textbooks') loadTextbooks();
   if(pg==='profile') loadProfile();
   if(pg==='history') loadHistory();
+  if(pg==='cbt-history') loadCBTHistory();
   if(pg==='mock') loadMockCourses();
   if(pg==='referral') { loadReferral(); initSpinWheel(); }
   if(pg==='inbox') loadInbox();
@@ -5774,13 +5839,34 @@ async function joinCBTExam(){
     const qSnap = await db.collection('cbtExams').doc(examDoc.id).collection('questions').get();
     cbtQuestions = {};
     cbtAnswers = {};
-    cbtSections = ['A','B','C','D','E'].slice(0, cbtExamData.sections||3);
-    cbtSections.forEach(s => { cbtQuestions[s] = []; });
 
+    // Auto-detect sections from actual question data — supports any number of sections (A-Z, AA-AZ etc.)
+    const sectionSet = new Set();
+    qSnap.docs.forEach(d => {
+      const sec = (d.data().section||'A').toUpperCase().trim();
+      sectionSet.add(sec);
+    });
+
+    // Sort sections alphabetically with proper ordering (A,B,...Z,AA,AB...)
+    cbtSections = Array.from(sectionSet).sort((a,b)=>{
+      if(a.length !== b.length) return a.length - b.length;
+      return a.localeCompare(b);
+    });
+
+    // Fallback if no sections found
+    if(!cbtSections.length) cbtSections = ['A'];
+
+    cbtSections.forEach(s => { cbtQuestions[s] = []; });
     qSnap.docs.forEach(d => {
       const q = {id:d.id, ...d.data()};
-      const sec = (q.section||'A').toUpperCase();
+      const sec = (q.section||'A').toUpperCase().trim();
       if(cbtQuestions[sec]) cbtQuestions[sec].push(q);
+      // Sort within section by order field
+    });
+
+    // Sort questions within each section by order
+    cbtSections.forEach(s => {
+      cbtQuestions[s].sort((a,b)=>(a.order||0)-(b.order||0));
     });
 
     // Check if exam actually has questions
@@ -5822,15 +5908,16 @@ function startCBTExam(){
   document.getElementById('cbt-exam-title').textContent = cbtExamData.title;
   document.getElementById('cbt-exam-course').textContent = cbtExamData.course;
 
-  // Build section tabs
+  // Build section tabs — scrollable for many sections
   const tabsEl = document.getElementById('cbt-section-tabs');
+  tabsEl.style.cssText = 'display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;';
   tabsEl.innerHTML = cbtSections.map((s,i)=>`
     <button id="cbt-tab-${s}" onclick="goToCBTSection(${i})"
       style="padding:6px 14px;border-radius:20px;border:1px solid ${i===0?'transparent':'var(--cb)'};
       background:${i===0?'linear-gradient(135deg,var(--gold),var(--gold2))':'rgba(255,255,255,.05)'};
       color:${i===0?'var(--navy)':'var(--text2)'};font-family:'Outfit',sans-serif;font-size:.74rem;font-weight:${i===0?'700':'400'};
-      cursor:pointer;white-space:nowrap;">
-      Section ${s}
+      cursor:pointer;white-space:nowrap;flex-shrink:0;">
+      Sec ${s}
     </button>`).join('');
 
   showPage('cbt-exam');
@@ -6012,8 +6099,34 @@ async function submitCBTExam(autoSubmit=false){
 
   const pct = total>0?Math.round(score/total*100):0;
 
-  // Save to quiz history
+  // Save to quiz history — full detail including per-question answers
   try{
+    const questionResults = [];
+    cbtSections.forEach(s=>{
+      (cbtQuestions[s]||[]).forEach((q,i)=>{
+        const given = cbtAnswers[s+'_'+i];
+        questionResults.push({
+          section:s, q:q.q, opts:q.opts, ans:q.ans,
+          given: given!==undefined ? given : -1,
+          correct: given===q.ans,
+          exp: q.exp||''
+        });
+      });
+    });
+    await db.collection('cbtHistory').add({
+      uid:CU.uid,
+      examId: cbtExamData.id,
+      examTitle: cbtExamData.title,
+      course: cbtExamData.course,
+      score, total, pct,
+      sectionResults,
+      questionResults,
+      timeTaken: cbtExamData.duration*60 - cbtTimeLeft,
+      autoSubmit,
+      createdAt: new Date().toISOString(),
+      date: new Date().toISOString()
+    });
+    // Also save to generic quizHistory for analytics
     await db.collection('quizHistory').add({
       uid:CU.uid, course:cbtExamData.course,
       score, total, type:'cbt', examTitle:cbtExamData.title,
@@ -6057,7 +6170,10 @@ async function submitCBTExam(autoSubmit=false){
           </div>`).join('')}
       </div>
 
-      <button onclick="showPage('dash')" class="btn btn-gold" style="width:100%;padding:14px;">🏠 Back to Dashboard</button>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <button onclick="showPage('cbt-history')" class="btn btn-out" style="flex:1;padding:12px;font-size:.82rem;">📈 View Exam History</button>
+        <button onclick="showPage('dash')" class="btn btn-gold" style="flex:1;padding:12px;font-size:.82rem;">🏠 Dashboard</button>
+      </div>
     </div>`;
 
   document.getElementById('cbt-bottom-nav').style.display='none';
@@ -7604,6 +7720,243 @@ async function loadHistory(){
       </div>`;
     }).join('');
   }catch(e){list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)">Error loading history</div>';}
+}
+
+// ══ CBT EXAM HISTORY ══
+let allCBTHistory = [];
+
+async function loadCBTHistory(){
+  const listEl = document.getElementById('cbth-list');
+  const summaryEl = document.getElementById('cbth-summary');
+  listEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2)">⏳ Loading exam history...</div>';
+  summaryEl.innerHTML = '';
+
+  try{
+    const snap = await db.collection('cbtHistory')
+      .where('uid','==',CU.uid)
+      .orderBy('createdAt','desc')
+      .limit(50)
+      .get()
+      .catch(async ()=>{
+        // Fallback if index not built yet
+        return await db.collection('cbtHistory').where('uid','==',CU.uid).limit(50).get();
+      });
+
+    if(snap.empty){
+      listEl.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text2);font-size:.84rem;">📋 No exam history yet.<br><br>Complete a CBT exam to see your results here.</div>';
+      return;
+    }
+
+    allCBTHistory = snap.docs.map(d=>({id:d.id,...d.data()}))
+      .sort((a,b)=>new Date(b.createdAt||b.date)-new Date(a.createdAt||a.date));
+
+    // ── Summary stats ──
+    const scores = allCBTHistory.map(h=>h.pct||Math.round((h.score/h.total)*100)||0);
+    const avg = Math.round(scores.reduce((s,n)=>s+n,0)/scores.length);
+    const best = Math.max(...scores);
+    const passed = allCBTHistory.filter(h=>(h.pct||0)>=50).length;
+    const trend = scores.length>=2 ? scores[0]-scores[1] : 0;
+
+    summaryEl.innerHTML = [
+      {label:'Total Exams',value:allCBTHistory.length,color:'#818cf8',icon:'📝'},
+      {label:'Average Score',value:avg+'%',color:avg>=60?'var(--green)':'#f87171',icon:'📊'},
+      {label:'Best Score',value:best+'%',color:'var(--gold2)',icon:'🏆'},
+      {label:'Pass Rate',value:Math.round(passed/allCBTHistory.length*100)+'%',color:passed/allCBTHistory.length>=0.5?'var(--green)':'#f87171',icon:'✅'},
+      {label:'Last Score',value:scores[0]+'%',color:scores[0]>=50?'var(--green)':'#f87171',icon:'🕐'},
+      {label:'Trend',value:trend>0?'▲ +'+trend+'%':trend<0?'▼ '+trend+'%':'→ Stable',color:trend>0?'var(--green)':trend<0?'#f87171':'var(--text2)',icon:'📈'},
+    ].map(s=>'<div style="background:var(--card);border:1px solid var(--cb);border-radius:10px;padding:10px;text-align:center;">'
+      +'<div style="font-size:.72rem;margin-bottom:3px;">'+s.icon+'</div>'
+      +'<div style="font-family:Playfair Display,serif;font-size:.9rem;font-weight:900;color:'+s.color+';">'+s.value+'</div>'
+      +'<div style="font-size:.6rem;color:var(--text2);margin-top:2px;">'+s.label+'</div>'
+      +'</div>').join('');
+
+    // ── Score trend chart ──
+    const recent = allCBTHistory.slice(0,10).reverse();
+    const maxPct = Math.max(...recent.map(h=>h.pct||0), 100);
+    const trendEl = document.getElementById('cbth-trend');
+    const labelEl = document.getElementById('cbth-trend-labels');
+    if(trendEl){
+      trendEl.innerHTML = recent.map((h,i)=>{
+        const pct = h.pct||0;
+        const ht = Math.max(Math.round(pct/maxPct*100),2);
+        const col = pct>=70?'var(--green)':pct>=50?'var(--gold2)':'#f87171';
+        const prev = i>0?(recent[i-1].pct||0):pct;
+        return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">'
+          +'<div style="font-size:.6rem;color:'+col+';">'+pct+'%</div>'
+          +'<div style="width:100%;background:'+col+';border-radius:4px 4px 0 0;height:'+ht+'%;min-height:4px;transition:height .5s;position:relative;" title="'+( h.examTitle||h.course||'Exam')+': '+pct+'%">'
+          +(i>0&&pct>prev?'<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:.5rem;color:var(--green);">▲</div>':i>0&&pct<prev?'<div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:.5rem;color:#f87171;">▼</div>':'')
+          +'</div></div>';
+      }).join('');
+      labelEl.innerHTML = recent.map(h=>'<div style="flex:1;text-align:center;font-size:.56rem;color:var(--text2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">'+(h.course||'Exam').substring(0,5)+'</div>').join('');
+    }
+
+    renderCBTHistoryList(allCBTHistory);
+
+  }catch(e){
+    listEl.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2);">❌ Error: '+e.message+'</div>';
+  }
+}
+
+function filterCBTHistory(type, btn){
+  document.querySelectorAll('.cbth-filter-btn').forEach(b=>{
+    b.style.background='transparent'; b.style.color='var(--text2)';
+    b.style.border='1px solid var(--cb)'; b.style.fontWeight='400';
+  });
+  btn.style.background='linear-gradient(135deg,var(--gold),var(--gold2))';
+  btn.style.color='var(--navy)'; btn.style.border='none'; btn.style.fontWeight='700';
+
+  let filtered = [...allCBTHistory];
+  if(type==='pass') filtered = filtered.filter(h=>(h.pct||0)>=50);
+  else if(type==='fail') filtered = filtered.filter(h=>(h.pct||0)<50);
+  else if(type==='best') filtered = filtered.sort((a,b)=>(b.pct||0)-(a.pct||0));
+  renderCBTHistoryList(filtered);
+}
+
+function renderCBTHistoryList(list){
+  const listEl = document.getElementById('cbth-list');
+  if(!list.length){listEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2);font-size:.82rem;">No exams match this filter.</div>';return;}
+
+  listEl.innerHTML = list.map((h,idx)=>{
+    const pct = h.pct || Math.round((h.score/h.total)*100) || 0;
+    const color = pct>=70?'var(--green)':pct>=50?'var(--gold2)':'#f87171';
+    const passed = pct>=50;
+    const date = h.createdAt ? new Date(h.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    const timeTaken = h.timeTaken ? Math.floor(h.timeTaken/60)+'m '+( h.timeTaken%60)+'s' : '—';
+    const sections = h.sectionResults ? Object.entries(h.sectionResults) : [];
+    const wrongCount = h.questionResults ? h.questionResults.filter(q=>!q.correct).length : (h.total-h.score);
+    const attempt = list.length - idx;
+
+    return '<div style="background:var(--card);border:1px solid '+(passed?'rgba(74,222,128,.2)':'rgba(248,113,113,.2)')+';border-radius:14px;overflow:hidden;margin-bottom:2px;">'
+      // Header row
+      +'<div style="padding:14px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">'
+      +'<div style="flex:1;">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">'
+      +'<span style="font-size:.66rem;padding:2px 8px;border-radius:10px;background:'+(passed?'rgba(74,222,128,.1)':'rgba(248,113,113,.1)')+';color:'+(passed?'var(--green)':'#f87171')+';font-weight:700;">'+(passed?'✅ PASSED':'❌ FAILED')+'</span>'
+      +'<span style="font-size:.66rem;color:var(--text2);">Attempt #'+attempt+'</span>'
+      +'</div>'
+      +'<div style="font-size:.86rem;font-weight:700;color:var(--text);">'+(h.examTitle||h.course||'CBT Exam')+'</div>'
+      +'<div style="font-size:.7rem;color:var(--text2);margin-top:3px;">'+date+' • ⏱ '+timeTaken+' • ❌ '+wrongCount+' wrong</div>'
+      +'</div>'
+      +'<div style="text-align:center;flex-shrink:0;">'
+      +'<div style="font-family:Playfair Display,serif;font-size:1.6rem;font-weight:900;color:'+color+';">'+pct+'%</div>'
+      +'<div style="font-size:.7rem;color:var(--text2);">'+(h.score||0)+'/'+(h.total||0)+'</div>'
+      +'</div></div>'
+      // Section mini scores
+      +(sections.length ? '<div style="display:flex;gap:6px;padding:0 14px 10px;flex-wrap:wrap;">'
+        +sections.map(([s,r])=>{
+          const sp = Math.round((r.score/r.total)*100);
+          const sc = sp>=70?'var(--green)':sp>=50?'var(--gold2)':'#f87171';
+          return '<div style="font-size:.68rem;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--cb);color:'+sc+';">Sec '+s+' '+r.score+'/'+r.total+'</div>';
+        }).join('')+'</div>' : '')
+      // Review button
+      +'<div style="padding:0 14px 12px;display:flex;gap:8px;">'
+      +'<button onclick="showCBTAttemptDetail(\''+h.id+'\')" style="flex:1;padding:8px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);border-radius:8px;color:#c084fc;font-family:Outfit,sans-serif;font-size:.76rem;cursor:pointer;">🔍 Review Answers</button>'
+      +(h.questionResults&&h.questionResults.filter(q=>!q.correct).length ? '<button onclick="studyWrongAnswers(\''+h.id+'\')" style="flex:1;padding:8px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:8px;color:#f87171;font-family:Outfit,sans-serif;font-size:.76rem;cursor:pointer;">📚 Study Wrong ('+h.questionResults.filter(q=>!q.correct).length+')</button>' : '')
+      +'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function showCBTAttemptDetail(id){
+  const attempt = allCBTHistory.find(h=>h.id===id);
+  if(!attempt) return;
+  const modal = document.getElementById('cbth-detail-modal');
+  const body = document.getElementById('cbth-detail-body');
+  const titleEl = document.getElementById('cbthd-title');
+  modal.style.display='block';
+  titleEl.textContent = attempt.examTitle||attempt.course||'Exam Review';
+
+  const pct = attempt.pct||0;
+  const color = pct>=70?'var(--green)':pct>=50?'var(--gold2)':'#f87171';
+  const qResults = attempt.questionResults||[];
+
+  body.innerHTML = '<div style="text-align:center;margin-bottom:16px;">'
+    +'<div style="font-family:Playfair Display,serif;font-size:2rem;font-weight:900;color:'+color+';">'+pct+'%</div>'
+    +'<div style="font-size:.78rem;color:var(--text2);">'+(attempt.score||0)+'/'+(attempt.total||0)+' correct • ⏱ '+(attempt.timeTaken?Math.floor(attempt.timeTaken/60)+'m '+( attempt.timeTaken%60)+'s':'—')+'</div>'
+    +'</div>'
+    // Wrong answers section
+    +(qResults.length ? '<div style="font-size:.78rem;font-weight:700;color:#f87171;margin-bottom:8px;">❌ Wrong Answers ('+qResults.filter(q=>!q.correct).length+')</div>'
+      +qResults.filter(q=>!q.correct).map((q,i)=>'<div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:10px;padding:12px;margin-bottom:8px;">'
+        +'<div style="font-size:.76rem;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.5;">'+q.q+'</div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px;">'
+        +(q.opts||[]).map((opt,j)=>'<div style="font-size:.7rem;padding:4px 7px;border-radius:6px;'
+          +'background:'+(j===q.ans?'rgba(74,222,128,.12)':j===q.given?'rgba(248,113,113,.12)':'rgba(255,255,255,.03)')+';'
+          +'border:1px solid '+(j===q.ans?'rgba(74,222,128,.4)':j===q.given?'rgba(248,113,113,.4)':'var(--cb)')+';'
+          +'color:'+(j===q.ans?'var(--green)':j===q.given?'#f87171':'var(--text2)')+';">'
+          +['A','B','C','D'][j]+'. '+opt
+          +(j===q.ans?' ✅':j===q.given?' ← Your answer':'')+'</div>').join('')
+        +'</div>'
+        +(q.exp?'<div style="font-size:.7rem;color:var(--text2);background:rgba(201,168,76,.06);border-radius:6px;padding:6px;line-height:1.6;">💡 '+q.exp+'</div>':'')
+        +'</div>').join('')
+      +'<div style="font-size:.78rem;font-weight:700;color:var(--green);margin:12px 0 8px;">✅ Correct Answers ('+qResults.filter(q=>q.correct).length+')</div>'
+      +qResults.filter(q=>q.correct).map(q=>'<div style="background:rgba(74,222,128,.04);border:1px solid rgba(74,222,128,.1);border-radius:8px;padding:8px 10px;margin-bottom:6px;">'
+        +'<div style="font-size:.74rem;color:var(--text);line-height:1.4;">'+q.q.substring(0,90)+(q.q.length>90?'...':'')+'</div>'
+        +'<div style="font-size:.7rem;color:var(--green);margin-top:3px;">✅ '+['A','B','C','D'][q.ans]+'. '+(q.opts||[])[q.ans]+'</div>'
+        +'</div>').join('')
+      : '<div style="color:var(--text2);text-align:center;padding:20px;font-size:.82rem;">Detailed question data not available for this attempt.</div>');
+}
+
+function studyWrongAnswers(id){
+  const attempt = allCBTHistory.find(h=>h.id===id);
+  if(!attempt||!attempt.questionResults) return;
+  const wrong = attempt.questionResults.filter(q=>!q.correct);
+  if(!wrong.length){showToast('No wrong answers to study!');return;}
+
+  const modal = document.getElementById('cbth-detail-modal');
+  const body = document.getElementById('cbth-detail-body');
+  document.getElementById('cbthd-title').textContent = '📚 Study Mode — Wrong Answers';
+  modal.style.display='block';
+
+  let current = 0;
+  const render = (i) => {
+    const q = wrong[i];
+    body.innerHTML = '<div style="text-align:center;font-size:.72rem;color:var(--text2);margin-bottom:12px;">Question '+(i+1)+' of '+wrong.length+' wrong answers</div>'
+      +'<div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:12px;padding:14px;margin-bottom:12px;">'
+      +'<div style="font-size:.84rem;font-weight:700;color:var(--text);line-height:1.6;margin-bottom:12px;">'+q.q+'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">'
+      +(q.opts||[]).map((opt,j)=>'<div style="padding:10px;border-radius:8px;font-size:.78rem;'
+        +'background:'+(j===q.ans?'rgba(74,222,128,.12)':j===q.given?'rgba(248,113,113,.1)':'rgba(255,255,255,.03)')+';'
+        +'border:2px solid '+(j===q.ans?'rgba(74,222,128,.5)':j===q.given?'rgba(248,113,113,.4)':'var(--cb)')+';'
+        +'color:'+(j===q.ans?'var(--green)':j===q.given?'#f87171':'var(--text2)')+';">'
+        +['A','B','C','D'][j]+'. '+opt
+        +(j===q.ans?' ✅ Correct answer':j===q.given?' ✗ Your answer':'')+'</div>').join('')
+      +'</div>'
+      +(q.exp?'<div style="font-size:.76rem;color:var(--text2);background:rgba(201,168,76,.06);border-radius:8px;padding:10px;line-height:1.7;">💡 '+q.exp+'</div>':'')
+      +'</div>'
+      +'<div style="display:flex;gap:8px;">'
+      +(i>0?'<button onclick="studyWrongAnswers_nav('+id+',\''+wrong.map(w=>wrong.indexOf(w)).join(',')+'\')" style="flex:1;padding:10px;background:rgba(255,255,255,.05);border:1px solid var(--cb);border-radius:10px;color:var(--text2);font-family:Outfit,sans-serif;font-size:.8rem;cursor:pointer;" onclick="studyWrongNav(\''+id+'\','+(i-1)+','+wrong.length+')">← Prev</button>':'')
+      +(i<wrong.length-1?'<button onclick="studyWrongNav(\''+id+'\','+(i+1)+','+wrong.length+')" style="flex:1;padding:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;color:var(--navy);font-family:Outfit,sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;">Next →</button>':'<button onclick="document.getElementById(\'cbth-detail-modal\').style.display=\'none\'" style="flex:1;padding:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;color:var(--navy);font-family:Outfit,sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;">Done 🎉</button>')
+      +'</div>';
+  };
+
+  // Store current wrong list for navigation
+  window._studyWrongList = wrong;
+  window._studyWrongId = id;
+  render(0);
+}
+
+function studyWrongNav(id, idx){
+  const wrong = window._studyWrongList;
+  if(!wrong) return;
+  const body = document.getElementById('cbth-detail-body');
+  const q = wrong[idx];
+  body.innerHTML = '<div style="text-align:center;font-size:.72rem;color:var(--text2);margin-bottom:12px;">Question '+(idx+1)+' of '+wrong.length+' wrong answers</div>'
+    +'<div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);border-radius:12px;padding:14px;margin-bottom:12px;">'
+    +'<div style="font-size:.84rem;font-weight:700;color:var(--text);line-height:1.6;margin-bottom:12px;">'+q.q+'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">'
+    +(q.opts||[]).map((opt,j)=>'<div style="padding:10px;border-radius:8px;font-size:.78rem;'
+      +'background:'+(j===q.ans?'rgba(74,222,128,.12)':j===q.given?'rgba(248,113,113,.1)':'rgba(255,255,255,.03)')+';'
+      +'border:2px solid '+(j===q.ans?'rgba(74,222,128,.5)':j===q.given?'rgba(248,113,113,.4)':'var(--cb)')+';'
+      +'color:'+(j===q.ans?'var(--green)':j===q.given?'#f87171':'var(--text2)')+';">'
+      +['A','B','C','D'][j]+'. '+opt
+      +(j===q.ans?' ✅ Correct answer':j===q.given?' ✗ Your answer':'')+'</div>').join('')
+    +'</div>'
+    +(q.exp?'<div style="font-size:.76rem;color:var(--text2);background:rgba(201,168,76,.06);border-radius:8px;padding:10px;line-height:1.7;">💡 '+q.exp+'</div>':'')
+    +'</div>'
+    +'<div style="display:flex;gap:8px;">'
+    +(idx>0?'<button onclick="studyWrongNav(\''+id+'\','+(idx-1)+','+wrong.length+')" style="flex:1;padding:10px;background:rgba(255,255,255,.05);border:1px solid var(--cb);border-radius:10px;color:var(--text2);font-family:Outfit,sans-serif;font-size:.8rem;cursor:pointer;">← Prev</button>':'')
+    +(idx<wrong.length-1?'<button onclick="studyWrongNav(\''+id+'\','+(idx+1)+','+wrong.length+')" style="flex:1;padding:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;color:var(--navy);font-family:Outfit,sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;">Next →</button>':'<button onclick="document.getElementById(\'cbth-detail-modal\').style.display=\'none\'" style="flex:1;padding:10px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;color:var(--navy);font-family:Outfit,sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;">Done 🎉</button>')
+    +'</div>';
 }
 
 async function saveQuizHistory(course, score, total, type='Practice'){

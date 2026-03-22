@@ -132,6 +132,67 @@ html, body {
 <!-- MOBILE MENU OVERLAY -->
 <div id="mob-overlay" onclick="closeSidebar()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:8888;"></div>
 
+<!-- STUDENT PROFILE MODAL -->
+<div id="student-profile-modal" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.85);overflow-y:auto;padding:16px;">
+  <div style="max-width:560px;margin:0 auto;background:#0d1e3d;border:1px solid rgba(168,85,247,.3);border-radius:20px;overflow:hidden;">
+    <!-- Header -->
+    <div id="sp-header" style="background:linear-gradient(135deg,#1a1060,#0d1e3d);padding:20px 20px 14px;position:relative;">
+      <button onclick="closeStudentProfile()" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;border-radius:50%;width:32px;height:32px;color:var(--text2);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div id="sp-avatar" style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:900;color:var(--navy);flex-shrink:0;"></div>
+        <div>
+          <div id="sp-name" style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:#fff;"></div>
+          <div id="sp-email" style="font-size:.76rem;color:var(--text2);margin-top:2px;"></div>
+          <div id="sp-badges" style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stat Cards -->
+    <div id="sp-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.06);"></div>
+
+    <!-- Body -->
+    <div style="padding:16px;">
+
+      <!-- Info Grid -->
+      <div id="sp-info" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;"></div>
+
+      <!-- Activity Timeline -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:.78rem;font-weight:700;color:#c084fc;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">📅 Activity Timeline</div>
+        <div id="sp-timeline" style="background:rgba(255,255,255,.03);border-radius:10px;padding:10px;"></div>
+      </div>
+
+      <!-- Quiz Performance -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:.78rem;font-weight:700;color:#c084fc;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">📊 Quiz Performance</div>
+        <div id="sp-quiz-stats" style="background:rgba(255,255,255,.03);border-radius:10px;padding:12px;"></div>
+      </div>
+
+      <!-- Recent Quiz History -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:.78rem;font-weight:700;color:#c084fc;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🕐 Recent Quiz Attempts</div>
+        <div id="sp-quiz-history" style="max-height:200px;overflow-y:auto;"></div>
+      </div>
+
+      <!-- Points History -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:.78rem;font-weight:700;color:#c084fc;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">💰 Points History</div>
+        <div id="sp-points-history" style="max-height:150px;overflow-y:auto;"></div>
+      </div>
+
+      <!-- AI Insight -->
+      <div style="margin-bottom:16px;">
+        <div style="font-size:.78rem;font-weight:700;color:#c084fc;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">🤖 AI Assessment</div>
+        <div id="sp-ai-insight" style="background:rgba(168,85,247,.06);border:1px solid rgba(168,85,247,.2);border-radius:10px;padding:12px;font-size:.78rem;color:var(--text2);line-height:1.7;"></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div id="sp-actions" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
 <!-- MOBILE MENU DRAWER -->
 <div id="mob-drawer" style="display:none;position:fixed;top:0;left:0;height:100%;width:75%;max-width:260px;background:#0d1e3d;z-index:9999;overflow-y:auto;box-shadow:4px 0 20px rgba(0,0,0,.6);padding:16px 0;">
   <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 16px 16px;border-bottom:1px solid rgba(201,168,76,.2);margin-bottom:6px;">
@@ -570,24 +631,58 @@ Answer: A</code>
 
     <!-- AI Extract from HTML -->
     <div class="card" style="margin-bottom:14px;">
-      <div class="card-title">🤖 AI: Extract Questions from HTML File</div>
-      <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;line-height:1.6">Upload an HTML quiz file and AI will automatically extract all questions and organize them into sections A, B, C, D with 8 questions each.</div>
+      <div class="card-title">🤖 AI: Extract Questions from Text or HTML File</div>
+      <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;line-height:1.6">Paste questions directly OR upload an HTML file. AI processes each section separately to ensure ALL questions are captured — no matter how many.</div>
       <div class="fg"><label>Exam to add questions to</label>
         <select id="cbt-extract-exam" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;outline:none;">
           <option value="">Select exam...</option>
         </select>
       </div>
+
+      <!-- Sections config -->
+      <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:120px;">
+          <label style="font-size:.72rem;color:var(--text2);display:block;margin-bottom:4px;">Questions per section</label>
+          <select id="cbt-extract-qps" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.78rem;outline:none;">
+            <option value="5">5 per section</option>
+            <option value="8" selected>8 per section</option>
+            <option value="10">10 per section</option>
+            <option value="15">15 per section</option>
+            <option value="20">20 per section</option>
+            <option value="25">25 per section</option>
+            <option value="50">50 per section</option>
+          </select>
+        </div>
+        <div style="flex:1;min-width:120px;">
+          <label style="font-size:.72rem;color:var(--text2);display:block;margin-bottom:4px;">Total questions (optional)</label>
+          <input type="number" id="cbt-extract-total" placeholder="e.g. 500 (auto if blank)" min="1" max="2000"
+            style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.78rem;outline:none;box-sizing:border-box;"/>
+        </div>
+      </div>
+      <div style="font-size:.72rem;color:var(--text2);background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:8px;margin-bottom:10px;line-height:1.6;">
+        💡 <b>Handles any size:</b> 500 questions = 50 sections of 10, or 25 sections of 20 etc. Sections auto-named A, B, C ... Z, AA, AB ... Processes in parallel batches — even 500 questions in one go.
+      </div>
+
+      <!-- Paste text -->
+      <div class="fg" style="margin-bottom:8px;">
+        <label>📋 Paste Questions Here (any format)</label>
+        <textarea id="cbt-paste-text" placeholder="Paste your exam questions here in any format:&#10;&#10;1. What is the molarity of...&#10;A) 0.2M  B) 0.4M  C) 0.1M  D) 1.0M&#10;Answer: A&#10;&#10;2. Which bonding involves...&#10;&#10;Or paste all at once — AI will figure it out!" style="width:100%;min-height:140px;padding:10px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.78rem;outline:none;resize:vertical;box-sizing:border-box;"></textarea>
+      </div>
+
+      <!-- OR upload file -->
+      <div style="text-align:center;font-size:.74rem;color:var(--text2);margin:6px 0;">— OR upload a file —</div>
       <div class="fg">
-        <label>Upload HTML File</label>
-        <div onclick="document.getElementById('cbt-html-file').click()" style="border:2px dashed var(--cb);border-radius:10px;padding:20px;text-align:center;cursor:pointer;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--cb)'">
-          <div style="font-size:1.5rem;margin-bottom:6px">📄</div>
-          <div style="font-size:.8rem;color:var(--text2)">Tap to select HTML file</div>
+        <div onclick="document.getElementById('cbt-html-file').click()" style="border:2px dashed var(--cb);border-radius:10px;padding:14px;text-align:center;cursor:pointer;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--cb)'">
+          <div style="font-size:1.2rem;margin-bottom:4px">📄</div>
+          <div style="font-size:.78rem;color:var(--text2)">Tap to select HTML / TXT file</div>
           <div id="cbt-html-fname" style="font-size:.76rem;color:var(--gold);margin-top:4px;display:none;"></div>
         </div>
-        <input type="file" id="cbt-html-file" accept=".html,.htm" style="display:none" onchange="cbtHTMLFileSelected(this)"/>
+        <input type="file" id="cbt-html-file" accept=".html,.htm,.txt" style="display:none" onchange="cbtHTMLFileSelected(this)"/>
       </div>
-      <button class="btn btn-gold" onclick="aiExtractCBTQuestions()" style="width:100%;">🤖 Extract & Organize Questions</button>
+
+      <button class="btn btn-gold" onclick="aiExtractCBTQuestions()" style="width:100%;margin-top:10px;padding:13px;font-size:.84rem;">🤖 Extract ALL Questions → Save to Sections</button>
       <div id="cbt-extract-status" style="margin-top:10px;font-size:.78rem;display:none;"></div>
+      <div id="cbt-extract-log" style="display:none;background:rgba(0,0,0,.3);border-radius:8px;padding:10px;font-family:monospace;font-size:.7rem;color:var(--green);max-height:180px;overflow-y:auto;margin-top:8px;"></div>
     </div>
 
     <!-- Add Questions Manually -->
@@ -1127,6 +1222,19 @@ Answer: A</code>
 
   <div id="panel-settings" class="panel">
     <div class="sec-title">Settings</div>
+
+    <!-- DEPLOY TOOL -->
+    <div class="card" style="margin-bottom:14px;border-color:rgba(99,102,241,.3);background:rgba(99,102,241,.04);">
+      <div class="card-title" style="color:#818cf8;">🚀 Deploy New Version</div>
+      <div style="font-size:.76rem;color:var(--text2);margin-bottom:12px;line-height:1.6;">
+        Every time you push new files to GitHub, also push a new <b style="color:var(--text);">version.json</b> so all students automatically get the latest version within seconds — no manual cache clearing needed.
+      </div>
+      <div id="deploy-status" style="display:none;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);border-radius:10px;padding:12px;margin-bottom:10px;font-size:.78rem;font-family:monospace;color:#818cf8;word-break:break-all;"></div>
+      <button onclick="generateVersionFile()" class="btn" style="width:100%;padding:12px;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;border-radius:10px;color:#fff;font-family:'Outfit',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;">
+        ⚡ Generate version.json for This Deploy
+      </button>
+      <div style="font-size:.7rem;color:var(--text2);margin-top:8px;text-align:center;">Tap → copy content → save as version.json → upload to GitHub alongside your other files</div>
+    </div>
     <div class="row2">
       <div class="card">
         <div class="card-title">🤖 GROQ AI Key</div>
@@ -1712,6 +1820,7 @@ function renderStudents(list){
       <td style="font-size:.74rem;color:${lastSeenColor};white-space:nowrap">${lastSeenStr}</td>
       <td><span class="badge ${u.banned?'badge-ban':'badge-ok'}">${u.banned?'Banned':'Active'}</span></td>
       <td style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:rgba(168,85,247,.12);color:#c084fc;border:1px solid rgba(168,85,247,.3)" onclick="viewStudentProfile('${u.id}')">👁 Profile</button>
         <button class="btn btn-sm ${u.banned?'btn-green':'btn-red'}" onclick="toggleBan('${u.id}',${!!u.banned})">${u.banned?'Unban':'Ban'}</button>
         <button class="btn btn-sm" style="background:rgba(201,168,76,.12);color:var(--gold);border:1px solid var(--cb)" onclick="setAttemptLimit('${u.id}','${u.name||'Student'}',${u.quizAttemptLimit||0})">⚙️ Limit</button>
         <button class="btn btn-sm" style="background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.2)" onclick="grantAiMessages('${u.id}','${u.name||'Student'}')">🤖 AI</button>
@@ -1721,6 +1830,263 @@ function renderStudents(list){
   }).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--text2);padding:18px">No students</td></tr>';
 }
 function filterStudents(q){renderStudents(allStudents.filter(u=>(u.name||'').toLowerCase().includes(q.toLowerCase())||(u.email||'').toLowerCase().includes(q.toLowerCase())));}
+function closeStudentProfile(){
+  document.getElementById('student-profile-modal').style.display='none';
+}
+
+async function viewStudentProfile(uid){
+  const modal = document.getElementById('student-profile-modal');
+  modal.style.display='block';
+
+  // Reset all sections to loading state
+  const loadingHtml = '<div style="color:var(--text2);font-size:.76rem;padding:8px;text-align:center;">⏳ Loading...</div>';
+  ['sp-stats','sp-info','sp-timeline','sp-quiz-stats','sp-quiz-history','sp-points-history','sp-ai-insight','sp-actions','sp-badges'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.innerHTML = id==='sp-stats'||id==='sp-info'||id==='sp-actions'||id==='sp-badges' ? '' : loadingHtml;
+  });
+  document.getElementById('sp-name').textContent='Loading...';
+  document.getElementById('sp-email').textContent='';
+  document.getElementById('sp-avatar').textContent='?';
+
+  try{
+    // ── Load student data ──
+    const userDoc = await db.collection('users').doc(uid).get();
+    if(!userDoc.exists){ closeStudentProfile(); showToast('Student not found'); return; }
+    const u = {id:uid, ...userDoc.data()};
+
+    // ── Load quiz history ──
+    const [quizSnap, pointsSnap] = await Promise.all([
+      db.collection('quizHistory').where('uid','==',uid).orderBy('createdAt','desc').limit(20).get().catch(()=>({docs:[]})),
+      db.collection('pointsHistory').where('uid','==',uid).orderBy('createdAt','desc').limit(15).get().catch(()=>({docs:[]}))
+    ]);
+    const quizzes = quizSnap.docs.map(d=>({id:d.id,...d.data()}));
+    const pointsHistory = pointsSnap.docs.map(d=>d.data());
+
+    // ── Compute stats ──
+    const now = Date.now();
+    const weekAgo = now - 7*24*60*60*1000;
+    const monthAgo = now - 30*24*60*60*1000;
+    const lastSeenMs = u.lastSeen ? new Date(u.lastSeen).getTime() : 0;
+    const daysSince = lastSeenMs ? Math.floor((now-lastSeenMs)/86400000) : 999;
+    const joinedDays = u.createdAt ? Math.floor((now-new Date(u.createdAt).getTime())/86400000) : 0;
+
+    const avgScore = quizzes.length ? Math.round(quizzes.reduce((t,q)=>t+(q.score/(q.total||10)*100),0)/quizzes.length) : 0;
+    const bestScore = quizzes.length ? Math.max(...quizzes.map(q=>Math.round(q.score/(q.total||10)*100))) : 0;
+    const coursesAttempted = [...new Set(quizzes.map(q=>q.course||q.subject).filter(Boolean))];
+    const quizThisWeek = quizzes.filter(q=>q.createdAt&&new Date(q.createdAt).getTime()>weekAgo).length;
+    const quizThisMonth = quizzes.filter(q=>q.createdAt&&new Date(q.createdAt).getTime()>monthAgo).length;
+
+    // ── Risk assessment ──
+    const riskScore = (daysSince>30?3:daysSince>7?1:0) + ((u.points||0)===0?2:0) + (quizzes.length===0?2:0) + (avgScore<40&&quizzes.length>0?2:0);
+    const riskLabel = riskScore>=5?'🔴 High Risk':riskScore>=3?'🟡 Medium Risk':riskScore>=1?'🟠 Low Risk':'🟢 On Track';
+    const riskColor = riskScore>=5?'#f87171':riskScore>=3?'#fbbf24':riskScore>=1?'#fb923c':'var(--green)';
+
+    // ── Header ──
+    const initials = (u.name||'?').split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    document.getElementById('sp-avatar').textContent = initials;
+    document.getElementById('sp-name').textContent = u.name||'Unknown Student';
+    document.getElementById('sp-email').textContent = u.email||'No email';
+
+    // Badges
+    const badges = [];
+    if((u.points||0)>=500) badges.push(['🏆','500+ pts','var(--gold)']);
+    if(quizzes.length>=20) badges.push(['📝','20+ quizzes','#818cf8']);
+    if(avgScore>=80&&quizzes.length>0) badges.push(['⭐','Top scorer','var(--green)']);
+    if(daysSince<=1) badges.push(['🔥','Active today','#fb923c']);
+    if(u.banned) badges.push(['🚫','Banned','#f87171']);
+    if(joinedDays<=7) badges.push(['🆕','New student','#38bdf8']);
+    document.getElementById('sp-badges').innerHTML = badges.map(([e,l,c])=>
+      '<span style="font-size:.66rem;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,.08);color:'+c+';border:1px solid '+c+'40;">'+e+' '+l+'</span>'
+    ).join('');
+
+    // ── Stat Cards ──
+    const statCards = [
+      {label:'Points',value:u.points||0,color:'var(--gold2)',icon:'💰'},
+      {label:'Quizzes',value:quizzes.length,color:'#818cf8',icon:'📝'},
+      {label:'Avg Score',value:avgScore+'%',color:avgScore>=60?'var(--green)':'#f87171',icon:'📊'},
+      {label:'Days Active',value:joinedDays+'d',color:'#38bdf8',icon:'📅'},
+    ];
+    document.getElementById('sp-stats').innerHTML = statCards.map(s=>
+      '<div style="background:#0d1e3d;padding:12px 8px;text-align:center;">'
+      +'<div style="font-size:.7rem;margin-bottom:4px;">'+s.icon+'</div>'
+      +'<div style="font-family:Playfair Display,serif;font-size:1.1rem;font-weight:900;color:'+s.color+';">'+s.value+'</div>'
+      +'<div style="font-size:.62rem;color:var(--text2);margin-top:2px;">'+s.label+'</div>'
+      +'</div>'
+    ).join('');
+
+    // ── Info Grid ──
+    const infoItems = [
+      ['🎓 Department', u.dept||'Not set'],
+      ['📱 Status', u.banned?'🚫 Banned':'✅ Active'],
+      ['⚠️ Risk Level', '<span style="color:'+riskColor+'">'+riskLabel+'</span>'],
+      ['🕐 Last Seen', daysSince===0?'🟢 Today':daysSince===1?'🟡 Yesterday':daysSince<7?'🟠 '+daysSince+'d ago':'🔴 '+daysSince+'d ago'],
+      ['📅 Joined', u.createdAt?new Date(u.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'Unknown'],
+      ['🏆 Best Score', bestScore+'%'],
+      ['📚 Courses Tried', coursesAttempted.length||0],
+      ['📈 This Week', quizThisWeek+' quizzes'],
+    ];
+    document.getElementById('sp-info').innerHTML = infoItems.map(([l,v])=>
+      '<div style="background:rgba(255,255,255,.03);border-radius:8px;padding:8px 10px;">'
+      +'<div style="font-size:.66rem;color:var(--text2);margin-bottom:2px;">'+l+'</div>'
+      +'<div style="font-size:.78rem;font-weight:600;color:var(--text);">'+v+'</div>'
+      +'</div>'
+    ).join('');
+
+    // ── Activity Timeline (weekly heatmap last 8 weeks) ──
+    const weeks = 8;
+    const heatmap = {};
+    quizzes.forEach(q=>{
+      if(q.createdAt){
+        const d = new Date(q.createdAt);
+        const key = d.toISOString().split('T')[0];
+        heatmap[key]=(heatmap[key]||0)+1;
+      }
+    });
+    const today = new Date();
+    let heatHtml = '<div style="display:flex;gap:3px;flex-wrap:wrap;">';
+    for(let w=weeks-1;w>=0;w--){
+      for(let d=6;d>=0;d--){
+        const date = new Date(today);
+        date.setDate(date.getDate()-(w*7+d));
+        const key = date.toISOString().split('T')[0];
+        const count = heatmap[key]||0;
+        const bg = count===0?'rgba(255,255,255,.06)':count===1?'rgba(99,102,241,.4)':count===2?'rgba(99,102,241,.7)':'#818cf8';
+        heatHtml += '<div title="'+key+': '+count+' quizzes" style="width:10px;height:10px;border-radius:2px;background:'+bg+';cursor:default;"></div>';
+      }
+    }
+    heatHtml += '</div><div style="display:flex;gap:8px;margin-top:6px;align-items:center;">'
+      +'<span style="font-size:.64rem;color:var(--text2);">Less</span>'
+      +'<div style="width:8px;height:8px;border-radius:2px;background:rgba(255,255,255,.06);"></div>'
+      +'<div style="width:8px;height:8px;border-radius:2px;background:rgba(99,102,241,.4);"></div>'
+      +'<div style="width:8px;height:8px;border-radius:2px;background:#818cf8;"></div>'
+      +'<span style="font-size:.64rem;color:var(--text2);">More</span>'
+      +'</div>';
+    document.getElementById('sp-timeline').innerHTML = heatHtml;
+
+    // ── Quiz Performance by Course ──
+    const byCourse = {};
+    quizzes.forEach(q=>{
+      const c = q.course||q.subject||'Unknown';
+      if(!byCourse[c]) byCourse[c]={attempts:0,totalScore:0,totalQ:0};
+      byCourse[c].attempts++;
+      byCourse[c].totalScore += q.score||0;
+      byCourse[c].totalQ += q.total||10;
+    });
+    const courseRows = Object.entries(byCourse).map(([c,s])=>{
+      const avg = Math.round(s.totalScore/s.totalQ*100);
+      const color = avg>=70?'var(--green)':avg>=50?'#fbbf24':'#f87171';
+      return '<div style="margin-bottom:8px;">'
+        +'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
+        +'<span style="font-size:.76rem;color:var(--text);">'+c+'</span>'
+        +'<span style="font-size:.74rem;color:'+color+';font-weight:700;">'+avg+'% ('+s.attempts+' attempts)</span>'
+        +'</div>'
+        +'<div style="background:rgba(255,255,255,.06);border-radius:20px;height:5px;">'
+        +'<div style="background:'+color+';height:100%;border-radius:20px;width:'+Math.min(avg,100)+'%;"></div>'
+        +'</div></div>';
+    });
+    document.getElementById('sp-quiz-stats').innerHTML = courseRows.join('')
+      || '<div style="color:var(--text2);font-size:.76rem;text-align:center;padding:8px;">No quiz attempts yet</div>';
+
+    // ── Recent Quiz History ──
+    document.getElementById('sp-quiz-history').innerHTML = quizzes.slice(0,10).map(q=>{
+      const pct = Math.round((q.score||0)/(q.total||10)*100);
+      const color = pct>=70?'var(--green)':pct>=50?'#fbbf24':'#f87171';
+      const date = q.createdAt ? new Date(q.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-bottom:1px solid rgba(255,255,255,.05);">'
+        +'<div><div style="font-size:.76rem;color:var(--text);font-weight:600;">'+(q.course||q.subject||'Quiz')+'</div>'
+        +'<div style="font-size:.68rem;color:var(--text2);">'+date+'</div></div>'
+        +'<div style="text-align:right;"><div style="font-size:.82rem;font-weight:900;color:'+color+';">'+pct+'%</div>'
+        +'<div style="font-size:.66rem;color:var(--text2);">'+(q.score||0)+'/'+(q.total||10)+' correct</div></div>'
+        +'</div>';
+    }).join('') || '<div style="color:var(--text2);font-size:.76rem;text-align:center;padding:12px;">No quiz history yet</div>';
+
+    // ── Points History ──
+    document.getElementById('sp-points-history').innerHTML = pointsHistory.slice(0,10).map(p=>{
+      const pts = p.points||p.amount||0;
+      const color = pts>0?'var(--green)':'#f87171';
+      const date = p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '—';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.05);">'
+        +'<div style="font-size:.74rem;color:var(--text);">'+(p.reason||p.action||'Points update')+'</div>'
+        +'<div style="display:flex;align-items:center;gap:8px;">'
+        +'<span style="font-size:.66rem;color:var(--text2);">'+date+'</span>'
+        +'<span style="font-size:.8rem;font-weight:700;color:'+color+';">'+(pts>0?'+':'')+pts+'</span>'
+        +'</div></div>';
+    }).join('') || '<div style="color:var(--text2);font-size:.76rem;text-align:center;padding:10px;">No points history found</div>';
+
+    // ── AI Insight ──
+    const insights = [];
+    if(riskScore>=5) insights.push('⚠️ High risk of dropout — needs immediate intervention.');
+    else if(riskScore>=3) insights.push('🟡 Medium engagement risk — send a personal nudge.');
+    else insights.push('✅ Student appears healthy and engaged.');
+
+    if(avgScore>=80 && quizzes.length>=5) insights.push('🌟 Top performer — consider featuring on leaderboard.');
+    else if(avgScore<40 && quizzes.length>=3) insights.push('📚 Struggling academically — suggest AI tutor sessions.');
+    else if(avgScore>=60) insights.push('📈 Performing above average — keep encouraging.');
+
+    if(quizThisWeek===0 && quizThisMonth>0) insights.push('😴 Active last month but quiet this week — could be burnout.');
+    else if(quizThisWeek>=5) insights.push('🔥 Highly active this week — great momentum!');
+
+    if(coursesAttempted.length===1) insights.push('📌 Only studying one course — encourage other subjects.');
+    else if(coursesAttempted.length>=4) insights.push('🎯 Well-rounded — attempting multiple courses.');
+
+    if((u.points||0)===0) insights.push('💰 Zero points — hasn\'t started earning. Send a push to spin the wheel.');
+    else if((u.points||0)>=1000) insights.push('🏆 High points balance — potential brand ambassador.');
+
+    document.getElementById('sp-ai-insight').innerHTML = insights.map(i=>'<div style="margin-bottom:5px;">'+i+'</div>').join('');
+
+    // ── Action Buttons ──
+    document.getElementById('sp-actions').innerHTML =
+      '<button onclick="givePointsToStudent(\''+uid+'\',\''+( u.name||'Student').replace(/'/g,"\\'")+'\','+(u.points||0)+')" class="btn btn-gold" style="font-size:.78rem;padding:10px;">💰 Give Points</button>'
+      +'<button onclick="msgStudent(\''+uid+'\',\''+( u.name||'Student').replace(/'/g,"\\'")+'\');closeStudentProfile()" class="btn btn-out" style="font-size:.78rem;padding:10px;">💬 Send Message</button>'
+      +'<button onclick="toggleBan(\''+uid+'\','+!!u.banned+');closeStudentProfile()" style="padding:10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:10px;color:#f87171;font-family:Outfit,sans-serif;font-size:.78rem;cursor:pointer;">'+(u.banned?'✅ Unban Student':'🚫 Ban Student')+'</button>'
+      +'<button onclick="generateStudentAIReport(\''+uid+'\','+JSON.stringify(u).replace(/'/g,"\\'")+','+JSON.stringify({quizzes:quizzes.length,avgScore,coursesAttempted}).replace(/'/g,"\\'")+')"; style="padding:10px;background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);border-radius:10px;color:#c084fc;font-family:Outfit,sans-serif;font-size:.78rem;cursor:pointer;">🤖 Full AI Report</button>';
+
+  }catch(e){
+    console.error('Profile error:', e);
+    document.getElementById('sp-name').textContent = 'Error loading profile';
+    document.getElementById('sp-ai-insight').innerHTML = '<div style="color:#f87171;">❌ '+e.message+'</div>';
+  }
+}
+
+async function generateStudentAIReport(uid, student, stats){
+  const groqSnap = await db.collection('settings').doc('config').get();
+  const groqKey = groqSnap.exists ? groqSnap.data().groqKey : '';
+  if(!groqKey){showToast('Set GROQ key in Settings');return;}
+
+  const insightEl = document.getElementById('sp-ai-insight');
+  insightEl.innerHTML = '<div style="color:var(--text2);">🤖 AI generating full report...</div>';
+
+  try{
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+      body: JSON.stringify({
+        model:'llama-3.3-70b-versatile',
+        messages:[{role:'user', content:
+          'Write a comprehensive student assessment report for an OAU 100L student on BABSPHARM Cloud platform.\n\n'+
+          'Student Data:\n'+
+          '- Name: '+(student.name||'Unknown')+'\n'+
+          '- Department: '+(student.dept||'Unknown')+'\n'+
+          '- Points: '+(student.points||0)+'\n'+
+          '- Total quizzes: '+stats.quizzes+'\n'+
+          '- Average score: '+stats.avgScore+'%\n'+
+          '- Courses attempted: '+stats.coursesAttempted.join(', ')+'\n'+
+          '- Last seen: '+(student.lastSeen||'Unknown')+'\n'+
+          '- Joined: '+(student.createdAt||'Unknown')+'\n\n'+
+          'Write: (1) Overall performance assessment, (2) Strengths, (3) Areas needing improvement, '+
+          '(4) Specific recommendations for this student, (5) Risk level. '+
+          'Be specific, direct, and actionable. Nigerian university context. Max 200 words.'
+        }],
+        max_tokens:400
+      })
+    });
+    const text = (await r.json()).choices?.[0]?.message?.content||'';
+    insightEl.innerHTML = '<div style="font-size:.78rem;color:var(--text);line-height:1.8;white-space:pre-wrap;">'+text+'</div>';
+  }catch(e){
+    insightEl.innerHTML = '<div style="color:#f87171;">❌ '+e.message+'</div>';
+  }
+}
+
 async function toggleBan(uid,isBanned){await db.collection('users').doc(uid).update({banned:!isBanned});showToast(isBanned?'Unbanned':'Banned');loadStudents();}
 async function loadCourses(){
   const snap=await db.collection('courses').get();
@@ -1836,6 +2202,45 @@ async function loadSettings(){
   const doc=await db.collection('settings').doc('config').get();
   if(doc.exists&&doc.data().groqKey)document.getElementById('groq-key').value=doc.data().groqKey;
 }
+function generateVersionFile(){
+  const now = new Date();
+  const ts = now.getFullYear().toString()
+    + String(now.getMonth()+1).padStart(2,'0')
+    + String(now.getDate()).padStart(2,'0')
+    + String(now.getHours()).padStart(2,'0')
+    + String(now.getMinutes()).padStart(2,'0')
+    + String(now.getSeconds()).padStart(2,'0');
+
+  const content = JSON.stringify({
+    version: ts,
+    updated: now.toISOString(),
+    note: 'Auto-generated by BABSPHARM Admin — upload this file to GitHub with every deploy'
+  }, null, 2);
+
+  const statusEl = document.getElementById('deploy-status');
+  statusEl.style.display = 'block';
+  statusEl.innerHTML =
+    '<div style="color:var(--green);font-weight:700;margin-bottom:8px;">✅ version.json generated!</div>'
+    +'<div style="color:var(--text2);margin-bottom:8px;font-size:.7rem;">File content (copy this exactly):</div>'
+    +'<div style="background:rgba(0,0,0,.4);border-radius:8px;padding:10px;color:#c084fc;font-size:.72rem;white-space:pre;">'+content+'</div>'
+    +'<div style="display:flex;gap:8px;margin-top:10px;">'
+    +'<button onclick="navigator.clipboard.writeText(\''+content.replace(/'/g,"\\'").replace(/\n/g,'\\n')+'\');showToast(\'✅ Copied! Save as version.json and upload to GitHub\')" style="flex:1;padding:8px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);border-radius:8px;color:#818cf8;font-family:Outfit,sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">📋 Copy Content</button>'
+    +'<button onclick="downloadVersionFile(\''+content.replace(/'/g,"\\'").replace(/\n/g,'\\n')+'\')" style="flex:1;padding:8px;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;border-radius:8px;color:#fff;font-family:Outfit,sans-serif;font-size:.76rem;cursor:pointer;font-weight:700;">⬇️ Download File</button>'
+    +'</div>'
+    +'<div style="margin-top:8px;padding:8px;background:rgba(201,168,76,.06);border-radius:6px;font-size:.7rem;color:var(--gold2);line-height:1.6;">'
+    +'📌 <b>Steps:</b> 1) Download or copy this file &nbsp; 2) Save as <b>version.json</b> &nbsp; 3) Upload to GitHub together with your index.html/admin.html &nbsp; 4) All students auto-update within seconds!'
+    +'</div>';
+}
+
+function downloadVersionFile(content){
+  const blob = new Blob([content], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'version.json'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ version.json downloaded — upload to GitHub!');
+}
+
 async function saveGroqKey(){
   const key=document.getElementById('groq-key').value.trim();
   if(!key){showToast('Enter GROQ key');return;}
@@ -2995,77 +3400,212 @@ function cbtHTMLFileSelected(input){
   reader.readAsText(file);
 }
 
+// Generate section label: 0=A, 1=B...25=Z, 26=AA, 27=AB...
+function getSectionLabel(idx){
+  if(idx < 26) return String.fromCharCode(65+idx);
+  const first = String.fromCharCode(65+Math.floor((idx-26)/26));
+  const second = String.fromCharCode(65+((idx-26)%26));
+  return first+second;
+}
+
 async function aiExtractCBTQuestions(){
   const examId = document.getElementById('cbt-extract-exam').value;
   if(!examId){showToast('Select an exam first');return;}
-  if(!cbtHTMLContent){showToast('Upload an HTML file first');return;}
+
+  const pasteText = document.getElementById('cbt-paste-text')?.value?.trim();
+  const rawText = pasteText || cbtHTMLContent;
+  if(!rawText){showToast('Paste questions or upload a file first');return;}
+
+  const qPerSection = parseInt(document.getElementById('cbt-extract-qps')?.value||'8');
+  const targetTotal = parseInt(document.getElementById('cbt-extract-total')?.value||'0') || null;
 
   const statusEl = document.getElementById('cbt-extract-status');
+  const logEl = document.getElementById('cbt-extract-log');
   statusEl.style.display='block';
-  statusEl.style.color='var(--gold2)';
-  statusEl.textContent='🤖 AI is reading the HTML file and extracting questions...';
+  logEl.style.display='block';
+  logEl.innerHTML='';
+
+  const addLog = (msg, color='var(--green)') => {
+    logEl.innerHTML += '<div style="color:'+color+';padding:1px 0;">['+new Date().toLocaleTimeString()+'] '+msg+'</div>';
+    logEl.scrollTop = logEl.scrollHeight;
+  };
+  const setStatus = (msg, color='var(--gold2)') => {
+    statusEl.style.color=color; statusEl.textContent=msg;
+  };
 
   try{
     const groqSnap = await db.collection('settings').doc('config').get();
     const groqKey = groqSnap.exists ? groqSnap.data().groqKey : '';
-    if(!groqKey){statusEl.textContent='❌ GROQ key not set. Go to Settings first.';return;}
+    if(!groqKey){setStatus('❌ GROQ key not set. Go to Settings.','var(--red)');return;}
 
-    // Extract text from HTML
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(cbtHTMLContent, 'text/html');
-    const text = doc.body.innerText || doc.body.textContent;
-    const truncated = text.substring(0, 12000);
+    // Clean HTML to plain text
+    let cleanText = rawText;
+    if(rawText.trim().startsWith('<') || rawText.includes('</')){
+      const parser = new DOMParser();
+      const htmlDoc = parser.parseFromString(rawText,'text/html');
+      cleanText = (htmlDoc.body.innerText || htmlDoc.body.textContent || rawText).replace(/\s+/g,' ').trim();
+    }
 
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
-      body: JSON.stringify({
-        model:'llama-3.3-70b-versatile',
-        messages:[{
-          role:'user',
-          content:`Extract ALL multiple choice questions from this text and organize them into sections A, B, C, D (8 questions per section maximum). Return ONLY valid JSON array, no markdown, no explanation:
+    addLog('📄 Content: '+cleanText.length.toLocaleString()+' characters');
+    if(targetTotal) addLog('🎯 Target: '+targetTotal+' questions → '+Math.ceil(targetTotal/qPerSection)+' sections of '+qPerSection);
+    else addLog('🎯 Mode: extract all questions, '+qPerSection+' per section');
 
-[{"section":"A","q":"Question text","opts":["Option A","Option B","Option C","Option D"],"ans":0,"exp":"Brief explanation"}]
+    // Confirm replace if questions exist
+    const existing = await db.collection('cbtExams').doc(examId).collection('questions').get();
+    if(existing.size > 0){
+      if(!confirm('This exam has '+existing.size+' existing questions.\n\nReplace ALL with new extraction?')) return;
+      setStatus('🗑️ Clearing existing questions...');
+      // Delete in parallel batches of 20
+      const batches = [];
+      for(let i=0; i<existing.docs.length; i+=20){
+        batches.push(existing.docs.slice(i,i+20));
+      }
+      for(const batch of batches){
+        await Promise.all(batch.map(d=>d.ref.delete()));
+      }
+      addLog('🗑️ Cleared '+existing.size+' existing questions');
+    }
 
-ans is 0-indexed (0=A, 1=B, 2=C, 3=D).
+    // ── PHASE 1: Extract all questions in parallel chunks ──
+    setStatus('⏳ Phase 1 — Extracting questions from text...');
 
-TEXT TO EXTRACT FROM:
-${truncated}`
-        }],
-        temperature:0.3,
-        max_tokens:4000
-      })
-    });
+    // Chunk size: 12000 chars per chunk to stay within token limits
+    const CHUNK_SIZE = 12000;
+    const chunks = [];
+    for(let i=0; i<cleanText.length; i+=CHUNK_SIZE){
+      chunks.push({idx:i/CHUNK_SIZE|0, text:cleanText.substring(i,i+CHUNK_SIZE)});
+    }
+    addLog('📦 Split into '+chunks.length+' chunk(s) — processing in parallel...');
 
-    const data = await res.json();
-    const content = data.choices?.[0]?.message?.content||'';
-    const clean = content.replace(/```json|```/g,'').trim();
-    const questions = JSON.parse(clean);
+    // Process chunks in parallel groups of 3
+    const PARALLEL = 3;
+    const allExtracted = [];
+    for(let i=0; i<chunks.length; i+=PARALLEL){
+      const group = chunks.slice(i, i+PARALLEL);
+      setStatus('⏳ Phase 1 — Chunks '+(i+1)+'-'+Math.min(i+PARALLEL,chunks.length)+' of '+chunks.length+'...');
 
-    if(!Array.isArray(questions)||!questions.length){
-      statusEl.style.color='var(--red)';
-      statusEl.textContent='❌ Could not extract questions. Try a different file format.';
+      const results = await Promise.all(group.map(async chunk=>{
+        for(let attempt=1; attempt<=3; attempt++){
+          try{
+            const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+              method:'POST',
+              headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+              body: JSON.stringify({
+                model:'llama-3.3-70b-versatile',
+                messages:[{role:'user', content:
+                  'Extract EVERY multiple choice question from the text below.\n'+
+                  'Return ONLY a raw JSON array — no markdown, no explanation, no preamble.\n'+
+                  'Format: [{"q":"full question text","opts":["A text","B text","C text","D text"],"ans":0,"exp":"explanation"}]\n'+
+                  '- ans: 0=A, 1=B, 2=C, 3=D\n'+
+                  '- opts: must have exactly 4 items (pad with "—" if fewer)\n'+
+                  '- Extract EVERY question, do NOT skip any\n'+
+                  '- If no explanation, write a brief one\n'+
+                  '- Start your response with [ and end with ]\n\n'+
+                  'TEXT:\n'+chunk.text
+                }],
+                temperature:0.1,
+                max_tokens:8000
+              })
+            });
+            const data = await res.json();
+            const raw = (data.choices?.[0]?.message?.content||'').trim();
+            const match = raw.match(/\[[\s\S]*\]/);
+            if(match){
+              const parsed = JSON.parse(match[0]);
+              if(Array.isArray(parsed) && parsed.length){
+                addLog('✅ Chunk '+(chunk.idx+1)+': '+parsed.length+' questions');
+                return parsed;
+              }
+            }
+          }catch(e){
+            if(attempt < 3){ await new Promise(r=>setTimeout(r,800*attempt)); }
+            else addLog('⚠️ Chunk '+(chunk.idx+1)+' failed after 3 attempts','#fbbf24');
+          }
+        }
+        return [];
+      }));
+
+      results.forEach(r=>allExtracted.push(...r));
+      addLog('📊 Running total: '+allExtracted.length+' questions extracted');
+
+      // Stop if we hit target
+      if(targetTotal && allExtracted.length >= targetTotal){
+        addLog('🎯 Target reached: '+allExtracted.length+' questions');
+        break;
+      }
+
+      // Small gap between parallel groups
+      if(i+PARALLEL < chunks.length) await new Promise(r=>setTimeout(r,300));
+    }
+
+    if(!allExtracted.length){
+      setStatus('❌ No questions found. Try pasting in a clearer MCQ format.','var(--red)');
       return;
     }
 
-    // Save all questions to Firestore
-    let saved = 0;
-    for(const q of questions){
-      if(!q.q||!q.opts||q.opts.length<2) continue;
-      await db.collection('cbtExams').doc(examId).collection('questions').add({
-        q: q.q, opts: q.opts, ans: q.ans||0,
-        exp: q.exp||'', section: q.section||'A',
-        createdAt: new Date().toISOString()
+    // Apply target limit
+    const finalQuestions = targetTotal ? allExtracted.slice(0, targetTotal) : allExtracted;
+    addLog('📋 Final question count: '+finalQuestions.length);
+
+    // ── PHASE 2: Distribute & save to sections ──
+    const numSections = Math.ceil(finalQuestions.length / qPerSection);
+    setStatus('⏳ Phase 2 — Saving to '+numSections+' sections...');
+    addLog('📂 Creating '+numSections+' sections ('+qPerSection+' q each): '+
+      Array.from({length:Math.min(numSections,5)},(_,i)=>getSectionLabel(i)).join(', ')+(numSections>5?'...':''));
+
+    let totalSaved = 0;
+    const sectionSummary = [];
+
+    // Save in parallel batches of 10 questions per Firestore write
+    for(let s=0; s<numSections; s++){
+      const sLabel = getSectionLabel(s);
+      const sQuestions = finalQuestions.slice(s*qPerSection, (s+1)*qPerSection);
+      if(!sQuestions.length) break;
+
+      setStatus('⏳ Saving section '+sLabel+' ('+s+1+'/'+numSections+')...');
+
+      // Parallel writes within section
+      const writes = sQuestions.map((q,order)=>{
+        while((q.opts||[]).length < 4)(q.opts||[]).push('—');
+        return db.collection('cbtExams').doc(examId).collection('questions').add({
+          q: (q.q||'').trim(),
+          opts: (q.opts||[]).slice(0,4),
+          ans: Math.min(Math.max(parseInt(q.ans)||0, 0), 3),
+          exp: q.exp||'',
+          section: sLabel,
+          order: order,
+          createdAt: new Date().toISOString()
+        });
       });
-      saved++;
+
+      await Promise.all(writes);
+      totalSaved += sQuestions.length;
+      sectionSummary.push(sLabel+'('+sQuestions.length+')');
+
+      if(s % 5 === 4 || s === numSections-1){
+        addLog('✅ Sections saved so far: '+sectionSummary.slice(-5).join(', '));
+      }
     }
 
-    statusEl.style.color='var(--green)';
-    statusEl.textContent=`✅ Successfully extracted and saved ${saved} questions! Organized into sections automatically.`;
+    // Clear inputs
+    const pasteEl = document.getElementById('cbt-paste-text');
+    if(pasteEl) pasteEl.value='';
+    cbtHTMLContent='';
+    const fnEl = document.getElementById('cbt-html-fname');
+    if(fnEl){fnEl.style.display='none'; fnEl.textContent='';}
+    const totalEl = document.getElementById('cbt-extract-total');
+    if(totalEl) totalEl.value='';
+
+    setStatus('✅ Done! '+totalSaved+' questions saved across '+numSections+' sections.','var(--green)');
+    addLog('🎉 Complete! '+totalSaved+' questions in '+numSections+' sections ('+qPerSection+' per section)');
+    addLog('📋 All sections: '+sectionSummary.join(', '));
     loadCBTExams();
+    showToast('✅ '+totalSaved+' questions saved in '+numSections+' sections!');
+
   }catch(e){
-    statusEl.style.color='var(--red)';
-    statusEl.textContent='❌ Error: '+e.message+'. Check your HTML file format.';
+    setStatus('❌ Error: '+e.message,'var(--red)');
+    addLog('❌ Fatal: '+e.message,'#f87171');
+    console.error(e);
   }
 }
 
