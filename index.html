@@ -1837,6 +1837,15 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let CU = null, GROQ_KEY = '';
+// CBT globals — declared here to avoid temporal dead zone errors
+let cbtExamData = null;
+let cbtQuestions = {};
+let cbtAnswers = {};
+let cbtCurrentSection = 0;
+let cbtSections = [];
+let cbtTimerInterval = null;
+let cbtTimeLeft = 0;
+let cbtSubmitted = false;
 
 // ══ CACHE HELPERS (reduces Firebase reads + enables offline) ══
 function cacheSet(key, data, ttlMinutes=60){
@@ -5726,14 +5735,6 @@ async function checkPointsBeforeQuiz(){
 }
 
 // ══ CBT EXAM SYSTEM ══
-let cbtExamData = null;
-let cbtQuestions = {};
-let cbtAnswers = {};
-let cbtCurrentSection = 0;
-let cbtSections = [];
-let cbtTimerInterval = null;
-let cbtTimeLeft = 0;
-let cbtSubmitted = false;
 
 async function joinCBTExam(){
   const code = document.getElementById('cbt-access-code').value.trim().toUpperCase();
