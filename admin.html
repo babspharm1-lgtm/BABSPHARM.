@@ -633,13 +633,7 @@ Answer: A</code>
     <div class="sec-title">📋 Past Questions Bank Manager</div>
 
     <!-- Subject selector -->
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
-      ${['chm101','chm102','mth101','mth102','phy101','phy102'].map((s,i)=>`
-        <button class="pq-admin-tab" onclick="switchAdminPQTab('${s}',this)"
-          style="padding:8px 16px;border-radius:20px;border:1px solid var(--cb);${i===0?'background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border:none;':'background:transparent;color:var(--text2);'}font-family:'Outfit',sans-serif;font-size:.76rem;font-weight:${i===0?'700':'400'};cursor:pointer;">
-          ${['⚗️ CHM 101','⚗️ CHM 102','📐 MTH 101','📐 MTH 102','⚡ PHY 101','⚡ PHY 102'][i]}
-        </button>`).join('')}
-    </div>
+    <div id="pq-admin-tabs" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;"></div>
 
     <!-- Add new question -->
     <div class="card" style="margin-bottom:14px;">
@@ -1443,7 +1437,20 @@ function showPanel(name,el){
   document.querySelectorAll('.sb-item').forEach(b=>b.classList.remove('on'));
   document.getElementById('panel-'+name).classList.add('on');
   if(el)el.classList.add('on');
-  ({motivations:loadMotivations,analytics:loadAnalytics,students:loadStudents,courses:loadCourses,questions:()=>{loadQCourses();loadBulkCourses();},privatequiz:()=>{loadPQList();loadHtmlQuizzes();},files:loadFiles,textbooks:loadAdminTextbooks,settings:()=>{loadSettings();loadBrevoSettings();loadPopupSettings();loadSpinSettings();loadCountdownSettings();loadSOTWSettings();loadDailyChallengeSettings();loadPQCodes();},dashboard:loadDashboard,messages:()=>{loadStudents();loadSentMessages();loadDeptStats();},subadmins:loadSubAdmins,coupons:loadCoupons,redemptions:loadRedemptions,cbt:()=>{loadCBTExams();loadHotTopicsAdmin();},aiadmin:()=>{loadAILiveStats();},pqbank:()=>{loadAdminPQBank('chm101');}})[name]?.();
+  ({motivations:loadMotivations,analytics:loadAnalytics,students:loadStudents,courses:loadCourses,questions:()=>{loadQCourses();loadBulkCourses();},privatequiz:()=>{loadPQList();loadHtmlQuizzes();},files:loadFiles,textbooks:loadAdminTextbooks,settings:()=>{loadSettings();loadBrevoSettings();loadPopupSettings();loadSpinSettings();loadCountdownSettings();loadSOTWSettings();loadDailyChallengeSettings();loadPQCodes();},dashboard:loadDashboard,messages:()=>{loadStudents();loadSentMessages();loadDeptStats();},subadmins:loadSubAdmins,coupons:loadCoupons,redemptions:loadRedemptions,cbt:()=>{loadCBTExams();loadHotTopicsAdmin();},aiadmin:()=>{loadAILiveStats();},pqbank:()=>{
+      const tabsEl=document.getElementById('pq-admin-tabs');
+      if(tabsEl&&!tabsEl.children.length){
+        const subjects=['chm101','chm102','mth101','mth102','phy101','phy102'];
+        const labels=['⚗️ CHM 101','⚗️ CHM 102','📐 MTH 101','📐 MTH 102','⚡ PHY 101','⚡ PHY 102'];
+        subjects.forEach((s,i)=>{
+          const btn=document.createElement('button');
+          btn.className='pq-admin-tab'; btn.textContent=labels[i];
+          btn.onclick=function(){switchAdminPQTab(s,this);};
+          btn.style.cssText='padding:8px 16px;border-radius:20px;font-family:Outfit,sans-serif;font-size:.76rem;cursor:pointer;'+(i===0?'background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border:none;font-weight:700;':'background:transparent;color:var(--text2);border:1px solid var(--cb);font-weight:400;');
+          tabsEl.appendChild(btn);
+        });
+      }
+      loadAdminPQBank('chm101');}})[name]?.();
 }
 async function loadDashboard(){
   const snap=await db.collection('users').get();
@@ -1770,7 +1777,7 @@ async function loadCoupons(){
       <div>
         <div class="li-code" style="letter-spacing:2px">${c.code}</div>
         <div class="li-name">💰 ${c.points} points • Used: ${c.usedCount}${c.limit>0?'/'+c.limit:''}</div>
-        ${c.expiry?`<div class="li-name">Expires: ${new Date(c.expiry).toLocaleDateString()}</div>`:''}
+        ${c.expiry ? '<div class="li-name">Expires: '+new Date(c.expiry).toLocaleDateString()+'</div>' : ''}
         <div class="sem-tag" style="color:${statusCol};background:${statusCol}22">${status}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:5px">
@@ -2547,12 +2554,12 @@ function renderAdminPQList(questions){
                 ${['A','B','C','D'][j]}. ${opt} ${j===q.ans?'✅':''}
               </div>`).join('')}
           </div>
-          ${q.exp?`<div style="font-size:.72rem;color:var(--text2);background:rgba(201,168,76,.06);border-radius:6px;padding:5px 8px;">💡 ${q.exp}</div>`:''}
+          ${q.exp ? '<div style="font-size:.72rem;color:var(--text2);background:rgba(201,168,76,.06);border-radius:6px;padding:5px 8px;">💡 '+q.exp+'</div>' : ''}
         </div>
         <div style="flex-shrink:0;">
           ${q.isBuiltIn
-            ? `<span style="font-size:.68rem;color:var(--text2);font-style:italic;">System</span>`
-            : `<button onclick="deletePQBankQuestion('${q.id}')" class="btn btn-red btn-sm">🗑 Delete</button>`
+            ? '<span style="font-size:.68rem;color:var(--text2);font-style:italic;">System</span>'
+            : '<button onclick="deletePQBankQuestion(\''+q.id+'\')" class="btn btn-red btn-sm">🗑 Delete</button>'
           }
         </div>
       </div>
@@ -2910,8 +2917,8 @@ async function adminAIAction(type){
     const data = await res.json();
     const text = data.choices?.[0]?.message?.content||'';
     showActionResult('📢 Announcement Ready', `<div style="font-size:.84rem;color:var(--text);line-height:1.7;padding:10px;background:rgba(255,255,255,.04);border-radius:8px;">${text}</div>`,
-      [{label:'📢 Send to All Students', action:`sendGeneratedAnnouncement(\`${text.replace(/`/g,"'")}\`)`, primary:true},
-       {label:'📋 Copy', action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`}]);
+      [{label:'📢 Send to All Students', action:"sendGeneratedAnnouncement('"+text.replace(/`/g,"'")+"')", primary:true},
+       {label:'📋 Copy', action:"navigator.clipboard.writeText('"+text.replace(/`/g,"'")+"');showToast('Copied!')"}]);
   }
 
   else if(type==='questions_chm'||type==='questions_mth'||type==='questions_phy'){
@@ -3036,7 +3043,7 @@ async function adminAIAction(type){
     const data = await res.json();
     const text = data.choices?.[0]?.message?.content||'';
     showActionResult('📱 WhatsApp Message Ready', `<div style="font-size:.82rem;color:var(--text);line-height:1.7;padding:10px;background:rgba(255,255,255,.04);border-radius:8px;white-space:pre-wrap;">${text}</div>`,
-      [{label:'📋 Copy Message', action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied! Paste on WhatsApp')`, primary:true}]);
+      [{label:'📋 Copy Message', action:"navigator.clipboard.writeText('"+text.replace(/`/g,"'")+"');showToast('Copied! Paste on WhatsApp')", primary:true}]);
   }
 
   else if(type==='coupon'){
@@ -3183,8 +3190,8 @@ async function adminAIAction(type){
       const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Create a weekly study plan for OAU 100L students covering CHM 101, MTH 101, PHY 101. Mon-Sun, each day 2 topics + revision. Format with emojis.'}],max_tokens:400})});
       const text=(await r.json()).choices?.[0]?.message?.content||'';
       showActionResult('📅 Weekly Study Plan',`<div style="font-size:.8rem;color:var(--text);line-height:1.8;white-space:pre-wrap;">${text}</div>`,
-        [{label:'📢 Post to Students',action:`sendGeneratedAnnouncement(\`📅 WEEKLY STUDY PLAN\n\n${text.replace(/`/g,"'")}\`)`,primary:true},
-         {label:'📋 Copy',action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`}]);
+        [{label:'📢 Post to Students',action:"sendGeneratedAnnouncement('📅 WEEKLY STUDY PLAN\n\n'+text.replace(/`/g,"'")+')",primary:true},
+         {label:'📋 Copy',action:"navigator.clipboard.writeText('"+text.replace(/`/g,"'")+"');showToast('Copied!')"}]);
     }catch(e){showActionResult('❌ Error','Try again.');}
   }
 
@@ -3195,7 +3202,7 @@ async function adminAIAction(type){
       const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Write a Telegram channel post for OAU 100L students about BABSPHARM Cloud. AI tutors, CBT exams, PQ bank. Bold key phrases with **text**. Link: https://babspharm1-lgtm.github.io/BABSPHARM/ Max 200 words.'}],max_tokens:350})});
       const text=(await r.json()).choices?.[0]?.message?.content||'';
       showActionResult('✈️ Telegram Post Ready',`<div style="font-size:.82rem;color:var(--text);line-height:1.7;white-space:pre-wrap;padding:10px;background:rgba(255,255,255,.04);border-radius:8px;">${text}</div>`,
-        [{label:'📋 Copy',action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`,primary:true}]);
+        [{label:'📋 Copy',action:"navigator.clipboard.writeText('"+text.replace(/`/g,"'")+"');showToast('Copied!')",primary:true}]);
     }catch(e){showActionResult('❌ Error','Try again.');}
   }
 
@@ -3383,7 +3390,7 @@ async function adminAIAction(type){
       const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Write an announcement that results for ${course} are out. Tell students to check. Motivate them regardless of score. Nigerian tone. Emojis. 4 sentences.`}],max_tokens:200})});
       const text=(await r.json()).choices?.[0]?.message?.content||'';
       showActionResult('📣 Result Alert Ready',`<div style="font-size:.84rem;line-height:1.7;padding:10px;background:rgba(255,255,255,.04);border-radius:8px;">${text}</div>`,
-        [{label:'📢 Send Now',action:`sendGeneratedAnnouncement(\`${text.replace(/`/g,"'")}\`)`,primary:true}]);
+        [{label:'📢 Send Now',action:"sendGeneratedAnnouncement('"+text.replace(/`/g,"'")+')',primary:true}]);
     }catch(e){showActionResult('❌ Error','Try again.');}
   }
 
@@ -3395,7 +3402,7 @@ async function adminAIAction(type){
       const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Urgent deadline reminder for OAU students about: ${deadline}. Create urgency. Nigerian tone. Emojis. 3 sentences.`}],max_tokens:200})});
       const text=(await r.json()).choices?.[0]?.message?.content||'';
       showActionResult('⚠️ Deadline Alert Ready',`<div style="font-size:.84rem;line-height:1.7;padding:10px;background:rgba(255,255,255,.04);border-radius:8px;">${text}</div>`,
-        [{label:'🚨 Send Now',action:`sendGeneratedAnnouncement(\`${text.replace(/`/g,"'")}\`)`,primary:true}]);
+        [{label:'🚨 Send Now',action:"sendGeneratedAnnouncement('"+text.replace(/`/g,"'")+')',primary:true}]);
     }catch(e){showActionResult('❌ Error','Try again.');}
   }
 
@@ -4592,7 +4599,7 @@ async function runSiteDoctor(type, groqKey){
             <div style="font-size:.7rem;color:var(--text2)">Code: <b style="color:var(--gold)">${e.code}</b> • <b style="color:${e.qCount>0?'var(--green)':'var(--red)'}">${e.qCount} questions</b> • ${e.active?'<span style="color:var(--green)">Active</span>':'<span style="color:var(--text2)">Inactive</span>'}</div>
             <div style="font-size:.68rem;color:var(--text2)">Sections: ${e.sections.length>0?e.sections.join(', '):'<span style="color:var(--red)">NONE</span>'}</div>
           </div>
-          ${e.qCount===0?`<button onclick="adminAIAction('doctor_fill_exam_${e.id}')" style="padding:3px 8px;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:6px;color:var(--gold);font-size:.68rem;cursor:pointer;font-family:'Outfit',sans-serif;">Auto-Fill</button>`:''}
+          ${e.qCount===0 ? '<button onclick="adminAIAction(\'doctor_fill_exam_'+e.id+'\')" style="padding:3px 8px;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:6px;color:var(--gold);font-size:.68rem;cursor:pointer;font-family:Outfit,sans-serif;">Auto-Fill</button>' : ''}
         </div>
       </div>`).join('')||'<div style="color:var(--text2)">No CBT exams yet</div>'
     );
@@ -4642,7 +4649,7 @@ async function runSiteDoctor(type, groqKey){
       checks.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--cb);">
         <div><div style="font-size:.78rem;color:var(--text)">${c.count>=c.min?'✅':'❌'} ${c.name}</div>
         <div style="font-size:.7rem;color:var(--text2)">${c.count} items (min ${c.min} recommended)</div></div>
-        ${c.count<c.min?`<button onclick="adminAIAction('${c.fix}')" style="padding:3px 10px;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:8px;color:var(--gold);font-size:.7rem;cursor:pointer;font-family:'Outfit',sans-serif;">Fix →</button>`:''}
+        ${c.count<c.min ? '<button onclick="adminAIAction(\''+c.fix+'\')" style="padding:3px 10px;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:8px;color:var(--gold);font-size:.7rem;cursor:pointer;font-family:Outfit,sans-serif;">Fix →</button>' : ''}
       </div>`).join('')
     );
   }
@@ -4726,7 +4733,7 @@ ${hotSnap.size<3?'• Set hot topics for exam season':''}
 ${students.filter(s=>(s.points||0)===0).length>studSnap.size*0.3?'• Many students have 0 points — run re-engagement campaign':''}`;
 
     showActionResult('📄 Issues Report',`<div style="font-size:.76rem;color:var(--text);line-height:1.8;white-space:pre-wrap;background:rgba(0,0,0,.2);padding:12px;border-radius:8px;">${report}</div>`,
-      [{label:'📋 Copy Report', action:`navigator.clipboard.writeText(\`${report.replace(/`/g,"'")}\`);showToast('Copied!')`, primary:true}]);
+      [{label:'📋 Copy Report', action:"navigator.clipboard.writeText('"+report.replace(/`/g,"'")+"');showToast('Copied!')", primary:true}]);
   }
 }
 
@@ -4758,7 +4765,7 @@ async function loadInactiveUsers(){
     return new Date(s.lastSeen).getTime() < cutoff;
   });
 
-  countEl.innerHTML = `Found <b style="color:var(--gold2)">${cleanupUserData.length}</b> users ${cleanupFilterDays===999?'who never logged in':`inactive for ${cleanupFilterDays}+ days`}`;
+  countEl.innerHTML = 'Found <b style="color:var(--gold2)">'+cleanupUserData.length+'</b> users '+(cleanupFilterDays===999?'who never logged in':'inactive for '+cleanupFilterDays+'+ days');
   renderCleanupList();
 }
 
