@@ -6043,18 +6043,49 @@ function selectCBTAnswer(section, qIndex, qId, optIndex){
 function updateCBTBottomNav(sectionIndex, answeredCount, totalQ){
   const section = cbtSections[sectionIndex];
   const isLast = sectionIndex === cbtSections.length-1;
-  const allAnswered = answeredCount === totalQ;
+  const isFirst = sectionIndex === 0;
 
-  document.getElementById('cbt-prev-btn').style.display = sectionIndex===0?'none':'block';
-  document.getElementById('cbt-next-btn').style.display = isLast?'none':'block';
-  // Submit always visible — no need to be on last section
+  const prevBtn = document.getElementById('cbt-prev-btn');
+  const nextBtn = document.getElementById('cbt-next-btn');
+  const submitBtn = document.getElementById('cbt-submit-btn');
 
-  // Progress
+  // Previous button
+  prevBtn.style.display = isFirst ? 'none' : 'block';
+
+  // Next button — hidden on last section
+  nextBtn.style.display = isLast ? 'none' : 'block';
+  if(!isLast){
+    nextBtn.textContent = 'Next Section →';
+    nextBtn.style.background = 'linear-gradient(135deg,var(--gold),var(--gold2))';
+  }
+
+  // Submit button — always visible, more prominent on last section
+  submitBtn.style.display = 'block';
   const totalAnswered = Object.keys(cbtAnswers).length;
   const totalQuestions = Object.values(cbtQuestions).reduce((s,a)=>s+a.length,0);
+  const unanswered = totalQuestions - totalAnswered;
+
+  if(isLast){
+    submitBtn.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
+    submitBtn.style.fontSize = '1rem';
+    submitBtn.style.padding = '16px';
+    submitBtn.textContent = unanswered > 0
+      ? '✅ Submit Exam (' + unanswered + ' unanswered)'
+      : '✅ Submit Exam — All Answered!';
+  } else {
+    submitBtn.style.background = 'rgba(22,163,74,.2)';
+    submitBtn.style.fontSize = '.82rem';
+    submitBtn.style.padding = '10px';
+    submitBtn.textContent = unanswered > 0
+      ? '✅ Submit Now (' + unanswered + ' unanswered)'
+      : '✅ Submit Exam';
+  }
+
+  // Progress
   document.getElementById('cbt-section-progress').innerHTML =
-    `Section ${section}: <b style="color:${allAnswered?'var(--green)':'#fbbf24'}">${answeredCount}/${totalQ}</b> answered
-     &nbsp;•&nbsp; Total: <b style="color:var(--gold2)">${totalAnswered}/${totalQuestions}</b>`;
+    'Section '+section+': <b style="color:'+(answeredCount===totalQ?'var(--green)':'#fbbf24')+'">'+answeredCount+'/'+totalQ+'</b> answered'
+    +' &nbsp;•&nbsp; Total: <b style="color:var(--gold2)">'+totalAnswered+'/'+totalQuestions+'</b>'
+    +(unanswered>0?' &nbsp;•&nbsp; <span style="color:#f87171">'+unanswered+' left</span>':'&nbsp;•&nbsp; <span style="color:var(--green)">✅ All done!</span>');
 }
 
 function goToCBTSection(index){
@@ -6080,6 +6111,18 @@ function cbtPrevSection(){
 
 async function submitCBTExam(autoSubmit=false){
   if(cbtSubmitted) return;
+
+  // Warn if unanswered questions
+  if(!autoSubmit){
+    const totalAnswered = Object.keys(cbtAnswers).length;
+    const totalQuestions = Object.values(cbtQuestions).reduce((s,a)=>s+a.length,0);
+    const unanswered = totalQuestions - totalAnswered;
+    if(unanswered > 0){
+      const go = confirm('⚠️ You have '+unanswered+' unanswered question'+(unanswered===1?'':'s')+'.\n\nUnanswered questions will be marked as wrong.\n\nSubmit anyway?');
+      if(!go) return;
+    }
+  }
+
   cbtSubmitted = true;
   if(cbtTimerInterval) clearInterval(cbtTimerInterval);
 
