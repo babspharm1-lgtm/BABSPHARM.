@@ -6092,21 +6092,33 @@ function updateCBTBottomNav(sectionIndex, answeredCount, totalQ){
   const nextBtn = document.getElementById('cbt-next-btn');
   const submitBtn = document.getElementById('cbt-submit-btn');
 
-  prevBtn.style.display = isFirst ? 'none' : 'block';
-  nextBtn.style.display = isLast ? 'none' : 'block';
-  submitBtn.style.display = 'block';
+  if(!prevBtn||!nextBtn||!submitBtn) return;
 
-  // Update submit button text based on answered count
+  // Prev — grey out on first section instead of hiding
+  prevBtn.style.opacity = isFirst ? '0.3' : '1';
+  prevBtn.style.pointerEvents = isFirst ? 'none' : 'auto';
+
+  // Next — grey out on last section instead of hiding
+  nextBtn.style.opacity = isLast ? '0.3' : '1';
+  nextBtn.style.pointerEvents = isLast ? 'none' : 'auto';
+  nextBtn.style.background = isLast ? 'rgba(255,255,255,.05)' : 'linear-gradient(135deg,var(--gold),var(--gold2))';
+  nextBtn.style.color = isLast ? 'var(--text2)' : 'var(--navy)';
+
+  // Submit always fully visible and active
+  submitBtn.style.opacity = '1';
+  submitBtn.style.pointerEvents = 'auto';
+
+  // Update submit text
   const totalAnswered = Object.keys(cbtAnswers).length;
   const totalQuestions = Object.values(cbtQuestions).reduce((s,a)=>s+a.length,0);
   const unanswered = totalQuestions - totalAnswered;
-  submitBtn.textContent = unanswered > 0 ? '✅ Submit ('+unanswered+' left)' : '✅ Submit All';
+  submitBtn.textContent = unanswered > 0 ? '✅ Submit ('+unanswered+' left)' : '✅ Submit All ✓';
 
   // Progress
   document.getElementById('cbt-section-progress').innerHTML =
-    'Section '+section+': <b style="color:'+(answeredCount===totalQ?'var(--green)':'#fbbf24')+'">'+answeredCount+'/'+totalQ+'</b>'
+    'Sec '+section+': <b style="color:'+(answeredCount===totalQ?'var(--green)':'#fbbf24')+'">'+answeredCount+'/'+totalQ+'</b>'
     +' &nbsp;•&nbsp; Total: <b style="color:var(--gold2)">'+totalAnswered+'/'+totalQuestions+'</b>'
-    +(unanswered>0?' &nbsp;<span style="color:#f87171">'+unanswered+' unanswered</span>':'&nbsp;<span style="color:var(--green)">✅ All done!</span>');
+    +(unanswered>0?' &nbsp;<span style="color:#f87171">'+unanswered+' left</span>':'&nbsp;<span style="color:var(--green)">✅ Done!</span>');
 }
 
 function goToCBTSection(index){
