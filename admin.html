@@ -701,6 +701,10 @@ Answer: A</code>
       </div>
 
       <button class="btn btn-gold" onclick="aiExtractCBTQuestions()" style="width:100%;margin-top:10px;padding:13px;font-size:.84rem;">🤖 Extract ALL Questions → Save to Sections</button>
+      <button class="btn btn-out" onclick="aiExtractCBTAppend()" style="width:100%;margin-top:6px;padding:10px;font-size:.78rem;">➕ Extract & APPEND (add to existing, don't replace)</button>
+      <div style="font-size:.7rem;color:var(--text2);margin-top:8px;padding:8px;background:rgba(255,255,255,.03);border-radius:8px;line-height:1.7;">
+        💡 <b>For 400 questions:</b> If text gets cut when pasting, split into 2 batches — paste first 200 → tap <b>Extract ALL</b>, then paste next 200 → tap <b>Extract & APPEND</b>. Sections update automatically.
+      </div>
       <div id="cbt-extract-status" style="margin-top:10px;font-size:.78rem;display:none;"></div>
       <div id="cbt-extract-log" style="display:none;background:rgba(0,0,0,.3);border-radius:8px;padding:10px;font-family:monospace;font-size:.7rem;color:var(--green);max-height:180px;overflow-y:auto;margin-top:8px;"></div>
     </div>
@@ -3461,6 +3465,164 @@ function getSectionLabel(idx){
   return first+second;
 }
 
+// Append mode — extract new questions and ADD to existing ones, then redistribute all sections
+async function aiExtractCBTAppend(){
+  const examId = document.getElementById('cbt-extract-exam').value;
+  if(!examId){showToast('Select an exam first');return;}
+  const pasteText = document.getElementById('cbt-paste-text')?.value?.trim();
+  const rawText = pasteText || cbtHTMLContent;
+  if(!rawText){showToast('Paste questions or upload a file first');return;}
+
+  const qPerSection = parseInt(document.getElementById('cbt-extract-qps')?.value||'10');
+  const statusEl = document.getElementById('cbt-extract-status');
+  const logEl = document.getElementById('cbt-extract-log');
+  statusEl.style.display='block'; logEl.style.display='block'; logEl.innerHTML='';
+
+  const addLog = (msg, color='var(--green)') => {
+    logEl.innerHTML += '<div style="color:'+color+';padding:1px 0;">['+new Date().toLocaleTimeString()+'] '+msg+'</div>';
+    logEl.scrollTop = logEl.scrollHeight;
+  };
+  const setStatus = (msg, color='var(--gold2)') => { statusEl.style.color=color; statusEl.textContent=msg; };
+
+  try{
+    const groqSnap = await db.collection('settings').doc('config').get();
+    const groqKey = groqSnap.exists ? groqSnap.data().groqKey : '';
+    if(!groqKey){setStatus('❌ GROQ key not set.','var(--red)');return;}
+
+    // Clean text
+    let cleanText = rawText;
+    if(rawText.trim().startsWith('<') || rawText.includes('</')){
+      const parser = new DOMParser();
+      const htmlDoc = parser.parseFromString(rawText,'text/html');
+      cleanText = (htmlDoc.body.innerText || htmlDoc.body.textContent || rawText).replace(/\s+/g,' ').trim();
+    }
+
+    addLog('📋 APPEND mode — new text: '+cleanText.length.toLocaleString()+' chars');
+
+    // Load existing questions first
+    setStatus('⏳ Loading existing questions...');
+    const existSnap = await db.collection('cbtExams').doc(examId).collection('questions').get();
+    const existingQs = existSnap.docs.map(d=>({firestoreId:d.id,...d.data()}));
+    addLog('📚 Existing questions: '+existingQs.length);
+
+    // Extract new questions from pasted text
+    const CHUNK_SIZE = 3000;
+    const chunks = [];
+    for(let i=0; i<cleanText.length; i+=CHUNK_SIZE){
+      chunks.push({idx:Math.floor(i/CHUNK_SIZE), text:cleanText.substring(i,i+CHUNK_SIZE)});
+    }
+    addLog('📦 Extracting from '+chunks.length+' chunks...');
+
+    const newExtracted = [];
+    const PARALLEL = 2;
+    for(let i=0; i<chunks.length; i+=PARALLEL){
+      const group = chunks.slice(i, i+PARALLEL);
+      setStatus('⏳ Extracting chunk '+(i+1)+'/'+chunks.length+' ('+newExtracted.length+' found)...');
+      const results = await Promise.all(group.map(async chunk=>{
+        for(let attempt=1; attempt<=3; attempt++){
+          try{
+            const res = await fetch('https://api.groq.com/openai/v1/chat/completions',{
+              method:'POST',
+              headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},
+              body: JSON.stringify({
+                model:'llama-3.3-70b-versatile',
+                messages:[{role:'user', content:
+                  'Extract ALL MCQ questions from this text. Return ONLY a valid JSON array.\n\n'+
+                  'FORMAT: [{"q":"question text","opts":["A option text","B option text","C option text","D option text"],"ans":1,"exp":"why correct"}]\n\n'+
+                  'RULES:\n'+
+                  '1. ans = 0-based index: A=0, B=1, C=2, D=3\n'+
+                  '2. Answer is shown as "ANSWER: B" or "Answer: A" or "ANS: C" after each question — use it\n'+
+                  '3. opts: remove the A) B) C) D) or A. B. prefix — include ONLY the option content\n'+
+                  '4. exp: one sentence explaining why the answer is correct\n'+
+                  '5. Extract EVERY single question — do NOT stop early or skip any\n'+
+                  '6. Output ONLY the JSON array — nothing before [ or after ]\n\n'+
+                  'TEXT:\n'+chunk.text
+                }],
+                temperature:0.1,
+                max_tokens:4000
+              })
+            });
+            const data = await res.json();
+            if(data.error?.code === 'rate_limit_exceeded'){
+              addLog('⏳ Rate limit — waiting 6s...','#fbbf24');
+              await new Promise(r=>setTimeout(r,6000));
+              continue;
+            }
+            const raw = (data.choices?.[0]?.message?.content||'').trim();
+            let parsed = [];
+            try{
+              const m = raw.match(/\[[\s\S]*\]/);
+              if(m) parsed = JSON.parse(m[0]);
+            }catch(e){
+              try{
+                const cut = raw.lastIndexOf('}');
+                if(cut > 0) parsed = JSON.parse(raw.substring(raw.indexOf('['), cut+1)+']');
+              }catch(e2){}
+            }
+            if(Array.isArray(parsed) && parsed.length){
+              addLog('✅ Chunk '+(chunk.idx+1)+': '+parsed.length+' new questions');
+              return parsed;
+            }
+            if(attempt < 3) await new Promise(r=>setTimeout(r,1500*attempt));
+          }catch(e){
+            if(attempt < 3) await new Promise(r=>setTimeout(r,1000*attempt));
+          }
+        }
+        return [];
+      }));
+      results.forEach(r=>newExtracted.push(...r));
+      if(i+PARALLEL < chunks.length) await new Promise(r=>setTimeout(r,1000));
+    }
+
+    addLog('🆕 New questions extracted: '+newExtracted.length);
+
+    // Save new questions to Firestore
+    setStatus('⏳ Saving '+newExtracted.length+' new questions...');
+    let saved = 0;
+    const allCount = existingQs.length + newExtracted.length;
+    const numSections = Math.ceil(allCount / qPerSection);
+
+    // Save new questions with temporary section labels (will be renumbered)
+    for(const q of newExtracted){
+      while((q.opts||[]).length < 4)(q.opts=q.opts||[]).push('—');
+      await db.collection('cbtExams').doc(examId).collection('questions').add({
+        q:(q.q||'').trim(), opts:(q.opts||[]).slice(0,4),
+        ans:Math.min(Math.max(parseInt(q.ans)||0,0),3),
+        exp:q.exp||'', section:'PENDING',
+        order:existingQs.length+saved,
+        createdAt:new Date().toISOString()
+      });
+      saved++;
+    }
+    addLog('💾 Saved '+saved+' new questions');
+
+    // Re-number ALL sections from scratch
+    setStatus('⏳ Re-distributing all '+(existingQs.length+saved)+' questions into sections...');
+    const allSnap = await db.collection('cbtExams').doc(examId).collection('questions').orderBy('order').get().catch(()=>db.collection('cbtExams').doc(examId).collection('questions').get());
+    const allDocs = allSnap.docs;
+    let updated = 0;
+    for(let idx=0; idx<allDocs.length; idx++){
+      const sLabel = getSectionLabel(Math.floor(idx/qPerSection));
+      await allDocs[idx].ref.update({section:sLabel, order:idx%qPerSection});
+      updated++;
+    }
+
+    addLog('🎉 Done! Total: '+allDocs.length+' questions in '+Math.ceil(allDocs.length/qPerSection)+' sections');
+    setStatus('✅ Appended '+saved+' questions. Total: '+allDocs.length+' in '+Math.ceil(allDocs.length/qPerSection)+' sections.','var(--green)');
+
+    // Clear paste
+    const pasteEl = document.getElementById('cbt-paste-text');
+    if(pasteEl) pasteEl.value='';
+    cbtHTMLContent='';
+    loadCBTExams();
+    showToast('✅ +'+saved+' questions appended! Total: '+allDocs.length);
+
+  }catch(e){
+    setStatus('❌ Error: '+e.message,'var(--red)');
+    addLog('❌ '+e.message,'#f87171');
+  }
+}
+
 async function aiExtractCBTQuestions(){
   const examId = document.getElementById('cbt-extract-exam').value;
   if(!examId){showToast('Select an exam first');return;}
@@ -3524,7 +3686,7 @@ async function aiExtractCBTQuestions(){
 
     // Smaller chunks = fewer questions per AI call = no token cutoff
     // 5000 chars ≈ 20-25 questions per chunk, well within limits
-    const CHUNK_SIZE = 5000;
+    const CHUNK_SIZE = 3000;  // ~12-15 questions per chunk — more reliable for large sets
     const chunks = [];
     for(let i=0; i<cleanText.length; i+=CHUNK_SIZE){
       chunks.push({idx:Math.floor(i/CHUNK_SIZE), text:cleanText.substring(i,i+CHUNK_SIZE)});
@@ -3547,21 +3709,15 @@ async function aiExtractCBTQuestions(){
               body: JSON.stringify({
                 model:'llama-3.3-70b-versatile',
                 messages:[{role:'user', content:
-                  'Extract ALL MCQ questions from the text. Return ONLY a JSON array, nothing else.\n\n'+
-                  'FORMAT: [{"q":"full question","opts":["option A","option B","option C","option D"],"ans":0,"exp":"why correct"}]\n\n'+
-                  'CRITICAL — Finding the correct answer (ans field = 0-indexed: A=0,B=1,C=2,D=3):\n'+
-                  '- "Answer: A" or "Ans: B" or "ANS: C" → convert letter to index\n'+
-                  '- "Answer: 1" or "Ans: 2" → 1=0(A), 2=1(B), 3=2(C), 4=3(D)\n'+
-                  '- Bold/starred option like **B. text** or *C. text* → that option is correct\n'+
-                  '- Option marked with ✓ or (correct) or underlined → that is the answer\n'+
-                  '- Answer key at end like "1.A 2.C 3.B" → match by question number\n'+
-                  '- Answer shown after each question in any format → extract it\n'+
-                  '- If truly no answer given → use your knowledge to pick the correct one\n\n'+
-                  'OTHER RULES:\n'+
-                  '- opts: strip A. B. 1. 2. labels — keep content only. Pad to 4 with "—"\n'+
-                  '- exp: one sentence explaining why the answer is correct\n'+
-                  '- Extract EVERY question without skipping any\n'+
-                  '- Output ONLY the JSON array starting with [ and ending with ]\n\n'+
+                  'Extract ALL MCQ questions from this text. Return ONLY a valid JSON array.\n\n'+
+                  'FORMAT: [{"q":"question text","opts":["A option text","B option text","C option text","D option text"],"ans":1,"exp":"why correct"}]\n\n'+
+                  'RULES:\n'+
+                  '1. ans = 0-based index: A=0, B=1, C=2, D=3\n'+
+                  '2. Answer is shown as "ANSWER: B" or "Answer: A" or "ANS: C" after each question — use it\n'+
+                  '3. opts: remove the A) B) C) D) or A. B. prefix — include ONLY the option content\n'+
+                  '4. exp: one sentence explaining why the answer is correct\n'+
+                  '5. Extract EVERY single question — do NOT stop early or skip any\n'+
+                  '6. Output ONLY the JSON array — nothing before [ or after ]\n\n'+
                   'TEXT:\n'+chunk.text
                 }],
                 temperature:0.1,
@@ -3631,6 +3787,12 @@ async function aiExtractCBTQuestions(){
     }
 
     // Apply target limit
+    // Warn if we got significantly fewer than expected
+    if(targetTotal && allExtracted.length < targetTotal * 0.95){
+      const missing = targetTotal - allExtracted.length;
+      addLog('⚠️ Got '+allExtracted.length+' of '+targetTotal+' requested. '+missing+' missing.','#fbbf24');
+      addLog('⚠️ Tip: Your pasted text may have been cut off. Try splitting into 2 pastes.','#fbbf24');
+    }
     const finalQuestions = targetTotal ? allExtracted.slice(0, targetTotal) : allExtracted;
     addLog('📋 Final question count: '+finalQuestions.length);
 
