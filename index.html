@@ -586,15 +586,10 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <!-- Bottom navigation -->
   <div id="cbt-bottom-nav" style="position:sticky;bottom:0;background:var(--navy);border-top:2px solid rgba(22,163,74,.4);padding:12px 16px;box-shadow:0 -4px 20px rgba(0,0,0,.4);">
     <div id="cbt-section-progress" style="margin-bottom:8px;font-size:.74rem;color:var(--text2);text-align:center;"></div>
-
-    <!-- SUBMIT BUTTON — always on top, always visible -->
-    <button id="cbt-submit-btn" onclick="submitCBTExam()" style="width:100%;margin-bottom:8px;padding:16px;background:linear-gradient(135deg,#16a34a,#15803d);border:2px solid #4ade80;border-radius:12px;color:#fff;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:900;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 20px rgba(22,163,74,.4);">
-      ✅ SUBMIT EXAM
-    </button>
-
     <div style="display:flex;gap:8px;">
-      <button id="cbt-prev-btn" onclick="cbtPrevSection()" style="flex:1;padding:11px;background:rgba(255,255,255,.05);border:1px solid var(--cb);border-radius:10px;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.82rem;cursor:pointer;">← Prev</button>
-      <button id="cbt-next-btn" onclick="cbtNextSection()" style="flex:1;padding:11px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;color:var(--navy);font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;">Next →</button>
+      <button id="cbt-prev-btn" onclick="cbtPrevSection()" style="flex:1;padding:12px;background:rgba(255,255,255,.05);border:1px solid var(--cb);border-radius:10px;color:var(--text2);font-family:'Outfit',sans-serif;font-size:.82rem;cursor:pointer;">← Prev</button>
+      <button id="cbt-next-btn" onclick="cbtNextSection()" style="flex:1;padding:12px;background:linear-gradient(135deg,var(--gold),var(--gold2));border:none;border-radius:10px;color:var(--navy);font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;">Next →</button>
+      <button id="cbt-submit-btn" onclick="submitCBTExam()" style="flex:1;padding:12px;background:linear-gradient(135deg,#16a34a,#15803d);border:2px solid #4ade80;border-radius:10px;color:#fff;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;">✅ Submit</button>
     </div>
   </div>
 </div>
@@ -6024,24 +6019,18 @@ function renderCBTSection(sectionIndex){
   const answeredCount = questions.filter((_,i)=>cbtAnswers[section+'_'+i]!==undefined).length;
 
   contentEl.innerHTML = `
-    <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
-      <div>
-        <div style="font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#a5b4fc;margin-bottom:2px">Section ${section}</div>
-        <div style="font-size:.74rem;color:var(--text2)">
-          ${answeredCount}/${questions.length} answered
-          ${answeredCount<questions.length ? '<span style="color:#fbbf24"> • '+(questions.length-answeredCount)+' remaining</span>' : '<span style="color:var(--green)"> • All done ✅</span>'}
-        </div>
+    <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+      <div style="font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#a5b4fc;margin-bottom:2px">Section ${section}</div>
+      <div style="font-size:.74rem;color:var(--text2)">
+        ${answeredCount}/${questions.length} answered
+        ${answeredCount<questions.length ? '<span style="color:#fbbf24"> • '+(questions.length-answeredCount)+' remaining</span>' : '<span style="color:var(--green)"> • All done ✅</span>'}
       </div>
-      <button onclick="submitCBTExam()" style="padding:8px 14px;background:linear-gradient(135deg,#16a34a,#15803d);border:1px solid #4ade80;border-radius:8px;color:#fff;font-family:'Outfit',sans-serif;font-size:.74rem;font-weight:700;cursor:pointer;white-space:nowrap;">✅ Submit</button>
     </div>
     ${questions.length===0?
       '<div style="text-align:center;padding:30px;color:var(--text2);font-size:.84rem">No questions in this section yet.</div>':
       questions.map((q,i)=>renderCBTQuestion(q,i,section)).join('')
     }
-    <div style="height:20px;"></div>
-    <button onclick="submitCBTExam()" style="width:100%;padding:16px;background:linear-gradient(135deg,#16a34a,#15803d);border:2px solid #4ade80;border-radius:12px;color:#fff;font-family:'Outfit',sans-serif;font-size:1rem;font-weight:900;cursor:pointer;margin-bottom:80px;box-shadow:0 4px 20px rgba(22,163,74,.4);">
-      ✅ SUBMIT EXAM
-    </button>`;
+    <div style="height:80px;"></div>`;
 
   // Update bottom nav
   updateCBTBottomNav(sectionIndex, answeredCount, questions.length);
@@ -6103,43 +6092,21 @@ function updateCBTBottomNav(sectionIndex, answeredCount, totalQ){
   const nextBtn = document.getElementById('cbt-next-btn');
   const submitBtn = document.getElementById('cbt-submit-btn');
 
-  // Previous button
-  prevBtn.style.display = isFirst ? 'none' : 'block';
+  prevBtn.style.display = isFirst ? 'none' : 'flex';
+  nextBtn.style.display = isLast ? 'none' : 'flex';
+  submitBtn.style.display = 'flex';
 
-  // Next button — hidden on last section
-  nextBtn.style.display = isLast ? 'none' : 'block';
-  if(!isLast){
-    nextBtn.textContent = 'Next Section →';
-    nextBtn.style.background = 'linear-gradient(135deg,var(--gold),var(--gold2))';
-  }
-
-  // Submit button — always visible, more prominent on last section
-  submitBtn.style.display = 'block';
+  // Update submit button text based on answered count
   const totalAnswered = Object.keys(cbtAnswers).length;
   const totalQuestions = Object.values(cbtQuestions).reduce((s,a)=>s+a.length,0);
   const unanswered = totalQuestions - totalAnswered;
-
-  if(isLast){
-    submitBtn.style.background = 'linear-gradient(135deg,#16a34a,#15803d)';
-    submitBtn.style.fontSize = '1rem';
-    submitBtn.style.padding = '16px';
-    submitBtn.textContent = unanswered > 0
-      ? '✅ Submit Exam (' + unanswered + ' unanswered)'
-      : '✅ Submit Exam — All Answered!';
-  } else {
-    submitBtn.style.background = 'rgba(22,163,74,.2)';
-    submitBtn.style.fontSize = '.82rem';
-    submitBtn.style.padding = '10px';
-    submitBtn.textContent = unanswered > 0
-      ? '✅ Submit Now (' + unanswered + ' unanswered)'
-      : '✅ Submit Exam';
-  }
+  submitBtn.textContent = unanswered > 0 ? '✅ Submit ('+unanswered+' left)' : '✅ Submit All';
 
   // Progress
   document.getElementById('cbt-section-progress').innerHTML =
-    'Section '+section+': <b style="color:'+(answeredCount===totalQ?'var(--green)':'#fbbf24')+'">'+answeredCount+'/'+totalQ+'</b> answered'
+    'Section '+section+': <b style="color:'+(answeredCount===totalQ?'var(--green)':'#fbbf24')+'">'+answeredCount+'/'+totalQ+'</b>'
     +' &nbsp;•&nbsp; Total: <b style="color:var(--gold2)">'+totalAnswered+'/'+totalQuestions+'</b>'
-    +(unanswered>0?' &nbsp;•&nbsp; <span style="color:#f87171">'+unanswered+' left</span>':'&nbsp;•&nbsp; <span style="color:var(--green)">✅ All done!</span>');
+    +(unanswered>0?' &nbsp;<span style="color:#f87171">'+unanswered+' unanswered</span>':'&nbsp;<span style="color:var(--green)">✅ All done!</span>');
 }
 
 function goToCBTSection(index){
