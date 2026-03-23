@@ -6092,9 +6092,9 @@ function updateCBTBottomNav(sectionIndex, answeredCount, totalQ){
   const nextBtn = document.getElementById('cbt-next-btn');
   const submitBtn = document.getElementById('cbt-submit-btn');
 
-  prevBtn.style.display = isFirst ? 'none' : 'flex';
-  nextBtn.style.display = isLast ? 'none' : 'flex';
-  submitBtn.style.display = 'flex';
+  prevBtn.style.display = isFirst ? 'none' : 'block';
+  nextBtn.style.display = isLast ? 'none' : 'block';
+  submitBtn.style.display = 'block';
 
   // Update submit button text based on answered count
   const totalAnswered = Object.keys(cbtAnswers).length;
