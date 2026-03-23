@@ -5840,15 +5840,42 @@ async function joinCBTExam(){
     const examDoc = snap.docs[0];
     cbtExamData = {id: examDoc.id, ...examDoc.data()};
 
-    // Load all questions
-    const qSnap = await db.collection('cbtExams').doc(examDoc.id).collection('questions').get();
+    // Load all questions — check localStorage cache first to save Firebase reads
+    // Cache key includes exam ID so different exams don't conflict
+    // TTL: 2 hours (questions rarely change during an exam session)
+    const cacheKey = 'cbt_q_' + examDoc.id;
+    let allQuestions = null;
+
+    try{
+      const cached = localStorage.getItem(cacheKey);
+      if(cached){
+        const parsed = JSON.parse(cached);
+        // Check TTL — 2 hours
+        if(parsed.ts && Date.now() - parsed.ts < 2*60*60*1000){
+          allQuestions = parsed.questions;
+        } else {
+          localStorage.removeItem(cacheKey);
+        }
+      }
+    }catch(e){}
+
+    if(!allQuestions){
+      // Not cached — fetch from Firestore (400 reads)
+      const qSnap = await db.collection('cbtExams').doc(examDoc.id).collection('questions').get();
+      allQuestions = qSnap.docs.map(d=>({id:d.id,...d.data()}));
+      // Save to cache
+      try{
+        localStorage.setItem(cacheKey, JSON.stringify({ts:Date.now(), questions:allQuestions}));
+      }catch(e){} // Storage full — ignore
+    }
+
     cbtQuestions = {};
     cbtAnswers = {};
 
     // Auto-detect sections from actual question data — supports any number of sections (A-Z, AA-AZ etc.)
     const sectionSet = new Set();
-    qSnap.docs.forEach(d => {
-      const sec = (d.data().section||'A').toUpperCase().trim();
+    allQuestions.forEach(d => {
+      const sec = (d.section||'A').toUpperCase().trim();
       sectionSet.add(sec);
     });
 
@@ -5862,11 +5889,9 @@ async function joinCBTExam(){
     if(!cbtSections.length) cbtSections = ['A'];
 
     cbtSections.forEach(s => { cbtQuestions[s] = []; });
-    qSnap.docs.forEach(d => {
-      const q = {id:d.id, ...d.data()};
+    allQuestions.forEach(q => {
       const sec = (q.section||'A').toUpperCase().trim();
       if(cbtQuestions[sec]) cbtQuestions[sec].push(q);
-      // Sort within section by order field
     });
 
     // Sort questions within each section by order
@@ -5912,6 +5937,24 @@ function startCBTExam(){
   // Setup UI
   document.getElementById('cbt-exam-title').textContent = cbtExamData.title;
   document.getElementById('cbt-exam-course').textContent = cbtExamData.course;
+
+  // Block refresh/back/close while exam is running
+  window._cbtExamActive = true;
+  window.onbeforeunload = function(e){
+    if(window._cbtExamActive && !cbtSubmitted){
+      e.preventDefault();
+      e.returnValue = '⚠️ You are in the middle of an exam! Refreshing will NOT reset your timer — but you will lose your current answers. Are you sure?';
+      return e.returnValue;
+    }
+  };
+  // Block Android back button
+  history.pushState(null, '', location.href);
+  window.onpopstate = function(){
+    if(window._cbtExamActive && !cbtSubmitted){
+      history.pushState(null, '', location.href);
+      showToast('⚠️ Cannot go back during exam. Tap Submit when done.');
+    }
+  };
 
   // Build section tabs — scrollable for many sections
   const tabsEl = document.getElementById('cbt-section-tabs');
@@ -6135,6 +6178,9 @@ async function submitCBTExam(autoSubmit=false){
   }
 
   cbtSubmitted = true;
+  window._cbtExamActive = false;
+  window.onbeforeunload = null;
+  window.onpopstate = null;
   if(cbtTimerInterval) clearInterval(cbtTimerInterval);
 
   // Calculate score
@@ -6213,13 +6259,21 @@ async function submitCBTExam(autoSubmit=false){
           <div style="margin-bottom:10px;">
             <div style="font-size:.76rem;font-weight:700;color:var(--text);margin-bottom:6px;">Section ${s}</div>
             ${(cbtQuestions[s]||[]).map((q,i)=>`
-              <div style="padding:8px 10px;border-radius:8px;background:${cbtAnswers[s+'_'+i]===q.ans?'rgba(74,222,128,.08)':'rgba(248,113,113,.08)'};border:1px solid ${cbtAnswers[s+'_'+i]===q.ans?'rgba(74,222,128,.2)':'rgba(248,113,113,.2)'};margin-bottom:6px;font-size:.74rem;">
-                <div style="color:var(--text);margin-bottom:3px">${i+1}. ${q.q.substring(0,80)}${q.q.length>80?'...':''}</div>
-                <div style="color:${cbtAnswers[s+'_'+i]===q.ans?'var(--green)':'var(--red)'}">
-                  Your answer: ${cbtAnswers[s+'_'+i]!==undefined?['A','B','C','D'][cbtAnswers[s+'_'+i]]:'Not answered'}
-                  ${cbtAnswers[s+'_'+i]!==q.ans ? ' | Correct: '+['A','B','C','D'][q.ans] : ''}
+              <div style="padding:10px;border-radius:8px;background:${cbtAnswers[s+'_'+i]===q.ans?'rgba(74,222,128,.08)':'rgba(248,113,113,.08)'};border:1px solid ${cbtAnswers[s+'_'+i]===q.ans?'rgba(74,222,128,.2)':'rgba(248,113,113,.2)'};margin-bottom:8px;font-size:.74rem;">
+                <div style="color:var(--text);margin-bottom:6px;font-weight:600;">${i+1}. ${q.q.substring(0,100)}${q.q.length>100?'...':''}</div>
+                <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:6px;">
+                  ${(q.opts||[]).map((opt,j)=>`
+                    <div style="padding:4px 8px;border-radius:6px;font-size:.72rem;
+                      background:${j===q.ans?'rgba(74,222,128,.15)':j===cbtAnswers[s+'_'+i]&&j!==q.ans?'rgba(248,113,113,.15)':'transparent'};
+                      border:1px solid ${j===q.ans?'rgba(74,222,128,.4)':j===cbtAnswers[s+'_'+i]&&j!==q.ans?'rgba(248,113,113,.3)':'transparent'};
+                      color:${j===q.ans?'var(--green)':j===cbtAnswers[s+'_'+i]&&j!==q.ans?'#f87171':'var(--text2)'};">
+                      ${['A','B','C','D'][j]}. ${opt}
+                      ${j===q.ans?' ✅':''}
+                      ${j===cbtAnswers[s+'_'+i]&&j!==q.ans?' ✗ (your answer)':''}
+                    </div>`).join('')}
                 </div>
-                ${q.exp&&cbtAnswers[s+'_'+i]!==q.ans ? '<div style="color:var(--text2);margin-top:3px;font-size:.7rem">Explanation: '+q.exp+'</div>' : ''}
+                ${q.exp ? '<div style="color:var(--text2);font-size:.7rem;background:rgba(201,168,76,.06);border-radius:6px;padding:6px;line-height:1.6;">💡 '+q.exp+'</div>' : ''}
+                ${!q.exp&&cbtAnswers[s+'_'+i]!==q.ans ? '<div style="color:var(--text2);font-size:.7rem;">Correct answer: <b style="color:var(--green)">'+['A','B','C','D'][q.ans]+'. '+(q.opts||[])[q.ans]+'</b></div>' : ''}
               </div>`).join('')}
           </div>`).join('')}
       </div>
