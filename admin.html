@@ -614,12 +614,27 @@ Answer: A</code>
       </div>
       <div class="row2">
         <div class="fg"><label>Number of Sections</label>
-          <select id="cbt-sections" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;outline:none;">
-            <option value="2">2 Sections (A, B)</option>
-            <option value="3">3 Sections (A, B, C)</option>
-            <option value="4" selected>4 Sections (A, B, C, D)</option>
-            <option value="5">5 Sections (A, B, C, D, E)</option>
+          <select id="cbt-sections" onchange="onCBTSectionsChange(this)" style="width:100%;padding:9px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;outline:none;">
+            <option value="1">1 Section (A)</option>
+            <option value="2">2 Sections (A–B)</option>
+            <option value="3">3 Sections (A–C)</option>
+            <option value="4" selected>4 Sections (A–D)</option>
+            <option value="5">5 Sections (A–E)</option>
+            <option value="6">6 Sections (A–F)</option>
+            <option value="7">7 Sections (A–G)</option>
+            <option value="8">8 Sections (A–H)</option>
+            <option value="10">10 Sections (A–J)</option>
+            <option value="13">13 Sections (A–M)</option>
+            <option value="15">15 Sections (A–O)</option>
+            <option value="20">20 Sections (A–T)</option>
+            <option value="26">26 Sections (A–Z)</option>
+            <option value="30">30 Sections (A–Z + AA–AD)</option>
+            <option value="40">40 Sections (A–Z + AA–AN)</option>
+            <option value="50">50 Sections (A–Z + AA–AX)</option>
+            <option value="custom">✏️ Custom number...</option>
           </select>
+          <input type="number" id="cbt-sections-custom" placeholder="Enter number of sections e.g. 35" min="1" max="200"
+            style="display:none;width:100%;padding:9px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;outline:none;margin-top:6px;box-sizing:border-box;"/>
         </div>
         <div class="fg"><label>Questions per Section</label><input type="number" id="cbt-qps" value="8" min="1" max="30"/></div>
       </div>
@@ -643,24 +658,29 @@ Answer: A</code>
       <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
         <div style="flex:1;min-width:120px;">
           <label style="font-size:.72rem;color:var(--text2);display:block;margin-bottom:4px;">Questions per section</label>
-          <select id="cbt-extract-qps" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.78rem;outline:none;">
+          <select id="cbt-extract-qps" onchange="updateSectionsPreview()" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.78rem;outline:none;">
             <option value="5">5 per section</option>
-            <option value="8" selected>8 per section</option>
-            <option value="10">10 per section</option>
+            <option value="8">8 per section</option>
+            <option value="10" selected>10 per section</option>
             <option value="15">15 per section</option>
             <option value="20">20 per section</option>
             <option value="25">25 per section</option>
+            <option value="30">30 per section</option>
+            <option value="40">40 per section</option>
             <option value="50">50 per section</option>
           </select>
         </div>
         <div style="flex:1;min-width:120px;">
-          <label style="font-size:.72rem;color:var(--text2);display:block;margin-bottom:4px;">Total questions (optional)</label>
-          <input type="number" id="cbt-extract-total" placeholder="e.g. 500 (auto if blank)" min="1" max="2000"
+          <label style="font-size:.72rem;color:var(--text2);display:block;margin-bottom:4px;">Total questions (leave blank = extract all)</label>
+          <input type="number" id="cbt-extract-total" placeholder="e.g. 400" min="1" max="5000" oninput="updateSectionsPreview()"
             style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--cb);background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;font-size:.78rem;outline:none;box-sizing:border-box;"/>
         </div>
       </div>
-      <div style="font-size:.72rem;color:var(--text2);background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:8px;margin-bottom:10px;line-height:1.6;">
-        💡 <b>Handles any size:</b> 500 questions = 50 sections of 10, or 25 sections of 20 etc. Sections auto-named A, B, C ... Z, AA, AB ... Processes in parallel batches — even 500 questions in one go.
+
+      <!-- Live sections preview -->
+      <div id="sections-preview" style="font-size:.74rem;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:10px;margin-bottom:10px;line-height:1.8;">
+        💡 <b>400 questions ÷ 10 per section = 40 sections</b> (A, B, C ... Z, AA, AB ... AN)<br>
+        Sections are auto-named. Handles any number up to 500+.
       </div>
 
       <!-- Paste text -->
@@ -3345,15 +3365,46 @@ async function loadCBTExams(){
   }catch(e){console.log('loadCBTExams error:',e);}
 }
 
+// Live preview: shows how many sections will be created
+function updateSectionsPreview(){
+  const qps = parseInt(document.getElementById('cbt-extract-qps')?.value||'10');
+  const total = parseInt(document.getElementById('cbt-extract-total')?.value||'0');
+  const previewEl = document.getElementById('sections-preview');
+  if(!previewEl) return;
+  if(total > 0){
+    const numSec = Math.ceil(total/qps);
+    const lastLabel = getSectionLabel(numSec-1);
+    previewEl.innerHTML = '💡 <b>'+total+' questions ÷ '+qps+' per section = '+numSec+' sections</b> (A → '+lastLabel+')<br>Sections auto-named alphabetically. Handles any number.';
+  } else {
+    previewEl.innerHTML = '💡 Enter total questions above to preview sections, or leave blank to extract everything in your text.';
+  }
+}
+
+// Show/hide custom sections input in Create Exam form
+function onCBTSectionsChange(sel){
+  const customEl = document.getElementById('cbt-sections-custom');
+  if(sel.value === 'custom'){
+    customEl.style.display = 'block';
+    customEl.focus();
+  } else {
+    customEl.style.display = 'none';
+  }
+}
+
 async function createCBTExam(){
   const title = document.getElementById('cbt-title').value.trim();
   const course = document.getElementById('cbt-course').value.trim();
   const code = document.getElementById('cbt-code').value.trim().toUpperCase();
   const duration = parseInt(document.getElementById('cbt-duration').value)||60;
-  const sections = parseInt(document.getElementById('cbt-sections').value)||4;
+  // Read custom sections if selected
+  const sectSel = document.getElementById('cbt-sections').value;
+  const sections = sectSel === 'custom'
+    ? (parseInt(document.getElementById('cbt-sections-custom').value)||4)
+    : (parseInt(sectSel)||4);
   const qps = parseInt(document.getElementById('cbt-qps').value)||8;
   const instructions = document.getElementById('cbt-instructions').value.trim();
   if(!title||!code){showToast('Enter title and code');return;}
+  if(sections < 1 || sections > 200){showToast('Sections must be between 1 and 200');return;}
   try{
     await db.collection('cbtExams').add({
       title, course, code, duration, sections, qps, instructions,
@@ -3361,7 +3412,9 @@ async function createCBTExam(){
     });
     ['cbt-title','cbt-course','cbt-code','cbt-instructions'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('cbt-duration').value='60';
-    showToast('CBT Exam created! ✅');
+    document.getElementById('cbt-sections').value='4';
+    document.getElementById('cbt-sections-custom').style.display='none';
+    showToast('✅ CBT Exam created with '+sections+' sections!');
     loadCBTExams();
   }catch(e){showToast('Error: '+e.message);}
 }
