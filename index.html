@@ -1856,6 +1856,11 @@ if('serviceWorker' in navigator){
           }
         });
       });
+
+      // ── PUSH NOTIFICATION SUBSCRIPTION ──
+      // Ask for permission after login, subscribe student to push
+      // Token saved to Firestore so admin can send notifications
+      window._swReg = reg;
     }catch(e){}
 
     // ── Auto version check ──
@@ -2013,6 +2018,9 @@ auth.onAuthStateChanged(async function(user){
     loadAnnouncement();
     loadStats();
     checkInboxBadge();
+    // ── Real-time notification listener ──
+    // Listens for new notifications pushed by admin
+    listenForPushNotifications();
     initMotivSlider();
     loadTextbooks();
     checkLoginPopup();
@@ -2024,6 +2032,11 @@ auth.onAuthStateChanged(async function(user){
     document.getElementById('bnav').style.display = 'flex';
     // Update last seen using set merge — works for ALL users old and new
     db.collection('users').doc(user.uid).set({lastSeen: new Date().toISOString()},{merge:true}).catch(()=>{});
+
+    // ── PUSH NOTIFICATION SUBSCRIPTION ──
+    // Subscribe student silently in background after login
+    // Only asks permission once — if already granted, re-registers token
+    subscribeToPushNotifications(user.uid).catch(()=>{});
     // Check if old user is missing department — prompt them to fill it
     if(!CU.dept || CU.dept.trim()===''){
       setTimeout(()=>showDeptPrompt(), 1500);
@@ -5844,9 +5857,51 @@ async function joinCBTExam(){
     const examDoc = snap.docs[0];
     cbtExamData = {id: examDoc.id, ...examDoc.data()};
 
-    // Load all questions — check localStorage cache first to save Firebase reads
-    // Cache key includes exam ID so different exams don't conflict
-    // TTL: 2 hours (questions rarely change during an exam session)
+    // ── DEVICE LOCK CHECK ──
+    // Each student gets one session token per exam stored in Firestore
+    // If another device tries to join with same UID, it gets blocked
+    const sessionKey = 'cbt_session_' + examDoc.id;
+    const mySessionToken = localStorage.getItem(sessionKey) || ('sess_'+CU.uid+'_'+Date.now());
+    localStorage.setItem(sessionKey, mySessionToken);
+
+    if(cbtExamData.deviceLock){
+      try{
+        const sessionDoc = await db.collection('cbtSessions').doc(CU.uid+'_'+examDoc.id).get();
+        if(sessionDoc.exists){
+          const existing = sessionDoc.data();
+          if(existing.token !== mySessionToken){
+            // Different device/token — block
+            msgEl.innerHTML='<div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:12px;padding:16px;text-align:center;color:#f87171;font-size:.82rem;line-height:1.7;">🔒 <b>Device Lock Active</b><br>This exam is already open on another device.<br>You can only take this exam on one device at a time.<br><br>If this is wrong, contact your admin.</div>';
+            return;
+          }
+        } else {
+          // Register this session
+          await db.collection('cbtSessions').doc(CU.uid+'_'+examDoc.id).set({
+            uid: CU.uid, examId: examDoc.id, token: mySessionToken,
+            device: navigator.userAgent.substring(0,100),
+            startedAt: new Date().toISOString()
+          });
+        }
+      }catch(e){} // Device lock check failed silently — don't block student
+    }
+
+    // ── PASSWORD EXPIRY CHECK ──
+    if(cbtExamData.codeExpiresAt){
+      const expiresAt = new Date(cbtExamData.codeExpiresAt);
+      if(Date.now() > expiresAt.getTime()){
+        msgEl.innerHTML='<div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:12px;padding:16px;text-align:center;color:#f87171;font-size:.82rem;line-height:1.7;">⏰ <b>Exam Code Expired</b><br>The access window for this exam has closed.<br>Contact your admin if you think this is wrong.</div>';
+        return;
+      }
+      // Show warning if less than 5 mins left
+      const minsLeft = Math.round((expiresAt.getTime() - Date.now()) / 60000);
+      if(minsLeft <= 5){
+        showToast('⚠️ Exam code expires in '+minsLeft+' min — start quickly!');
+      }
+    }
+
+    // ── RESULTS RELEASE CHECK ──
+    // If admin has not released results yet, hide scores after submission
+    // (resultsReleased flag on exam doc controls this)
     const cacheKey = 'cbt_q_' + examDoc.id;
     let allQuestions = null;
 
@@ -6216,21 +6271,65 @@ async function submitCBTExam(autoSubmit=false){
 
   // Show results
   const contentEl = document.getElementById('cbt-section-content');
+
+  // ── RESULTS RELEASE CHECK ──
+  // If admin hasn't released results yet, show holding screen
+  if(cbtExamData.resultsReleased === false){
+    contentEl.innerHTML = `
+      <div style="text-align:center;padding:40px 20px;">
+        <div style="font-size:3rem;margin-bottom:16px;">⏳</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:900;color:var(--gold2);margin-bottom:10px;">Exam Submitted!</div>
+        <div style="font-size:.84rem;color:var(--text2);margin-bottom:20px;line-height:1.7;">Your answers have been saved successfully.<br>Your score is <b style="color:var(--gold2);">${score}/${total}</b> but results have not been released yet.<br><br>The admin will release results soon. Check back later!</div>
+        <button onclick="showPage('dash')" class="btn btn-gold" style="max-width:200px;margin:0 auto;">🏠 Go to Dashboard</button>
+      </div>`;
+    document.getElementById('cbt-bottom-nav').style.display='none';
+    document.getElementById('cbt-header').querySelector('#cbt-timer-display').textContent='Done!';
+    document.getElementById('cbt-header').querySelector('#cbt-timer-display').style.color='var(--green)';
+    return;
+  }
+
+  // Collect wrong questions for Smart Retry
+  const wrongQuestions = [];
+  cbtSections.forEach(s=>{
+    (cbtQuestions[s]||[]).forEach((q,i)=>{
+      if(cbtAnswers[s+'_'+i] !== q.ans){
+        wrongQuestions.push({...q, _section:s, _idx:i, _given:cbtAnswers[s+'_'+i]});
+      }
+    });
+  });
+
   contentEl.innerHTML = `
     <div style="text-align:center;padding:20px 0;">
       <div style="font-size:3rem;margin-bottom:12px">${pct>=70?'🎉':pct>=50?'👍':'💪'}</div>
       <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;color:${pct>=70?'var(--green)':pct>=50?'var(--gold2)':'var(--red)'};margin-bottom:6px">${pct}%</div>
-      <div style="font-size:.84rem;color:var(--text2);margin-bottom:20px">${score} out of ${total} questions correct</div>
+      <div style="font-size:.84rem;color:var(--text2);margin-bottom:20px">${score} out of ${total} questions correct • ${wrongQuestions.length} wrong</div>
 
-      <div style="display:grid;grid-template-columns:repeat(${cbtSections.length},1fr);gap:8px;margin-bottom:20px;">
+      <div style="display:grid;grid-template-columns:repeat(${Math.min(cbtSections.length,5)},1fr);gap:6px;margin-bottom:16px;">
         ${cbtSections.map(s=>`
-          <div style="background:var(--card);border:1px solid var(--cb);border-radius:12px;padding:12px;text-align:center;">
-            <div style="font-size:.7rem;color:var(--text2);margin-bottom:4px">Section ${s}</div>
-            <div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:900;color:${sectionResults[s].score/sectionResults[s].total>=0.5?'var(--green)':'var(--red)'}">
+          <div style="background:var(--card);border:1px solid var(--cb);border-radius:10px;padding:10px;text-align:center;">
+            <div style="font-size:.64rem;color:var(--text2);margin-bottom:2px">Sec ${s}</div>
+            <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:900;color:${sectionResults[s].score/sectionResults[s].total>=0.5?'var(--green)':'var(--red)'}">
               ${sectionResults[s].score}/${sectionResults[s].total}
             </div>
           </div>`).join('')}
       </div>
+
+      ${wrongQuestions.length > 0 ? `
+      <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.25);border-radius:12px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:.82rem;font-weight:700;color:#a5b4fc;margin-bottom:6px;">🔄 Smart Retry Mode</div>
+        <div style="font-size:.76rem;color:var(--text2);margin-bottom:10px;line-height:1.6;">You got <b style="color:#f87171;">${wrongQuestions.length} questions wrong</b>. Practice only those questions to improve your score.</div>
+        <button onclick="startSmartRetry()" style="width:100%;padding:12px;background:linear-gradient(135deg,#6366f1,#4f46e5);border:none;border-radius:10px;color:#fff;font-family:'Outfit',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;">🔄 Retry ${wrongQuestions.length} Wrong Questions</button>
+      </div>` : `
+      <div style="background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);border-radius:12px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:.84rem;font-weight:700;color:var(--green);">🎯 Perfect Score! All questions correct!</div>
+      </div>`}
+
+      ${pct>=50 ? `
+      <div style="background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.25);border-radius:12px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:.82rem;font-weight:700;color:var(--gold2);margin-bottom:6px;">🏆 You Passed!</div>
+        <div style="font-size:.76rem;color:var(--text2);margin-bottom:10px;">Download your certificate of completion.</div>
+        <button onclick="generateCertificate('${cbtExamData.title}',${pct},'${CU.displayName||CU.email||'Student'}')" style="width:100%;padding:11px;background:linear-gradient(135deg,#c9a84c,#f0c040);border:none;border-radius:10px;color:#0a1628;font-family:'Outfit',sans-serif;font-size:.84rem;font-weight:700;cursor:pointer;">🏅 Download Certificate</button>
+      </div>` : ''}
 
       <div style="background:var(--card);border:1px solid var(--cb);border-radius:14px;padding:14px;text-align:left;margin-bottom:14px;">
         <div style="font-size:.82rem;font-weight:700;color:var(--gold2);margin-bottom:10px">📋 Answer Review</div>
@@ -6246,26 +6345,237 @@ async function submitCBTExam(autoSubmit=false){
                       background:${j===q.ans?'rgba(74,222,128,.15)':j===cbtAnswers[s+'_'+i]&&j!==q.ans?'rgba(248,113,113,.15)':'transparent'};
                       border:1px solid ${j===q.ans?'rgba(74,222,128,.4)':j===cbtAnswers[s+'_'+i]&&j!==q.ans?'rgba(248,113,113,.3)':'transparent'};
                       color:${j===q.ans?'var(--green)':j===cbtAnswers[s+'_'+i]&&j!==q.ans?'#f87171':'var(--text2)'};">
-                      ${['A','B','C','D'][j]}. ${opt}
+                      ${'ABCD'[j]}. ${opt}
                       ${j===q.ans?' ✅':''}
                       ${j===cbtAnswers[s+'_'+i]&&j!==q.ans?' ✗ (your answer)':''}
                     </div>`).join('')}
                 </div>
                 ${q.exp ? '<div style="color:var(--text2);font-size:.7rem;background:rgba(201,168,76,.06);border-radius:6px;padding:6px;line-height:1.6;">💡 '+q.exp+'</div>' : ''}
-                ${!q.exp&&cbtAnswers[s+'_'+i]!==q.ans ? '<div style="color:var(--text2);font-size:.7rem;">Correct answer: <b style="color:var(--green)">'+['A','B','C','D'][q.ans]+'. '+(q.opts||[])[q.ans]+'</b></div>' : ''}
+                ${!q.exp&&cbtAnswers[s+'_'+i]!==q.ans ? '<div style="color:var(--text2);font-size:.7rem;">Correct: <b style="color:var(--green)">'+'ABCD'[q.ans]+'. '+(q.opts||[])[q.ans]+'</b></div>' : ''}
               </div>`).join('')}
           </div>`).join('')}
       </div>
 
       <div style="display:flex;gap:8px;margin-top:4px;">
-        <button onclick="showPage('cbt-history')" class="btn btn-out" style="flex:1;padding:12px;font-size:.82rem;">📈 View Exam History</button>
+        <button onclick="showPage('cbt-history')" class="btn btn-out" style="flex:1;padding:12px;font-size:.82rem;">📈 History</button>
         <button onclick="showPage('dash')" class="btn btn-gold" style="flex:1;padding:12px;font-size:.82rem;">🏠 Dashboard</button>
       </div>
     </div>`;
 
+  // Store wrong questions for retry
+  window._cbtWrongQuestions = wrongQuestions;
+
   document.getElementById('cbt-bottom-nav').style.display='none';
   document.getElementById('cbt-header').querySelector('#cbt-timer-display').textContent='Done!';
   document.getElementById('cbt-header').querySelector('#cbt-timer-display').style.color='var(--green)';
+}
+
+// ── REAL-TIME NOTIFICATION LISTENER ──
+// Listens to Firestore /notifications collection
+// When admin sends a notification, all logged-in students see it immediately
+let _notifListener = null;
+function listenForPushNotifications(){
+  if(_notifListener) _notifListener();
+  const lastSeen = localStorage.getItem('notif_last_seen') || new Date(Date.now() - 60000).toISOString();
+  try{
+    _notifListener = db.collection('notifications')
+      .orderBy('sentAt','desc')
+      .limit(1)
+      .onSnapshot(snap=>{
+        snap.docChanges().forEach(change=>{
+          if(change.type === 'added'){
+            const n = change.doc.data();
+            const sentAt = n.sentAt||'';
+            if(sentAt > lastSeen){
+              localStorage.setItem('notif_last_seen', new Date().toISOString());
+              showNotifBanner(n.title||'BABSPHARM Cloud', n.body||'');
+              if(document.hidden && Notification.permission==='granted'){
+                new Notification(n.title||'BABSPHARM Cloud',{body:n.body||'',icon:'/icon.png'});
+              }
+            }
+          }
+        });
+      });
+  }catch(e){}
+}
+
+function showNotifBanner(title, body){
+  const existing = document.getElementById('notif-banner');
+  if(existing) existing.remove();
+  const banner = document.createElement('div');
+  banner.id = 'notif-banner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#1e3a5f,#0d1e3d);border-bottom:2px solid #c9a84c;padding:12px 16px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 20px rgba(0,0,0,.5);';
+  banner.innerHTML = '<div style="width:36px;height:36px;border-radius:8px;background:linear-gradient(135deg,#c9a84c,#f0c040);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;">🔔</div>'
+    +'<div style="flex:1;"><div style="font-size:.78rem;font-weight:700;color:#e2e8f0;">'+title+'</div><div style="font-size:.72rem;color:#94a3b8;margin-top:2px;">'+body.substring(0,100)+(body.length>100?'...':'')+'</div></div>'
+    +'<button onclick="document.getElementById(\'notif-banner\').remove()" style="background:none;border:none;color:#94a3b8;font-size:1.2rem;cursor:pointer;padding:4px;">✕</button>';
+  document.body.prepend(banner);
+  setTimeout(()=>{ if(banner.parentNode) banner.remove(); }, 8000);
+}
+
+// ══ PUSH NOTIFICATIONS ══
+// VAPID public key — identifies your server to browsers
+// This is a demo key — replace with your own from web-push-codelab.glitch.me
+const VAPID_PUBLIC_KEY = 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBorKISbn0EIFVxRDHQ';
+
+function urlBase64ToUint8Array(base64String){
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map(c => c.charCodeAt(0)));
+}
+
+async function subscribeToPushNotifications(uid){
+  if(!('Notification' in window) || !('serviceWorker' in navigator)) return;
+
+  // Check if already subscribed
+  const alreadySubscribed = localStorage.getItem('push_subscribed_'+uid);
+
+  let permission = Notification.permission;
+
+  // If not yet asked, show a friendly prompt first
+  if(permission === 'default' && !alreadySubscribed){
+    // Wait 3 seconds after login before asking
+    await new Promise(r=>setTimeout(r,3000));
+    // Only ask if user is on dashboard
+    permission = await Notification.requestPermission();
+  }
+
+  if(permission !== 'granted') return;
+
+  try{
+    const reg = window._swReg || await navigator.serviceWorker.ready;
+    const existing = await reg.pushManager.getSubscription();
+    if(existing){
+      // Already subscribed — save token to Firestore in case it changed
+      await savePushToken(uid, existing);
+      return;
+    }
+
+    // Subscribe
+    const subscription = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+
+    await savePushToken(uid, subscription);
+    localStorage.setItem('push_subscribed_'+uid, '1');
+  }catch(e){}
+}
+
+async function savePushToken(uid, subscription){
+  // Save push subscription to Firestore
+  // Admin tools read these to send notifications
+  const token = JSON.stringify(subscription);
+  await db.collection('pushTokens').doc(uid).set({
+    uid, token,
+    name: CU.name||'',
+    email: CU.email||'',
+    dept: CU.dept||'',
+    updatedAt: new Date().toISOString(),
+    platform: /Android/i.test(navigator.userAgent)?'android':'web'
+  }, {merge:true});
+}
+
+async function unsubscribeFromPush(){
+  try{
+    const reg = window._swReg || await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if(sub) await sub.unsubscribe();
+    if(CU?.uid) await db.collection('pushTokens').doc(CU.uid).delete();
+    localStorage.removeItem('push_subscribed_'+CU?.uid);
+    showToast('🔕 Push notifications disabled');
+  }catch(e){ showToast('Could not disable notifications'); }
+}
+
+// ══ SMART RETRY MODE ══
+function startSmartRetry(){
+  const wrong = window._cbtWrongQuestions || [];
+  if(!wrong.length){ showToast('No wrong questions to retry!'); return; }
+
+  // Build retry exam from wrong questions
+  cbtAnswers = {};
+  cbtSubmitted = false;
+  cbtSections = ['RETRY'];
+  cbtQuestions = { RETRY: wrong.map((q,i)=>({...q, id: q.id||'retry_'+i})) };
+  cbtCurrentSection = 0;
+  cbtTimeLeft = wrong.length * 60; // 1 min per question
+  cbtExamData = {...cbtExamData, _retryMode: true, title: 'Retry: '+cbtExamData.title};
+
+  // Update header
+  document.getElementById('cbt-exam-title').textContent = '🔄 Retry Mode — '+wrong.length+' wrong questions';
+  document.getElementById('cbt-exam-course').textContent = cbtExamData.course;
+
+  // Rebuild tabs
+  const tabsEl = document.getElementById('cbt-section-tabs');
+  tabsEl.innerHTML = `<div style="padding:6px 14px;border-radius:20px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;font-family:'Outfit',sans-serif;font-size:.74rem;font-weight:700;">🔄 Retry Mode</div>`;
+
+  document.getElementById('cbt-bottom-nav').style.display='block';
+  showPage('cbt-exam');
+  renderCBTSection(0);
+  startCBTTimer();
+
+  // Re-enable protection
+  window._cbtExamActive = true;
+  window.onbeforeunload = e=>{ if(window._cbtExamActive&&!cbtSubmitted){ e.preventDefault(); e.returnValue='Retry in progress!'; return e.returnValue; }};
+}
+
+// ══ CERTIFICATE GENERATOR ══
+function generateCertificate(examTitle, score, studentName){
+  const date = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  const cert = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Outfit:wght@300;400;600&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#f8f4e8;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px;font-family:'Outfit',sans-serif;}
+  .cert{background:#fff;width:100%;max-width:750px;padding:50px 60px;border:3px solid #c9a84c;box-shadow:0 0 0 8px rgba(201,168,76,.1),0 0 0 10px #c9a84c,0 20px 60px rgba(0,0,0,.15);text-align:center;position:relative;}
+  .cert::before,.cert::after{content:'✦';position:absolute;font-size:2rem;color:#c9a84c;top:16px;bottom:16px;}
+  .cert::before{left:20px;} .cert::after{right:20px;}
+  .logo{font-size:2rem;margin-bottom:8px;}
+  .org{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:#c9a84c;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px;}
+  .presents{font-size:.8rem;color:#94a3b8;letter-spacing:2px;text-transform:uppercase;margin-bottom:24px;}
+  .title{font-family:'Playfair Display',serif;font-size:2rem;font-weight:900;color:#0a1628;margin-bottom:8px;}
+  .subtitle{font-size:.85rem;color:#94a3b8;margin-bottom:30px;}
+  .awarded{font-size:.8rem;color:#94a3b8;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+  .name{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:900;color:#c9a84c;border-bottom:2px solid #c9a84c;padding-bottom:8px;display:inline-block;margin-bottom:24px;}
+  .for{font-size:.82rem;color:#666;margin-bottom:8px;}
+  .exam{font-weight:700;color:#0a1628;font-size:1rem;margin-bottom:6px;}
+  .score{font-family:'Playfair Display',serif;font-size:2.5rem;font-weight:900;color:${score>=70?'#16a34a':score>=50?'#c9a84c':'#dc2626'};margin-bottom:24px;}
+  .footer{display:flex;justify-content:space-between;align-items:flex-end;margin-top:30px;padding-top:20px;border-top:1px solid rgba(201,168,76,.3);}
+  .sig{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:700;color:#0a1628;}
+  .sig-line{border-top:1px solid #0a1628;padding-top:6px;margin-top:20px;}
+  .date{font-size:.78rem;color:#94a3b8;}
+  .seal{width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#c9a84c,#f0c040);display:flex;align-items:center;justify-content:center;font-size:1.8rem;box-shadow:0 4px 15px rgba(201,168,76,.4);}
+  @media print{body{background:#fff;padding:0;}.no-print{display:none;}}
+</style></head><body>
+<div class="cert">
+  <div class="logo">🎓</div>
+  <div class="org">BABSPHARM Cloud</div>
+  <div class="presents">Certificate of Achievement</div>
+  <div class="title">Certificate of Completion</div>
+  <div class="subtitle">This is to certify that</div>
+  <div class="awarded">has been awarded to</div>
+  <div class="name">${studentName}</div>
+  <div class="for">for successfully completing</div>
+  <div class="exam">${examTitle}</div>
+  <div class="score">${score}%</div>
+  <div class="footer">
+    <div>
+      <div class="sig-line"><div class="sig">BABSPHARM Cloud</div><div class="date">Date: ${date}</div></div>
+    </div>
+    <div class="seal">🏅</div>
+    <div>
+      <div class="sig-line"><div class="sig">OAU Faculty of Pharmacy</div><div class="date">Pharm-D Programme</div></div>
+    </div>
+  </div>
+</div>
+<div class="no-print" style="text-align:center;margin-top:20px;">
+  <button onclick="window.print()" style="padding:12px 30px;background:linear-gradient(135deg,#c9a84c,#f0c040);border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;color:#0a1628;">🖨️ Download / Print Certificate</button>
+</div>
+</body></html>`;
+
+  const w = window.open('','_blank');
+  if(w){ w.document.write(cert); w.document.close(); }
+  else { showToast('Allow popups to download certificate'); }
 }
 
 // ══ PQ BANK ACCESS CODE ══
