@@ -349,7 +349,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   <div class="sb-item" onclick="showPage('progress');closeSB()"><span class="si">📈</span>My Progress</div>
   <div class="sb-item" onclick="showPage('gpa');closeSB()"><span class="si">🎓</span>GPA Calculator</div>
   <div class="sb-item" onclick="showPage('map');closeSB()"><span class="si">🌍</span>Campus Map</div>
-  <div class="sb-item" onclick="showPage('files');closeSB()"><span class="si">📁</span>Downloads</div>
+  <div class="sb-item" onclick="showPage('files');closeSB()"><span class="si">📖</span>Lecture Slides</div>
   <div class="sb-item" onclick="showPage('textbooks');closeSB()"><span class="si">📗</span>Textbooks</div>
   <div class="sb-item" onclick="showPage('ai');closeSB()"><span class="si">🤖</span>AI Tutor</div>
   <div class="sb-item" onclick="showPage('inbox');closeSB()"><span class="si">📥</span>Inbox <span id="sb-inbox-badge" style="display:none;background:var(--red);color:#fff;font-size:.6rem;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px"></span></div>
@@ -505,6 +505,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="qc" onclick="showPage('quiz')"><div class="qc-icon">📝</div><div class="qc-lbl">CBT Quiz</div></div>
     <div class="qc" onclick="showPage('mock')"><div class="qc-icon">🎯</div><div class="qc-lbl">Mock Exam</div></div>
     <div class="qc" onclick="showPage('cbt')"><div class="qc-icon">📝</div><div class="qc-lbl">CBT</div></div>
+    <div class="qc" onclick="showPage('files')" style="background:linear-gradient(135deg,rgba(99,102,241,.2),rgba(99,102,241,.1));border-color:rgba(99,102,241,.3);"><div class="qc-icon">📖</div><div class="qc-lbl" style="color:#a5b4fc;">Slides</div></div>
     <div class="qc" onclick="showPage('pq')"><div class="qc-icon">📋</div><div class="qc-lbl">Past Q</div></div>
     <div class="qc" onclick="showPage('vault')"><div class="qc-icon">🔓</div><div class="qc-lbl">Vault</div></div>
     <div class="qc" onclick="showPage('sprint')"><div class="qc-icon">🏃</div><div class="qc-lbl">Sprint</div></div>
@@ -521,7 +522,6 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="qc" onclick="showPage('videos')"><div class="qc-icon">📹</div><div class="qc-lbl">Videos</div></div>
     <div class="qc" onclick="showPage('forum')"><div class="qc-icon">💬</div><div class="qc-lbl">Forum</div></div>
     <div class="qc" onclick="showPage('badges')"><div class="qc-icon">🏅</div><div class="qc-lbl">Badges</div></div>
-    <div class="qc" onclick="showPage('files')"><div class="qc-icon">📁</div><div class="qc-lbl">Downloads</div></div>
     <div class="qc" onclick="showPage('ai')"><div class="qc-icon">🤖</div><div class="qc-lbl">AI Tutor</div></div>
     <div class="qc" onclick="showPage('history')"><div class="qc-icon">📊</div><div class="qc-lbl">Quiz History</div></div>
     <div class="qc" onclick="showPage('cbt-history')"><div class="qc-icon">📈</div><div class="qc-lbl">Exam History</div></div>
@@ -532,6 +532,16 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
     <div class="qc" onclick="showPage('referral')"><div class="qc-icon">🎁</div><div class="qc-lbl">Referral</div></div>
     <div class="qc" onclick="showPage('textbooks')"><div class="qc-icon">📗</div><div class="qc-lbl">Textbooks</div></div>
     <div class="qc" onclick="showPage('profile')"><div class="qc-icon">👤</div><div class="qc-lbl">Profile</div></div>
+  </div>
+
+  <!-- ══ LECTURE SLIDES BANNER ══ -->
+  <div onclick="showPage('files')" style="background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(79,70,229,.08));border:1px solid rgba(99,102,241,.3);border-radius:14px;padding:14px 16px;margin-bottom:16px;cursor:pointer;display:flex;align-items:center;gap:14px;">
+    <div style="width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#4f46e5);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;">📖</div>
+    <div style="flex:1;">
+      <div style="font-weight:700;color:#a5b4fc;font-size:.86rem;margin-bottom:3px;">Lecture Slides & Study Materials</div>
+      <div style="font-size:.72rem;color:var(--text2);line-height:1.5;">PCY 101 • CHM 101 • MTH 101 • PHY 101 and more — view & download all course slides</div>
+    </div>
+    <div style="color:#a5b4fc;font-size:1.2rem;">›</div>
   </div>
 
   <!-- ══ TEXTBOOK SHOWCASE ══ -->
@@ -1291,7 +1301,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 
 <!-- ══ FILES PAGE ══ -->
 <div id="pg-files" class="page hidden">
-  <div class="sec-title">Study Materials</div>
+  <div class="sec-title">📖 Lecture Slides & Materials</div>
   <!-- Semester Tabs -->
   <div class="sem-tabs" style="margin-bottom:14px;">
     <button class="sem-tab on" id="fsem-harm" onclick="switchFileSem('harm',this)">☀️ Harmattan</button>
@@ -1850,7 +1860,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
 <div id="bnav">
   <div class="bni on" id="bn-dash" onclick="showPage('dash')"><div class="bni-ico">🏠</div><div class="bni-lbl">Home</div></div>
   <div class="bni" id="bn-quiz" onclick="showPage('quiz')"><div class="bni-ico">📝</div><div class="bni-lbl">Quiz</div></div>
-  <div class="bni" id="bn-files" onclick="showPage('files')"><div class="bni-ico">📁</div><div class="bni-lbl">Files</div></div>
+  <div class="bni" id="bn-files" onclick="showPage('files')"><div class="bni-ico">📖</div><div class="bni-lbl">Slides</div></div>
   <div class="bni" id="bn-ai" onclick="showPage('ai')"><div class="bni-ico">🤖</div><div class="bni-lbl">AI</div></div>
   <div class="bni" id="bn-profile" onclick="showPage('profile')"><div class="bni-ico">👤</div><div class="bni-lbl">Profile</div></div>
 </div>
@@ -1973,14 +1983,17 @@ let quizData = [], currentQ = 0, answers = {}, quizTimer = null, timeLeft = 600;
 let currentSem = 'harm';
 
 // ══ AUTH STATE ══
-// Force hide loading after 8 seconds
+// Force hide loading after 15 seconds only if user is definitely not logged in
 setTimeout(()=>{
   const l=document.getElementById('loading');
   if(l&&!l.classList.contains('hidden')){
     l.classList.add('hidden');
-    showPage('auth');
+    // Only show auth if no user is currently signed in
+    if(!auth.currentUser){
+      showPage('auth');
+    }
   }
-},8000);
+},15000);
 
 auth.onAuthStateChanged(async function(user){
   document.getElementById('loading').classList.add('hidden');
@@ -2192,9 +2205,26 @@ function showPage(pg){
       setTimeout(()=>ind.remove(), 3000);
     }
   }
+
+  // Hide ALL pages first
   document.querySelectorAll('.page').forEach(p=>{p.classList.remove('on');p.classList.add('hidden');});
+
+  // Show target page
   const t = document.getElementById('pg-'+pg);
   if(t){t.classList.remove('hidden');t.classList.add('on');}
+
+  // When showing dash — always make sure auth page is fully hidden
+  if(pg==='dash'){
+    const authPage = document.getElementById('pg-auth');
+    if(authPage){authPage.classList.remove('on');authPage.classList.add('hidden');}
+    document.getElementById('bnav').style.display='flex';
+  }
+
+  // When showing auth — always hide bottom nav
+  if(pg==='auth'){
+    document.getElementById('bnav').style.display='none';
+  }
+
   document.querySelectorAll('.bni').forEach(b=>b.classList.remove('on'));
   const bn = document.getElementById('bn-'+pg);
   if(bn) bn.classList.add('on');
