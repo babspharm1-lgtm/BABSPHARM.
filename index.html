@@ -2034,6 +2034,12 @@ auth.onAuthStateChanged(async function(user){
     };
     if(CU.banned){ await auth.signOut(); showToast('Your account has been suspended'); return; }
 
+    // ── Show dashboard IMMEDIATELY — before any async calls ──
+    showPage('dash');
+    document.getElementById('bnav').style.display = 'flex';
+    document.getElementById('wm').textContent = CU.name;
+    updateSidebarProfile();
+
     // If old user — create/update their document with missing fields
     if(!doc.exists || userData.points === undefined){
       await db.collection('users').doc(user.uid).set({
@@ -2046,14 +2052,11 @@ auth.onAuthStateChanged(async function(user){
       }, {merge:true});
     }
 
-    document.getElementById('wm').textContent = CU.name;
-    updateSidebarProfile();
+    // Load everything else in background — won't affect page display
     loadGroqKey();
     loadAnnouncement();
     loadStats();
     checkInboxBadge();
-    // ── Real-time notification listener ──
-    // Listens for new notifications pushed by admin
     listenForPushNotifications();
     initMotivSlider();
     loadTextbooks();
@@ -2062,16 +2065,8 @@ auth.onAuthStateChanged(async function(user){
     checkExamCountdown();
     checkSOTW();
     checkSurpriseReward();
-    showPage('dash');
-    document.getElementById('bnav').style.display = 'flex';
-    // Update last seen using set merge — works for ALL users old and new
     db.collection('users').doc(user.uid).set({lastSeen: new Date().toISOString()},{merge:true}).catch(()=>{});
-
-    // ── PUSH NOTIFICATION SUBSCRIPTION ──
-    // Subscribe student silently in background after login
-    // Only asks permission once — if already granted, re-registers token
     subscribeToPushNotifications(user.uid).catch(()=>{});
-    // Check if old user is missing department — prompt them to fill it
     if(!CU.dept || CU.dept.trim()===''){
       setTimeout(()=>showDeptPrompt(), 1500);
     }
@@ -2207,22 +2202,32 @@ function showPage(pg){
   }
 
   // Hide ALL pages first
-  document.querySelectorAll('.page').forEach(p=>{p.classList.remove('on');p.classList.add('hidden');});
+  document.querySelectorAll('.page').forEach(p=>{
+    p.classList.remove('on');
+    p.classList.add('hidden');
+    p.style.display = 'none';
+  });
 
   // Show target page
   const t = document.getElementById('pg-'+pg);
-  if(t){t.classList.remove('hidden');t.classList.add('on');}
-
-  // When showing dash — always make sure auth page is fully hidden
-  if(pg==='dash'){
-    const authPage = document.getElementById('pg-auth');
-    if(authPage){authPage.classList.remove('on');authPage.classList.add('hidden');}
-    document.getElementById('bnav').style.display='flex';
+  if(t){
+    t.classList.remove('hidden');
+    t.classList.add('on');
+    t.style.display = '';
   }
 
-  // When showing auth — always hide bottom nav
+  // When showing dash — force hide auth, show nav
+  if(pg==='dash'){
+    const authPage = document.getElementById('pg-auth');
+    if(authPage){ authPage.classList.remove('on'); authPage.classList.add('hidden'); authPage.style.display='none'; }
+    document.getElementById('bnav').style.display = 'flex';
+  }
+
+  // When showing auth — force hide dash, hide nav
   if(pg==='auth'){
-    document.getElementById('bnav').style.display='none';
+    const dashPage = document.getElementById('pg-dash');
+    if(dashPage){ dashPage.classList.remove('on'); dashPage.classList.add('hidden'); dashPage.style.display='none'; }
+    document.getElementById('bnav').style.display = 'none';
   }
 
   document.querySelectorAll('.bni').forEach(b=>b.classList.remove('on'));
@@ -2585,9 +2590,12 @@ async function loadFiles(filter){
     const isViewable = url => {
       if(!url) return false;
       const u = url.toLowerCase();
-      return u.includes('drive.google.com') || u.includes('docs.google.com') ||
-             u.endsWith('.pdf') || u.includes('pdf') ||
-             u.includes('slides.google') || u.includes('presentation');
+      return u.includes('drive.google.com') ||
+             u.includes('docs.google.com') ||
+             u.includes('slides.google') ||
+             u.endsWith('.pdf') ||
+             u.includes('.pdf?') ||
+             u.includes('pdf');
     };
 
     const getEmbedUrl = url => {
@@ -2646,14 +2654,32 @@ function openSlideViewer(url, name, course){
 
 function getEmbedUrlFromRaw(url){
   if(!url) return '';
-  const driveMatch = url.match(/\/file\/d\/([^/]+)/);
-  if(driveMatch) return 'https://drive.google.com/file/d/'+driveMatch[1]+'/preview';
-  if(url.includes('docs.google.com/document')) return url.replace('/edit','').replace(/\?.*$/,'') + '/preview';
-  if(url.includes('docs.google.com/presentation')) return url.replace('/edit','').replace(/\?.*$/,'') + '/embed?start=false&loop=false';
-  if(url.includes('drive.google.com/open?id=')) {
-    const id = url.split('id=')[1];
-    return 'https://drive.google.com/file/d/'+id+'/preview';
-  }
+
+  // Google Drive — shared link formats
+  // Format 1: https://drive.google.com/file/d/FILE_ID/view
+  // Format 2: https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+  // Format 3: https://drive.google.com/open?id=FILE_ID
+  // Format 4: https://drive.google.com/uc?id=FILE_ID
+  const driveFileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if(driveFileMatch) return 'https://drive.google.com/file/d/'+driveFileMatch[1]+'/preview';
+
+  const driveOpenMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  if(url.includes('drive.google.com') && driveOpenMatch)
+    return 'https://drive.google.com/file/d/'+driveOpenMatch[1]+'/preview';
+
+  // Google Docs
+  if(url.includes('docs.google.com/document'))
+    return url.replace(/\/edit.*$/, '/preview').replace(/\/pub.*$/, '/preview');
+
+  // Google Slides
+  if(url.includes('docs.google.com/presentation'))
+    return url.replace(/\/edit.*$/, '/embed?start=false&loop=false&delayms=3000').replace(/\/pub.*$/, '/embed?start=false&loop=false');
+
+  // Google Sheets
+  if(url.includes('docs.google.com/spreadsheets'))
+    return url.replace(/\/edit.*$/, '/preview');
+
+  // Direct PDF or other URL — use as-is
   return url;
 }
 
