@@ -2789,20 +2789,33 @@ let analyticsCharts = {};
 async function loadAnalytics(){
   // Summary cards
   try{
-    const [usersSnap, quizSnap] = await Promise.all([
-      db.collection('users').where('role','==','user').get(),
-      db.collection('quizHistory').get()
+    const [usersSnap, quizSnap, cbtSnap] = await Promise.all([
+      db.collection('users').get(),
+      db.collection('quizHistory').get(),
+      db.collection('cbtHistory').get()
     ]);
-    const totalStudents = usersSnap.size;
+
+    // Count all students — exclude admin accounts
+    const studentDocs = usersSnap.docs.filter(d=>{
+      const role = d.data().role;
+      return !role || role === 'user';
+    });
+    const totalStudents = studentDocs.length;
     const totalQuizzes = quizSnap.size;
+    const totalCBT = cbtSnap.size;
+
     const today = new Date().toDateString();
-    const activeToday = usersSnap.docs.filter(d=>d.data().lastSeen && new Date(d.data().lastSeen).toDateString()===today).length;
+    const activeToday = studentDocs.filter(d=>d.data().lastSeen && new Date(d.data().lastSeen).toDateString()===today).length;
+    const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+    const activeWeek = studentDocs.filter(d=>d.data().lastSeen && new Date(d.data().lastSeen)>=weekAgo).length;
     const avgScore = quizSnap.size ? Math.round(quizSnap.docs.reduce((s,d)=>{const h=d.data();return s+(h.total?h.score/h.total*100:0);},0)/quizSnap.size) : 0;
 
     document.getElementById('analytics-cards').innerHTML=`
       <div class="sc"><div class="si">👥</div><div><div class="sv">${totalStudents}</div><div class="sl">Total Students</div></div></div>
-      <div class="sc"><div class="si">✅</div><div><div class="sv">${activeToday}</div><div class="sl">Active Today</div></div></div>
-      <div class="sc"><div class="si">📝</div><div><div class="sv">${totalQuizzes}</div><div class="sl">Total Quizzes</div></div></div>
+      <div class="sc"><div class="si">🟢</div><div><div class="sv">${activeToday}</div><div class="sl">Active Today</div></div></div>
+      <div class="sc"><div class="si">📅</div><div><div class="sv">${activeWeek}</div><div class="sl">Active This Week</div></div></div>
+      <div class="sc"><div class="si">📝</div><div><div class="sv">${totalQuizzes}</div><div class="sl">Quiz Attempts</div></div></div>
+      <div class="sc"><div class="si">🎯</div><div><div class="sv">${totalCBT}</div><div class="sl">CBT Attempts</div></div></div>
       <div class="sc"><div class="si">⭐</div><div><div class="sv">${avgScore}%</div><div class="sl">Avg Score</div></div></div>`;
 
     // Build last 7 days labels
