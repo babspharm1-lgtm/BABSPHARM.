@@ -1,13 +1,27 @@
-name: Split index-1.html
-on: workflow_dispatch
-jobs:
-  split:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Split file
-        run: python3 .github/split.py
-      - uses: actions/upload-artifact@v4
-        with:
-          name: split-files
-          path: split-output/
+import os, re
+
+with open("index-1.html", "r", encoding="utf-8") as f:
+    content = f.read()
+
+os.makedirs("split-output", exist_ok=True)
+
+# Extract CSS (handles attributes like <style type="text/css">)
+css_match = re.search(r'<style[^>]*>(.*?)</style>', content, re.DOTALL)
+css = css_match.group(1).strip() if css_match else ""
+
+# Extract JS (handles attributes like <script type="text/javascript">)
+js_match = re.search(r'<script[^>]*>(.*?)</script>', content, re.DOTALL)
+js = js_match.group(1).strip() if js_match else ""
+
+# Replace in HTML
+html = re.sub(r'<style[^>]*>.*?</style>', '<link rel="stylesheet" href="style.css">', content, flags=re.DOTALL)
+html = re.sub(r'<script[^>]*>.*?</script>', '<script src="app.js"></script>', html, flags=re.DOTALL)
+
+with open("split-output/style.css", "w", encoding="utf-8") as f:
+    f.write(css)
+with open("split-output/app.js", "w", encoding="utf-8") as f:
+    f.write(js)
+with open("split-output/index-1.html", "w", encoding="utf-8") as f:
+    f.write(html)
+
+print("Done!")
