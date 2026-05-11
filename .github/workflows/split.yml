@@ -1,21 +1,28 @@
-import os, re
+import os, re, sys
 
-with open("index-1.html", "r", encoding="utf-8") as f:
-    content = f.read()
+try:
+    with open("index-1.html", "r", encoding="utf-8", errors="ignore") as f:
+        content = f.read()
+    print(f"File loaded: {len(content)} characters")
+except Exception as e:
+    print(f"ERROR loading file: {e}")
+    sys.exit(1)
 
 os.makedirs("split-output", exist_ok=True)
 
-# Extract CSS (handles attributes like <style type="text/css">)
-css_match = re.search(r'<style[^>]*>(.*?)</style>', content, re.DOTALL)
-css = css_match.group(1).strip() if css_match else ""
+# Extract CSS
+css_match = re.search(r'<style[^>]*>(.*?)</style>', content, re.DOTALL | re.IGNORECASE)
+css = css_match.group(1).strip() if css_match else "/* No CSS found */"
+print(f"CSS extracted: {len(css)} characters")
 
-# Extract JS (handles attributes like <script type="text/javascript">)
-js_match = re.search(r'<script[^>]*>(.*?)</script>', content, re.DOTALL)
-js = js_match.group(1).strip() if js_match else ""
+# Extract JS
+js_match = re.search(r'<script(?!\s+src)[^>]*>(.*?)</script>', content, re.DOTALL | re.IGNORECASE)
+js = js_match.group(1).strip() if js_match else "// No JS found"
+print(f"JS extracted: {len(js)} characters")
 
 # Replace in HTML
-html = re.sub(r'<style[^>]*>.*?</style>', '<link rel="stylesheet" href="style.css">', content, flags=re.DOTALL)
-html = re.sub(r'<script[^>]*>.*?</script>', '<script src="app.js"></script>', html, flags=re.DOTALL)
+html = re.sub(r'<style[^>]*>.*?</style>', '<link rel="stylesheet" href="style.css">', content, flags=re.DOTALL | re.IGNORECASE)
+html = re.sub(r'<script(?!\s+src)[^>]*>.*?</script>', '<script src="app.js"></script>', html, flags=re.DOTALL | re.IGNORECASE)
 
 with open("split-output/style.css", "w", encoding="utf-8") as f:
     f.write(css)
@@ -24,4 +31,4 @@ with open("split-output/app.js", "w", encoding="utf-8") as f:
 with open("split-output/index-1.html", "w", encoding="utf-8") as f:
     f.write(html)
 
-print("Done!")
+print("Done! All files saved.")
