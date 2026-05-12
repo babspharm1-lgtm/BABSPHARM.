@@ -1,16 +1,12 @@
-name: Split index-1.html
-on: workflow_dispatch
-jobs:
-  split:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run script
-        run: python3 .github/split.py
-      - name: Commit changes
-        run: |
-          git config user.email "action@github.com"
-          git config user.name "GitHub Action"
-          git add index-1.html
-          git commit -m "Add Supabase script tag"
-          git push
+with open("index-1.html", "r", encoding="utf-8", errors="ignore") as f:
+    content = f.read()
+
+old = '<script src="app.js"></script>'
+new = '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>\n<script src="app.js"></script>'
+
+content = content.replace(old, new, 1)
+
+with open("index-1.html", "w", encoding="utf-8") as f:
+    f.write(content)
+
+print("Done!")
