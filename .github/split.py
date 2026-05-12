@@ -1,31 +1,12 @@
-import os, re, sys
+with open("index-1.html", "r", encoding="utf-8", errors="ignore") as f:
+    content = f.read()
 
-try:
-    with open("index-1.html", "r", encoding="utf-8", errors="ignore") as f:
-        content = f.read()
-    print(f"File loaded: {len(content)} characters")
-except Exception as e:
-    print(f"ERROR loading file: {e}")
-    sys.exit(1)
+old = '<script src="app.js"></script>'
+new = '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>\n<script src="app.js"></script>'
 
-os.makedirs("split-output", exist_ok=True)
+content = content.replace(old, new, 1)
 
-css_match = re.search(r'<style[^>]*>(.*?)</style>', content, re.DOTALL | re.IGNORECASE)
-css = css_match.group(1).strip() if css_match else "/* No CSS found */"
-print(f"CSS extracted: {len(css)} characters")
-
-js_match = re.search(r'<script(?!\s+src)[^>]*>(.*?)</script>', content, re.DOTALL | re.IGNORECASE)
-js = js_match.group(1).strip() if js_match else "// No JS found"
-print(f"JS extracted: {len(js)} characters")
-
-html = re.sub(r'<style[^>]*>.*?</style>', '<link rel="stylesheet" href="style.css">', content, flags=re.DOTALL | re.IGNORECASE)
-html = re.sub(r'<script(?!\s+src)[^>]*>.*?</script>', '<script src="app.js"></script>', html, flags=re.DOTALL | re.IGNORECASE)
-
-with open("split-output/style.css", "w", encoding="utf-8") as f:
-    f.write(css)
-with open("split-output/app.js", "w", encoding="utf-8") as f:
-    f.write(js)
-with open("split-output/index-1.html", "w", encoding="utf-8") as f:
-    f.write(html)
+with open("index-1.html", "w", encoding="utf-8") as f:
+    f.write(content)
 
 print("Done!")
