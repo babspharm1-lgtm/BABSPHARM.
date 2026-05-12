@@ -1,34 +1,24 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
-           signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+// Supabase initialization
+const SUPABASE_URL = 'https://wwummihoiklnnqjncgmd.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3dW1taWhvaWtsbm5xam5jZ21kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODI0OTAsImV4cCI6MjA5NDE1ODQ5MH0.ZY7M1lngXz2MaTDaLGXn8uQgNvKJiKvHcygPsy7o1Ks';
 
-  // SECURITY: Replace these values with your actual Firebase config.
-  // Get them from Firebase Console → Project Settings → Your apps → Web app config.
-  // Restrict this API key to your domain in Google Cloud Console.
-  var firebaseConfig = {
-    apiKey: "AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8",
-    authDomain: "babspharmcloud.firebaseapp.com",
-    projectId: "babspharmcloud",
-    storageBucket: "babspharmcloud.appspot.com",
-    messagingSenderId: "385674572482",
-    appId: "1:385674572482:web:a427125e649fef011b815b",
-    measurementId: "G-ZM6EX0MWZL"
-  };
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  var fbApp = initializeApp(firebaseConfig);
-  var fbAuth = getAuth(fbApp);
+// Expose to global scope
+window._sb = sb;
 
-  // Expose auth functions to global scope for use by existing code
-  window._fbAuth = fbAuth;
-  window._fbSignIn = function(email, password) {
-    return signInWithEmailAndPassword(fbAuth, email, password);
-  };
-  window._fbSignUp = function(email, password) {
-    return createUserWithEmailAndPassword(fbAuth, email, password);
-  };
-  window._fbSignOut = function() {
-    return signOut(fbAuth);
-  };
-  window._fbOnAuthStateChanged = function(cb) {
-    return onAuthStateChanged(fbAuth, cb);
-  };
+window._fbSignIn = async function(email, password) {
+  return await sb.auth.signInWithPassword({ email, password });
+};
+window._fbSignUp = async function(email, password) {
+  return await sb.auth.signUp({ email, password });
+};
+window._fbSignOut = async function() {
+  return await sb.auth.signOut();
+};
+window._fbOnAuthStateChanged = function(cb) {
+  sb.auth.onAuthStateChange((event, session) => {
+    cb(session ? session.user : null);
+  });
+};
