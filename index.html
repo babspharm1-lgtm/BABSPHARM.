@@ -14,8 +14,8 @@
 <meta name="version" content="2.5.0"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root{
@@ -1933,6 +1933,7 @@ window.addEventListener('online', ()=>{
   showToast('✅ Back online!');
 });
 
+// Firebase — Firestore data only (auth handled by Supabase)
 const FC = {
   apiKey:"AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8",
   authDomain:"babspharmcloud.firebaseapp.com",
@@ -1942,8 +1943,13 @@ const FC = {
   appId:"1:385674572482:web:a427125e649fef011b815b"
 };
 firebase.initializeApp(FC);
-const auth = firebase.auth();
 const db = firebase.firestore();
+
+// Supabase — handles all authentication
+const _supa = window.supabase.createClient(
+  'https://wwummihoiklnnqjncgmd.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3dW1taWhvaWtsbm5xam5jZ21kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODI0OTAsImV4cCI6MjA5NDE1ODQ5MH0.ZY7M1lngXz2MaTDaLGXn8uQgNvKJiKvHcygPsy7o1Ks'
+);
 
 let CU = null, GROQ_KEY = '';
 // CBT globals — declared here to avoid temporal dead zone errors
@@ -1984,18 +1990,19 @@ let currentSem = 'harm';
 
 // ══ AUTH STATE ══
 // Force hide loading after 15 seconds only if user is definitely not logged in
-setTimeout(()=>{
+setTimeout(async ()=>{
   const l=document.getElementById('loading');
   if(l&&!l.classList.contains('hidden')){
     l.classList.add('hidden');
-    // Only show auth if no user is currently signed in
-    if(!auth.currentUser){
+    const {data:{session}} = await _supa.auth.getSession();
+    if(!session){
       showPage('auth');
     }
   }
 },15000);
 
-auth.onAuthStateChanged(async function(user){
+_supa.auth.onAuthStateChange(async function(event, session){
+  const user = session ? session.user : null;
   document.getElementById('loading').classList.add('hidden');
   // Load contact info for auth page
   try{
@@ -2021,18 +2028,19 @@ auth.onAuthStateChanged(async function(user){
     }
   }catch(e){}
   if(user){
-    const doc = await db.collection('users').doc(user.uid).get();
+    const uid = user.id;
+    const doc = await db.collection('users').doc(uid).get();
     const userData = doc.exists ? doc.data() : {};
     CU = {
-      uid: user.uid,
+      uid: uid,
       email: user.email,
-      name: userData.name || user.displayName || user.email.split('@')[0],
+      name: userData.name || user.user_metadata?.full_name || user.email.split('@')[0],
       dept: userData.dept || '',
-      photoURL: user.photoURL || '',
+      photoURL: userData.photoURL || '',
       banned: userData.banned || false,
       points: userData.points || 0
     };
-    if(CU.banned){ await auth.signOut(); showToast('Your account has been suspended'); return; }
+    if(CU.banned){ await _supa.auth.signOut(); showToast('Your account has been suspended'); return; }
 
     // ── Show dashboard IMMEDIATELY — before any async calls ──
     showPage('dash');
@@ -2042,7 +2050,7 @@ auth.onAuthStateChanged(async function(user){
 
     // If old user — create/update their document with missing fields
     if(!doc.exists || userData.points === undefined){
-      await db.collection('users').doc(user.uid).set({
+      await db.collection('users').doc(uid).set({
         name: CU.name,
         email: CU.email,
         points: userData.points || 0,
@@ -2065,8 +2073,8 @@ auth.onAuthStateChanged(async function(user){
     checkExamCountdown();
     checkSOTW();
     checkSurpriseReward();
-    db.collection('users').doc(user.uid).set({lastSeen: new Date().toISOString()},{merge:true}).catch(()=>{});
-    subscribeToPushNotifications(user.uid).catch(()=>{});
+    db.collection('users').doc(uid).set({lastSeen: new Date().toISOString()},{merge:true}).catch(()=>{});
+    subscribeToPushNotifications(uid).catch(()=>{});
     if(!CU.dept || CU.dept.trim()===''){
       setTimeout(()=>showDeptPrompt(), 1500);
     }
@@ -2108,8 +2116,10 @@ async function doLogin(){
   const em = document.getElementById('li-em').value.trim();
   const pw = document.getElementById('li-pw').value;
   if(!em||!pw){showMsg('li-msg','Fill all fields','err');return;}
-  try{ await auth.signInWithEmailAndPassword(em, pw); }
-  catch(e){ showMsg('li-msg', e.message.replace('Firebase:','').trim(), 'err'); }
+  try{
+    const {error} = await _supa.auth.signInWithPassword({email:em, password:pw});
+    if(error) throw error;
+  }catch(e){ showMsg('li-msg', e.message, 'err'); }
 }
 
 async function doRegister(){
@@ -2121,15 +2131,19 @@ async function doRegister(){
   if(!nm||!em||!dp||!pw){showMsg('rg-msg','Fill all fields','err');return;}
   if(pw.length<6){showMsg('rg-msg','Password must be at least 6 characters','err');return;}
   try{
-    const cred = await auth.createUserWithEmailAndPassword(em, pw);
-    await cred.user.updateProfile({displayName: nm});
-    await db.collection('users').doc(cred.user.uid).set({
+    const {data, error} = await _supa.auth.signUp({
+      email: em, password: pw,
+      options: { data: { full_name: nm } }
+    });
+    if(error) throw error;
+    const uid = data.user.id;
+    await db.collection('users').doc(uid).set({
       name:nm, email:em, dept:dp, role:'user', createdAt:new Date().toISOString(),
       referredBy: ref||'', points:50
     });
     // Log welcome bonus
     await db.collection('pointsLog').add({
-      uid:cred.user.uid, reason:'Welcome bonus 🎉', points:'+50', date:new Date().toISOString()
+      uid:uid, reason:'Welcome bonus 🎉', points:'+50', date:new Date().toISOString()
     });
     // Award referrer if code is valid
     if(ref){
@@ -2141,7 +2155,7 @@ async function doRegister(){
         await db.collection('pointsLog').add({uid:referrerId,reason:'Referral bonus — '+nm+' joined',points:'+15',date:new Date().toISOString()});
       }
     }
-    showMsg('rg-msg','Account created! You can now sign in.','ok');
+    showMsg('rg-msg','Account created! Check your email to confirm, then sign in.','ok');
     // Send welcome email via Brevo
     try{
       const bDoc = await db.collection('settings').doc('brevo').get();
@@ -2169,21 +2183,22 @@ async function doRegister(){
       }
     }catch(e){}
     setTimeout(()=>switchTab('li'), 1500);
-  }catch(e){ showMsg('rg-msg', e.message.replace('Firebase:','').trim(), 'err'); }
+  }catch(e){ showMsg('rg-msg', e.message, 'err'); }
 }
 
 async function doForgot(){
   const em = document.getElementById('li-em').value.trim();
   if(!em){showMsg('li-msg','Enter your email above first','err');return;}
   try{
-    await auth.sendPasswordResetEmail(em);
+    const {error} = await _supa.auth.resetPasswordForEmail(em);
+    if(error) throw error;
     showMsg('li-msg','✅ Reset link sent to '+em+'! Open your email, click the link to set a new password, then come back here to Sign In with your new password.','ok');
-  }catch(e){ showMsg('li-msg', e.message.replace('Firebase:','').trim(), 'err'); }
+  }catch(e){ showMsg('li-msg', e.message, 'err'); }
 }
 
 async function doLogout(){
   closeSB();
-  await auth.signOut();
+  await _supa.auth.signOut();
 }
 
 // ══ PAGES ══
@@ -3085,7 +3100,7 @@ async function saveProfile(){
   const dept = document.getElementById('ed-dept').value;
   if(!name){showMsg('prof-msg','Enter your name','err');return;}
   try{
-    await auth.currentUser.updateProfile({displayName:name});
+    await _supa.auth.updateUser({data:{full_name:name}});
     await db.collection('users').doc(CU.uid).update({name,dept});
     CU.name=name; CU.dept=dept;
     updateSidebarProfile();
@@ -3099,13 +3114,12 @@ async function changePassword(){
   const pw = document.getElementById('new-pw').value;
   if(!pw||pw.length<6){showMsg('prof-msg','Password must be at least 6 characters','err');return;}
   try{
-    await auth.currentUser.updatePassword(pw);
+    const {error} = await _supa.auth.updateUser({password:pw});
+    if(error) throw error;
     showMsg('prof-msg','Password updated! You can now login with your new password.','ok');
     document.getElementById('new-pw').value='';
   }catch(e){
-    if(e.code==='auth/requires-recent-login'){
-      showMsg('prof-msg','Please log out and log in again before changing password','err');
-    }else{ showMsg('prof-msg',e.message,'err'); }
+    showMsg('prof-msg', e.message, 'err');
   }
 }
 
@@ -3116,7 +3130,7 @@ async function uploadPhoto(input){
   reader.onload = async function(e){
     const dataUrl = e.target.result;
     try{
-      await auth.currentUser.updateProfile({photoURL: dataUrl});
+      await _supa.auth.updateUser({data:{avatar_url: dataUrl}});
       await db.collection('users').doc(CU.uid).update({photoURL: dataUrl});
       CU.photoURL = dataUrl;
       updateSidebarProfile();

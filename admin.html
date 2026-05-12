@@ -12,8 +12,8 @@
 <meta name="version" content="2.5.0"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root{--navy:#0a1628;--navy2:#0f2044;--navy3:#162d5a;--gold:#c9a84c;--gold2:#e8c97a;--text:#f0ead6;--text2:#9bacc8;--card:rgba(255,255,255,0.04);--cb:rgba(201,168,76,0.2);--green:#4ade80;--red:#f87171;--r:13px;}
@@ -1703,23 +1703,26 @@ Answer: A</code>
 <script>
 const FC={apiKey:"AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8",authDomain:"babspharmcloud.firebaseapp.com",projectId:"babspharmcloud",storageBucket:"babspharmcloud.firebasestorage.app",messagingSenderId:"385674572482",appId:"1:385674572482:web:a427125e649fef011b815b"};
 firebase.initializeApp(FC);
-const auth=firebase.auth(),db=firebase.firestore();
+const db=firebase.firestore();
+const _supa=window.supabase.createClient('https://wwummihoiklnnqjncgmd.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3dW1taWhvaWtsbm5xam5jZ21kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODI0OTAsImV4cCI6MjA5NDE1ODQ5MH0.ZY7M1lngXz2MaTDaLGXn8uQgNvKJiKvHcygPsy7o1Ks');
+let ADMIN_EMAIL='';
 let allStudents=[],selectedPQId='';
 // Force hide loading after 8 seconds no matter what
-auth.onAuthStateChanged(async function(user){
+_supa.auth.onAuthStateChange(async function(event, session){
+  const user = session ? session.user : null;
   if(!user){ showAuthUI(); return; }
-  // Show loading indicator in button
+  ADMIN_EMAIL = user.email;
   document.getElementById('a-em').disabled=true;
   document.getElementById('a-pw').disabled=true;
   try{
-    let doc = await db.collection('users').doc(user.uid).get();
+    let doc = await db.collection('users').doc(user.id).get();
     if(!doc.exists){
       const snap = await db.collection('users').where('email','==',user.email).get();
       if(!snap.empty) doc = snap.docs[0];
     }
     const data = doc.exists ? doc.data() : null;
     if(!data || (data.role!=='admin' && data.role!=='subadmin')){
-      await auth.signOut();
+      await _supa.auth.signOut();
       document.getElementById('a-em').disabled=false;
       document.getElementById('a-pw').disabled=false;
       showAuthUI();
@@ -1775,11 +1778,14 @@ function closeSidebar(){
   document.getElementById('mob-drawer').style.display='none';
   document.getElementById('mob-overlay').style.display='none';
 }
-async function doLogout(){await auth.signOut();}
+async function doLogout(){await _supa.auth.signOut();}
 async function adminLogin(){
   const em=document.getElementById('a-em').value.trim(),pw=document.getElementById('a-pw').value;
   if(!em||!pw){showErr('a-msg','Fill all fields');return;}
-  try{await auth.signInWithEmailAndPassword(em,pw);}catch(e){showErr('a-msg',e.message.replace('Firebase:','').trim());}
+  try{
+    const {error}=await _supa.auth.signInWithPassword({email:em,password:pw});
+    if(error) throw error;
+  }catch(e){showErr('a-msg',e.message);}
 }
 function showErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.className='amsg err';}
 function showPanel(name,el){
@@ -2304,7 +2310,7 @@ async function uploadHtmlQuiz(){
     // Add quiz as subcollection item
     await groupRef.collection('quizzes').add({
       title, course, duration, html, active:true,
-      createdAt:new Date().toISOString(), createdBy:auth.currentUser.email
+      createdAt:new Date().toISOString(), createdBy:ADMIN_EMAIL
     });
     ['hq-title','hq-course','hq-duration'].forEach(id=>document.getElementById(id).value=id==='hq-duration'?'30':'');
     document.getElementById('hq-file').value='';
@@ -2400,7 +2406,7 @@ async function createCoupon(){
     code, points, limit, usedCount:0,
     expiry: expiry||null, active:true,
     createdAt:new Date().toISOString(),
-    createdBy:auth.currentUser.email
+    createdBy:ADMIN_EMAIL
   });
   document.getElementById('cp-code').value='';
   document.getElementById('cp-points').value='';
@@ -6116,7 +6122,7 @@ async function sendDirectMessage(){
   await db.collection('messages').add({
     toUid:msgTargetId, toName:msgTargetName,
     subject, body, fromAdmin:true,
-    sentBy:auth.currentUser.email,
+    sentBy:ADMIN_EMAIL,
     createdAt:new Date().toISOString(), read:false
   });
   // Send email via Brevo
@@ -6170,7 +6176,7 @@ async function sendBulkDeptMessage(){
     const batches=[];
     for(let i=0;i<snap.docs.length;i+=10)batches.push(snap.docs.slice(i,i+10));
     for(const batch of batches){
-      await Promise.all(batch.map(d=>db.collection('messages').add({toUid:d.id,toName:d.data().name||d.data().email,subject,body,fromAdmin:true,sentBy:auth.currentUser.email,createdAt:today,read:false})));
+      await Promise.all(batch.map(d=>db.collection('messages').add({toUid:d.id,toName:d.data().name||d.data().email,subject,body,fromAdmin:true,sentBy:ADMIN_EMAIL,createdAt:today,read:false})));
       done+=batch.length;
       prog.textContent=`📨 Sending... ${done}/${total}`;
     }
