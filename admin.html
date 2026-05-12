@@ -1706,6 +1706,44 @@ firebase.initializeApp(FC);
 const db=firebase.firestore();
 const _supa=window.supabase.createClient('https://wwummihoiklnnqjncgmd.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3dW1taWhvaWtsbm5xam5jZ21kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODI0OTAsImV4cCI6MjA5NDE1ODQ5MH0.ZY7M1lngXz2MaTDaLGXn8uQgNvKJiKvHcygPsy7o1Ks');
 let ADMIN_EMAIL='';
+// Supabase users table wrapper — mimics Firestore API
+const _usersTable = {
+  doc: (id) => ({
+    get: async () => {
+      const {data} = await _supa.from('users').select('*').eq('id', id).maybeSingle();
+      return {exists: !!data, data: ()=>data||{}, id};
+    },
+    set: async (fields) => {
+      const {error} = await _supa.from('users').upsert({id, ...fields}, {onConflict:'id'});
+      if(error) throw error;
+    },
+    update: async (fields) => {
+      const {error} = await _supa.from('users').update(fields).eq('id', id);
+      if(error) throw error;
+    }
+  }),
+  get: async () => {
+    const {data, error} = await _supa.from('users').select('*');
+    if(error) throw error;
+    return {docs: data.map(d=>({id:d.id,data:()=>d,exists:true})), size:data.length, empty:data.length===0};
+  },
+  where: (field, op, value) => ({
+    get: async () => {
+      let q = _supa.from('users').select('*');
+      if(op==='==') q = q.eq(field, value);
+      const {data, error} = await q;
+      if(error) throw error;
+      return {docs: data.map(d=>({id:d.id,data:()=>d,exists:true})), size:data.length, empty:data.length===0};
+    }
+  }),
+  orderBy: (field, dir) => ({
+    get: async () => {
+      const {data, error} = await _supa.from('users').select('*').order(field, {ascending: dir!=='desc'});
+      if(error) throw error;
+      return {docs: data.map(d=>({id:d.id,data:()=>d,exists:true})), size:data.length};
+    }
+  })
+};
 let allStudents=[],selectedPQId='';
 // Force hide loading after 8 seconds no matter what
 _supa.auth.onAuthStateChange(async function(event, session){
@@ -1715,9 +1753,9 @@ _supa.auth.onAuthStateChange(async function(event, session){
   document.getElementById('a-em').disabled=true;
   document.getElementById('a-pw').disabled=true;
   try{
-    let doc = await db.collection('users').doc(user.id).get();
+    let doc = await _usersTable.doc(user.id).get();
     if(!doc.exists){
-      const snap = await db.collection('users').where('email','==',user.email).get();
+      const snap = await _usersTable.where('email','==',user.email).get();
       if(!snap.empty) doc = snap.docs[0];
     }
     const data = doc.exists ? doc.data() : null;
@@ -1809,7 +1847,7 @@ function showPanel(name,el){
       loadAdminPQBank('chm101');}})[name]?.();
 }
 async function loadDashboard(){
-  const snap=await db.collection('users').get();
+  const snap=await _usersTable.get();
   const users=snap.docs.map(d=>d.data()),students=users.filter(u=>u.role!=='admin');
   document.getElementById('st-total').textContent=students.length;
   document.getElementById('st-ban').textContent=students.filter(u=>u.banned).length;
@@ -1820,7 +1858,7 @@ async function loadDashboard(){
   document.getElementById('recent-list').innerHTML=students.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0)).slice(0,8).map(u=>`<tr><td>${u.name||'--'}</td><td style="color:var(--text2);font-size:.76rem">${u.email||'--'}</td><td style="font-size:.76rem">${u.dept||'--'}</td><td style="color:var(--text2);font-size:.7rem">${u.createdAt?new Date(u.createdAt).toLocaleDateString():'--'}</td></tr>`).join('');
 }
 async function loadStudents(){
-  const snap=await db.collection('users').get();
+  const snap=await _usersTable.get();
   allStudents=snap.docs.map(d=>({id:d.id,...d.data()})).filter(u=>u.role!=='admin');
   renderStudents(allStudents);
 }
@@ -1880,7 +1918,7 @@ async function viewStudentProfile(uid){
 
   try{
     // ── Load student data ──
-    const userDoc = await db.collection('users').doc(uid).get();
+    const userDoc = await _usersTable.doc(uid).get();
     if(!userDoc.exists){ closeStudentProfile(); showToast('Student not found'); return; }
     const u = {id:uid, ...userDoc.data()};
 
@@ -2117,7 +2155,7 @@ async function generateStudentAIReport(uid, student, stats){
   }
 }
 
-async function toggleBan(uid,isBanned){await db.collection('users').doc(uid).update({banned:!isBanned});showToast(isBanned?'Unbanned':'Banned');loadStudents();}
+async function toggleBan(uid,isBanned){await _usersTable.doc(uid).update({banned:!isBanned});showToast(isBanned?'Unbanned':'Banned');loadStudents();}
 async function loadCourses(){
   const snap=await db.collection('courses').get();
   document.getElementById('courses-list').innerHTML=snap.empty?'<div style="color:var(--text2);font-size:.8rem">No courses yet</div>':snap.docs.map(d=>{const c=d.data();return`<div class="li"><div><div class="li-code">${c.code}</div><div class="li-name">${c.name}</div><div class="sem-tag">${c.sem==='harm'?'☀️ Harmattan':'🌧 Rain'}</div></div><button class="btn btn-red btn-sm" onclick="deleteCourse('${d.id}')">🗑</button></div>`;}).join('');
@@ -2559,10 +2597,10 @@ async function managePoints(action){
   if(!ptsTargetId){showToast('Select a student first');return;}
   const amount=parseInt(document.getElementById('pts-amount').value);
   if(!amount||amount<1){showToast('Enter a valid amount');return;}
-  const doc=await db.collection('users').doc(ptsTargetId).get();
+  const doc=await _usersTable.doc(ptsTargetId).get();
   const current=doc.data().points||0;
   const newPoints=action==='add'?current+amount:Math.max(0,current-amount);
-  await db.collection('users').doc(ptsTargetId).update({points:newPoints});
+  await _usersTable.doc(ptsTargetId).update({points:newPoints});
   await db.collection('pointsLog').add({
     uid:ptsTargetId,
     reason:'Admin '+(action==='add'?'added':'deducted')+' points',
@@ -2796,7 +2834,7 @@ async function loadAnalytics(){
   // Summary cards
   try{
     const [usersSnap, quizSnap, cbtSnap] = await Promise.all([
-      db.collection('users').get(),
+      _usersTable.get(),
       db.collection('quizHistory').get(),
       db.collection('cbtHistory').get()
     ]);
@@ -3911,7 +3949,7 @@ async function loadAILiveStats(){
   if(!el) return;
   try{
     const [studSnap, quizSnap] = await Promise.all([
-      db.collection('users').get(),
+      _usersTable.get(),
       db.collection('quizHistory').get()
     ]);
     const today = new Date().toDateString();
@@ -3960,7 +3998,7 @@ async function adminAIAction(type){
 
   if(type==='students'){
     // Fetch real student data
-    const snap = await db.collection('users').get();
+    const snap = await _usersTable.get();
     const students = snap.docs.map(d=>d.data());
     const today = new Date().toDateString();
     const activeToday = students.filter(s=>s.lastSeen&&new Date(s.lastSeen).toDateString()===today).length;
@@ -4040,7 +4078,7 @@ async function adminAIAction(type){
   }
 
   else if(type==='give_points'){
-    const snap = await db.collection('users').orderBy('name').get();
+    const snap = await _usersTable.orderBy('name').get();
     const students = snap.docs.map(d=>({id:d.id,...d.data()}));
     const list = students.slice(0,20).map(s=>`
       <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--cb);">
@@ -4054,7 +4092,7 @@ async function adminAIAction(type){
   }
 
   else if(type==='inactive'){
-    const snap = await db.collection('users').get();
+    const snap = await _usersTable.get();
     const students = snap.docs.map(d=>({id:d.id,...d.data()}));
     const weekAgo = Date.now() - 7*24*60*60*1000;
     const inactive = students.filter(s=>{
@@ -4073,7 +4111,7 @@ async function adminAIAction(type){
   }
 
   else if(type==='top_students'){
-    const snap = await db.collection('users').get();
+    const snap = await _usersTable.get();
     const students = snap.docs.map(d=>d.data()).sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,10);
     const medals = ['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟'];
     const list = students.map((s,i)=>`
@@ -4138,7 +4176,7 @@ async function adminAIAction(type){
   else if(type==='analyze'){
     // Full platform analysis
     const [studSnap, quizSnap, pqSnap] = await Promise.all([
-      db.collection('users').get(),
+      _usersTable.get(),
       db.collection('quizHistory').orderBy('date','desc').limit(50).get().catch(()=>({docs:[]})),
       db.collection('pqBank').get().catch(()=>({docs:[]}))
     ]);
@@ -4199,7 +4237,7 @@ async function adminAIAction(type){
   else if(type==='student_search'){
     const query = prompt('Search by name or email:')?.toLowerCase();
     if(!query) return;
-    const snap = await db.collection('users').get();
+    const snap = await _usersTable.get();
     const results = snap.docs.map(d=>({id:d.id,...d.data()}))
       .filter(s=>(s.name||'').toLowerCase().includes(query)||(s.email||'').toLowerCase().includes(query));
     showActionResult(`🔍 ${results.length} Results`,
@@ -4217,7 +4255,7 @@ async function adminAIAction(type){
 
   // ── MISSING STUDENTS HANDLERS ──
   else if(type==='zero_points'){
-    const snap = await db.collection('users').get();
+    const snap = await _usersTable.get();
     const zeroPts = snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>(s.points||0)===0);
     showActionResult(`📉 ${zeroPts.length} Students with 0 Points`,
       zeroPts.slice(0,15).map(s=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--cb);">
@@ -4229,7 +4267,7 @@ async function adminAIAction(type){
   }
 
   else if(type==='new_students'){
-    const snap = await db.collection('users').get();
+    const snap = await _usersTable.get();
     const weekAgo = Date.now()-7*24*60*60*1000;
     const newStudents = snap.docs.map(d=>d.data()).filter(s=>s.createdAt&&new Date(s.createdAt).getTime()>weekAgo).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
     showActionResult(`🆕 ${newStudents.length} New Students This Week`,
@@ -4241,7 +4279,7 @@ async function adminAIAction(type){
   }
 
   else if(type==='dept_breakdown'){
-    const snap = await db.collection('users').get();
+    const snap = await _usersTable.get();
     const depts={};
     snap.docs.forEach(d=>{const dept=d.data().dept||'Unknown';depts[dept]=(depts[dept]||0)+1;});
     const sorted=Object.entries(depts).sort((a,b)=>b[1]-a[1]);
@@ -4262,7 +4300,7 @@ async function adminAIAction(type){
   else if(type==='bulk_points'){
     const pts=parseInt(prompt('Give how many points to ALL students?'));
     if(!pts||isNaN(pts)) return;
-    if(!confirm(`Give ${pts} points to ALL ${(await db.collection('users').get()).size} students?`)) return;
+    if(!confirm(`Give ${pts} points to ALL ${(await _usersTable.get()).size} students?`)) return;
     await bulkGivePoints(pts);
   }
 
@@ -4291,7 +4329,7 @@ async function adminAIAction(type){
   }
 
   else if(type==='sotw'){
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const top=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.points||0)-(a.points||0))[0];
     if(!top){showActionResult('❌ Error','No students found');return;}
     showActionResult('🌟 Student of the Week',
@@ -4581,7 +4619,7 @@ Return ONLY the JSON array, no other text.`}],
 
   else if(type==='student_atrisk'){
     showActionResult('⚠️ Identifying At-Risk...','<div style="color:var(--text2)">Analysing students...</div>');
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const students=snap.docs.map(d=>({id:d.id,...d.data()}));
     const weekAgo=Date.now()-7*24*60*60*1000;const monthAgo=Date.now()-30*24*60*60*1000;
     const atRisk=students.filter(s=>{const score=((s.points||0)===0?2:0)+(!s.lastSeen||new Date(s.lastSeen).getTime()<monthAgo?3:new Date(s.lastSeen).getTime()<weekAgo?1:0)+(!s.dept?1:0);s._risk=score;return score>=2;}).sort((a,b)=>b._risk-a._risk);
@@ -4594,7 +4632,7 @@ Return ONLY the JSON array, no other text.`}],
 
   else if(type==='platform_score'){
     showActionResult('🏆 Calculating Score...','<div style="color:var(--text2)">Analysing all metrics...</div>');
-    const [studSnap,quizSnap,pqSnap,motSnap,hotSnap,cbtSnap,annSnap]=await Promise.all([db.collection('users').get(),db.collection('quizHistory').get().catch(()=>({size:0,docs:[]})),db.collection('pqBank').get().catch(()=>({size:0})),db.collection('motivations').get().catch(()=>({size:0})),db.collection('hotTopics').get().catch(()=>({size:0})),db.collection('cbtExams').get().catch(()=>({size:0})),db.collection('announcements').get().catch(()=>({size:0}))]);
+    const [studSnap,quizSnap,pqSnap,motSnap,hotSnap,cbtSnap,annSnap]=await Promise.all([_usersTable.get(),db.collection('quizHistory').get().catch(()=>({size:0,docs:[]})),db.collection('pqBank').get().catch(()=>({size:0})),db.collection('motivations').get().catch(()=>({size:0})),db.collection('hotTopics').get().catch(()=>({size:0})),db.collection('cbtExams').get().catch(()=>({size:0})),db.collection('announcements').get().catch(()=>({size:0}))]);
     const students=studSnap.docs.map(d=>d.data());const weekAgo=Date.now()-7*24*60*60*1000;
     const activeRate=studSnap.size>0?students.filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>weekAgo).length/studSnap.size:0;
     const engRate=studSnap.size>0?students.filter(s=>(s.points||0)>0).length/studSnap.size:0;
@@ -4608,7 +4646,7 @@ Return ONLY the JSON array, no other text.`}],
   else if(type==='data_backup'){
     showActionResult('💾 Exporting...','<div style="color:var(--text2)">Reading all collections...</div>');
     try{
-      const [studSnap,pqSnap,quizSnap,motSnap,hotSnap,annSnap,cbtSnap]=await Promise.all([db.collection('users').get(),db.collection('pqBank').get().catch(()=>({docs:[]})),db.collection('quizHistory').limit(500).get().catch(()=>({docs:[]})),db.collection('motivations').get().catch(()=>({docs:[]})),db.collection('hotTopics').get().catch(()=>({docs:[]})),db.collection('announcements').get().catch(()=>({docs:[]})),db.collection('cbtExams').get().catch(()=>({docs:[]}))]);
+      const [studSnap,pqSnap,quizSnap,motSnap,hotSnap,annSnap,cbtSnap]=await Promise.all([_usersTable.get(),db.collection('pqBank').get().catch(()=>({docs:[]})),db.collection('quizHistory').limit(500).get().catch(()=>({docs:[]})),db.collection('motivations').get().catch(()=>({docs:[]})),db.collection('hotTopics').get().catch(()=>({docs:[]})),db.collection('announcements').get().catch(()=>({docs:[]})),db.collection('cbtExams').get().catch(()=>({docs:[]}))]);
       const backup={exportedAt:new Date().toISOString(),platform:'BABSPHARM Cloud',collections:{users:studSnap.docs.map(d=>({id:d.id,...d.data()})),pqBank:pqSnap.docs.map(d=>({id:d.id,...d.data()})),quizHistory:quizSnap.docs.map(d=>({id:d.id,...d.data()})),motivations:motSnap.docs.map(d=>({id:d.id,...d.data()})),hotTopics:hotSnap.docs.map(d=>({id:d.id,...d.data()})),announcements:annSnap.docs.map(d=>({id:d.id,...d.data()})),cbtExams:cbtSnap.docs.map(d=>({id:d.id,...d.data()}))},summary:{users:studSnap.size,pqBank:pqSnap.docs.length,quizHistory:quizSnap.docs.length,motivations:motSnap.docs.length}};
       const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
       const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='BABSPHARM_Backup_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(url);
@@ -4620,7 +4658,7 @@ Return ONLY the JSON array, no other text.`}],
     if(!groqKey){showToast('Set GROQ key first');return;}
     showActionResult('🧠 Generating Smart Announcement...','<div style="color:var(--text2)">Reading live data...</div>');
     try{
-      const [studSnap,quizSnap,hotSnap]=await Promise.all([db.collection('users').get(),db.collection('quizHistory').limit(100).get().catch(()=>({size:0})),db.collection('hotTopics').limit(3).get().catch(()=>({docs:[]}))]);
+      const [studSnap,quizSnap,hotSnap]=await Promise.all([_usersTable.get(),db.collection('quizHistory').limit(100).get().catch(()=>({size:0})),db.collection('hotTopics').limit(3).get().catch(()=>({docs:[]}))]);
       const students=studSnap.docs.map(d=>d.data());const weekAgo=Date.now()-7*24*60*60*1000;
       const activeToday=students.filter(s=>s.lastSeen&&new Date(s.lastSeen).toDateString()===new Date().toDateString()).length;
       const inactive=students.filter(s=>!s.lastSeen||new Date(s.lastSeen).getTime()<weekAgo).length;
@@ -4636,7 +4674,7 @@ Return ONLY the JSON array, no other text.`}],
   // ══ INTELLIGENCE HANDLERS ══
   else if(type==='intel_predict_scores'){
     showActionResult('🔮 Predicting...','<div style="color:var(--text2)">Analysing patterns...</div>');
-    const [studSnap,quizSnap] = await Promise.all([db.collection('users').get(), db.collection('quizHistory').limit(500).get().catch(()=>({docs:[]}))]);
+    const [studSnap,quizSnap] = await Promise.all([_usersTable.get(), db.collection('quizHistory').limit(500).get().catch(()=>({docs:[]}))]);
     const students = studSnap.docs.map(d=>({id:d.id,...d.data()}));
     const quizByUser = {};
     quizSnap.docs.forEach(d=>{ const q=d.data(); if(q.uid){ if(!quizByUser[q.uid]) quizByUser[q.uid]=[]; quizByUser[q.uid].push(q); }});
@@ -4664,7 +4702,7 @@ Return ONLY the JSON array, no other text.`}],
   }
 
   else if(type==='intel_burnout'){
-    const snap = await db.collection('users').get();
+    const snap = await _usersTable.get();
     const students = snap.docs.map(d=>({id:d.id,...d.data()}));
     const weekAgo=Date.now()-7*24*60*60*1000, twoWeeksAgo=Date.now()-14*24*60*60*1000;
     const burnout = students.filter(s=>{
@@ -4685,7 +4723,7 @@ Return ONLY the JSON array, no other text.`}],
 
   else if(type==='intel_nudge'){
     if(!groqKey){showToast('Set GROQ key first');return;}
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const students=snap.docs.map(d=>d.data()).filter(s=>s.name);
     const weekAgo=Date.now()-7*24*60*60*1000;
     const sample=students.sort(()=>Math.random()-0.5).slice(0,5);
@@ -4699,7 +4737,7 @@ Return ONLY the JSON array, no other text.`}],
   }
 
   else if(type==='intel_segments'){
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const students=snap.docs.map(d=>({id:d.id,...d.data()}));
     const sorted=students.sort((a,b)=>(b.points||0)-(a.points||0));
     const third=Math.ceil(sorted.length/3);
@@ -4716,7 +4754,7 @@ Return ONLY the JSON array, no other text.`}],
   else if(type==='intel_report_card'){
     const email=prompt('Enter student email or name to generate report:');
     if(!email) return;
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const student=snap.docs.map(d=>({id:d.id,...d.data()})).find(s=>(s.email||'').toLowerCase().includes(email.toLowerCase())||(s.name||'').toLowerCase().includes(email.toLowerCase()));
     if(!student){showActionResult('❌ Not Found','<div style="color:var(--text2)">Student not found. Try a different name or email.</div>');return;}
     const quizSnap=await db.collection('quizHistory').where('uid','==',student.id).get().catch(()=>({docs:[]}));
@@ -4736,7 +4774,7 @@ Return ONLY the JSON array, no other text.`}],
   }
 
   else if(type==='intel_compare'){
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const students=snap.docs.map(d=>d.data());
     const now=Date.now(), weekAgo=now-7*24*60*60*1000, twoWeeksAgo=now-14*24*60*60*1000;
     const thisWeek=students.filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>weekAgo).length;
@@ -4781,7 +4819,7 @@ Return ONLY the JSON array, no other text.`}],
     try{
       const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Write a targeted broadcast message specifically for OAU ${dept} department students using BABSPHARM Cloud. Reference their specific courses (Pharmacy: CHM, PCY; Science: MTH, PHY, CHM). Nigerian tone. Warm and direct. 3 sentences max. Emojis.`}],max_tokens:200})});
       const text=(await r.json()).choices?.[0]?.message?.content||'';
-      const snap=await db.collection('users').where('dept','==',dept).get();
+      const snap=await _usersTable.where('dept','==',dept).get();
       showActionResult(`📢 Broadcast for ${dept} (${snap.size} students)`,
         `<div style="font-size:.84rem;line-height:1.7;padding:12px;background:rgba(255,255,255,.04);border-radius:8px;">${text}</div>`,
         [{label:'📢 Post as Announcement', action:`sendGeneratedAnnouncement('${text.replace(/'/g,"\\'")}')`, primary:true},
@@ -4805,7 +4843,7 @@ Return ONLY the JSON array, no other text.`}],
 
   else if(type==='comms_personalized'){
     if(!groqKey){showToast('Set GROQ key first');return;}
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const top10=snap.docs.map(d=>d.data()).sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,10);
     showActionResult('⏳ Writing...','<div style="color:var(--text2)">Generating personal messages...</div>');
     try{
@@ -4833,7 +4871,7 @@ Return ONLY the JSON array, no other text.`}],
     const platform=prompt('Which platform? (Instagram / Twitter / TikTok / LinkedIn):')||'Instagram';
     showActionResult('⏳ Writing...','<div style="color:var(--text2)">Crafting social media caption...</div>');
     try{
-      const snap=await db.collection('users').get();
+      const snap=await _usersTable.get();
       const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Write a ${platform} caption for BABSPHARM Cloud — OAU student learning platform with ${snap.size} students. Features: AI tutors, CBT exams, PQ bank, leaderboard. Optimized for ${platform} with relevant hashtags. Nigerian + global audience. Viral-worthy. Include call to action.`}],max_tokens:300})});
       const text=(await r.json()).choices?.[0]?.message?.content||'';
       showActionResult(`📸 ${platform} Caption`,`<div style="font-size:.82rem;color:var(--text);line-height:1.7;white-space:pre-wrap;padding:12px;background:rgba(255,255,255,.04);border-radius:8px;">${text}</div>`,
@@ -4857,7 +4895,7 @@ Return ONLY the JSON array, no other text.`}],
 
   else if(type==='gamify_tournament'){
     showActionResult('⏳ Launching Tournament...','<div style="color:var(--text2)">Setting up subject tournament...</div>');
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const students=snap.docs.map(d=>d.data());
     const depts={};students.forEach(s=>{if(s.dept)depts[s.dept]=(depts[s.dept]||0)+1;});
     // Create tournament announcement
@@ -4871,7 +4909,7 @@ Return ONLY the JSON array, no other text.`}],
   }
 
   else if(type==='gamify_streak'){
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const students=snap.docs.map(d=>({id:d.id,...d.data()}));
     const now=Date.now();
     let bonuses={day3:0,day7:0,day14:0};
@@ -4879,9 +4917,9 @@ Return ONLY the JSON array, no other text.`}],
     for(const s of students){
       if(!s.lastSeen) continue;
       const daysSince=Math.floor((now-new Date(s.lastSeen).getTime())/(24*60*60*1000));
-      if(daysSince<=3){ await db.collection('users').doc(s.id).set({points:(s.points||0)+50},{merge:true}); bonuses.day3++; }
-      else if(daysSince<=7){ await db.collection('users').doc(s.id).set({points:(s.points||0)+30},{merge:true}); bonuses.day7++; }
-      else if(daysSince<=14){ await db.collection('users').doc(s.id).set({points:(s.points||0)+10},{merge:true}); bonuses.day14++; }
+      if(daysSince<=3){ await _usersTable.doc(s.id).set({points:(s.points||0)+50},{merge:true}); bonuses.day3++; }
+      else if(daysSince<=7){ await _usersTable.doc(s.id).set({points:(s.points||0)+30},{merge:true}); bonuses.day7++; }
+      else if(daysSince<=14){ await _usersTable.doc(s.id).set({points:(s.points||0)+10},{merge:true}); bonuses.day14++; }
     }
     await db.collection('announcements').add({title:'🔥 STREAK BONUSES AWARDED!',msg:'Streak bonuses just dropped! 🔥\n\n🥇 3-day streak: +50 bonus points\n🥈 7-day streak: +30 bonus points\n🥉 14-day streak: +10 bonus points\n\nCheck your points balance! Keep logging in daily for bigger rewards. 💪',createdAt:new Date().toISOString()});
     showActionResult('🔥 Streak Bonuses Awarded!',`<div style="font-size:.8rem;line-height:2;color:var(--text);">
@@ -4893,13 +4931,13 @@ Return ONLY the JSON array, no other text.`}],
   }
 
   else if(type==='gamify_prize_draw'){
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const weekAgo=Date.now()-7*24*60*60*1000;
     const eligible=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>weekAgo&&(s.points||0)>0);
     if(!eligible.length){showActionResult('❌ No Eligible Students','<div style="color:var(--text2)">No active students found for the draw.</div>');return;}
     const winner=eligible[Math.floor(Math.random()*eligible.length)];
     const prize=parseInt(prompt('Prize for winner (bonus points):')||'300');
-    await db.collection('users').doc(winner.id).set({points:(winner.points||0)+prize},{merge:true});
+    await _usersTable.doc(winner.id).set({points:(winner.points||0)+prize},{merge:true});
     await db.collection('announcements').add({title:'🎰 PRIZE DRAW WINNER!',msg:'🎰 PRIZE DRAW RESULTS ARE IN!\n\nCongratulations to our lucky winner:\n\n🏆 '+winner.name+' ('+winner.dept+')\n\nYou just won '+prize+' BONUS POINTS! 🎉\n\nThank you to all '+ eligible.length+' eligible students who participated. Keep being active — more draws coming! 💪',createdAt:new Date().toISOString()});
     showActionResult('🎰 Prize Draw Complete!',`<div style="text-align:center;padding:16px;"><div style="font-size:2.5rem;">🏆</div><div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:var(--gold2);">${winner.name}</div><div style="font-size:.8rem;color:var(--text2);margin-top:4px;">${winner.dept||'—'} • Won ${prize} bonus points!</div><div style="font-size:.74rem;color:var(--green);margin-top:8px;">✅ Points awarded + announcement posted!<br>Draw pool: ${eligible.length} active students</div></div>`);
     showToast('🎰 Winner: '+winner.name+'!');
@@ -4932,7 +4970,7 @@ Return ONLY the JSON array, no other text.`}],
   // ══ BUSINESS INTELLIGENCE HANDLERS ══
   else if(type==='biz_growth_forecast'){
     if(!groqKey){showToast('Set GROQ key first');return;}
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const students=snap.docs.map(d=>d.data());
     const now=Date.now(), weekAgo=now-7*24*60*60*1000, monthAgo=now-30*24*60*60*1000;
     const newThisWeek=students.filter(s=>s.createdAt&&new Date(s.createdAt).getTime()>weekAgo).length;
@@ -4946,7 +4984,7 @@ Return ONLY the JSON array, no other text.`}],
   }
 
   else if(type==='biz_retention'){
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const students=snap.docs.map(d=>d.data());
     const now=Date.now();
     const segments=[{label:'Active (last 7 days)',days:7},{label:'At risk (8-30 days)',days:30},{label:'Churned (31-90 days)',days:90},{label:'Lost (90+ days)',days:9999}];
@@ -4966,7 +5004,7 @@ Return ONLY the JSON array, no other text.`}],
 
   else if(type==='biz_monetize'){
     if(!groqKey){showToast('Set GROQ key first');return;}
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     showActionResult('⏳ Generating Ideas...','<div style="color:var(--text2)">AI analysing monetization opportunities...</div>');
     try{
       const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`BABSPHARM Cloud is a free OAU student learning platform with ${snap.size} students, AI tutors, CBT exams, and PQ bank. Suggest 5 practical monetization strategies that:\n1. Won't alienate students (they're Nigerian undergrads)\n2. Can work with current features\n3. Are realistic for a small ed-tech startup\n4. Could generate income within 3 months\n\nBe specific with pricing, implementation steps, and realistic revenue estimates.`}],max_tokens:700})});
@@ -4986,7 +5024,7 @@ Return ONLY the JSON array, no other text.`}],
   }
 
   else if(type==='biz_cohort'){
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const students=snap.docs.map(d=>d.data());
     const now=Date.now(), semesterStart=new Date(new Date().getFullYear(),8,1).getTime(); // Sept 1
     const thisSemester=students.filter(s=>s.createdAt&&new Date(s.createdAt).getTime()>semesterStart);
@@ -5004,7 +5042,7 @@ Return ONLY the JSON array, no other text.`}],
 
   else if(type==='biz_action_plan'){
     if(!groqKey){showToast('Set GROQ key first');return;}
-    const [studSnap,quizSnap]=await Promise.all([db.collection('users').get(),db.collection('quizHistory').get().catch(()=>({size:0}))]);
+    const [studSnap,quizSnap]=await Promise.all([_usersTable.get(),db.collection('quizHistory').get().catch(()=>({size:0}))]);
     const students=studSnap.docs.map(d=>d.data());
     const weekAgo=Date.now()-7*24*60*60*1000;
     showActionResult('⏳ Building Action Plan...','<div style="color:var(--text2)">AI generating 30-day roadmap...</div>');
@@ -5080,7 +5118,7 @@ Return ONLY the JSON array, no other text.`}],
     // Study plan
     try{const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Create this week study timetable for OAU 100L. Mon-Sun, CHM 101, MTH 101, PHY 101. Brief, emojis.'}],max_tokens:250})});const t=(await r.json()).choices?.[0]?.message?.content||'';await db.collection('announcements').add({title:"📅 This Week's Study Plan",msg:t,createdAt:new Date().toISOString()});addLog('✅ Weekly study plan posted');}catch(e){addLog('⚠️ Study plan skipped');}
     // Leaderboard
-    const snap=await db.collection('users').get();const top3=snap.docs.map(d=>d.data()).sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,3);
+    const snap=await _usersTable.get();const top3=snap.docs.map(d=>d.data()).sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,3);
     await db.collection('announcements').add({title:'🏆 Weekly Leaderboard!',msg:'🏆 TOP STUDENTS THIS WEEK!\n\n'+top3.map((s,i)=>['🥇','🥈','🥉'][i]+' '+s.name+' — '+(s.points||0)+' pts').join('\n')+'\n\nKeep pushing! Leaderboard updates every week! 💪',createdAt:new Date().toISOString()});
     addLog('✅ Leaderboard posted: '+(top3[0]?.name||'—')+' leads!');
     // Re-engagement coupon
@@ -5119,14 +5157,14 @@ Return ONLY the JSON array, no other text.`}],
   }
 
   else if(type==='auto_milestone'){
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const count=snap.size;
     const milestone=count>=500?500:count>=400?400:count>=300?300:count>=200?200:count>=100?100:50;
     if(count<milestone){showActionResult('⏳ Not Yet','<div style="color:var(--text2)">You have '+count+' students. Next milestone is '+milestone+'.</div>');return;}
     const msg='🎉 WE HIT '+count+' STUDENTS! 🎉\n\nBABSPHARM Cloud just reached a MAJOR milestone! Thank you to every single student who joined, studied, and trusted us with your education.\n\n'+count+' students means '+count+' futures we are shaping together. This is just the beginning! 🚀\n\nShare this platform with your coursemates — let us keep growing! 💪\n\n👉 https://babspharm1-lgtm.github.io/BABSPHARM/';
     await db.collection('announcements').add({title:'🎉 '+count+' STUDENTS MILESTONE!',msg,createdAt:new Date().toISOString()});
     const students=snap.docs.map(d=>({id:d.id,...d.data()}));
-    for(const s of students) await db.collection('users').doc(s.id).set({points:(s.points||0)+25},{merge:true});
+    for(const s of students) await _usersTable.doc(s.id).set({points:(s.points||0)+25},{merge:true});
     showActionResult('🎉 Milestone Celebrated!',`<div style="text-align:center;padding:16px;"><div style="font-size:2.5rem;">🎉</div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:900;color:var(--gold2);">${count} Students!</div><div style="font-size:.78rem;color:var(--text2);margin-top:6px;">✅ Celebration announcement posted<br>+25 bonus points given to ALL students!</div></div>`);
     showToast('🎉 Milestone celebrated — +25pts to everyone!');
   }
@@ -5139,7 +5177,7 @@ Return ONLY the JSON array, no other text.`}],
     // Remove old hot topics (>30 days)
     try{const monthAgo=new Date(Date.now()-30*24*60*60*1000).toISOString();const hSnap=await db.collection('hotTopics').where('createdAt','<',monthAgo).get();let removed=0;for(const d of hSnap.docs){await d.ref.delete();removed++;}addLog('✅ Removed '+removed+' old hot topics');}catch(e){addLog('⚠️ Hot topics cleanup skipped');}
     // Remove orphaned quiz history
-    try{const uSnap=await db.collection('users').get();const uids=new Set(uSnap.docs.map(d=>d.id));const qSnap=await db.collection('quizHistory').limit(200).get();let orphans=0;for(const d of qSnap.docs){if(d.data().uid&&!uids.has(d.data().uid)){await d.ref.delete();orphans++;}}addLog('✅ Removed '+orphans+' orphaned quiz records');}catch(e){addLog('⚠️ Quiz cleanup skipped');}
+    try{const uSnap=await _usersTable.get();const uids=new Set(uSnap.docs.map(d=>d.id));const qSnap=await db.collection('quizHistory').limit(200).get();let orphans=0;for(const d of qSnap.docs){if(d.data().uid&&!uids.has(d.data().uid)){await d.ref.delete();orphans++;}}addLog('✅ Removed '+orphans+' orphaned quiz records');}catch(e){addLog('⚠️ Quiz cleanup skipped');}
     addLog('🎉 Platform cleanup complete!');
     showToast('✅ Cleanup done!');
   }
@@ -5248,7 +5286,7 @@ Return ONLY the JSON array, no other text.`}],
   }
 
   else if(type==='daily_active'){
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const days={};
     snap.docs.forEach(d=>{if(d.data().lastSeen){const day=new Date(d.data().lastSeen).toLocaleDateString();days[day]=(days[day]||0)+1;}});
     const sorted=Object.entries(days).sort((a,b)=>new Date(b[0])-new Date(a[0])).slice(0,7);
@@ -5263,7 +5301,7 @@ Return ONLY the JSON array, no other text.`}],
   }
 
   else if(type==='revenue_report'){
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const students=snap.docs.map(d=>d.data());
     const total=students.reduce((s,st)=>s+(st.points||0),0);
     const avg=students.length?Math.round(total/students.length):0;
@@ -5280,7 +5318,7 @@ Return ONLY the JSON array, no other text.`}],
 
   else if(type==='growth_advice'){
     if(!groqKey){showToast('Set GROQ key first');return;}
-    const studSnap=await db.collection('users').get();
+    const studSnap=await _usersTable.get();
     const students=studSnap.docs.map(d=>d.data());
     showActionResult('⏳ Getting Growth Advice...','<div style="color:var(--text2)">AI analyzing...</div>');
     try{
@@ -5353,7 +5391,7 @@ Return ONLY the JSON array, no other text.`}],
   else if(type==='student_search'){
     const query=prompt('Search by name or email:')?.toLowerCase();
     if(!query) return;
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const results=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>(s.name||'').toLowerCase().includes(query)||(s.email||'').toLowerCase().includes(query));
     showActionResult(`🔍 ${results.length} Results`,results.slice(0,10).map(s=>`<div style="padding:10px;background:rgba(255,255,255,.03);border-radius:10px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start;"><div><div style="font-size:.82rem;font-weight:700;color:var(--text)">${s.name||'Unknown'}</div><div style="font-size:.72rem;color:var(--text2)">${s.email||''} • ${s.dept||'—'} • ${s.points||0}pts</div></div><button onclick="givePointsToStudent('${s.id}','${(s.name||'').replace(/'/g,"\\'")}',${s.points||0})" style="padding:4px 10px;background:rgba(201,168,76,.1);border:1px solid var(--cb);border-radius:8px;color:var(--gold);font-size:.72rem;cursor:pointer;">⭐</button></div>`).join('')||'<div style="color:var(--text2)">No results</div>');
   }
@@ -5423,7 +5461,7 @@ async function removeAllDuplicates(ids){
 }
 
 async function bulkGivePoints(pts){
-  const snap = await db.collection('users').get();
+  const snap = await _usersTable.get();
   let count = 0;
   for(const doc of snap.docs){
     await doc.ref.set({points:(doc.data().points||0)+pts},{merge:true});
@@ -5444,7 +5482,7 @@ async function saveAllHotTopics(topics){
 async function givePointsToStudent(uid, name, currentPoints){
   const pts = parseInt(prompt(`Give points to ${name} (currently ${currentPoints} pts)\nHow many points to add?`));
   if(!pts||isNaN(pts)) return;
-  await db.collection('users').doc(uid).set({points: currentPoints+pts},{merge:true});
+  await _usersTable.doc(uid).set({points: currentPoints+pts},{merge:true});
   await db.collection('pointsHistory').add({uid, pts, reason:'Admin gift', date:new Date().toISOString()});
   showToast(`✅ +${pts} points given to ${name}!`);
   document.getElementById('ai-action-result').style.display='none';
@@ -5501,7 +5539,7 @@ async function sendAdminAI(){
     let liveData = {students:[]};
     try{
       const [studSnap,quizSnap,cbtSnap,motivSnap,hotSnap,coupSnap,annSnap] = await Promise.all([
-        db.collection('users').get(),
+        _usersTable.get(),
         db.collection('quizHistory').get(),
         db.collection('cbtExams').get(),
         db.collection('motivations').get(),
@@ -5799,7 +5837,7 @@ async function batchGivePoints(){
   const prog = document.getElementById('batch-progress');
   prog.style.display='block'; prog.textContent='Loading students...';
   try{
-    const snap = await db.collection('users').where('role','==','user').get();
+    const snap = await _usersTable.where('role','==','user').get();
     if(snap.empty){showToast('No students found');prog.style.display='none';return;}
     let done=0; const total=snap.docs.length;
     const today=new Date().toISOString();
@@ -5808,7 +5846,7 @@ async function batchGivePoints(){
     for(const batch of batches){
       await Promise.all(batch.map(async d=>{
         const current=d.data().points||0;
-        await db.collection('users').doc(d.id).update({points:current+pts});
+        await _usersTable.doc(d.id).update({points:current+pts});
         await db.collection('pointsLog').add({uid:d.id,reason,points:'+'+pts,date:today});
         done++;
       }));
@@ -5948,7 +5986,7 @@ async function sendAnnouncementEmails(title, msg){
   if(!bDoc.exists||!bDoc.data().announcements||!bDoc.data().apiKey) return;
   const b = bDoc.data();
   // Get all student emails
-  const snap = await db.collection('users').where('role','==','user').get();
+  const snap = await _usersTable.where('role','==','user').get();
   if(snap.empty) return;
   const html = `<div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:30px;background:#0a1628;color:#f0ead6;border-radius:12px;">
     <h2 style="color:#c9a84c;">📢 ${title}</h2>
@@ -6070,7 +6108,7 @@ async function setAttemptLimit(uid, name, current){
   const limit = prompt(`Set daily quiz attempt limit for ${name}.\nEnter 0 for unlimited:`, current||0);
   if(limit===null) return;
   const n = parseInt(limit)||0;
-  await db.collection('users').doc(uid).update({quizAttemptLimit:n});
+  await _usersTable.doc(uid).update({quizAttemptLimit:n});
   showToast(n===0?'Attempt limit removed':'Limit set to '+n+' per day');
   loadStudents();
 }
@@ -6130,7 +6168,7 @@ async function sendDirectMessage(){
   if(bDoc.exists && bDoc.data().messages && bDoc.data().apiKey){
     const b = bDoc.data();
     // Get student email
-    const uDoc = await db.collection('users').doc(msgTargetId).get();
+    const uDoc = await _usersTable.doc(msgTargetId).get();
     const studentEmail = uDoc.exists ? uDoc.data().email : null;
     if(studentEmail){
       const html = `<div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:30px;background:#0a1628;color:#f0ead6;border-radius:12px;">
@@ -6167,7 +6205,7 @@ async function sendBulkDeptMessage(){
   const prog=document.getElementById('bulk-msg-progress');
   prog.style.display='block';prog.textContent='Loading students...';
   try{
-    let query=db.collection('users').where('role','==','user');
+    let query=_usersTable.where('role','==','user');
     if(dept!=='all')query=query.where('dept','==',dept);
     const snap=await query.get();
     if(snap.empty){showToast('No students found');prog.style.display='none';return;}
@@ -6190,7 +6228,7 @@ async function sendBulkDeptMessage(){
 
 async function loadDeptStats(){
   try{
-    const snap=await db.collection('users').where('role','==','user').get();
+    const snap=await _usersTable.where('role','==','user').get();
     const depts={};
     snap.docs.forEach(d=>{const dept=d.data().dept||'Unknown';depts[dept]=(depts[dept]||0)+1;});
     const sorted=Object.entries(depts).sort((a,b)=>b[1]-a[1]);
@@ -6218,7 +6256,7 @@ async function loadSentMessages(){
 
 // ══ SUB-ADMINS ══
 async function loadSubAdmins(){
-  const snap=await db.collection('users').where('role','==','subadmin').get();
+  const snap=await _usersTable.where('role','==','subadmin').get();
   const list=document.getElementById('subadmins-list');
   if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem">No sub-admins yet</div>';return;}
   list.innerHTML=snap.docs.map(d=>{
@@ -6244,10 +6282,10 @@ async function loadSubAdmins(){
 async function addSubAdmin(){
   const email=document.getElementById('sa-email').value.trim();
   if(!email){showToast('Enter student email');return;}
-  const snap=await db.collection('users').where('email','==',email).get();
+  const snap=await _usersTable.where('email','==',email).get();
   if(snap.empty){showToast('Student not found. Must be registered first.');return;}
   const uid=snap.docs[0].id;
-  await db.collection('users').doc(uid).update({
+  await _usersTable.doc(uid).update({
     role:'subadmin',
     perm_students:document.getElementById('sa-students').checked,
     perm_courses:document.getElementById('sa-courses').checked,
@@ -6262,7 +6300,7 @@ async function addSubAdmin(){
 
 async function removeSubAdmin(uid){
   if(!confirm('Remove sub-admin access?'))return;
-  await db.collection('users').doc(uid).update({role:'user'});
+  await _usersTable.doc(uid).update({role:'user'});
   showToast('Sub-admin removed');
   loadSubAdmins();
 }
@@ -6300,9 +6338,9 @@ async function runCampaign(type, groqKey){
     addLog('🎉 Exam prep campaign done!');
   }
   else if(type==='campaign_engagement'){
-    const snap=await db.collection('users').get();const weekAgo=Date.now()-7*24*60*60*1000;
+    const snap=await _usersTable.get();const weekAgo=Date.now()-7*24*60*60*1000;
     const inactive=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>!s.lastSeen||new Date(s.lastSeen).getTime()<weekAgo);
-    let bc=0;for(const s of inactive.slice(0,50)){await db.collection('users').doc(s.id).set({points:(s.points||0)+30},{merge:true});bc++;}addLog(`+30pts to ${bc} inactive students`);
+    let bc=0;for(const s of inactive.slice(0,50)){await _usersTable.doc(s.id).set({points:(s.points||0)+30},{merge:true});bc++;}addLog(`+30pts to ${bc} inactive students`);
     try{const t=await aiPost("Re-engagement msg for OAU students who haven't logged in recently. Bonus points waiting. Warm, Nigerian. 3 sentences. Emojis.");await db.collection('announcements').add({title:'👋 We Miss You! Bonus Inside',msg:t,createdAt:new Date().toISOString()});addLog('Announcement posted');}catch(e){}
     await db.collection('coupons').add({code:'COMEBACK',pts:75,limit:inactive.length,used:0,active:true,createdAt:new Date().toISOString()});addLog('COMEBACK=75pts coupon');
     addLog(`🎉 ${inactive.length} students targeted!`);
@@ -6314,8 +6352,8 @@ async function runCampaign(type, groqKey){
     addLog('🎉 Growth campaign launched!');
   }
   else if(type==='campaign_reward'){
-    const snap=await db.collection('users').get();const top3=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,3);
-    for(let i=0;i<top3.length;i++){await db.collection('users').doc(top3[i].id).set({points:(top3[i].points||0)+[500,300,200][i]},{merge:true});addLog(`+${[500,300,200][i]}pts to ${top3[i].name||'Unknown'} #${i+1}`);}
+    const snap=await _usersTable.get();const top3=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,3);
+    for(let i=0;i<top3.length;i++){await _usersTable.doc(top3[i].id).set({points:(top3[i].points||0)+[500,300,200][i]},{merge:true});addLog(`+${[500,300,200][i]}pts to ${top3[i].name||'Unknown'} #${i+1}`);}
     try{const names=top3.map((s,i)=>`${i+1}. ${s.name} (${s.points}pts)`).join(', ');const t=await aiPost(`Winners announcement. Top 3: ${names}. Celebrate. Encourage others. Nigerian energy. 4 sentences. Emojis.`);await db.collection('announcements').add({title:'🏆 LEADERBOARD WINNERS!',msg:t,createdAt:new Date().toISOString()});addLog('Winners posted');}catch(e){}
     addLog('🎉 Reward campaign done!');
   }
@@ -6345,7 +6383,7 @@ async function runAutopilot(type, groqKey){
   const aiJSON=async(p,m=600)=>{return JSON.parse((await aiPost(p,m)).replace(/```json|```/g,'').trim());};
 
   if(type==='autopilot_healthcheck'){
-    const [studSnap,quizSnap,pqSnap,motSnap,cbtSnap,settingsSnap]=await Promise.all([db.collection('users').get(),db.collection('quizHistory').get().catch(()=>({size:0})),db.collection('pqBank').get().catch(()=>({size:0})),db.collection('motivations').get().catch(()=>({size:0})),db.collection('cbtExams').get().catch(()=>({size:0})),db.collection('settings').doc('config').get()]);
+    const [studSnap,quizSnap,pqSnap,motSnap,cbtSnap,settingsSnap]=await Promise.all([_usersTable.get(),db.collection('quizHistory').get().catch(()=>({size:0})),db.collection('pqBank').get().catch(()=>({size:0})),db.collection('motivations').get().catch(()=>({size:0})),db.collection('cbtExams').get().catch(()=>({size:0})),db.collection('settings').doc('config').get()]);
     const hasGroq=settingsSnap.exists&&settingsSnap.data().groqKey;
     const students=studSnap.docs.map(d=>d.data());const zeroPoints=students.filter(s=>(s.points||0)===0).length;
     const issues=[];if(pqSnap.size<50)issues.push('Add more PQ questions');if(motSnap.size<5)issues.push('Add motivations');if(!hasGroq)issues.push('Set GROQ key');if(zeroPoints>10)issues.push(`${zeroPoints} students at 0pts`);
@@ -6384,16 +6422,16 @@ async function runAutopilot(type, groqKey){
   }
 
   else if(type==='autopilot_weekly_report'){
-    const [studSnap,quizSnap]=await Promise.all([db.collection('users').get(),db.collection('quizHistory').get().catch(()=>({docs:[],size:0}))]);
+    const [studSnap,quizSnap]=await Promise.all([_usersTable.get(),db.collection('quizHistory').get().catch(()=>({docs:[],size:0}))]);
     const students=studSnap.docs.map(d=>d.data());const today=new Date().toDateString();const weekAgo=Date.now()-7*24*60*60*1000;
     showActionResult('⏳ Generating...','<div style="color:var(--text2)">Analyzing...</div>');
     try{const text=await aiPost(`Weekly platform report BABSPHARM Cloud. Stats: ${studSnap.size} students, ${students.filter(s=>s.lastSeen&&new Date(s.lastSeen).toDateString()===today).length} active today, ${students.filter(s=>s.createdAt&&new Date(s.createdAt).getTime()>weekAgo).length} new this week, ${quizSnap.size} quiz attempts. Summary, wins, issues, 3 action items.`,600);showActionResult('📊 Weekly Report',`<div style="font-size:.8rem;color:var(--text);line-height:1.8;white-space:pre-wrap;">${text}</div>`,[{label:'📋 Copy',action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`,primary:true}]);}catch(e){}
   }
 
   else if(type==='autopilot_reactivate'){
-    const snap=await db.collection('users').get();const weekAgo=Date.now()-7*24*60*60*1000;
+    const snap=await _usersTable.get();const weekAgo=Date.now()-7*24*60*60*1000;
     const inactive=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>!s.lastSeen||new Date(s.lastSeen).getTime()<weekAgo);
-    let count=0;for(const s of inactive){await db.collection('users').doc(s.id).set({points:(s.points||0)+50},{merge:true});count++;}
+    let count=0;for(const s of inactive){await _usersTable.doc(s.id).set({points:(s.points||0)+50},{merge:true});count++;}
     await db.collection('coupons').add({code:'RETURN50',pts:50,limit:count,used:0,active:true,createdAt:new Date().toISOString()});
     showActionResult(`✅ ${count} Reactivated`,`<div style="text-align:center;padding:16px;"><div style="font-size:2rem">🎁</div><div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:var(--green)">+50pts to ${count} students</div><div style="color:var(--text2);font-size:.78rem">Coupon RETURN50 created</div></div>`,[{label:'📢 Notify',action:`sendGeneratedAnnouncement('Welcome back! 50 FREE bonus points on BABSPHARM Cloud! Code RETURN50 gives 50 more. Your AI tutors are ready!')`,primary:true}]);
     showToast(`✅ ${count} students reactivated!`);
@@ -6437,7 +6475,7 @@ async function runSiteDoctor(type, groqKey){
     if(!hasGroq){addLog('❌ GROQ API key missing — AI features broken!','#f87171');issues.push('GROQ key missing');} else addLog('✓ GROQ key configured');
 
     // Check users
-    const studSnap = await db.collection('users').get();
+    const studSnap = await _usersTable.get();
     addLog(`✓ ${studSnap.size} users in database`);
     const students = studSnap.docs.map(d=>({id:d.id,...d.data()}));
     const noEmail = students.filter(s=>!s.email).length;
@@ -6552,7 +6590,7 @@ async function runSiteDoctor(type, groqKey){
   }
 
   else if(type==='doctor_points'){
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const students=snap.docs.map(d=>({id:d.id,...d.data()}));
     const negativePoints=students.filter(s=>(s.points||0)<0);
     const missingPointsField=students.filter(s=>s.points===undefined||s.points===null);
@@ -6653,7 +6691,7 @@ async function runSiteDoctor(type, groqKey){
   else if(type==='doctor_orphans'){
     let orphans=0;
     // Find quiz history with no matching user
-    const [quizSnap,userSnap]=await Promise.all([db.collection('quizHistory').limit(100).get().catch(()=>({docs:[]})),db.collection('users').get()]);
+    const [quizSnap,userSnap]=await Promise.all([db.collection('quizHistory').limit(100).get().catch(()=>({docs:[]})),_usersTable.get()]);
     const userIds=new Set(userSnap.docs.map(d=>d.id));
     const orphanQuizzes=quizSnap.docs.filter(d=>d.data().uid&&!userIds.has(d.data().uid));
     orphans+=orphanQuizzes.length;
@@ -6691,7 +6729,7 @@ async function runSiteDoctor(type, groqKey){
   }
 
   else if(type==='doctor_report'){
-    const [studSnap,quizSnap,pqSnap,motSnap,hotSnap,cbtSnap,couponSnap]=await Promise.all([db.collection('users').get(),db.collection('quizHistory').get().catch(()=>({size:0})),db.collection('pqBank').get().catch(()=>({size:0})),db.collection('motivations').get().catch(()=>({size:0})),db.collection('hotTopics').get().catch(()=>({size:0})),db.collection('cbtExams').get().catch(()=>({size:0})),db.collection('coupons').get().catch(()=>({size:0}))]);
+    const [studSnap,quizSnap,pqSnap,motSnap,hotSnap,cbtSnap,couponSnap]=await Promise.all([_usersTable.get(),db.collection('quizHistory').get().catch(()=>({size:0})),db.collection('pqBank').get().catch(()=>({size:0})),db.collection('motivations').get().catch(()=>({size:0})),db.collection('hotTopics').get().catch(()=>({size:0})),db.collection('cbtExams').get().catch(()=>({size:0})),db.collection('coupons').get().catch(()=>({size:0}))]);
     const students=studSnap.docs.map(d=>d.data());
     const weekAgo=Date.now()-7*24*60*60*1000;
     const report=`BABSPHARM CLOUD — SITE ISSUES REPORT
@@ -6744,7 +6782,7 @@ async function loadInactiveUsers(){
   cleanupSelectedUsers=new Set();
   cleanupUserData=[];
 
-  const snap=await db.collection('users').get();
+  const snap=await _usersTable.get();
   const cutoff = cleanupFilterDays===999 ? null : Date.now()-(cleanupFilterDays*24*60*60*1000);
   cleanupUserData = snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>{
     if(cleanupFilterDays===999) return !s.lastSeen && !s.createdAt;
@@ -6785,14 +6823,14 @@ async function bulkActionCleanup(action){
     if(!confirm(`Permanently delete ${ids.length} users? This CANNOT be undone.`)) return;
     let count=0;
     for(const id of ids){
-      try{await db.collection('users').doc(id).delete();count++;}catch(e){}
+      try{await _usersTable.doc(id).delete();count++;}catch(e){}
     }
     showToast(`✅ Deleted ${count} users`);
     loadInactiveUsers();
   }
   else if(action==='ban'){
     let count=0;
-    for(const id of ids){try{await db.collection('users').doc(id).update({banned:true});count++;}catch(e){}}
+    for(const id of ids){try{await _usersTable.doc(id).update({banned:true});count++;}catch(e){}}
     showToast(`🚫 Banned ${count} users`);loadInactiveUsers();
   }
   else if(action==='give_points'){
@@ -6800,7 +6838,7 @@ async function bulkActionCleanup(action){
     if(!pts||isNaN(pts)) return;
     for(const id of ids){
       const user=cleanupUserData.find(u=>u.id===id);
-      try{await db.collection('users').doc(id).set({points:(user?.points||0)+pts},{merge:true});}catch(e){}
+      try{await _usersTable.doc(id).set({points:(user?.points||0)+pts},{merge:true});}catch(e){}
     }
     showToast(`✅ +${pts} points given to ${ids.length} users`);loadInactiveUsers();
   }
@@ -6814,7 +6852,7 @@ async function bulkActionCleanup(action){
 
 async function deleteSingleUser(id, name, email){
   if(!confirm(`Delete user: ${name} (${email})?\n\nThis cannot be undone.`)) return;
-  await db.collection('users').doc(id).delete();
+  await _usersTable.doc(id).delete();
   showToast(`✅ ${name} deleted`);
   cleanupUserData=cleanupUserData.filter(u=>u.id!==id);
   cleanupSelectedUsers.delete(id);
@@ -6825,7 +6863,7 @@ async function deleteSingleUser(id, name, email){
 // Cleanup extras
 async function runCleanupExtra(type){
   if(type==='cleanup_zero_activity'){
-    const [usersSnap,quizSnap]=await Promise.all([db.collection('users').get(),db.collection('quizHistory').get().catch(()=>({docs:[]}))]);
+    const [usersSnap,quizSnap]=await Promise.all([_usersTable.get(),db.collection('quizHistory').get().catch(()=>({docs:[]}))]);
     const activeUIDs=new Set(quizSnap.docs.map(d=>d.data().uid).filter(Boolean));
     const neverQuizzed=usersSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>!activeUIDs.has(s.id));
     cleanupUserData=neverQuizzed;cleanupSelectedUsers=new Set();
@@ -6834,7 +6872,7 @@ async function runCleanupExtra(type){
     renderCleanupList();
   }
   else if(type==='cleanup_no_dept'){
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const noDept=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>!s.dept||s.dept==='');
     cleanupUserData=noDept;cleanupSelectedUsers=new Set();
     document.getElementById('cleanup-results').style.display='block';
@@ -6842,7 +6880,7 @@ async function runCleanupExtra(type){
     renderCleanupList();
   }
   else if(type==='cleanup_banned'){
-    const snap=await db.collection('users').where('banned','==',true).get();
+    const snap=await _usersTable.where('banned','==',true).get();
     const banned=snap.docs.map(d=>({id:d.id,...d.data()}));
     cleanupUserData=banned;cleanupSelectedUsers=new Set();
     document.getElementById('cleanup-results').style.display='block';
@@ -6850,7 +6888,7 @@ async function runCleanupExtra(type){
     renderCleanupList();
   }
   else if(type==='cleanup_stats'){
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const students=snap.docs.map(d=>d.data());
     const weekAgo=Date.now()-7*24*60*60*1000;
     const monthAgo=Date.now()-30*24*60*60*1000;
@@ -6867,7 +6905,7 @@ async function runCleanupExtra(type){
     </div>`);
   }
   else if(type==='cleanup_export'){
-    const snap=await db.collection('users').get();
+    const snap=await _usersTable.get();
     const students=snap.docs.map(d=>d.data());
     const csv=['Name,Email,Department,Points,Last Seen,Joined',...students.map(s=>`"${s.name||''}","${s.email||''}","${s.dept||''}",${s.points||0},"${s.lastSeen?new Date(s.lastSeen).toLocaleDateString():'Never'}","${s.createdAt?new Date(s.createdAt).toLocaleDateString():'?'}"`)].join('\n');
     const blob=new Blob([csv],{type:'text/csv'});
@@ -6879,13 +6917,13 @@ async function runCleanupExtra(type){
 
 // Fix helpers
 async function fixMissingPoints(){
-  const snap=await db.collection('users').get();
+  const snap=await _usersTable.get();
   let fixed=0;
   for(const d of snap.docs){if(d.data().points===undefined||d.data().points===null){await d.ref.set({points:0},{merge:true});fixed++;}}
   showToast(`✅ Fixed ${fixed} users with missing points field`);
 }
 async function fixNegativePoints(){
-  const snap=await db.collection('users').get();let fixed=0;
+  const snap=await _usersTable.get();let fixed=0;
   for(const d of snap.docs){if((d.data().points||0)<0){await d.ref.set({points:0},{merge:true});fixed++;}}
   showToast(`✅ Fixed ${fixed} users with negative points`);
 }

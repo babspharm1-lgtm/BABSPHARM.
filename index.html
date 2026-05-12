@@ -1945,8 +1945,44 @@ const FC = {
 firebase.initializeApp(FC);
 const db = firebase.firestore();
 
-// Supabase — handles all authentication
-const _supa = window.supabase.createClient(
+// Supabase users table wrapper — mimics Firestore API
+const _usersTable = {
+  doc: (id) => ({
+    get: async () => {
+      const {data} = await _supa.from('users').select('*').eq('id', id).maybeSingle();
+      return {exists: !!data, data: ()=>data||{}, id};
+    },
+    set: async (fields) => {
+      const {error} = await _supa.from('users').upsert({id, ...fields}, {onConflict:'id'});
+      if(error) throw error;
+    },
+    update: async (fields) => {
+      const {error} = await _supa.from('users').update(fields).eq('id', id);
+      if(error) throw error;
+    }
+  }),
+  get: async () => {
+    const {data, error} = await _supa.from('users').select('*');
+    if(error) throw error;
+    return {docs: data.map(d=>({id:d.id,data:()=>d,exists:true})), size:data.length, empty:data.length===0};
+  },
+  where: (field, op, value) => ({
+    get: async () => {
+      let q = _supa.from('users').select('*');
+      if(op==='==') q = q.eq(field, value);
+      const {data, error} = await q;
+      if(error) throw error;
+      return {docs: data.map(d=>({id:d.id,data:()=>d,exists:true})), size:data.length, empty:data.length===0};
+    }
+  }),
+  orderBy: (field, dir) => ({
+    get: async () => {
+      const {data, error} = await _supa.from('users').select('*').order(field, {ascending: dir!=='desc'});
+      if(error) throw error;
+      return {docs: data.map(d=>({id:d.id,data:()=>d,exists:true})), size:data.length};
+    }
+  })
+};
   'https://wwummihoiklnnqjncgmd.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3dW1taWhvaWtsbm5xam5jZ21kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODI0OTAsImV4cCI6MjA5NDE1ODQ5MH0.ZY7M1lngXz2MaTDaLGXn8uQgNvKJiKvHcygPsy7o1Ks'
 );
@@ -2029,7 +2065,7 @@ _supa.auth.onAuthStateChange(async function(event, session){
   }catch(e){}
   if(user){
     const uid = user.id;
-    const doc = await db.collection('users').doc(uid).get();
+    const doc = await _usersTable.doc(uid).get();
     const userData = doc.exists ? doc.data() : {};
     CU = {
       uid: uid,
@@ -2050,7 +2086,7 @@ _supa.auth.onAuthStateChange(async function(event, session){
 
     // If old user — create/update their document with missing fields
     if(!doc.exists || userData.points === undefined){
-      await db.collection('users').doc(uid).set({
+      await _usersTable.doc(uid).set({
         name: CU.name,
         email: CU.email,
         points: userData.points || 0,
@@ -2073,7 +2109,7 @@ _supa.auth.onAuthStateChange(async function(event, session){
     checkExamCountdown();
     checkSOTW();
     checkSurpriseReward();
-    db.collection('users').doc(uid).set({lastSeen: new Date().toISOString()},{merge:true}).catch(()=>{});
+    _usersTable.doc(uid).set({lastSeen: new Date().toISOString()},{merge:true}).catch(()=>{});
     subscribeToPushNotifications(uid).catch(()=>{});
     if(!CU.dept || CU.dept.trim()===''){
       setTimeout(()=>showDeptPrompt(), 1500);
@@ -2137,7 +2173,7 @@ async function doRegister(){
     });
     if(error) throw error;
     const uid = data.user.id;
-    await db.collection('users').doc(uid).set({
+    await _usersTable.doc(uid).set({
       name:nm, email:em, dept:dp, role:'user', createdAt:new Date().toISOString(),
       referredBy: ref||'', points:50
     });
@@ -2147,11 +2183,11 @@ async function doRegister(){
     });
     // Award referrer if code is valid
     if(ref){
-      const refSnap = await db.collection('users').where('referralCode','==',ref).get();
+      const refSnap = await _usersTable.where('referralCode','==',ref).get();
       if(!refSnap.empty){
         const referrerId = refSnap.docs[0].id;
         const referrerData = refSnap.docs[0].data();
-        await db.collection('users').doc(referrerId).update({points:(referrerData.points||0)+15});
+        await _usersTable.doc(referrerId).update({points:(referrerData.points||0)+15});
         await db.collection('pointsLog').add({uid:referrerId,reason:'Referral bonus — '+nm+' joined',points:'+15',date:new Date().toISOString()});
       }
     }
@@ -2313,7 +2349,7 @@ async function loadStats(){
   try{
     const [statDoc, userDoc] = await Promise.all([
       db.collection('userStats').doc(CU.uid).get(),
-      db.collection('users').doc(CU.uid).get()
+      _usersTable.doc(CU.uid).get()
     ]);
     const d = statDoc.exists ? statDoc.data() : {};
     const pts = userDoc.exists ? (userDoc.data().points||0) : 0;
@@ -3101,7 +3137,7 @@ async function saveProfile(){
   if(!name){showMsg('prof-msg','Enter your name','err');return;}
   try{
     await _supa.auth.updateUser({data:{full_name:name}});
-    await db.collection('users').doc(CU.uid).update({name,dept});
+    await _usersTable.doc(CU.uid).update({name,dept});
     CU.name=name; CU.dept=dept;
     updateSidebarProfile();
     document.getElementById('wm').textContent = name;
@@ -3131,7 +3167,7 @@ async function uploadPhoto(input){
     const dataUrl = e.target.result;
     try{
       await _supa.auth.updateUser({data:{avatar_url: dataUrl}});
-      await db.collection('users').doc(CU.uid).update({photoURL: dataUrl});
+      await _usersTable.doc(CU.uid).update({photoURL: dataUrl});
       CU.photoURL = dataUrl;
       updateSidebarProfile();
       loadProfile();
@@ -3418,7 +3454,7 @@ async function saveDeptPrompt(){
   const dept = document.getElementById('dept-prompt-select').value;
   if(!dept){showToast('Please select your department');return;}
   try{
-    await db.collection('users').doc(CU.uid).set({dept},{merge:true});
+    await _usersTable.doc(CU.uid).set({dept},{merge:true});
     CU.dept = dept;
     // Update sidebar and profile
     const deptEl = document.getElementById('sb-dept');
@@ -3440,7 +3476,7 @@ async function showIDCard(){
   try{
     const [statDoc, userDoc] = await Promise.all([
       db.collection('userStats').doc(CU.uid).get(),
-      db.collection('users').doc(CU.uid).get()
+      _usersTable.doc(CU.uid).get()
     ]);
     if(statDoc.exists){quizCount=statDoc.data().quizCount||0;bestScore=statDoc.data().bestScore||0;}
     if(userDoc.exists && userDoc.data().createdAt) joinDate=new Date(userDoc.data().createdAt).toLocaleDateString('en-GB',{year:'numeric',month:'short'});
@@ -4111,7 +4147,7 @@ async function loadBadges(){
   try{
     const [statDoc,userDoc]=await Promise.all([
       db.collection('userStats').doc(CU.uid).get(),
-      db.collection('users').doc(CU.uid).get()
+      _usersTable.doc(CU.uid).get()
     ]);
     const stats=statDoc.exists?statDoc.data():{};
     const user=userDoc.exists?userDoc.data():{};
@@ -5944,7 +5980,7 @@ function showSpinWin(pts){
 async function checkPointsBeforeQuiz(){
   try{
     // Always fetch fresh from Firestore — never use cache
-    const doc = await db.collection('users').doc(CU.uid).get();
+    const doc = await _usersTable.doc(CU.uid).get();
     const pts = doc.exists ? (doc.data().points||0) : 0;
     if(CU) CU.points = pts;
     document.getElementById('st-points').textContent = pts;
@@ -7305,7 +7341,7 @@ function checkPQAnswer(subject, qIndex, selectedOpt){
 // ══ SECRET STUDY VAULT ══
 async function loadVault(){
   try{
-    const userDoc = await db.collection('users').doc(CU.uid).get();
+    const userDoc = await _usersTable.doc(CU.uid).get();
     const vaultAccess = userDoc.exists && userDoc.data().vaultAccess;
     if(!vaultAccess){
       document.getElementById('vault-locked').style.display='block';
@@ -8575,12 +8611,12 @@ async function startMockExam(){
 async function loadReferral(){
   if(!CU) return;
   try{
-    const doc = await db.collection('users').doc(CU.uid).get();
+    const doc = await _usersTable.doc(CU.uid).get();
     const data = doc.data();
     let refCode = data.referralCode;
     if(!refCode){
       refCode = (CU.name.replace(/\s/g,'').substring(0,4)+Math.floor(1000+Math.random()*9000)).toUpperCase();
-      await db.collection('users').doc(CU.uid).update({referralCode:refCode});
+      await _usersTable.doc(CU.uid).update({referralCode:refCode});
     }
     document.getElementById('ref-code').textContent = refCode;
     document.getElementById('ref-points').textContent = data.points||0;
@@ -8662,7 +8698,7 @@ function shareRefCode(){
 async function awardPoints(reason, points){
   if(!CU) return;
   try{
-    const ref = db.collection('users').doc(CU.uid);
+    const ref = _usersTable.doc(CU.uid);
     const doc = await ref.get();
     const current = doc.exists ? (doc.data().points||0) : 0;
     const newTotal = current + points;
@@ -8683,7 +8719,7 @@ async function awardPoints(reason, points){
 async function deductPoints(reason, points){
   if(!CU) return;
   try{
-    const ref = db.collection('users').doc(CU.uid);
+    const ref = _usersTable.doc(CU.uid);
     const doc = await ref.get();
     const current = doc.exists ? (doc.data().points||0) : 0;
     const newBalance = Math.max(0, current-points);
