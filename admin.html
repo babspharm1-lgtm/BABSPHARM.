@@ -11,8 +11,6 @@
 <meta http-equiv="Expires" content="0"/>
 <meta name="version" content="2.5.0"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -1701,11 +1699,419 @@ Answer: A</code>
 
 </div>
 <script>
-const FC={apiKey:"AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8",authDomain:"babspharmcloud.firebaseapp.com",projectId:"babspharmcloud",storageBucket:"babspharmcloud.firebasestorage.app",messagingSenderId:"385674572482",appId:"1:385674572482:web:a427125e649fef011b815b"};
-firebase.initializeApp(FC);
-const db=firebase.firestore();
+// Firebase removed — fully migrated to Supabase
 const _supa=window.supabase.createClient('https://wwummihoiklnnqjncgmd.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3dW1taWhvaWtsbm5xam5jZ21kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODI0OTAsImV4cCI6MjA5NDE1ODQ5MH0.ZY7M1lngXz2MaTDaLGXn8uQgNvKJiKvHcygPsy7o1Ks');
 let ADMIN_EMAIL='';
+// Generic Supabase table factory
+const _COL_MAP={uid:'uid',subject:'subject',sem:'sem',code:'code',active:'active',courseId:'courseid',claimed:'claimed',createdAt:'createdat',redeemedAt:'redeemedat',toUid:'touid',fromAdmin:'fromadmin',type:'type',date:'date',read:'read',courseid:'courseid',redeemedat:'redeemedat',createdat:'createdat'};
+function _mapCol(f){return _COL_MAP[f]||f.toLowerCase();}
+function _makeTable(tname,opts={}){
+  const qcols=opts.queryableCols||[];
+  const idField=opts.idField||null;
+  function makeRow(fields,id=null){
+    const row={data:fields};
+    if(id!=null) row.id=id;
+    else if(idField) row.id=fields[idField]||('AUTO_'+Date.now());
+    for(const col of qcols){
+      const jsKey=Object.keys(_COL_MAP).find(k=>_COL_MAP[k]===col)||col;
+      const val=fields[jsKey]??fields[col];
+      if(val!==undefined) row[col]=val;
+    }
+    return row;
+  }
+  function buildQ(conds=[],ord=null,dir='asc',lim=null){
+    return{
+      where:(f,op,v)=>buildQ([...conds,{f,op,v}],ord,dir,lim),
+      orderBy:(f,d)=>buildQ(conds,f,d||'asc',lim),
+      limit:(n)=>buildQ(conds,ord,dir,n),
+      get:async()=>{
+        let q=_supa.from(tname).select('*');
+        for(const c of conds){
+          const col=_mapCol(c.f);
+          if(c.op==='==') q=q.eq(col,c.v);
+          else if(c.op==='<') q=q.lt(col,c.v);
+          else if(c.op==='>') q=q.gt(col,c.v);
+        }
+        if(ord) q=q.order(_mapCol(ord),{ascending:dir!=='desc'});
+        if(lim) q=q.limit(lim);
+        const {data,error}=await q;
+        if(error) throw error;
+        return{docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true,ref:{delete:async()=>{await _supa.from(tname).delete().eq('id',d.id);}}})),size:data.length,empty:data.length===0};
+      }
+    };
+  }
+  const subCfg={htmlquizgroups:{table:'htmlquiz_quizzes',parentCol:'groupid',qcols:['active']},privatequizzes:{table:'private_questions',parentCol:'quizid',qcols:[]}};
+  return{
+    get:async()=>buildQ().get(),
+    add:async(fields)=>{const{error}=await _supa.from(tname).insert(makeRow(fields));if(error) throw error;},
+    where:(f,op,v)=>buildQ([{f,op,v}]),
+    orderBy:(f,d)=>buildQ([],f,d||'asc',null),
+    limit:(n)=>buildQ([],null,'asc',n),
+    doc:(id)=>({
+      get:async()=>{const{data,error}=await _supa.from(tname).select('*').eq('id',id).maybeSingle();if(error) throw error;return{exists:!!data,data:()=>data?.data||{},id};},
+      set:async(fields,o)=>{
+        if(o?.merge){const{data:ex}=await _supa.from(tname).select('data').eq('id',id).maybeSingle();const merged={...(ex?.data||{}),...fields};const{error}=await _supa.from(tname).upsert(makeRow(merged,id),{onConflict:'id'});if(error) throw error;}
+        else{const{error}=await _supa.from(tname).upsert(makeRow(fields,id),{onConflict:'id'});if(error) throw error;}
+      },
+      update:async(fields)=>{const{data:ex}=await _supa.from(tname).select('data').eq('id',id).maybeSingle();const merged={...(ex?.data||{}),...fields};const row=makeRow(merged,id);const{error}=await _supa.from(tname).update(row).eq('id',id);if(error) throw error;},
+      delete:async()=>{const{error}=await _supa.from(tname).delete().eq('id',id);if(error) throw error;},
+      collection:(subCol)=>{
+        const cfg=subCfg[tname];if(!cfg) return{};
+        const{table:stbl,parentCol:pcol,qcols:sqcols}=cfg;
+        return{
+          get:async()=>{const{data,error}=await _supa.from(stbl).select('*').eq(pcol,id);if(error) throw error;return{docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length,empty:data.length===0};},
+          where:(f,op,v)=>({get:async()=>{let q=_supa.from(stbl).select('*').eq(pcol,id);if(op==='==') q=q.eq(f,v);const{data,error}=await q;if(error) throw error;return{docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length,empty:data.length===0};}}),
+          add:async(fields)=>{const row={[pcol]:id,data:fields};for(const c of sqcols) if(fields[c]!==undefined) row[c]=fields[c];const{error}=await _supa.from(stbl).insert(row);if(error) throw error;},
+          doc:(qid)=>({
+            get:async()=>{const{data,error}=await _supa.from(stbl).select('*').eq('id',qid).maybeSingle();if(error) throw error;return{exists:!!data,data:()=>data?.data||{},id:qid};},
+            update:async(fields)=>{const{data:ex}=await _supa.from(stbl).select('data').eq('id',qid).maybeSingle();const merged={...(ex?.data||{}),...fields};const row={data:merged};for(const c of sqcols) if(merged[c]!==undefined) row[c]=merged[c];const{error}=await _supa.from(stbl).update(row).eq('id',qid);if(error) throw error;},
+            delete:async()=>{const{error}=await _supa.from(stbl).delete().eq('id',qid);if(error) throw error;}
+          })
+        };
+      }
+    })
+  };
+}
+const _goalsTable=_makeTable('goals',{queryableCols:['uid','createdat']});
+const _aiUsageTable=_makeTable('aiusage');
+const _announcementsTable=_makeTable('announcements',{queryableCols:['createdat']});
+const _pqBankTable=_makeTable('pqbank',{queryableCols:['subject']});
+const _motivationsTable=_makeTable('motivations',{queryableCols:['createdat']});
+const _hotTopicsTable=_makeTable('hottopics',{queryableCols:['createdat']});
+const _couponsTable=_makeTable('coupons',{idField:'code',queryableCols:['createdat']});
+const _htmlQuizGroupsTable=_makeTable('htmlquizgroups');
+const _privateQuizzesTable=_makeTable('privatequizzes',{queryableCols:['code','active','createdat']});
+const _filesTable=_makeTable('files',{queryableCols:['sem']});
+const _couponRedemptionsTable=_makeTable('couponredemptions',{queryableCols:['redeemedat']});
+const _gpaHistoryTable=_makeTable('gpahistory',{queryableCols:['uid','createdat']});
+const _tutorProgressTable=_makeTable('tutorprogress');
+const _videosTable=_makeTable('videos');
+const _vaultContentTable=_makeTable('vaultcontent',{queryableCols:['createdat']});
+const _testimonialsTable=_makeTable('testimonials',{queryableCols:['createdat']});
+const _pushTokensTable=_makeTable('pushtokens');
+const _pointsHistoryTable=_makeTable('pointshistory',{queryableCols:['uid','createdat']});
+const _forumTable=_makeTable('forum',{queryableCols:['courseid','createdat']});
+const _notificationsTable=_makeTable('notifications');
+const _htmlQuizzesTable=_makeTable('htmlquizzes');
+const _badgesTable=_makeTable('badges');
+const _surpriseRewardsTable=_makeTable('surpriserewards',{queryableCols:['uid','claimed']});
+const _textbooksTable=_makeTable('textbooks');
+// Supabase messages wrapper
+function _messagesQuery(conditions=[],orderField=null,orderDir='asc',limitN=null){
+  return {
+    where:(f,op,v)=>_messagesQuery([...conditions,{f,op,v}],orderField,orderDir,limitN),
+    orderBy:(f,dir)=>_messagesQuery(conditions,f,dir||'asc',limitN),
+    limit:(n)=>_messagesQuery(conditions,orderField,orderDir,n),
+    get:async()=>{
+      let q=_supa.from('messages').select('*');
+      for(const c of conditions){
+        if(c.op==='==') q=q.eq(c.f==='toUid'?'touid':c.f==='fromAdmin'?'fromadmin':c.f==='read'?'read':c.f,c.v);
+      }
+      if(orderField) q=q.order(orderField==='createdAt'?'createdat':orderField,{ascending:orderDir!=='desc'});
+      if(limitN) q=q.limit(limitN);
+      const {data,error}=await q;
+      if(error) throw error;
+      return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length,empty:data.length===0};
+    }
+  };
+}
+const _messagesTable={
+  add:async(fields)=>{
+    const {error}=await _supa.from('messages').insert({touid:fields.toUid||'',read:fields.read||false,fromadmin:fields.fromAdmin||false,createdat:fields.createdAt||'',data:fields});
+    if(error) throw error;
+  },
+  doc:(id)=>({
+    update:async(fields)=>{
+      const {data:existing}=await _supa.from('messages').select('data').eq('id',id).maybeSingle();
+      const merged={...(existing?.data||{}),...fields};
+      const {error}=await _supa.from('messages').update({read:merged.read??false,data:merged}).eq('id',id);
+      if(error) throw error;
+    }
+  }),
+  where:(f,op,v)=>_messagesQuery([{f,op,v}])
+};
+// Supabase userStats wrapper
+const _userStatsTable={
+  doc:(id)=>({
+    get:async()=>{
+      const {data,error}=await _supa.from('userstats').select('*').eq('id',id).maybeSingle();
+      if(error) throw error;
+      return {exists:!!data,data:()=>data?.data||{},id};
+    },
+    set:async(fields,opts)=>{
+      if(opts?.merge){
+        const {data:existing}=await _supa.from('userstats').select('*').eq('id',id).maybeSingle();
+        const merged={...(existing?.data||{}),...fields};
+        const {error}=await _supa.from('userstats').upsert({id,bestscore:merged.bestScore||0,data:merged},{onConflict:'id'});
+        if(error) throw error;
+      } else {
+        const {error}=await _supa.from('userstats').upsert({id,bestscore:fields.bestScore||0,data:fields},{onConflict:'id'});
+        if(error) throw error;
+      }
+    }
+  }),
+  orderBy:(field,dir)=>({
+    limit:(n)=>({
+      get:async()=>{
+        const col=field==='bestScore'?'bestscore':field;
+        const {data,error}=await _supa.from('userstats').select('*').order(col,{ascending:dir!=='desc'}).limit(n);
+        if(error) throw error;
+        return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+      }
+    })
+  })
+};
+// Supabase quizHistory wrapper
+function _quizHistQuery(conditions=[],orderField=null,orderDir='asc',limitN=null){
+  return {
+    where:(f,op,v)=>_quizHistQuery([...conditions,{f,op,v}],orderField,orderDir,limitN),
+    orderBy:(f,dir)=>_quizHistQuery(conditions,f,dir||'asc',limitN),
+    limit:(n)=>_quizHistQuery(conditions,orderField,orderDir,n),
+    get:async()=>{
+      let q=_supa.from('quizhistory').select('*');
+      for(const c of conditions) if(c.op==='==') q=q.eq(c.f,c.v);
+      if(orderField) q=q.order(orderField,{ascending:orderDir!=='desc'});
+      if(limitN) q=q.limit(limitN);
+      const {data,error}=await q;
+      if(error) throw error;
+      return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true,ref:{delete:async()=>{await _supa.from('quizhistory').delete().eq('id',d.id);}}})),size:data.length,empty:data.length===0};
+    }
+  };
+}
+const _quizHistoryTable={
+  add:async(fields)=>{
+    const {error}=await _supa.from('quizhistory').insert({uid:fields.uid||'',type:fields.type||'',date:fields.date||'',data:fields});
+    if(error) throw error;
+  },
+  get:async()=>_quizHistQuery().get(),
+  limit:(n)=>_quizHistQuery([],null,'asc',n),
+  orderBy:(f,dir)=>_quizHistQuery([],f,dir||'asc',null),
+  where:(f,op,v)=>_quizHistQuery([{f,op,v}])
+};
+// Supabase cbtExams table wrapper
+function _cbtExamQuery(conditions=[]){
+  return {
+    where:(f,op,v)=>_cbtExamQuery([...conditions,{f,op,v}]),
+    limit:(n)=>({
+      get:async()=>{
+        let q=_supa.from('cbtexams').select('*');
+        for(const c of conditions) q=q.eq(c.f,c.v);
+        const {data,error}=await q.limit(n);
+        if(error) throw error;
+        return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),empty:data.length===0,size:data.length};
+      }
+    }),
+    get:async()=>{
+      let q=_supa.from('cbtexams').select('*');
+      for(const c of conditions) q=q.eq(c.f,c.v);
+      const {data,error}=await q;
+      if(error) throw error;
+      return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),empty:data.length===0,size:data.length};
+    }
+  };
+}
+const _cbtExamsTable = {
+  get:async()=>{
+    const {data,error}=await _supa.from('cbtexams').select('*');
+    if(error) throw error;
+    return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+  },
+  add:async(fields)=>{
+    const {data,error}=await _supa.from('cbtexams').insert({code:fields.code||'',active:fields.active||false,data:fields}).select('id').single();
+    if(error) throw error;
+    return {id:data.id};
+  },
+  where:(f,op,v)=>_cbtExamQuery([{f,op,v}]),
+  orderBy:(field,dir)=>({
+    get:async()=>{
+      const {data,error}=await _supa.from('cbtexams').select('*').order(field,{ascending:dir!=='desc'});
+      if(error) throw error;
+      return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+    }
+  }),
+  doc:(id)=>({
+    get:async()=>{
+      const {data,error}=await _supa.from('cbtexams').select('*').eq('id',id).maybeSingle();
+      if(error) throw error;
+      return {exists:!!data,data:()=>data?{...data.data}:{},id};
+    },
+    update:async(fields)=>{
+      const {error}=await _supa.from('cbtexams').update({active:fields.active,data:fields}).eq('id',id);
+      if(error) throw error;
+    },
+    delete:async()=>{
+      await _supa.from('cbt_questions').delete().eq('examid',id);
+      const {error}=await _supa.from('cbtexams').delete().eq('id',id);
+      if(error) throw error;
+    },
+    collection:()=>({
+      get:async()=>{
+        const {data,error}=await _supa.from('cbt_questions').select('*').eq('examid',id);
+        if(error) throw error;
+        return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+      },
+      add:async(fields)=>{
+        const {error}=await _supa.from('cbt_questions').insert({examid:id,data:fields});
+        if(error) throw error;
+      },
+      limit:(n)=>({
+        get:async()=>{
+          const {data,error}=await _supa.from('cbt_questions').select('*').eq('examid',id).limit(n);
+          if(error) throw error;
+          return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+        }
+      }),
+      orderBy:()=>({
+        get:async()=>{
+          const {data,error}=await _supa.from('cbt_questions').select('*').eq('examid',id);
+          if(error) throw error;
+          return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+        }
+      }),
+      doc:(qid)=>({
+        delete:async()=>{
+          const {error}=await _supa.from('cbt_questions').delete().eq('id',qid);
+          if(error) throw error;
+        }
+      })
+    })
+  })
+};
+// Supabase cbtSessions wrapper
+const _cbtSessionsTable = {
+  doc:(id)=>({
+    get:async()=>{
+      const {data,error}=await _supa.from('cbtsessions').select('data').eq('id',id).maybeSingle();
+      if(error) throw error;
+      return {exists:!!data,data:()=>data?.data||{},id};
+    },
+    set:async(fields)=>{
+      const {error}=await _supa.from('cbtsessions').upsert({id,data:fields},{onConflict:'id'});
+      if(error) throw error;
+    }
+  })
+};
+// Supabase cbtHistory wrapper
+const _cbtHistoryTable = {
+  add:async(fields)=>{
+    const {error}=await _supa.from('cbthistory').insert({uid:fields.uid||'',data:fields});
+    if(error) throw error;
+  },
+  get:async()=>{
+    const {data,error}=await _supa.from('cbthistory').select('*');
+    if(error) throw error;
+    return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+  },
+  where:(field,op,value)=>({
+    limit:(n)=>({
+      get:async()=>{
+        let q=_supa.from('cbthistory').select('*');
+        if(op==='==') q=q.eq(field,value);
+        const {data,error}=await q.limit(n);
+        if(error) throw error;
+        return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+      }
+    }),
+    get:async()=>{
+      let q=_supa.from('cbthistory').select('*');
+      if(op==='==') q=q.eq(field,value);
+      const {data,error}=await q;
+      if(error) throw error;
+      return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+    }
+  })
+};
+// Supabase courses table wrapper
+const _coursesTable = {
+  get: async () => {
+    const {data,error} = await _supa.from('courses').select('*');
+    if(error) throw error;
+    return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true,ref:{delete:async()=>{await _supa.from('courses').delete().eq('id',d.id);}}})),size:data.length};
+  },
+  where: (field,op,value) => ({
+    get: async () => {
+      let q = _supa.from('courses').select('*');
+      if(op==='==') q = q.eq(field,value);
+      const {data,error} = await q;
+      if(error) throw error;
+      return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+    }
+  }),
+  add: async (fields) => {
+    const {error} = await _supa.from('courses').insert({sem:fields.sem||'',data:fields});
+    if(error) throw error;
+  },
+  doc: (id) => ({
+    delete: async () => {
+      const {error} = await _supa.from('courses').delete().eq('id',id);
+      if(error) throw error;
+    },
+    collection: (subCol) => ({
+      get: async () => {
+        const {data,error} = await _supa.from('course_questions').select('*').eq('courseid',id);
+        if(error) throw error;
+        return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+      },
+      add: async (fields) => {
+        const {error} = await _supa.from('course_questions').insert({courseid:id,data:fields});
+        if(error) throw error;
+      },
+      doc: (qid) => ({
+        delete: async () => {
+          const {error} = await _supa.from('course_questions').delete().eq('id',qid);
+          if(error) throw error;
+        }
+      })
+    })
+  })
+};
+// Supabase pointsLog table wrapper
+const _pointsLogTable = {
+  add: async (fields) => {
+    const {error} = await _supa.from('pointslog').insert(fields);
+    if(error) throw error;
+  },
+  where: (field, op, value) => ({
+    limit: (n) => ({
+      get: async () => {
+        let q = _supa.from('pointslog').select('*');
+        if(op==='==') q = q.eq(field, value);
+        q = q.limit(n);
+        const {data, error} = await q;
+        if(error) throw error;
+        return {docs: data.map(d=>({id:d.id,data:()=>d,exists:true})), size:data.length};
+      }
+    }),
+    get: async () => {
+      let q = _supa.from('pointslog').select('*');
+      if(op==='==') q = q.eq(field, value);
+      const {data, error} = await q;
+      if(error) throw error;
+      return {docs: data.map(d=>({id:d.id,data:()=>d,exists:true})), size:data.length};
+    }
+  })
+};
+// Supabase settings table wrapper
+const _settingsTable = {
+  doc: (id) => ({
+    get: async () => {
+      const {data} = await _supa.from('settings').select('data').eq('id', id).maybeSingle();
+      const fields = data?.data || null;
+      return {exists: !!fields, data: ()=>fields||{}, id};
+    },
+    set: async (fields, opts) => {
+      if(opts?.merge){
+        const {data: existing} = await _supa.from('settings').select('data').eq('id', id).maybeSingle();
+        const merged = {...(existing?.data||{}), ...fields};
+        const {error} = await _supa.from('settings').upsert({id, data: merged}, {onConflict:'id'});
+        if(error) throw error;
+      } else {
+        const {error} = await _supa.from('settings').upsert({id, data: fields}, {onConflict:'id'});
+        if(error) throw error;
+      }
+    }
+  })
+};
 // Supabase users table wrapper — mimics Firestore API
 const _usersTable = {
   doc: (id) => ({
@@ -1750,8 +2156,6 @@ _supa.auth.onAuthStateChange(async function(event, session){
   const user = session ? session.user : null;
   if(!user){ showAuthUI(); return; }
   ADMIN_EMAIL = user.email;
-  document.getElementById('a-em').disabled=true;
-  document.getElementById('a-pw').disabled=true;
   try{
     let doc = await _usersTable.doc(user.id).get();
     if(!doc.exists){
@@ -1761,8 +2165,6 @@ _supa.auth.onAuthStateChange(async function(event, session){
     const data = doc.exists ? doc.data() : null;
     if(!data || (data.role!=='admin' && data.role!=='subadmin')){
       await _supa.auth.signOut();
-      document.getElementById('a-em').disabled=false;
-      document.getElementById('a-pw').disabled=false;
       showAuthUI();
       showToast('Access denied — Admins only');
       return;
@@ -1771,8 +2173,7 @@ _supa.auth.onAuthStateChange(async function(event, session){
     showAdminUI();
     loadDashboard();
   }catch(e){
-    document.getElementById('a-em').disabled=false;
-    document.getElementById('a-pw').disabled=false;
+    await _supa.auth.signOut();
     showAuthUI();
     showToast('Error loading. Try again.');
   }
@@ -1782,6 +2183,8 @@ function showAuthUI(){
   document.getElementById('topbar').style.cssText='display:none!important';
   document.getElementById('sidebar').style.cssText='display:none!important';
   document.getElementById('main').style.cssText='display:none!important';
+  document.getElementById('a-em').disabled=false;
+  document.getElementById('a-pw').disabled=false;
 }
 function showAdminUI(){
   document.getElementById('auth-wrap').style.cssText='display:none!important';
@@ -1853,7 +2256,7 @@ async function loadDashboard(){
   document.getElementById('st-ban').textContent=students.filter(u=>u.banned).length;
   const today=new Date().toDateString();
   document.getElementById('st-today').textContent=students.filter(u=>u.lastSeen&&new Date(u.lastSeen).toDateString()===today).length;
-  const cSnap=await db.collection('courses').get();
+  const cSnap=await _coursesTable.get();
   document.getElementById('st-courses').textContent=cSnap.size;
   document.getElementById('recent-list').innerHTML=students.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0)).slice(0,8).map(u=>`<tr><td>${u.name||'--'}</td><td style="color:var(--text2);font-size:.76rem">${u.email||'--'}</td><td style="font-size:.76rem">${u.dept||'--'}</td><td style="color:var(--text2);font-size:.7rem">${u.createdAt?new Date(u.createdAt).toLocaleDateString():'--'}</td></tr>`).join('');
 }
@@ -1924,8 +2327,8 @@ async function viewStudentProfile(uid){
 
     // ── Load quiz history ──
     const [quizSnap, pointsSnap] = await Promise.all([
-      db.collection('quizHistory').where('uid','==',uid).orderBy('createdAt','desc').limit(20).get().catch(()=>({docs:[]})),
-      db.collection('pointsHistory').where('uid','==',uid).orderBy('createdAt','desc').limit(15).get().catch(()=>({docs:[]}))
+      _quizHistoryTable.where('uid','==',uid).orderBy('createdAt','desc').limit(20).get().catch(()=>({docs:[]})),
+      _pointsHistoryTable.where('uid','==',uid).orderBy('createdAt','desc').limit(15).get().catch(()=>({docs:[]}))
     ]);
     const quizzes = quizSnap.docs.map(d=>({id:d.id,...d.data()}));
     const pointsHistory = pointsSnap.docs.map(d=>d.data());
@@ -2117,7 +2520,7 @@ async function viewStudentProfile(uid){
 }
 
 async function generateStudentAIReport(uid, student, stats){
-  const groqSnap = await db.collection('settings').doc('config').get();
+  const groqSnap = await _settingsTable.doc('config').get();
   const groqKey = groqSnap.exists ? groqSnap.data().groqKey : '';
   if(!groqKey){showToast('Set GROQ key in Settings');return;}
 
@@ -2157,19 +2560,19 @@ async function generateStudentAIReport(uid, student, stats){
 
 async function toggleBan(uid,isBanned){await _usersTable.doc(uid).update({banned:!isBanned});showToast(isBanned?'Unbanned':'Banned');loadStudents();}
 async function loadCourses(){
-  const snap=await db.collection('courses').get();
+  const snap=await _coursesTable.get();
   document.getElementById('courses-list').innerHTML=snap.empty?'<div style="color:var(--text2);font-size:.8rem">No courses yet</div>':snap.docs.map(d=>{const c=d.data();return`<div class="li"><div><div class="li-code">${c.code}</div><div class="li-name">${c.name}</div><div class="sem-tag">${c.sem==='harm'?'☀️ Harmattan':'🌧 Rain'}</div></div><button class="btn btn-red btn-sm" onclick="deleteCourse('${d.id}')">🗑</button></div>`;}).join('');
 }
 async function addCourse(){
   const code=document.getElementById('c-code').value.trim().toUpperCase(),name=document.getElementById('c-name').value.trim(),sem=document.getElementById('c-sem').value;
   if(!code||!name){showToast('Fill all fields');return;}
-  await db.collection('courses').add({code,name,sem,createdAt:new Date().toISOString()});
+  await _coursesTable.add({code,name,sem,createdAt:new Date().toISOString()});
   document.getElementById('c-code').value='';document.getElementById('c-name').value='';
   showToast('Course added!');loadCourses();
 }
-async function deleteCourse(id){if(!confirm('Delete?'))return;await db.collection('courses').doc(id).delete();showToast('Deleted');loadCourses();}
+async function deleteCourse(id){if(!confirm('Delete?'))return;await _coursesTable.doc(id).delete();showToast('Deleted');loadCourses();}
 async function loadQCourses(){
-  const snap=await db.collection('courses').get();
+  const snap=await _coursesTable.get();
   const opts=snap.docs.map(d=>`<option value="${d.id}">${d.data().code} — ${d.data().name}</option>`).join('');
   document.getElementById('q-course').innerHTML='<option value="">Select course...</option>'+opts;
   document.getElementById('qview-course').innerHTML='<option value="">Select course...</option>'+opts;
@@ -2180,44 +2583,44 @@ async function addQuestion(){
   const c=document.getElementById('q-c').value.trim(),d=document.getElementById('q-d').value.trim();
   const ans=parseInt(document.getElementById('q-ans').value);
   if(!cid||!q||!a||!b||!c||!d){showToast('Fill all fields');return;}
-  await db.collection('courses').doc(cid).collection('questions').add({q,opts:[a,b,c,d],ans});
+  await _coursesTable.doc(cid).collection('questions').add({q,opts:[a,b,c,d],ans});
   ['q-text','q-a','q-b','q-c','q-d'].forEach(id=>document.getElementById(id).value='');
   showToast('Question added!');
 }
 async function loadQuestions(cid){
   if(!cid)return;
-  const snap=await db.collection('courses').doc(cid).collection('questions').get();
+  const snap=await _coursesTable.doc(cid).collection('questions').get();
   const letters=['A','B','C','D'];
   document.getElementById('questions-list').innerHTML=snap.empty?'<div style="color:var(--text2);font-size:.8rem;padding:10px">No questions yet</div>':snap.docs.map((d,i)=>{const q=d.data();return`<div class="q-item"><div class="q-text">${i+1}. ${q.q}</div><div class="q-opts">${q.opts.map((o,j)=>`<div class="q-opt${j===q.ans?' correct':''}">${letters[j]}. ${o}</div>`).join('')}</div><button class="btn btn-red btn-sm" style="margin-top:7px" onclick="deleteQ('${cid}','${d.id}')">🗑 Delete</button></div>`;}).join('');
 }
-async function deleteQ(cid,qid){await db.collection('courses').doc(cid).collection('questions').doc(qid).delete();showToast('Deleted');loadQuestions(cid);}
+async function deleteQ(cid,qid){await _coursesTable.doc(cid).collection('questions').doc(qid).delete();showToast('Deleted');loadQuestions(cid);}
 async function loadPQList(){
-  const snap=await db.collection('privateQuizzes').orderBy('createdAt','desc').get();
+  const snap=await _privateQuizzesTable.orderBy('createdAt','desc').get();
   document.getElementById('pq-list').innerHTML=snap.empty?'<div style="color:var(--text2);font-size:.8rem">No private quizzes yet</div>':snap.docs.map(d=>{const p=d.data();return`<div class="li"><div><div class="li-code">${p.title}</div><div class="li-name">Code: <b style="color:var(--gold);letter-spacing:2px">${p.code}</b></div><div class="sem-tag">${p.active?'✅ Active':'⛔ Inactive'}</div></div><div style="display:flex;gap:5px;flex-direction:column"><button class="btn btn-gold btn-sm" onclick="selectPQ('${d.id}','${p.title}')">+ Q</button><button class="btn btn-sm ${p.active?'btn-red':'btn-green'}" onclick="togglePQ('${d.id}',${!!p.active})">${p.active?'Off':'On'}</button></div></div>`;}).join('');
 }
 async function createPrivateQuiz(){
   const title=document.getElementById('pq-title').value.trim(),code=document.getElementById('pq-code').value.trim().toUpperCase(),dur=parseInt(document.getElementById('pq-dur').value)||600;
   if(!title||!code){showToast('Fill all fields');return;}
-  await db.collection('privateQuizzes').add({title,code,duration:dur,active:true,createdAt:new Date().toISOString()});
+  await _privateQuizzesTable.add({title,code,duration:dur,active:true,createdAt:new Date().toISOString()});
   document.getElementById('pq-title').value='';document.getElementById('pq-code').value='';
   showToast('Quiz created! Code: '+code);loadPQList();
 }
-async function togglePQ(id,isActive){await db.collection('privateQuizzes').doc(id).update({active:!isActive});showToast(isActive?'Deactivated':'Activated');loadPQList();}
+async function togglePQ(id,isActive){await _privateQuizzesTable.doc(id).update({active:!isActive});showToast(isActive?'Deactivated':'Activated');loadPQList();}
 function selectPQ(id,title){selectedPQId=id;document.getElementById('pq-sel-title').textContent=title;document.getElementById('pq-q-section').style.display='block';loadPQQList(id);document.getElementById('pq-q-section').scrollIntoView({behavior:'smooth'});}
 async function addPQQ(){
   if(!selectedPQId){showToast('Select a quiz first');return;}
   const q=document.getElementById('pqq-text').value.trim(),a=document.getElementById('pqq-a').value.trim(),b=document.getElementById('pqq-b').value.trim(),c=document.getElementById('pqq-c').value.trim(),d=document.getElementById('pqq-d').value.trim(),ans=parseInt(document.getElementById('pqq-ans').value);
   if(!q||!a||!b||!c||!d){showToast('Fill all fields');return;}
-  await db.collection('privateQuizzes').doc(selectedPQId).collection('questions').add({q,opts:[a,b,c,d],ans});
+  await _privateQuizzesTable.doc(selectedPQId).collection('questions').add({q,opts:[a,b,c,d],ans});
   ['pqq-text','pqq-a','pqq-b','pqq-c','pqq-d'].forEach(id=>document.getElementById(id).value='');
   showToast('Question added!');loadPQQList(selectedPQId);
 }
 async function loadPQQList(id){
-  const snap=await db.collection('privateQuizzes').doc(id).collection('questions').get();
+  const snap=await _privateQuizzesTable.doc(id).collection('questions').get();
   const letters=['A','B','C','D'];
   document.getElementById('pq-qlist').innerHTML=snap.empty?'<div style="color:var(--text2);font-size:.8rem;padding:10px">No questions yet</div>':snap.docs.map((d,i)=>{const q=d.data();return`<div class="q-item"><div class="q-text">${i+1}. ${q.q}</div><div class="q-opts">${q.opts.map((o,j)=>`<div class="q-opt${j===q.ans?' correct':''}">${letters[j]}. ${o}</div>`).join('')}</div><button class="btn btn-red btn-sm" style="margin-top:6px" onclick="deletePQQ('${id}','${d.id}')">🗑</button></div>`;}).join('');
 }
-async function deletePQQ(pid,qid){await db.collection('privateQuizzes').doc(pid).collection('questions').doc(qid).delete();showToast('Deleted');loadPQQList(pid);}
+async function deletePQQ(pid,qid){await _privateQuizzesTable.doc(pid).collection('questions').doc(qid).delete();showToast('Deleted');loadPQQList(pid);}
 let currentFileSem = 'harm';
 function switchFileSem(sem, btn){
   currentFileSem = sem;
@@ -2229,7 +2632,7 @@ function switchFileSem(sem, btn){
 }
 
 async function loadFiles(){
-  const snap = await db.collection('files').where('sem','==',currentFileSem).get();
+  const snap = await _filesTable.where('sem','==',currentFileSem).get();
   const list = document.getElementById('files-list');
   if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem">No files for this semester yet</div>';return;}
   const icons={CHM:'📄',MTH:'📊',PHY:'🔬',PCY:'💊',BIO:'🧬',COS:'💻',GST:'📝'};
@@ -2252,11 +2655,11 @@ async function addFile(){
   const url=document.getElementById('f-url').value.trim();
   const size=document.getElementById('f-size').value.trim();
   if(!name||!course||!url){showToast('Fill required fields');return;}
-  await db.collection('files').add({name,course,sem,url,size,createdAt:new Date().toISOString()});
+  await _filesTable.add({name,course,sem,url,size,createdAt:new Date().toISOString()});
   ['f-name','f-course','f-url','f-size'].forEach(id=>document.getElementById(id).value='');
   showToast('File added!'); loadFiles();
 }
-async function deleteFile(id){if(!confirm('Delete?'))return;await db.collection('files').doc(id).delete();showToast('Deleted');loadFiles();}
+async function deleteFile(id){if(!confirm('Delete?'))return;await _filesTable.doc(id).delete();showToast('Deleted');loadFiles();}
 
 function previewHQFile(input){
   if(input.files[0]){
@@ -2267,7 +2670,7 @@ function previewHQFile(input){
   }
 }
 async function loadSettings(){
-  const doc=await db.collection('settings').doc('config').get();
+  const doc=await _settingsTable.doc('config').get();
   if(doc.exists&&doc.data().groqKey)document.getElementById('groq-key').value=doc.data().groqKey;
 }
 function generateVersionFile(){
@@ -2312,13 +2715,13 @@ function downloadVersionFile(content){
 async function saveGroqKey(){
   const key=document.getElementById('groq-key').value.trim();
   if(!key){showToast('Enter GROQ key');return;}
-  await db.collection('settings').doc('config').set({groqKey:key},{merge:true});
+  await _settingsTable.doc('config').set({groqKey:key},{merge:true});
   showToast('GROQ key saved!');
 }
 async function sendAnn(){
   const title=document.getElementById('ann-title').value.trim(),msg=document.getElementById('ann-msg').value.trim();
   if(!title||!msg){showToast('Fill title and message');return;}
-  await db.collection('announcements').add({title,msg,createdAt:new Date().toISOString()});
+  await _announcementsTable.add({title,msg,createdAt:new Date().toISOString()});
   document.getElementById('ann-title').value='';document.getElementById('ann-msg').value='';
   showToast('Announcement sent!');
   // Send emails via Brevo
@@ -2342,7 +2745,7 @@ async function uploadHtmlQuiz(){
     const html=await file.text();
     prog.textContent='☁️ Uploading to Firestore...';
     // Store as subcollection under code — supports multiple quizzes per code
-    const groupRef = db.collection('htmlQuizGroups').doc(code);
+    const groupRef = _htmlQuizGroupsTable.doc(code);
     // Create/update the group doc
     await groupRef.set({code, active:true, updatedAt:new Date().toISOString()},{merge:true});
     // Add quiz as subcollection item
@@ -2363,13 +2766,13 @@ async function uploadHtmlQuiz(){
 }
 
 async function loadHtmlQuizzes(){
-  const snap=await db.collection('htmlQuizGroups').get();
+  const snap=await _htmlQuizGroupsTable.get();
   const list=document.getElementById('hq-list');
   if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem;text-align:center;padding:20px;">No quiz groups yet</div>';return;}
   list.innerHTML='';
   for(const d of snap.docs){
     const g=d.data();
-    const qSnap=await db.collection('htmlQuizGroups').doc(d.id).collection('quizzes').get();
+    const qSnap=await _htmlQuizGroupsTable.doc(d.id).collection('quizzes').get();
     const quizzes=qSnap.docs.map(q=>({id:q.id,...q.data()}));
     const div=document.createElement('div');
     div.style.cssText='background:rgba(255,255,255,.03);border:1px solid var(--gold);border-radius:12px;padding:14px;margin-bottom:12px;';
@@ -2400,26 +2803,26 @@ async function loadHtmlQuizzes(){
 }
 
 async function toggleHQ(groupId, quizId, isActive){
-  await db.collection('htmlQuizGroups').doc(groupId).collection('quizzes').doc(quizId).update({active:!isActive});
+  await _htmlQuizGroupsTable.doc(groupId).collection('quizzes').doc(quizId).update({active:!isActive});
   showToast(isActive?'Quiz deactivated':'Quiz activated');
   loadHtmlQuizzes();
 }
 
 async function deleteHQ(groupId, quizId){
   if(!confirm('Delete this quiz?')) return;
-  await db.collection('htmlQuizGroups').doc(groupId).collection('quizzes').doc(quizId).delete();
+  await _htmlQuizGroupsTable.doc(groupId).collection('quizzes').doc(quizId).delete();
   // Check if group is now empty
-  const remaining = await db.collection('htmlQuizGroups').doc(groupId).collection('quizzes').get();
-  if(remaining.empty) await db.collection('htmlQuizGroups').doc(groupId).delete();
+  const remaining = await _htmlQuizGroupsTable.doc(groupId).collection('quizzes').get();
+  if(remaining.empty) await _htmlQuizGroupsTable.doc(groupId).delete();
   showToast('Deleted');
   loadHtmlQuizzes();
 }
 
 async function deleteHQGroup(groupId){
   if(!confirm('Delete ALL quizzes in this group?')) return;
-  const qSnap = await db.collection('htmlQuizGroups').doc(groupId).collection('quizzes').get();
+  const qSnap = await _htmlQuizGroupsTable.doc(groupId).collection('quizzes').get();
   await Promise.all(qSnap.docs.map(d=>d.ref.delete()));
-  await db.collection('htmlQuizGroups').doc(groupId).delete();
+  await _htmlQuizGroupsTable.doc(groupId).delete();
   showToast('Group deleted');
   loadHtmlQuizzes();
 }
@@ -2438,9 +2841,9 @@ async function createCoupon(){
   const expiry = document.getElementById('cp-expiry').value;
   if(!code||!points||points<1){showToast('Enter a valid code and points value');return;}
   // Check if code already exists
-  const existing = await db.collection('coupons').doc(code).get();
+  const existing = await _couponsTable.doc(code).get();
   if(existing.exists){showToast('Coupon code already exists!');return;}
-  await db.collection('coupons').doc(code).set({
+  await _couponsTable.doc(code).set({
     code, points, limit, usedCount:0,
     expiry: expiry||null, active:true,
     createdAt:new Date().toISOString(),
@@ -2455,7 +2858,7 @@ async function createCoupon(){
 }
 
 async function loadCoupons(){
-  const snap = await db.collection('coupons').orderBy('createdAt','desc').get();
+  const snap = await _couponsTable.orderBy('createdAt','desc').get();
   const list = document.getElementById('coupons-list');
   if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem">No coupons created yet</div>';return;}
   list.innerHTML = snap.docs.map(d=>{
@@ -2481,20 +2884,20 @@ async function loadCoupons(){
 }
 
 async function toggleCoupon(id, isActive){
-  await db.collection('coupons').doc(id).update({active:!isActive});
+  await _couponsTable.doc(id).update({active:!isActive});
   showToast(isActive?'Coupon disabled':'Coupon enabled');
   loadCoupons();
 }
 
 async function deleteCoupon(id){
   if(!confirm('Delete this coupon?'))return;
-  await db.collection('coupons').doc(id).delete();
+  await _couponsTable.doc(id).delete();
   showToast('Coupon deleted');
   loadCoupons();
 }
 
 async function loadCouponLog(){
-  const snap = await db.collection('couponRedemptions').orderBy('redeemedAt','desc').limit(20).get();
+  const snap = await _couponRedemptionsTable.orderBy('redeemedAt','desc').limit(20).get();
   const list = document.getElementById('coupon-log');
   if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px">No redemptions yet</div>';return;}
   list.innerHTML = `<table class="tbl">
@@ -2515,7 +2918,7 @@ async function saveContact(){
   const wa=document.getElementById('contact-wa-inp').value.trim();
   const email=document.getElementById('contact-email-inp').value.trim();
   if(!wa&&!email){showToast('Enter at least WhatsApp or Email');return;}
-  await db.collection('settings').doc('contact').set({whatsapp:wa,email,updatedAt:new Date().toISOString()});
+  await _settingsTable.doc('contact').set({whatsapp:wa,email,updatedAt:new Date().toISOString()});
   showToast('Contact info saved!');
 }
 
@@ -2524,16 +2927,16 @@ let maintActive = false;
 let maintUid = '';
 
 async function loadSettings(){
-  const doc=await db.collection('settings').doc('config').get();
+  const doc=await _settingsTable.doc('config').get();
   if(doc.exists&&doc.data().groqKey)document.getElementById('groq-key').value=doc.data().groqKey;
   // Load contact info
-  const cDoc=await db.collection('settings').doc('contact').get();
+  const cDoc=await _settingsTable.doc('contact').get();
   if(cDoc.exists){
     if(cDoc.data().whatsapp)document.getElementById('contact-wa-inp').value=cDoc.data().whatsapp;
     if(cDoc.data().email)document.getElementById('contact-email-inp').value=cDoc.data().email;
   }
   // Load maintenance
-  const mDoc=await db.collection('settings').doc('maintenance').get();
+  const mDoc=await _settingsTable.doc('maintenance').get();
   if(mDoc.exists){
     maintActive=mDoc.data().active||false;
     document.getElementById('maint-msg').value=mDoc.data().message||'';
@@ -2565,7 +2968,7 @@ function toggleMaintenance(){
 
 async function saveMaintenance(){
   const msg=document.getElementById('maint-msg').value.trim();
-  await db.collection('settings').doc('maintenance').set({
+  await _settingsTable.doc('maintenance').set({
     active:maintActive,
     message:msg||'Platform is under maintenance. Please check back later.',
     updatedAt:new Date().toISOString()
@@ -2601,7 +3004,7 @@ async function managePoints(action){
   const current=doc.data().points||0;
   const newPoints=action==='add'?current+amount:Math.max(0,current-amount);
   await _usersTable.doc(ptsTargetId).update({points:newPoints});
-  await db.collection('pointsLog').add({
+  await _pointsLogTable.add({
     uid:ptsTargetId,
     reason:'Admin '+(action==='add'?'added':'deducted')+' points',
     points:(action==='add'?'+':'-')+amount,
@@ -2698,7 +3101,7 @@ async function uploadBulkQuestions(){
   let uploaded = 0, failed = 0;
   for(const q of bulkParsed){
     try{
-      await db.collection('courses').doc(courseId).collection('questions').add({
+      await _coursesTable.doc(courseId).collection('questions').add({
         q: q.q, opts: q.opts, ans: q.ans
       });
       uploaded++;
@@ -2730,7 +3133,7 @@ async function loadMotivations(){
   const list = document.getElementById('motivations-list');
   list.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px">Loading...</div>';
   try{
-    const snap = await db.collection('motivations').orderBy('createdAt','desc').get();
+    const snap = await _motivationsTable.orderBy('createdAt','desc').get();
     allMotivations = snap.docs.map(d=>({id:d.id,...d.data()}));
     renderMotivations('all');
     document.getElementById('motiv-count').textContent='('+allMotivations.length+' total)';
@@ -2774,12 +3177,12 @@ async function saveMotivation(){
   const data={emoji:emoji||'💡',text,sub,category,bg:MOTIV_COLORS[category]||MOTIV_COLORS.general,updatedAt:new Date().toISOString()};
   const statusEl=document.getElementById('motiv-save-status');
   if(id){
-    await db.collection('motivations').doc(id).update(data);
+    await _motivationsTable.doc(id).update(data);
     statusEl.textContent='✅ Updated!';statusEl.style.color='var(--green)';
     showToast('Motivation updated!');
   } else {
     data.createdAt=new Date().toISOString();
-    await db.collection('motivations').add(data);
+    await _motivationsTable.add(data);
     statusEl.textContent='✅ Added!';statusEl.style.color='var(--green)';
     showToast('Motivation added!');
   }
@@ -2801,7 +3204,7 @@ function editMotivation(id){
 
 async function deleteMotivation(id){
   if(!confirm('Delete this motivation?')) return;
-  await db.collection('motivations').doc(id).delete();
+  await _motivationsTable.doc(id).delete();
   showToast('Deleted');loadMotivations();
 }
 
@@ -2835,8 +3238,8 @@ async function loadAnalytics(){
   try{
     const [usersSnap, quizSnap, cbtSnap] = await Promise.all([
       _usersTable.get(),
-      db.collection('quizHistory').get(),
-      db.collection('cbtHistory').get()
+      _quizHistoryTable.get(),
+      _cbtHistoryTable.get()
     ]);
 
     // Count all students — exclude admin accounts
@@ -2915,11 +3318,11 @@ async function sendEmergencyAlert(){
   const title=document.getElementById('emg-title').value.trim();
   const msg=document.getElementById('emg-msg').value.trim();
   if(!title||!msg){showToast('Fill title and message');return;}
-  await db.collection('settings').doc('emergency').set({title,msg,active:true,sentAt:new Date().toISOString()});
+  await _settingsTable.doc('emergency').set({title,msg,active:true,sentAt:new Date().toISOString()});
   showToast('🚨 Emergency alert sent to all students!');
 }
 async function clearEmergencyAlert(){
-  await db.collection('settings').doc('emergency').set({active:false},{merge:true});
+  await _settingsTable.doc('emergency').set({active:false},{merge:true});
   showToast('Emergency alert cleared');
 }
 
@@ -2929,12 +3332,12 @@ async function saveCountdown(){
   const date=document.getElementById('cd-date').value;
   const active=document.getElementById('cd-active').checked;
   if(!date){showToast('Select exam date');return;}
-  await db.collection('settings').doc('examCountdown').set({label,examDate:date,active,updatedAt:new Date().toISOString()});
+  await _settingsTable.doc('examCountdown').set({label,examDate:date,active,updatedAt:new Date().toISOString()});
   showToast('Exam countdown saved!');
 }
 async function loadCountdownSettings(){
   try{
-    const doc=await db.collection('settings').doc('examCountdown').get();
+    const doc=await _settingsTable.doc('examCountdown').get();
     if(doc.exists){const d=doc.data();if(d.label)document.getElementById('cd-label').value=d.label;if(d.examDate)document.getElementById('cd-date').value=d.examDate;document.getElementById('cd-active').checked=d.active||false;}
   }catch(e){}
 }
@@ -2945,12 +3348,12 @@ async function saveSOTW(){
   const reason=document.getElementById('sotw-reason-inp').value.trim();
   const active=document.getElementById('sotw-active').checked;
   if(!name){showToast('Enter student name');return;}
-  await db.collection('settings').doc('sotw').set({name,reason,active,updatedAt:new Date().toISOString()});
+  await _settingsTable.doc('sotw').set({name,reason,active,updatedAt:new Date().toISOString()});
   showToast('Student of the Week saved!');
 }
 async function loadSOTWSettings(){
   try{
-    const doc=await db.collection('settings').doc('sotw').get();
+    const doc=await _settingsTable.doc('sotw').get();
     if(doc.exists){const d=doc.data();if(d.name)document.getElementById('sotw-name-inp').value=d.name;if(d.reason)document.getElementById('sotw-reason-inp').value=d.reason;document.getElementById('sotw-active').checked=d.active||false;}
   }catch(e){}
 }
@@ -2964,12 +3367,12 @@ async function saveDailyChallenge(){
   const explanation=document.getElementById('dc-exp').value.trim();
   const active=document.getElementById('dc-active').checked;
   if(!q||options.some(o=>!o)){showToast('Fill all fields');return;}
-  await db.collection('settings').doc('dailyChallenge').set({question:q,options,answer,points,explanation,active,date:new Date().toDateString(),updatedAt:new Date().toISOString()});
+  await _settingsTable.doc('dailyChallenge').set({question:q,options,answer,points,explanation,active,date:new Date().toDateString(),updatedAt:new Date().toISOString()});
   showToast('Daily challenge saved!');
 }
 async function loadDailyChallengeSettings(){
   try{
-    const doc=await db.collection('settings').doc('dailyChallenge').get();
+    const doc=await _settingsTable.doc('dailyChallenge').get();
     if(doc.exists){const d=doc.data();if(d.question)document.getElementById('dc-q').value=d.question;if(d.options){['a','b','c','d'].forEach((l,i)=>document.getElementById('dc-'+l).value=d.options[i]||'');}if(typeof d.answer!=='undefined')document.getElementById('dc-ans').value=d.answer;if(d.points)document.getElementById('dc-pts').value=d.points;if(d.explanation)document.getElementById('dc-exp').value=d.explanation;document.getElementById('dc-active').checked=d.active!==false;}
   }catch(e){}
 }
@@ -2981,7 +3384,7 @@ async function addVideo(){
   const url=document.getElementById('vid-url').value.trim();
   const lecturer=document.getElementById('vid-lecturer').value.trim();
   if(!title||!url){showToast('Fill title and URL');return;}
-  await db.collection('videos').add({title,course,url,lecturer,createdAt:new Date().toISOString()});
+  await _videosTable.add({title,course,url,lecturer,createdAt:new Date().toISOString()});
   ['vid-title','vid-course','vid-url','vid-lecturer'].forEach(id=>document.getElementById(id).value='');
   showToast('Video added!');
 }
@@ -3222,7 +3625,7 @@ async function loadAdminPQBank(subject){
   // Custom questions from Firestore
   let custom = [];
   try{
-    const snap = await db.collection('pqBank').where('subject','==',subject).get();
+    const snap = await _pqBankTable.where('subject','==',subject).get();
     custom = snap.docs.map(d=>({id:d.id,...d.data(), isBuiltIn:false}));
   }catch(e){}
 
@@ -3350,7 +3753,7 @@ async function addPQBankQuestion(){
   const exp = document.getElementById('pqb-exp').value.trim();
   if(!q||opts.some(o=>!o)){showToast('Fill question and all 4 options');return;}
   try{
-    await db.collection('pqBank').add({
+    await _pqBankTable.add({
       subject: adminPQSubject, q, opts, ans, exp,
       createdAt: new Date().toISOString()
     });
@@ -3361,7 +3764,7 @@ async function addPQBankQuestion(){
 }
 
 async function deletePQBankQuestion(id){
-  await db.collection('pqBank').doc(id).delete();
+  await _pqBankTable.doc(id).delete();
   showToast('Question deleted');
   loadAdminPQBank(adminPQSubject);
 }
@@ -3371,7 +3774,7 @@ let cbtHTMLContent = '';
 
 async function loadCBTExams(){
   try{
-    const snap = await db.collection('cbtExams').orderBy('createdAt','desc').get();
+    const snap = await _cbtExamsTable.orderBy('createdAt','desc').get();
     const exams = snap.docs.map(d=>({id:d.id,...d.data()}));
 
     // Populate dropdowns
@@ -3415,7 +3818,7 @@ async function loadCBTExams(){
     // Load question counts
     for(const e of exams){
       for(const s of ['A','B','C','D','E'].slice(0, e.sections||4)){
-        db.collection('cbtExams').doc(e.id).collection('questions')
+        _cbtExamsTable.doc(e.id).collection('questions')
           .where('section','==',s).get()
           .then(snap=>{
             const el = document.getElementById(`cbt-count-${e.id}-${s}`);
@@ -3467,7 +3870,7 @@ async function createCBTExam(){
   if(!title||!code){showToast('Enter title and code');return;}
   if(sections < 1 || sections > 200){showToast('Sections must be between 1 and 200');return;}
   try{
-    await db.collection('cbtExams').add({
+    await _cbtExamsTable.add({
       title, course, code, duration, sections, qps, instructions,
       active: false, createdAt: new Date().toISOString()
     });
@@ -3495,7 +3898,7 @@ async function addCBTQuestion(){
   if(!examId){showToast('Select an exam');return;}
   if(!q||opts.some(o=>!o)){showToast('Fill all fields');return;}
   try{
-    await db.collection('cbtExams').doc(examId).collection('questions').add({
+    await _cbtExamsTable.doc(examId).collection('questions').add({
       q, opts, ans, exp, section, createdAt: new Date().toISOString()
     });
     ['cbt-q','cbt-oa','cbt-ob','cbt-oc','cbt-od','cbt-exp'].forEach(id=>document.getElementById(id).value='');
@@ -3542,7 +3945,7 @@ async function aiExtractCBTAppend(){
   const setStatus = (msg, color='var(--gold2)') => { statusEl.style.color=color; statusEl.textContent=msg; };
 
   try{
-    const groqSnap = await db.collection('settings').doc('config').get();
+    const groqSnap = await _settingsTable.doc('config').get();
     const groqKey = groqSnap.exists ? groqSnap.data().groqKey : '';
     if(!groqKey){setStatus('❌ GROQ key not set.','var(--red)');return;}
 
@@ -3558,7 +3961,7 @@ async function aiExtractCBTAppend(){
 
     // Load existing questions first
     setStatus('⏳ Loading existing questions...');
-    const existSnap = await db.collection('cbtExams').doc(examId).collection('questions').get();
+    const existSnap = await _cbtExamsTable.doc(examId).collection('questions').get();
     const existingQs = existSnap.docs.map(d=>({firestoreId:d.id,...d.data()}));
     addLog('📚 Existing questions: '+existingQs.length);
 
@@ -3642,7 +4045,7 @@ async function aiExtractCBTAppend(){
     // Save new questions with temporary section labels (will be renumbered)
     for(const q of newExtracted){
       while((q.opts||[]).length < 4)(q.opts=q.opts||[]).push('—');
-      await db.collection('cbtExams').doc(examId).collection('questions').add({
+      await _cbtExamsTable.doc(examId).collection('questions').add({
         q:(q.q||'').trim(), opts:(q.opts||[]).slice(0,4),
         ans:Math.min(Math.max(parseInt(q.ans)||0,0),3),
         exp:q.exp||'', section:'PENDING',
@@ -3655,7 +4058,7 @@ async function aiExtractCBTAppend(){
 
     // Re-number ALL sections from scratch
     setStatus('⏳ Re-distributing all '+(existingQs.length+saved)+' questions into sections...');
-    const allSnap = await db.collection('cbtExams').doc(examId).collection('questions').orderBy('order').get().catch(()=>db.collection('cbtExams').doc(examId).collection('questions').get());
+    const allSnap = await _cbtExamsTable.doc(examId).collection('questions').orderBy('order').get().catch(()=>_cbtExamsTable.doc(examId).collection('questions').get());
     const allDocs = allSnap.docs;
     let updated = 0;
     for(let idx=0; idx<allDocs.length; idx++){
@@ -3706,7 +4109,7 @@ async function aiExtractCBTQuestions(){
   };
 
   try{
-    const groqSnap = await db.collection('settings').doc('config').get();
+    const groqSnap = await _settingsTable.doc('config').get();
     const groqKey = groqSnap.exists ? groqSnap.data().groqKey : '';
     if(!groqKey){setStatus('❌ GROQ key not set. Go to Settings.','var(--red)');return;}
 
@@ -3723,7 +4126,7 @@ async function aiExtractCBTQuestions(){
     else addLog('🎯 Mode: extract all questions, '+qPerSection+' per section');
 
     // Confirm replace if questions exist
-    const existing = await db.collection('cbtExams').doc(examId).collection('questions').get();
+    const existing = await _cbtExamsTable.doc(examId).collection('questions').get();
     if(existing.size > 0){
       if(!confirm('This exam has '+existing.size+' existing questions.\n\nReplace ALL with new extraction?')) return;
       setStatus('🗑️ Clearing existing questions...');
@@ -3873,7 +4276,7 @@ async function aiExtractCBTQuestions(){
       // Parallel writes within section
       const writes = sQuestions.map((q,order)=>{
         while((q.opts||[]).length < 4)(q.opts||[]).push('—');
-        return db.collection('cbtExams').doc(examId).collection('questions').add({
+        return _cbtExamsTable.doc(examId).collection('questions').add({
           q: (q.q||'').trim(),
           opts: (q.opts||[]).slice(0,4),
           ans: Math.min(Math.max(parseInt(q.ans)||0, 0), 3),
@@ -3916,7 +4319,7 @@ async function aiExtractCBTQuestions(){
 }
 
 async function toggleCBTExam(id, active){
-  await db.collection('cbtExams').doc(id).update({active});
+  await _cbtExamsTable.doc(id).update({active});
   showToast(active?'Exam activated ✅':'Exam deactivated');
   loadCBTExams();
 }
@@ -3924,9 +4327,9 @@ async function toggleCBTExam(id, active){
 async function deleteCBTExam(id){
   if(!confirm('Delete this exam and ALL its questions?')) return;
   // Delete all questions
-  const qSnap = await db.collection('cbtExams').doc(id).collection('questions').get();
+  const qSnap = await _cbtExamsTable.doc(id).collection('questions').get();
   for(const d of qSnap.docs) await d.ref.delete();
-  await db.collection('cbtExams').doc(id).delete();
+  await _cbtExamsTable.doc(id).delete();
   showToast('Exam deleted');
   loadCBTExams();
 }
@@ -3950,7 +4353,7 @@ async function loadAILiveStats(){
   try{
     const [studSnap, quizSnap] = await Promise.all([
       _usersTable.get(),
-      db.collection('quizHistory').get()
+      _quizHistoryTable.get()
     ]);
     const today = new Date().toDateString();
     const students = studSnap.docs.map(d=>d.data());
@@ -3993,7 +4396,7 @@ function showActionResult(title, content, buttons=[]){
 
 // Quick action buttons
 async function adminAIAction(type){
-  const groqSnap = await db.collection('settings').doc('config').get();
+  const groqSnap = await _settingsTable.doc('config').get();
   const groqKey = groqSnap.exists ? groqSnap.data().groqKey : '';
 
   if(type==='students'){
@@ -4177,8 +4580,8 @@ async function adminAIAction(type){
     // Full platform analysis
     const [studSnap, quizSnap, pqSnap] = await Promise.all([
       _usersTable.get(),
-      db.collection('quizHistory').orderBy('date','desc').limit(50).get().catch(()=>({docs:[]})),
-      db.collection('pqBank').get().catch(()=>({docs:[]}))
+      _quizHistoryTable.orderBy('date','desc').limit(50).get().catch(()=>({docs:[]})),
+      _pqBankTable.get().catch(()=>({docs:[]}))
     ]);
     const students = studSnap.docs.map(d=>d.data());
     const quizzes = quizSnap.docs.map(d=>d.data());
@@ -4411,7 +4814,7 @@ Return ONLY the JSON array, no other text.`}],
     if(!query) return;
     showActionResult('🔍 Searching...','<div style="color:var(--text2)">Loading questions...</div>');
     try{
-      const snap = await db.collection('pqBank').get();
+      const snap = await _pqBankTable.get();
       const results = snap.docs
         .map(d=>({id:d.id,...d.data()}))
         .filter(q=>(q.q||'').toLowerCase().includes(query.toLowerCase()) ||
@@ -4443,7 +4846,7 @@ Return ONLY the JSON array, no other text.`}],
     if(!course || !courseNames[course]){showToast('Invalid course code');return;}
     showActionResult('📚 Loading...','<div style="color:var(--text2)">Fetching questions...</div>');
     try{
-      const snap = await db.collection('pqBank').where('subject','==',course).get();
+      const snap = await _pqBankTable.where('subject','==',course).get();
       if(snap.empty){
         showActionResult(`${courseNames[course]} — No Custom Questions`,`<div style="color:var(--text2)">No custom questions found. Built-in questions cannot be deleted here.</div>`);
         return;
@@ -4478,7 +4881,7 @@ Return ONLY the JSON array, no other text.`}],
   else if(type==='pq_duplicates'){
     showActionResult('🔍 Scanning for Duplicates...','<div style="color:var(--text2)">Reading all PQ bank questions...</div>');
     try{
-      const snap = await db.collection('pqBank').get();
+      const snap = await _pqBankTable.get();
       if(snap.empty){showActionResult('✅ No Custom Questions','<div style="color:var(--text2)">PQ bank is empty.</div>');return;}
       const all = snap.docs.map(d=>({id:d.id,...d.data()}));
       const seen = {};
@@ -4511,7 +4914,7 @@ Return ONLY the JSON array, no other text.`}],
     const subject = prompt('Quality check for which course?\n(chm101, chm102, mth101, mth102, phy101, phy102)')?.toLowerCase().trim();
     if(!subject) return;
     showActionResult('✅ Running Quality Check...','<div style="color:var(--text2)">AI reviewing questions...</div>');
-    const snap = await db.collection('pqBank').where('subject','==',subject).get();
+    const snap = await _pqBankTable.where('subject','==',subject).get();
     const builtIn = (PQ_BANK[subject]||[]).slice(0,8);
     const custom = snap.docs.map(d=>d.data()).slice(0,7);
     const sample = [...builtIn,...custom].slice(0,15);
@@ -4529,7 +4932,7 @@ Return ONLY the JSON array, no other text.`}],
     if(!subject) return;
     showActionResult('🎯 Tagging Difficulty...','<div style="color:var(--text2)">AI analysing questions...</div>');
     try{
-      const snap=await db.collection('pqBank').where('subject','==',subject).get();
+      const snap=await _pqBankTable.where('subject','==',subject).get();
       const questions=snap.docs.map(d=>({id:d.id,...d.data()}));
       if(!questions.length){showActionResult('❌ No Custom Questions','<div style="color:var(--text2)">No Firestore questions to tag for this course.</div>');return;}
       const log=[];const addLog=(msg)=>{log.push(msg);showActionResult('🎯 Tagging Progress',log.map(l=>'<div style="font-size:.76rem;color:var(--green);padding:2px 0">✅ '+l+'</div>').join(''));};
@@ -4537,7 +4940,7 @@ Return ONLY the JSON array, no other text.`}],
       for(let i=0;i<Math.min(questions.length,50);i+=10){
         const batch=questions.slice(i,i+10);
         const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Rate these OAU 100L MCQ questions as Easy, Medium, or Hard. Return ONLY JSON:\n'+JSON.stringify(batch.map((q,j)=>({idx:j,q:q.q.substring(0,80)})))+'\nReturn: [{"idx":0,"difficulty":"Easy"},...]'}],max_tokens:400,temperature:0.2})});
-        try{const ratings=JSON.parse(((await r.json()).choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());for(const rating of ratings){const q=batch[rating.idx];if(q&&rating.difficulty){await db.collection('pqBank').doc(q.id).update({difficulty:rating.difficulty});tagged++;}}}catch(e){}
+        try{const ratings=JSON.parse(((await r.json()).choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());for(const rating of ratings){const q=batch[rating.idx];if(q&&rating.difficulty){await _pqBankTable.doc(q.id).update({difficulty:rating.difficulty});tagged++;}}}catch(e){}
         addLog('Tagged questions '+(i+1)+'-'+(i+batch.length));
       }
       addLog('🎉 Done! '+tagged+' questions tagged.');showToast('✅ '+tagged+' tagged!');
@@ -4550,7 +4953,7 @@ Return ONLY the JSON array, no other text.`}],
     const PQ_TOPICS_MAP={chm101:['Atomic Structure','Periodic Table','Ionic Bonding','Covalent Bonding','Stoichiometry','Gas Laws','Acids & Bases','Redox','Reaction Kinetics','Thermochemistry'],chm102:['Qualitative Analysis','Resonance','VSEPR','Hybridization','Intermolecular Forces','Noble Gases','Alkali Metals','Alkaline Earth Metals','Hydrogen','Transition Metals','Alcohols'],mth101:['Sets Theory','Number Systems','Indices & Logs','Surds','Quadratics','Polynomials','Partial Fractions','Sequences & Series','Binomial Theorem','Trigonometry','Functions','Limits','Differentiation','Permutations & Combinations'],mth102:['Integration','Definite Integrals','Vectors','Matrices','Complex Numbers','Differential Equations','Statistics','Probability','Coordinate Geometry'],phy101:['Measurements & Units','Kinematics','Newtons Laws','Work & Energy','Momentum','Circular Motion','Gravitation','SHM','Waves & Sound','Thermodynamics'],phy102:['Electrostatics','Electric Circuits','Capacitors','Magnetism','EM Induction','Optics','Modern Physics','Nuclear Physics','Special Relativity']};
     const topics=PQ_TOPICS_MAP[subject];if(!topics){showToast('Invalid course');return;}
     showActionResult('🏷️ Auto-Fixing Topics...','<div style="color:var(--text2)">Matching questions to topics...</div>');
-    const snap=await db.collection('pqBank').where('subject','==',subject).get();
+    const snap=await _pqBankTable.where('subject','==',subject).get();
     let fixed=0;
     for(const doc of snap.docs){const q=doc.data().q||'';const qLow=q.toLowerCase();let matched='';for(const t of topics){const kws=t.toLowerCase().split(/[\s&\/,]+/).filter(k=>k.length>3);if(kws.some(k=>qLow.includes(k))){matched=t;break;}}if(matched&&doc.data().topic!==matched){await doc.ref.update({topic:matched});fixed++;}}
     showActionResult('🏷️ Topics Fixed!','<div style="text-align:center;padding:16px;"><div style="font-size:2rem">🏷️</div><div style="font-family:Playfair Display,serif;font-size:1.1rem;font-weight:900;color:var(--green)">'+fixed+' Questions Updated</div></div>');
@@ -4569,7 +4972,7 @@ Return ONLY the JSON array, no other text.`}],
     const subjects=course==='mixed'?['chm101','mth101','phy101']:[course];
     for(const s of subjects){
       const builtIn=(PQ_BANK[s]||[]).map(q=>({...q,subject:s}));
-      try{const snap=await db.collection('pqBank').where('subject','==',s).get();pool.push(...builtIn,...snap.docs.map(d=>({id:d.id,...d.data()})));}
+      try{const snap=await _pqBankTable.where('subject','==',s).get();pool.push(...builtIn,...snap.docs.map(d=>({id:d.id,...d.data()})));}
       catch(e){pool.push(...builtIn);}
     }
     pool.sort(()=>Math.random()-0.5);
@@ -4604,7 +5007,7 @@ Return ONLY the JSON array, no other text.`}],
   else if(type==='topic_weakness_map'){
     showActionResult('🗺️ Loading...','<div style="color:var(--text2)">Analysing quiz history...</div>');
     try{
-      const snap=await db.collection('quizHistory').limit(300).get();
+      const snap=await _quizHistoryTable.limit(300).get();
       const history=snap.docs.map(d=>d.data());
       if(!history.length){showActionResult('📊 No Data','<div style="color:var(--text2)">No quiz attempts yet.</div>');return;}
       const courseStats={};
@@ -4632,7 +5035,7 @@ Return ONLY the JSON array, no other text.`}],
 
   else if(type==='platform_score'){
     showActionResult('🏆 Calculating Score...','<div style="color:var(--text2)">Analysing all metrics...</div>');
-    const [studSnap,quizSnap,pqSnap,motSnap,hotSnap,cbtSnap,annSnap]=await Promise.all([_usersTable.get(),db.collection('quizHistory').get().catch(()=>({size:0,docs:[]})),db.collection('pqBank').get().catch(()=>({size:0})),db.collection('motivations').get().catch(()=>({size:0})),db.collection('hotTopics').get().catch(()=>({size:0})),db.collection('cbtExams').get().catch(()=>({size:0})),db.collection('announcements').get().catch(()=>({size:0}))]);
+    const [studSnap,quizSnap,pqSnap,motSnap,hotSnap,cbtSnap,annSnap]=await Promise.all([_usersTable.get(),_quizHistoryTable.get().catch(()=>({size:0,docs:[]})),_pqBankTable.get().catch(()=>({size:0})),_motivationsTable.get().catch(()=>({size:0})),_hotTopicsTable.get().catch(()=>({size:0})),_cbtExamsTable.get().catch(()=>({size:0})),_announcementsTable.get().catch(()=>({size:0}))]);
     const students=studSnap.docs.map(d=>d.data());const weekAgo=Date.now()-7*24*60*60*1000;
     const activeRate=studSnap.size>0?students.filter(s=>s.lastSeen&&new Date(s.lastSeen).getTime()>weekAgo).length/studSnap.size:0;
     const engRate=studSnap.size>0?students.filter(s=>(s.points||0)>0).length/studSnap.size:0;
@@ -4646,7 +5049,7 @@ Return ONLY the JSON array, no other text.`}],
   else if(type==='data_backup'){
     showActionResult('💾 Exporting...','<div style="color:var(--text2)">Reading all collections...</div>');
     try{
-      const [studSnap,pqSnap,quizSnap,motSnap,hotSnap,annSnap,cbtSnap]=await Promise.all([_usersTable.get(),db.collection('pqBank').get().catch(()=>({docs:[]})),db.collection('quizHistory').limit(500).get().catch(()=>({docs:[]})),db.collection('motivations').get().catch(()=>({docs:[]})),db.collection('hotTopics').get().catch(()=>({docs:[]})),db.collection('announcements').get().catch(()=>({docs:[]})),db.collection('cbtExams').get().catch(()=>({docs:[]}))]);
+      const [studSnap,pqSnap,quizSnap,motSnap,hotSnap,annSnap,cbtSnap]=await Promise.all([_usersTable.get(),_pqBankTable.get().catch(()=>({docs:[]})),_quizHistoryTable.limit(500).get().catch(()=>({docs:[]})),_motivationsTable.get().catch(()=>({docs:[]})),_hotTopicsTable.get().catch(()=>({docs:[]})),_announcementsTable.get().catch(()=>({docs:[]})),_cbtExamsTable.get().catch(()=>({docs:[]}))]);
       const backup={exportedAt:new Date().toISOString(),platform:'BABSPHARM Cloud',collections:{users:studSnap.docs.map(d=>({id:d.id,...d.data()})),pqBank:pqSnap.docs.map(d=>({id:d.id,...d.data()})),quizHistory:quizSnap.docs.map(d=>({id:d.id,...d.data()})),motivations:motSnap.docs.map(d=>({id:d.id,...d.data()})),hotTopics:hotSnap.docs.map(d=>({id:d.id,...d.data()})),announcements:annSnap.docs.map(d=>({id:d.id,...d.data()})),cbtExams:cbtSnap.docs.map(d=>({id:d.id,...d.data()}))},summary:{users:studSnap.size,pqBank:pqSnap.docs.length,quizHistory:quizSnap.docs.length,motivations:motSnap.docs.length}};
       const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
       const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='BABSPHARM_Backup_'+new Date().toISOString().split('T')[0]+'.json';a.click();URL.revokeObjectURL(url);
@@ -4658,7 +5061,7 @@ Return ONLY the JSON array, no other text.`}],
     if(!groqKey){showToast('Set GROQ key first');return;}
     showActionResult('🧠 Generating Smart Announcement...','<div style="color:var(--text2)">Reading live data...</div>');
     try{
-      const [studSnap,quizSnap,hotSnap]=await Promise.all([_usersTable.get(),db.collection('quizHistory').limit(100).get().catch(()=>({size:0})),db.collection('hotTopics').limit(3).get().catch(()=>({docs:[]}))]);
+      const [studSnap,quizSnap,hotSnap]=await Promise.all([_usersTable.get(),_quizHistoryTable.limit(100).get().catch(()=>({size:0})),_hotTopicsTable.limit(3).get().catch(()=>({docs:[]}))]);
       const students=studSnap.docs.map(d=>d.data());const weekAgo=Date.now()-7*24*60*60*1000;
       const activeToday=students.filter(s=>s.lastSeen&&new Date(s.lastSeen).toDateString()===new Date().toDateString()).length;
       const inactive=students.filter(s=>!s.lastSeen||new Date(s.lastSeen).getTime()<weekAgo).length;
@@ -4674,7 +5077,7 @@ Return ONLY the JSON array, no other text.`}],
   // ══ INTELLIGENCE HANDLERS ══
   else if(type==='intel_predict_scores'){
     showActionResult('🔮 Predicting...','<div style="color:var(--text2)">Analysing patterns...</div>');
-    const [studSnap,quizSnap] = await Promise.all([_usersTable.get(), db.collection('quizHistory').limit(500).get().catch(()=>({docs:[]}))]);
+    const [studSnap,quizSnap] = await Promise.all([_usersTable.get(), _quizHistoryTable.limit(500).get().catch(()=>({docs:[]}))]);
     const students = studSnap.docs.map(d=>({id:d.id,...d.data()}));
     const quizByUser = {};
     quizSnap.docs.forEach(d=>{ const q=d.data(); if(q.uid){ if(!quizByUser[q.uid]) quizByUser[q.uid]=[]; quizByUser[q.uid].push(q); }});
@@ -4757,7 +5160,7 @@ Return ONLY the JSON array, no other text.`}],
     const snap=await _usersTable.get();
     const student=snap.docs.map(d=>({id:d.id,...d.data()})).find(s=>(s.email||'').toLowerCase().includes(email.toLowerCase())||(s.name||'').toLowerCase().includes(email.toLowerCase()));
     if(!student){showActionResult('❌ Not Found','<div style="color:var(--text2)">Student not found. Try a different name or email.</div>');return;}
-    const quizSnap=await db.collection('quizHistory').where('uid','==',student.id).get().catch(()=>({docs:[]}));
+    const quizSnap=await _quizHistoryTable.where('uid','==',student.id).get().catch(()=>({docs:[]}));
     const quizzes=quizSnap.docs.map(d=>d.data());
     const avgScore=quizzes.length?Math.round(quizzes.reduce((t,q)=>t+(q.score/(q.total||10)*100),0)/quizzes.length):0;
     const courses={};quizzes.forEach(q=>{if(q.course)courses[q.course]=(courses[q.course]||0)+1;});
@@ -4887,8 +5290,8 @@ Return ONLY the JSON array, no other text.`}],
     showActionResult('⏳ Creating Challenge...','<div style="color:var(--text2)">Setting up weekly challenge...</div>');
     const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Create a weekly quiz challenge announcement for BABSPHARM Cloud OAU students. Subject: ${subject}. Prize: ${prize}. Include: challenge name, rules (attempt in app), how to win, deadline (Friday). Nigerian energy. Exciting. Emojis. Max 5 sentences.`}],max_tokens:250})});
     const text=(await r.json()).choices?.[0]?.message?.content||'';
-    await db.collection('announcements').add({title:'🏆 WEEKLY CHALLENGE!',msg:text,createdAt:new Date().toISOString()});
-    await db.collection('coupons').add({code:'CHALLENGE'+Date.now().toString().slice(-4),pts:parseInt(prize)||200,limit:1,used:0,active:true,createdAt:new Date().toISOString()});
+    await _announcementsTable.add({title:'🏆 WEEKLY CHALLENGE!',msg:text,createdAt:new Date().toISOString()});
+    await _couponsTable.add({code:'CHALLENGE'+Date.now().toString().slice(-4),pts:parseInt(prize)||200,limit:1,used:0,active:true,createdAt:new Date().toISOString()});
     showActionResult('🏆 Challenge Launched!',`<div style="font-size:.84rem;line-height:1.7;padding:12px;background:rgba(255,255,255,.04);border-radius:8px;">${text}</div><div style="font-size:.74rem;color:var(--green);margin-top:8px;">✅ Announcement posted + prize coupon created!</div>`);
     showToast('✅ Challenge live!');
   }
@@ -4900,9 +5303,9 @@ Return ONLY the JSON array, no other text.`}],
     const depts={};students.forEach(s=>{if(s.dept)depts[s.dept]=(depts[s.dept]||0)+1;});
     // Create tournament announcement
     const msg='⚔️ SUBJECT TOURNAMENT IS HERE! 🔥\n\nWhich course reigns supreme? CHM vs MTH vs PHY!\n\nRules:\n✅ Take quizzes in any subject this week\n✅ Top scorer per subject wins 500 points\n✅ Department with highest avg wins bonus\n✅ Tournament ends Sunday midnight\n\n👉 Log in NOW and start grinding! 💪\n\nMay the best student WIN! 🏆';
-    await db.collection('announcements').add({title:'⚔️ SUBJECT TOURNAMENT!',msg,createdAt:new Date().toISOString()});
+    await _announcementsTable.add({title:'⚔️ SUBJECT TOURNAMENT!',msg,createdAt:new Date().toISOString()});
     for(const subj of ['CHM','MTH','PHY']){
-      await db.collection('hotTopics').add({topic:'Tournament — '+subj+' Leaderboard',course:subj+' 101',urgency:'urgent',note:'Weekly tournament active — score high!',createdAt:new Date().toISOString()});
+      await _hotTopicsTable.add({topic:'Tournament — '+subj+' Leaderboard',course:subj+' 101',urgency:'urgent',note:'Weekly tournament active — score high!',createdAt:new Date().toISOString()});
     }
     showActionResult('⚔️ Tournament Launched!',`<div style="font-size:.82rem;color:var(--text);line-height:1.7;white-space:pre-wrap;">${msg}</div><div style="font-size:.74rem;color:var(--green);margin-top:8px;">✅ Announcement posted + hot topics set for CHM, MTH and PHY!</div>`);
     showToast('⚔️ Tournament is live!');
@@ -4921,7 +5324,7 @@ Return ONLY the JSON array, no other text.`}],
       else if(daysSince<=7){ await _usersTable.doc(s.id).set({points:(s.points||0)+30},{merge:true}); bonuses.day7++; }
       else if(daysSince<=14){ await _usersTable.doc(s.id).set({points:(s.points||0)+10},{merge:true}); bonuses.day14++; }
     }
-    await db.collection('announcements').add({title:'🔥 STREAK BONUSES AWARDED!',msg:'Streak bonuses just dropped! 🔥\n\n🥇 3-day streak: +50 bonus points\n🥈 7-day streak: +30 bonus points\n🥉 14-day streak: +10 bonus points\n\nCheck your points balance! Keep logging in daily for bigger rewards. 💪',createdAt:new Date().toISOString()});
+    await _announcementsTable.add({title:'🔥 STREAK BONUSES AWARDED!',msg:'Streak bonuses just dropped! 🔥\n\n🥇 3-day streak: +50 bonus points\n🥈 7-day streak: +30 bonus points\n🥉 14-day streak: +10 bonus points\n\nCheck your points balance! Keep logging in daily for bigger rewards. 💪',createdAt:new Date().toISOString()});
     showActionResult('🔥 Streak Bonuses Awarded!',`<div style="font-size:.8rem;line-height:2;color:var(--text);">
       <div>🥇 3-day streak: <b style="color:var(--green);">${bonuses.day3} students</b> got +50 pts</div>
       <div>🥈 7-day streak: <b style="color:#fbbf24;">${bonuses.day7} students</b> got +30 pts</div>
@@ -4938,7 +5341,7 @@ Return ONLY the JSON array, no other text.`}],
     const winner=eligible[Math.floor(Math.random()*eligible.length)];
     const prize=parseInt(prompt('Prize for winner (bonus points):')||'300');
     await _usersTable.doc(winner.id).set({points:(winner.points||0)+prize},{merge:true});
-    await db.collection('announcements').add({title:'🎰 PRIZE DRAW WINNER!',msg:'🎰 PRIZE DRAW RESULTS ARE IN!\n\nCongratulations to our lucky winner:\n\n🏆 '+winner.name+' ('+winner.dept+')\n\nYou just won '+prize+' BONUS POINTS! 🎉\n\nThank you to all '+ eligible.length+' eligible students who participated. Keep being active — more draws coming! 💪',createdAt:new Date().toISOString()});
+    await _announcementsTable.add({title:'🎰 PRIZE DRAW WINNER!',msg:'🎰 PRIZE DRAW RESULTS ARE IN!\n\nCongratulations to our lucky winner:\n\n🏆 '+winner.name+' ('+winner.dept+')\n\nYou just won '+prize+' BONUS POINTS! 🎉\n\nThank you to all '+ eligible.length+' eligible students who participated. Keep being active — more draws coming! 💪',createdAt:new Date().toISOString()});
     showActionResult('🎰 Prize Draw Complete!',`<div style="text-align:center;padding:16px;"><div style="font-size:2.5rem;">🏆</div><div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:var(--gold2);">${winner.name}</div><div style="font-size:.8rem;color:var(--text2);margin-top:4px;">${winner.dept||'—'} • Won ${prize} bonus points!</div><div style="font-size:.74rem;color:var(--green);margin-top:8px;">✅ Points awarded + announcement posted!<br>Draw pool: ${eligible.length} active students</div></div>`);
     showToast('🎰 Winner: '+winner.name+'!');
   }
@@ -4951,8 +5354,8 @@ Return ONLY the JSON array, no other text.`}],
     showActionResult('⏳ Creating Badge...','<div style="color:var(--text2)">Designing badge announcement...</div>');
     const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Create an exciting announcement for a new achievement badge called "${badgeName}" on BABSPHARM Cloud. Criteria to earn it: ${criteria}. Make it feel prestigious. Nigerian energy. Tell students how to earn it. Max 4 sentences. Emojis.`}],max_tokens:200})});
     const text=(await r.json()).choices?.[0]?.message?.content||'';
-    await db.collection('announcements').add({title:'🥇 NEW BADGE: '+badgeName.toUpperCase(),msg:text,createdAt:new Date().toISOString()});
-    await db.collection('badges').add({name:badgeName,criteria,emoji:'🥇',createdAt:new Date().toISOString()}).catch(()=>{});
+    await _announcementsTable.add({title:'🥇 NEW BADGE: '+badgeName.toUpperCase(),msg:text,createdAt:new Date().toISOString()});
+    await _badgesTable.add({name:badgeName,criteria,emoji:'🥇',createdAt:new Date().toISOString()}).catch(()=>{});
     showActionResult('🥇 Badge Created!',`<div style="font-size:.84rem;line-height:1.7;padding:12px;background:rgba(255,255,255,.04);border-radius:8px;">${text}</div><div style="font-size:.74rem;color:var(--green);margin-top:8px;">✅ Announcement posted!</div>`);
     showToast('🥇 Badge launched!');
   }
@@ -4960,10 +5363,10 @@ Return ONLY the JSON array, no other text.`}],
   else if(type==='gamify_double_points'){
     const endDate=prompt('Double points until? (e.g. Sunday 11:59PM):')||'Sunday midnight';
     const msg='💰 DOUBLE POINTS WEEKEND IS HERE! 🔥\n\nEvery quiz you take this weekend earns DOUBLE POINTS!\n\n🎯 How to earn:\n✅ Take any quiz in the app\n✅ Points automatically doubled\n✅ Offer ends: '+endDate+'\n\nThis is your chance to CLIMB the leaderboard fast! 🚀\n\nLog in NOW → 👉 https://babspharm1-lgtm.github.io/BABSPHARM/';
-    await db.collection('announcements').add({title:'💰 DOUBLE POINTS WEEKEND!',msg,createdAt:new Date().toISOString()});
-    await db.collection('settings').doc('doublePoints').set({active:true,endDate,startedAt:new Date().toISOString()});
+    await _announcementsTable.add({title:'💰 DOUBLE POINTS WEEKEND!',msg,createdAt:new Date().toISOString()});
+    await _settingsTable.doc('doublePoints').set({active:true,endDate,startedAt:new Date().toISOString()});
     showActionResult('💰 Double Points Active!',`<div style="font-size:.82rem;color:var(--text);line-height:1.7;white-space:pre-wrap;">${msg}</div><div style="font-size:.74rem;color:var(--green);margin-top:8px;">✅ Announcement posted! Remember to disable when weekend ends.</div>`,
-      [{label:'🛑 Disable Double Points', action:"db.collection('settings').doc('doublePoints').set({active:false});showToast('✅ Double points disabled')", primary:false}]);
+      [{label:'🛑 Disable Double Points', action:"_settingsTable.doc('doublePoints').set({active:false});showToast('✅ Double points disabled')", primary:false}]);
     showToast('💰 Double points weekend active!');
   }
 
@@ -5042,7 +5445,7 @@ Return ONLY the JSON array, no other text.`}],
 
   else if(type==='biz_action_plan'){
     if(!groqKey){showToast('Set GROQ key first');return;}
-    const [studSnap,quizSnap]=await Promise.all([_usersTable.get(),db.collection('quizHistory').get().catch(()=>({size:0}))]);
+    const [studSnap,quizSnap]=await Promise.all([_usersTable.get(),_quizHistoryTable.get().catch(()=>({size:0}))]);
     const students=studSnap.docs.map(d=>d.data());
     const weekAgo=Date.now()-7*24*60*60*1000;
     showActionResult('⏳ Building Action Plan...','<div style="color:var(--text2)">AI generating 30-day roadmap...</div>');
@@ -5090,21 +5493,21 @@ Return ONLY the JSON array, no other text.`}],
     try{
       const r1=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Write a powerful daily motivation for OAU students. Nigerian energy. Max 2 sentences. Emojis.'}],max_tokens:100})});
       const motiv=(await r1.json()).choices?.[0]?.message?.content||'';
-      await db.collection('motivations').add({emoji:'🌅',text:motiv,sub:'Daily motivation',category:'general',createdAt:new Date().toISOString()});
+      await _motivationsTable.add({emoji:'🌅',text:motiv,sub:'Daily motivation',category:'general',createdAt:new Date().toISOString()});
       addLog('✅ Motivation added: '+motiv.substring(0,50)+'...');
     }catch(e){addLog('⚠️ Motivation skipped');}
     addLog('Setting daily hot topic...');
     try{
       const r2=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Give 1 OAU exam hot topic for today. JSON: {"topic":"name","course":"CHM 101","urgency":"urgent","note":"brief reason"}'}],max_tokens:100})});
       const t=JSON.parse((await r2.json()).choices?.[0]?.message?.content.replace(/```json|```/g,'').trim()||'{}');
-      if(t.topic) await db.collection('hotTopics').add({...t,createdAt:new Date().toISOString()});
+      if(t.topic) await _hotTopicsTable.add({...t,createdAt:new Date().toISOString()});
       addLog('✅ Hot topic set: '+(t.topic||'done'));
     }catch(e){addLog('⚠️ Hot topic skipped');}
     addLog('Posting daily tip...');
     try{
       const r3=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Write 1 exam tip for OAU 100L students. Today tone. Nigerian. 2 sentences. Emojis.'}],max_tokens:100})});
       const tip=(await r3.json()).choices?.[0]?.message?.content||'';
-      await db.collection('announcements').add({title:'💡 Daily Tip',msg:tip,createdAt:new Date().toISOString()});
+      await _announcementsTable.add({title:'💡 Daily Tip',msg:tip,createdAt:new Date().toISOString()});
       addLog('✅ Daily tip posted');
     }catch(e){addLog('⚠️ Tip skipped');}
     addLog('════ Daily routine complete! ════');
@@ -5116,13 +5519,13 @@ Return ONLY the JSON array, no other text.`}],
     const log=[];const addLog=(msg)=>{log.push(msg);showActionResult('📅 Weekly Routine Running',log.map(l=>'<div style="font-size:.76rem;color:#818cf8;padding:2px 0">'+l+'</div>').join(''));};
     showActionResult('📅 Starting...','<div style="color:var(--text2)">Running weekly routine...</div>');
     // Study plan
-    try{const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Create this week study timetable for OAU 100L. Mon-Sun, CHM 101, MTH 101, PHY 101. Brief, emojis.'}],max_tokens:250})});const t=(await r.json()).choices?.[0]?.message?.content||'';await db.collection('announcements').add({title:"📅 This Week's Study Plan",msg:t,createdAt:new Date().toISOString()});addLog('✅ Weekly study plan posted');}catch(e){addLog('⚠️ Study plan skipped');}
+    try{const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Create this week study timetable for OAU 100L. Mon-Sun, CHM 101, MTH 101, PHY 101. Brief, emojis.'}],max_tokens:250})});const t=(await r.json()).choices?.[0]?.message?.content||'';await _announcementsTable.add({title:"📅 This Week's Study Plan",msg:t,createdAt:new Date().toISOString()});addLog('✅ Weekly study plan posted');}catch(e){addLog('⚠️ Study plan skipped');}
     // Leaderboard
     const snap=await _usersTable.get();const top3=snap.docs.map(d=>d.data()).sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,3);
-    await db.collection('announcements').add({title:'🏆 Weekly Leaderboard!',msg:'🏆 TOP STUDENTS THIS WEEK!\n\n'+top3.map((s,i)=>['🥇','🥈','🥉'][i]+' '+s.name+' — '+(s.points||0)+' pts').join('\n')+'\n\nKeep pushing! Leaderboard updates every week! 💪',createdAt:new Date().toISOString()});
+    await _announcementsTable.add({title:'🏆 Weekly Leaderboard!',msg:'🏆 TOP STUDENTS THIS WEEK!\n\n'+top3.map((s,i)=>['🥇','🥈','🥉'][i]+' '+s.name+' — '+(s.points||0)+' pts').join('\n')+'\n\nKeep pushing! Leaderboard updates every week! 💪',createdAt:new Date().toISOString()});
     addLog('✅ Leaderboard posted: '+(top3[0]?.name||'—')+' leads!');
     // Re-engagement coupon
-    await db.collection('coupons').add({code:'WEEK'+new Date().toISOString().slice(0,10).replace(/-/g,''),pts:40,limit:200,used:0,active:true,createdAt:new Date().toISOString()});
+    await _couponsTable.add({code:'WEEK'+new Date().toISOString().slice(0,10).replace(/-/g,''),pts:40,limit:200,used:0,active:true,createdAt:new Date().toISOString()});
     addLog('✅ Weekly coupon created');
     addLog('🎉 Weekly routine complete!');
     showToast('✅ Weekly routine done!');
@@ -5132,12 +5535,12 @@ Return ONLY the JSON array, no other text.`}],
     if(!groqKey){showToast('Set GROQ key first');return;}
     const log=[];const addLog=(msg)=>{log.push(msg);showActionResult('📚 Exam Season Mode',log.map(l=>'<div style="font-size:.76rem;color:#818cf8;padding:2px 0">'+l+'</div>').join(''));};
     showActionResult('📚 Activating Exam Season...','<div style="color:var(--text2)">All systems go...</div>');
-    await db.collection('announcements').add({title:'⚠️ EXAM SEASON IS HERE!',msg:'⚠️ EXAM SEASON OFFICIALLY ACTIVATED! 🔥\n\nAll AI tutors are on standby. PQ bank is fully loaded. CBT exams are live.\n\nYour study strategy:\n1️⃣ AI Tutor → Learn each topic\n2️⃣ PQ Bank → Practice past questions\n3️⃣ CBT Exam → Test yourself\n4️⃣ Repeat until exam day!\n\nYou can do this! 💪 Log in NOW!',createdAt:new Date().toISOString()});
+    await _announcementsTable.add({title:'⚠️ EXAM SEASON IS HERE!',msg:'⚠️ EXAM SEASON OFFICIALLY ACTIVATED! 🔥\n\nAll AI tutors are on standby. PQ bank is fully loaded. CBT exams are live.\n\nYour study strategy:\n1️⃣ AI Tutor → Learn each topic\n2️⃣ PQ Bank → Practice past questions\n3️⃣ CBT Exam → Test yourself\n4️⃣ Repeat until exam day!\n\nYou can do this! 💪 Log in NOW!',createdAt:new Date().toISOString()});
     addLog('✅ Exam season alert posted');
-    try{const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Give 6 exam season hot topics for OAU 100L, 2 per CHM 101, MTH 101, PHY 101. JSON: [{"topic":"","course":"CHM 101","urgency":"urgent","note":""}]'}],max_tokens:600})});const topics=JSON.parse((await r.json()).choices?.[0]?.message?.content.replace(/```json|```/g,'').trim()||'[]');for(const t of topics)await db.collection('hotTopics').add({...t,createdAt:new Date().toISOString()});addLog('✅ '+topics.length+' exam hot topics set');}catch(e){addLog('⚠️ Hot topics skipped');}
-    await db.collection('coupons').add({code:'EXAMBOOST',pts:75,limit:500,used:0,active:true,createdAt:new Date().toISOString()});
+    try{const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Give 6 exam season hot topics for OAU 100L, 2 per CHM 101, MTH 101, PHY 101. JSON: [{"topic":"","course":"CHM 101","urgency":"urgent","note":""}]'}],max_tokens:600})});const topics=JSON.parse((await r.json()).choices?.[0]?.message?.content.replace(/```json|```/g,'').trim()||'[]');for(const t of topics)await _hotTopicsTable.add({...t,createdAt:new Date().toISOString()});addLog('✅ '+topics.length+' exam hot topics set');}catch(e){addLog('⚠️ Hot topics skipped');}
+    await _couponsTable.add({code:'EXAMBOOST',pts:75,limit:500,used:0,active:true,createdAt:new Date().toISOString()});
     addLog('✅ EXAMBOOST coupon (75pts) created');
-    await db.collection('settings').doc('examSeason').set({active:true,startedAt:new Date().toISOString()});
+    await _settingsTable.doc('examSeason').set({active:true,startedAt:new Date().toISOString()});
     addLog('🎉 Exam season mode fully activated!');
     showToast('📚 Exam season mode is ON!');
   }
@@ -5147,10 +5550,10 @@ Return ONLY the JSON array, no other text.`}],
     const semester=prompt('Semester name? (e.g. 2024/2025 Rain Semester):')||'New Semester';
     const log=[];const addLog=(msg)=>{log.push(msg);showActionResult('🎓 New Semester Setup',log.map(l=>'<div style="font-size:.76rem;color:#818cf8;padding:2px 0">'+l+'</div>').join(''));};
     showActionResult('🎓 Setting up New Semester...','<div style="color:var(--text2)">Preparing platform...</div>');
-    try{const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Write a warm welcome announcement for ${semester} at BABSPHARM Cloud. Welcome returning students, encourage new ones. Mention AI tutors, PQ bank, CBT exams. Nigerian energy. Emojis. 4 sentences.`}],max_tokens:200})});const t=(await r.json()).choices?.[0]?.message?.content||'';await db.collection('announcements').add({title:'🎓 Welcome to '+semester+'!',msg:t,createdAt:new Date().toISOString()});addLog('✅ Welcome announcement posted');}catch(e){addLog('⚠️ Welcome skipped');}
-    await db.collection('coupons').add({code:'NEWSEM'+Date.now().toString().slice(-3),pts:100,limit:500,used:0,active:true,createdAt:new Date().toISOString()});
+    try{const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Write a warm welcome announcement for ${semester} at BABSPHARM Cloud. Welcome returning students, encourage new ones. Mention AI tutors, PQ bank, CBT exams. Nigerian energy. Emojis. 4 sentences.`}],max_tokens:200})});const t=(await r.json()).choices?.[0]?.message?.content||'';await _announcementsTable.add({title:'🎓 Welcome to '+semester+'!',msg:t,createdAt:new Date().toISOString()});addLog('✅ Welcome announcement posted');}catch(e){addLog('⚠️ Welcome skipped');}
+    await _couponsTable.add({code:'NEWSEM'+Date.now().toString().slice(-3),pts:100,limit:500,used:0,active:true,createdAt:new Date().toISOString()});
     addLog('✅ New semester welcome coupon (100pts) created');
-    await db.collection('settings').doc('currentSemester').set({name:semester,startedAt:new Date().toISOString()});
+    await _settingsTable.doc('currentSemester').set({name:semester,startedAt:new Date().toISOString()});
     addLog('✅ Semester name updated in settings');
     addLog('🎉 New semester setup complete!');
     showToast('🎓 New semester activated!');
@@ -5162,7 +5565,7 @@ Return ONLY the JSON array, no other text.`}],
     const milestone=count>=500?500:count>=400?400:count>=300?300:count>=200?200:count>=100?100:50;
     if(count<milestone){showActionResult('⏳ Not Yet','<div style="color:var(--text2)">You have '+count+' students. Next milestone is '+milestone+'.</div>');return;}
     const msg='🎉 WE HIT '+count+' STUDENTS! 🎉\n\nBABSPHARM Cloud just reached a MAJOR milestone! Thank you to every single student who joined, studied, and trusted us with your education.\n\n'+count+' students means '+count+' futures we are shaping together. This is just the beginning! 🚀\n\nShare this platform with your coursemates — let us keep growing! 💪\n\n👉 https://babspharm1-lgtm.github.io/BABSPHARM/';
-    await db.collection('announcements').add({title:'🎉 '+count+' STUDENTS MILESTONE!',msg,createdAt:new Date().toISOString()});
+    await _announcementsTable.add({title:'🎉 '+count+' STUDENTS MILESTONE!',msg,createdAt:new Date().toISOString()});
     const students=snap.docs.map(d=>({id:d.id,...d.data()}));
     for(const s of students) await _usersTable.doc(s.id).set({points:(s.points||0)+25},{merge:true});
     showActionResult('🎉 Milestone Celebrated!',`<div style="text-align:center;padding:16px;"><div style="font-size:2.5rem;">🎉</div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:900;color:var(--gold2);">${count} Students!</div><div style="font-size:.78rem;color:var(--text2);margin-top:6px;">✅ Celebration announcement posted<br>+25 bonus points given to ALL students!</div></div>`);
@@ -5173,11 +5576,11 @@ Return ONLY the JSON array, no other text.`}],
     const log=[];const addLog=(msg)=>{log.push(msg);showActionResult('🧹 Cleanup Running',log.map(l=>'<div style="font-size:.76rem;color:#818cf8;padding:2px 0">'+l+'</div>').join(''));};
     showActionResult('🧹 Starting Cleanup...','<div style="color:var(--text2)">Scanning...</div>');
     // Remove duplicate motivations
-    try{const mSnap=await db.collection('motivations').get();const seen={};let dupes=0;for(const d of mSnap.docs){const k=(d.data().text||'').toLowerCase().trim();if(seen[k]){await d.ref.delete();dupes++;}else seen[k]=true;}addLog('✅ Removed '+dupes+' duplicate motivations');}catch(e){addLog('⚠️ Motivations check skipped');}
+    try{const mSnap=await _motivationsTable.get();const seen={};let dupes=0;for(const d of mSnap.docs){const k=(d.data().text||'').toLowerCase().trim();if(seen[k]){await d.ref.delete();dupes++;}else seen[k]=true;}addLog('✅ Removed '+dupes+' duplicate motivations');}catch(e){addLog('⚠️ Motivations check skipped');}
     // Remove old hot topics (>30 days)
-    try{const monthAgo=new Date(Date.now()-30*24*60*60*1000).toISOString();const hSnap=await db.collection('hotTopics').where('createdAt','<',monthAgo).get();let removed=0;for(const d of hSnap.docs){await d.ref.delete();removed++;}addLog('✅ Removed '+removed+' old hot topics');}catch(e){addLog('⚠️ Hot topics cleanup skipped');}
+    try{const monthAgo=new Date(Date.now()-30*24*60*60*1000).toISOString();const hSnap=await _hotTopicsTable.where('createdAt','<',monthAgo).get();let removed=0;for(const d of hSnap.docs){await d.ref.delete();removed++;}addLog('✅ Removed '+removed+' old hot topics');}catch(e){addLog('⚠️ Hot topics cleanup skipped');}
     // Remove orphaned quiz history
-    try{const uSnap=await _usersTable.get();const uids=new Set(uSnap.docs.map(d=>d.id));const qSnap=await db.collection('quizHistory').limit(200).get();let orphans=0;for(const d of qSnap.docs){if(d.data().uid&&!uids.has(d.data().uid)){await d.ref.delete();orphans++;}}addLog('✅ Removed '+orphans+' orphaned quiz records');}catch(e){addLog('⚠️ Quiz cleanup skipped');}
+    try{const uSnap=await _usersTable.get();const uids=new Set(uSnap.docs.map(d=>d.id));const qSnap=await _quizHistoryTable.limit(200).get();let orphans=0;for(const d of qSnap.docs){if(d.data().uid&&!uids.has(d.data().uid)){await d.ref.delete();orphans++;}}addLog('✅ Removed '+orphans+' orphaned quiz records');}catch(e){addLog('⚠️ Quiz cleanup skipped');}
     addLog('🎉 Platform cleanup complete!');
     showToast('✅ Cleanup done!');
   }
@@ -5193,7 +5596,7 @@ Return ONLY the JSON array, no other text.`}],
       try{
         const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`10 university MCQ for OAU 100L ${s.name}. ONLY JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`}],max_tokens:2000,temperature:0.6})});
         const qs=JSON.parse(((await r.json()).choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());
-        for(const q of qs)if(q.q){await db.collection('pqBank').add({subject:s.key,q:q.q,opts:q.opts,ans:q.ans||0,exp:q.exp||'',createdAt:new Date().toISOString()});total++;}
+        for(const q of qs)if(q.q){await _pqBankTable.add({subject:s.key,q:q.q,opts:q.opts,ans:q.ans||0,exp:q.exp||'',createdAt:new Date().toISOString()});total++;}
         addLog(`${s.name} — ${qs.length} questions saved`);
       }catch(e){addLog(`${s.name} — error, skipped`);}
     }
@@ -5203,7 +5606,7 @@ Return ONLY the JSON array, no other text.`}],
 
   // ── MISSING EXAM HANDLERS ──
   else if(type==='cbt_list'){
-    const snap=await db.collection('cbtExams').get().catch(()=>({docs:[]}));
+    const snap=await _cbtExamsTable.get().catch(()=>({docs:[]}));
     const exams=snap.docs.map(d=>({id:d.id,...d.data()}));
     showActionResult(`📋 ${exams.length} CBT Exams`,
       exams.map(e=>`<div style="padding:8px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px;">
@@ -5224,7 +5627,7 @@ Return ONLY the JSON array, no other text.`}],
   }
 
   else if(type==='cbt_results'){
-    const quizSnap=await db.collection('quizHistory').where('type','==','cbt').get().catch(()=>({docs:[]}));
+    const quizSnap=await _quizHistoryTable.where('type','==','cbt').get().catch(()=>({docs:[]}));
     const results=quizSnap.docs.map(d=>d.data());
     const avg=results.length?Math.round(results.reduce((s,r)=>s+(r.score/(r.total||1)*100),0)/results.length):0;
     showActionResult(`📊 CBT Results (${results.length} attempts)`,
@@ -5238,20 +5641,20 @@ Return ONLY the JSON array, no other text.`}],
   }
 
   else if(type==='coupon_list'){
-    const snap=await db.collection('coupons').get().catch(()=>({docs:[]}));
+    const snap=await _couponsTable.get().catch(()=>({docs:[]}));
     const coupons=snap.docs.map(d=>({id:d.id,...d.data()}));
     showActionResult(`🎟️ ${coupons.length} Coupons`,
       coupons.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--cb);">
         <div><div style="font-size:.82rem;font-weight:700;color:var(--gold2);letter-spacing:2px">${c.code}</div>
         <div style="font-size:.7rem;color:var(--text2)">${c.pts}pts • Used: ${c.used||0}/${c.limit||'∞'} • ${c.active?'<span style="color:var(--green)">Active</span>':'<span style="color:var(--red)">Inactive</span>'}</div></div>
-        <button onclick="db.collection('coupons').doc('${c.id}').update({active:!${c.active}}).then(()=>showToast('Updated!'))" style="padding:3px 8px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:8px;color:var(--red);font-size:.68rem;cursor:pointer;font-family:'Outfit',sans-serif;">Toggle</button>
+        <button onclick="_couponsTable.doc('${c.id}').update({active:!${c.active}}).then(()=>showToast('Updated!'))" style="padding:3px 8px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:8px;color:var(--red);font-size:.68rem;cursor:pointer;font-family:'Outfit',sans-serif;">Toggle</button>
       </div>`).join('')||'<div style="color:var(--text2)">No coupons yet</div>'
     );
   }
 
   // ── MISSING ANALYTICS HANDLERS ──
   else if(type==='quiz_stats'){
-    const snap=await db.collection('quizHistory').get().catch(()=>({docs:[]}));
+    const snap=await _quizHistoryTable.get().catch(()=>({docs:[]}));
     const quizzes=snap.docs.map(d=>d.data());
     const courses={};quizzes.forEach(q=>{if(q.course)courses[q.course]=(courses[q.course]||0)+1;});
     const avg=quizzes.length?Math.round(quizzes.reduce((s,q)=>s+(q.score/(q.total||1)*100),0)/quizzes.length):0;
@@ -5269,7 +5672,7 @@ Return ONLY the JSON array, no other text.`}],
   }
 
   else if(type==='course_popular'){
-    const snap=await db.collection('quizHistory').get().catch(()=>({docs:[]}));
+    const snap=await _quizHistoryTable.get().catch(()=>({docs:[]}));
     const courses={};
     snap.docs.forEach(d=>{const c=d.data().course||'Unknown';courses[c]=(courses[c]||0)+1;});
     const sorted=Object.entries(courses).sort((a,b)=>b[1]-a[1]);
@@ -5333,14 +5736,14 @@ Return ONLY the JSON array, no other text.`}],
     const examName=prompt('Exam name (e.g. CHM 101 CA1):');
     const examDate=prompt('Exam date (YYYY-MM-DD):');
     if(!examName||!examDate) return;
-    await db.collection('settings').doc('countdown').set({examName,examDate,active:true,updatedAt:new Date().toISOString()});
+    await _settingsTable.doc('countdown').set({examName,examDate,active:true,updatedAt:new Date().toISOString()});
     showToast(`✅ Countdown set for ${examName} on ${examDate}!`);
     showActionResult('⏱️ Countdown Set!',`<div style="text-align:center;padding:16px;"><div style="font-size:2rem">⏱️</div><div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--gold2)">${examName}</div><div style="color:var(--text2)">${examDate}</div></div>`);
   }
 
   else if(type==='maintenance'){
     const msg=prompt('Maintenance message (leave blank to clear):');
-    await db.collection('settings').doc('maintenance').set({msg:msg||'',active:!!msg,updatedAt:new Date().toISOString()});
+    await _settingsTable.doc('maintenance').set({msg:msg||'',active:!!msg,updatedAt:new Date().toISOString()});
     showToast(msg?'🔧 Maintenance notice sent!':'✅ Maintenance notice cleared');
     showActionResult(msg?'🔧 Maintenance Notice Sent':'✅ Maintenance Cleared',`<div style="text-align:center;padding:12px;">${msg||'Maintenance mode disabled'}</div>`);
   }
@@ -5405,7 +5808,7 @@ async function confirmPasteSave(questions, subject){
   for(const q of questions){
     if(!q.q || !q.opts || q.opts.length < 2) continue;
     while(q.opts.length < 4) q.opts.push('N/A');
-    await db.collection('pqBank').add({
+    await _pqBankTable.add({
       subject, q:q.q, opts:q.opts.slice(0,4),
       ans: Math.min(q.ans||0, 3),
       exp: q.exp||'',
@@ -5423,7 +5826,7 @@ async function confirmPasteSave(questions, subject){
 async function deletePQBankItem(id, label, btn){
   if(!confirm('Delete question: "'+label+'"?\n\nThis cannot be undone.')) return;
   try{
-    await db.collection('pqBank').doc(id).delete();
+    await _pqBankTable.doc(id).delete();
     showToast('✅ Question deleted!');
     if(btn){
       const card = btn.closest('div[style*="margin-bottom:8px"]') || btn.parentElement?.parentElement;
@@ -5434,7 +5837,7 @@ async function deletePQBankItem(id, label, btn){
 }
 
 async function deleteAllPQForCourse(course, courseName){
-  const snap = await db.collection('pqBank').where('subject','==',course).get();
+  const snap = await _pqBankTable.where('subject','==',course).get();
   if(snap.empty){showToast('No custom questions for '+courseName);return;}
   if(!confirm('Delete ALL '+snap.size+' custom questions for '+courseName+'?\n\nBuilt-in questions are NOT affected.\nThis CANNOT be undone.')) return;
   let deleted = 0;
@@ -5446,7 +5849,7 @@ async function deleteAllPQForCourse(course, courseName){
 
 async function removeDuplicate(id, btn){
   try{
-    await db.collection('pqBank').doc(id).delete();
+    await _pqBankTable.doc(id).delete();
     showToast('✅ Duplicate removed!');
     if(btn){ const card = btn.closest('div[style*="border-radius:8px"]'); if(card) card.remove(); }
   }catch(e){showToast('❌ Error: '+e.message);}
@@ -5455,7 +5858,7 @@ async function removeDuplicate(id, btn){
 async function removeAllDuplicates(ids){
   if(!confirm('Remove all '+ids.length+' duplicate questions?\nOriginals are kept. This cannot be undone.')) return;
   let removed=0;
-  for(const id of ids){ try{ await db.collection('pqBank').doc(id).delete(); removed++; }catch(e){} }
+  for(const id of ids){ try{ await _pqBankTable.doc(id).delete(); removed++; }catch(e){} }
   showToast('✅ Removed '+removed+' duplicates!');
   document.getElementById('ai-action-result').style.display='none';
 }
@@ -5473,7 +5876,7 @@ async function bulkGivePoints(pts){
 
 async function saveAllHotTopics(topics){
   for(const t of topics){
-    await db.collection('hotTopics').add({topic:t.topic,course:t.course,urgency:t.urgency||'urgent',note:t.note||'',createdAt:new Date().toISOString()});
+    await _hotTopicsTable.add({topic:t.topic,course:t.course,urgency:t.urgency||'urgent',note:t.note||'',createdAt:new Date().toISOString()});
   }
   showToast(`🔥 ${topics.length} hot topics saved!`);
   document.getElementById('ai-action-result').style.display='none';
@@ -5483,7 +5886,7 @@ async function givePointsToStudent(uid, name, currentPoints){
   const pts = parseInt(prompt(`Give points to ${name} (currently ${currentPoints} pts)\nHow many points to add?`));
   if(!pts||isNaN(pts)) return;
   await _usersTable.doc(uid).set({points: currentPoints+pts},{merge:true});
-  await db.collection('pointsHistory').add({uid, pts, reason:'Admin gift', date:new Date().toISOString()});
+  await _pointsHistoryTable.add({uid, pts, reason:'Admin gift', date:new Date().toISOString()});
   showToast(`✅ +${pts} points given to ${name}!`);
   document.getElementById('ai-action-result').style.display='none';
 }
@@ -5493,7 +5896,7 @@ async function saveGeneratedQuestions(questions, subject){
   let saved = 0;
   for(const q of questions){
     if(!q.q||!q.opts) continue;
-    await db.collection('pqBank').add({subject, q:q.q, opts:q.opts, ans:q.ans||0, exp:q.exp||'', createdAt:new Date().toISOString()});
+    await _pqBankTable.add({subject, q:q.q, opts:q.opts, ans:q.ans||0, exp:q.exp||'', createdAt:new Date().toISOString()});
     saved++;
   }
   showToast(`✅ ${saved} questions saved to PQ Bank!`);
@@ -5503,7 +5906,7 @@ async function saveGeneratedQuestions(questions, subject){
 // Helper: save generated motivations
 async function saveGeneratedMotivations(motivations){
   for(const m of motivations){
-    await db.collection('motivations').add({emoji:m.emoji||'✨', text:m.text, sub:m.sub||'', category:m.category||'general', createdAt:new Date().toISOString()});
+    await _motivationsTable.add({emoji:m.emoji||'✨', text:m.text, sub:m.sub||'', category:m.category||'general', createdAt:new Date().toISOString()});
   }
   showToast(`✅ ${motivations.length} motivations saved!`);
   document.getElementById('ai-action-result').style.display='none';
@@ -5511,7 +5914,7 @@ async function saveGeneratedMotivations(motivations){
 
 // Helper: send generated announcement
 async function sendGeneratedAnnouncement(text){
-  await db.collection('announcements').add({title:'📢 Announcement', msg:text, createdAt:new Date().toISOString()});
+  await _announcementsTable.add({title:'📢 Announcement', msg:text, createdAt:new Date().toISOString()});
   showToast('✅ Announcement sent to all students!');
   document.getElementById('ai-action-result').style.display='none';
 }
@@ -5527,7 +5930,7 @@ async function sendAdminAI(){
   if(!msg) return;
   inp.value='';
 
-  const groqSnap = await db.collection('settings').doc('config').get();
+  const groqSnap = await _settingsTable.doc('config').get();
   const groqKey = groqSnap.exists ? groqSnap.data().groqKey : '';
   if(!groqKey){appendAdminAIMsg('❌ GROQ key not set. Go to Settings first.','bot');return;}
 
@@ -5540,12 +5943,12 @@ async function sendAdminAI(){
     try{
       const [studSnap,quizSnap,cbtSnap,motivSnap,hotSnap,coupSnap,annSnap] = await Promise.all([
         _usersTable.get(),
-        db.collection('quizHistory').get(),
-        db.collection('cbtExams').get(),
-        db.collection('motivations').get(),
-        db.collection('hotTopics').get(),
-        db.collection('coupons').get(),
-        db.collection('announcements').get()
+        _quizHistoryTable.get(),
+        _cbtExamsTable.get(),
+        _motivationsTable.get(),
+        _hotTopicsTable.get(),
+        _couponsTable.get(),
+        _announcementsTable.get()
       ]);
       const students = studSnap.docs.map(d=>({id:d.id,...d.data()}));
       const today = new Date().toDateString();
@@ -5668,43 +6071,43 @@ async function doExecuteAction(action, students){
   const ts = new Date().toISOString();
 
   if(action.type==='ANNOUNCEMENT'){
-    await db.collection('announcements').add({title:action.title||'Announcement',msg:action.message||'',createdAt:ts});
+    await _announcementsTable.add({title:action.title||'Announcement',msg:action.message||'',createdAt:ts});
   }
   else if(action.type==='EMERGENCY'){
-    await db.collection('settings').doc('emergency').set({title:action.title||'⚠️ Emergency',msg:action.message||'',active:true,sentAt:ts});
-    await db.collection('announcements').add({title:'🚨 '+(action.title||'Emergency'),msg:action.message||'',createdAt:ts});
+    await _settingsTable.doc('emergency').set({title:action.title||'⚠️ Emergency',msg:action.message||'',active:true,sentAt:ts});
+    await _announcementsTable.add({title:'🚨 '+(action.title||'Emergency'),msg:action.message||'',createdAt:ts});
   }
   else if(action.type==='MOTIVATION'){
-    await db.collection('motivations').add({emoji:action.emoji||'💪',text:action.text||'',sub:action.sub||'',category:action.category||'general',createdAt:ts});
+    await _motivationsTable.add({emoji:action.emoji||'💪',text:action.text||'',sub:action.sub||'',category:action.category||'general',createdAt:ts});
   }
   else if(action.type==='HOT_TOPIC'){
-    await db.collection('hotTopics').add({topic:action.topic||'',course:action.course||'',urgency:action.urgency||'normal',note:action.note||'',examDate:action.examDate||'',createdAt:ts});
+    await _hotTopicsTable.add({topic:action.topic||'',course:action.course||'',urgency:action.urgency||'normal',note:action.note||'',examDate:action.examDate||'',createdAt:ts});
   }
   else if(action.type==='COUPON'){
     const code=action.code||('BABS'+Math.random().toString(36).slice(2,6).toUpperCase());
-    await db.collection('coupons').doc(code).set({code,points:action.points||50,limit:action.limit||100,used:0,active:true,createdAt:ts});
+    await _couponsTable.doc(code).set({code,points:action.points||50,limit:action.limit||100,used:0,active:true,createdAt:ts});
     showToast('🎟️ Coupon: '+code+' = '+action.points+' pts');
   }
   else if(action.type==='GENERATE_QUESTIONS'){
-    const groqSnap=await db.collection('settings').doc('config').get();
+    const groqSnap=await _settingsTable.doc('config').get();
     const groqKey=groqSnap.exists?groqSnap.data().groqKey:'';
     if(!groqKey) throw new Error('GROQ key not set');
     const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'Generate '+(action.count||10)+' university MCQ questions for OAU 100L '+(action.subject||'chm101')+' on "'+(action.topic||'general')+'". Return ONLY JSON: [{"q":"...","opts":["A","B","C","D"],"ans":0,"exp":"..."}]'}],max_tokens:2000,temperature:0.5})});
     const d=await res.json();
     const qs=JSON.parse((d.choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());
-    for(const q of qs){if(!q.q)continue;await db.collection('pqBank').add({subject:action.subject||'chm101',q:q.q,opts:q.opts,ans:q.ans||0,exp:q.exp||'',createdAt:ts});}
+    for(const q of qs){if(!q.q)continue;await _pqBankTable.add({subject:action.subject||'chm101',q:q.q,opts:q.opts,ans:q.ans||0,exp:q.exp||'',createdAt:ts});}
     showToast('✅ '+qs.length+' questions saved!');
   }
   else if(action.type==='SURPRISE_REWARD'||action.type==='AWARD_POINTS'){
     const search=(action.search||'').toLowerCase();
     const match=students.find(s=>(s.name||'').toLowerCase().includes(search)||(s.email||'').toLowerCase().includes(search));
     if(!match) throw new Error('Student "'+action.search+'" not found');
-    await db.collection('surpriseRewards').add({uid:match.uid||match.id,points:action.points||20,message:action.message||'You have a reward! 🎁',claimed:false,sentAt:ts});
+    await _surpriseRewardsTable.add({uid:match.uid||match.id,points:action.points||20,message:action.message||'You have a reward! 🎁',claimed:false,sentAt:ts});
     showToast('🎁 Reward sent to '+match.name+'!');
   }
   else if(action.type==='CBT_EXAM'){
     const code=(action.code||(action.course||'EXAM').replace(/\s/g,'').toUpperCase()+'2025');
-    await db.collection('cbtExams').add({title:action.title||'New Exam',course:action.course||'',code,duration:action.duration||60,sections:action.sections||4,qps:action.qps||8,instructions:action.instructions||'',active:false,createdAt:ts});
+    await _cbtExamsTable.add({title:action.title||'New Exam',course:action.course||'',code,duration:action.duration||60,sections:action.sections||4,qps:action.qps||8,instructions:action.instructions||'',active:false,createdAt:ts});
     showToast('📝 CBT Exam created! Code: '+code);
   }
 }
@@ -5719,7 +6122,7 @@ async function savePQCodes(){
   });
   const msgEl = document.getElementById('pq-code-save-msg');
   try{
-    await db.collection('settings').doc('pqAccess').set({
+    await _settingsTable.doc('pqAccess').set({
       masterCode: master||'BABSPQ2024',
       courseCodes,
       updatedAt: new Date().toISOString()
@@ -5737,7 +6140,7 @@ async function savePQCodes(){
 
 async function loadPQCodes(){
   try{
-    const doc = await db.collection('settings').doc('pqAccess').get();
+    const doc = await _settingsTable.doc('pqAccess').get();
     if(doc.exists){
       const d = doc.data();
       if(document.getElementById('pq-master-code'))
@@ -5759,16 +6162,16 @@ async function addHotTopic(){
   const note=document.getElementById('hot-note').value.trim();
   const urgency=document.getElementById('hot-urgency').value;
   if(!topic){showToast('Enter a topic');return;}
-  await db.collection('hotTopics').add({topic,course,exam,note,urgency,createdAt:new Date().toISOString()});
+  await _hotTopicsTable.add({topic,course,exam,note,urgency,createdAt:new Date().toISOString()});
   ['hot-topic','hot-course','hot-exam','hot-note'].forEach(id=>document.getElementById(id).value='');
   showToast('Hot topic added! 🔥');loadHotTopicsAdmin();
 }
 async function loadHotTopicsAdmin(){
   const el=document.getElementById('hot-topics-admin');if(!el)return;
-  const snap=await db.collection('hotTopics').orderBy('createdAt','desc').limit(10).get();
+  const snap=await _hotTopicsTable.orderBy('createdAt','desc').limit(10).get();
   el.innerHTML=snap.docs.map(d=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:6px;font-size:.78rem;"><span>${d.data().urgency==='high'?'🚨':'🔥'} <b>${d.data().topic}</b> — ${d.data().course||'All'}</span><button onclick="deleteHotTopic('${d.id}')" class="btn btn-red btn-sm">🗑</button></div>`).join('');
 }
-async function deleteHotTopic(id){await db.collection('hotTopics').doc(id).delete();showToast('Deleted');loadHotTopicsAdmin();}
+async function deleteHotTopic(id){await _hotTopicsTable.doc(id).delete();showToast('Deleted');loadHotTopicsAdmin();}
 
 // ══ VAULT ══
 async function addVaultContent(){
@@ -5778,7 +6181,7 @@ async function addVaultContent(){
   const content=document.getElementById('vault-content-inp').value.trim();
   const url=document.getElementById('vault-url').value.trim();
   if(!title||!content){showToast('Fill title and content');return;}
-  await db.collection('vaultContent').add({title,emoji:emoji||'📚',course,content,url,createdAt:new Date().toISOString()});
+  await _vaultContentTable.add({title,emoji:emoji||'📚',course,content,url,createdAt:new Date().toISOString()});
   ['vault-title','vault-course','vault-content-inp','vault-url'].forEach(id=>document.getElementById(id).value='');
   showToast('Added to vault! 🔓');
 }
@@ -5802,7 +6205,7 @@ async function sendSurpriseReward(){
   const pts=parseInt(document.getElementById('surprise-pts-inp').value)||0;
   const msg=document.getElementById('surprise-msg-inp').value.trim();
   if(!pts){showToast('Enter points amount');return;}
-  await db.collection('surpriseRewards').add({uid:surpriseTargetUid,points:pts,message:msg||'Admin just sent you a surprise reward! 🎁',claimed:false,sentAt:new Date().toISOString()});
+  await _surpriseRewardsTable.add({uid:surpriseTargetUid,points:pts,message:msg||'Admin just sent you a surprise reward! 🎁',claimed:false,sentAt:new Date().toISOString()});
   surpriseTargetUid='';document.getElementById('surprise-search').value='';document.getElementById('surprise-selected').style.display='none';document.getElementById('surprise-pts-inp').value='';document.getElementById('surprise-msg-inp').value='';
   showToast('Surprise reward sent! 🎁');
 }
@@ -5812,7 +6215,7 @@ async function saveSpinSettings(){
   if(!raw){showToast('Enter segment values');return;}
   const segments = raw.split(',').map(s=>parseInt(s.trim())).filter(n=>n>0);
   if(segments.length<4){showToast('Add at least 4 values');return;}
-  await db.collection('settings').doc('spinWheel').set({segments,updatedAt:new Date().toISOString()});
+  await _settingsTable.doc('spinWheel').set({segments,updatedAt:new Date().toISOString()});
   const el = document.getElementById('spin-save-status');
   if(el){el.textContent='✅ Saved! Students will see '+segments.length+' segments on the wheel.';el.style.color='var(--green)';}
   showToast('Spin wheel updated!');
@@ -5820,7 +6223,7 @@ async function saveSpinSettings(){
 
 async function loadSpinSettings(){
   try{
-    const doc = await db.collection('settings').doc('spinWheel').get();
+    const doc = await _settingsTable.doc('spinWheel').get();
     if(doc.exists && doc.data().segments){
       document.getElementById('spin-segments').value = doc.data().segments.join(',');
     }
@@ -5847,7 +6250,7 @@ async function batchGivePoints(){
       await Promise.all(batch.map(async d=>{
         const current=d.data().points||0;
         await _usersTable.doc(d.id).update({points:current+pts});
-        await db.collection('pointsLog').add({uid:d.id,reason,points:'+'+pts,date:today});
+        await _pointsLogTable.add({uid:d.id,reason,points:'+'+pts,date:today});
         done++;
       }));
       prog.textContent=`⬆ Processing... ${done}/${total} students`;
@@ -5863,7 +6266,7 @@ async function batchGivePoints(){
 // ══ LOGIN POPUP ══
 async function loadPopupSettings(){
   try{
-    const doc=await db.collection('settings').doc('popup').get();
+    const doc=await _settingsTable.doc('popup').get();
     if(doc.exists){
       const p=doc.data();
       document.getElementById('popup-emoji-inp').value=p.emoji||'📢';
@@ -5880,12 +6283,12 @@ async function savePopup(){
   const msg=document.getElementById('popup-msg-inp').value.trim();
   const active=document.getElementById('popup-active').checked;
   if(!title||!msg){showToast('Fill title and message');return;}
-  await db.collection('settings').doc('popup').set({emoji,title,msg,active,updatedAt:new Date().toISOString()});
+  await _settingsTable.doc('popup').set({emoji,title,msg,active,updatedAt:new Date().toISOString()});
   showToast(active?'✅ Popup active! Students will see it on login.':'✅ Popup saved (inactive)');
 }
 
 async function disablePopup(){
-  await db.collection('settings').doc('popup').set({active:false},{merge:true});
+  await _settingsTable.doc('popup').set({active:false},{merge:true});
   document.getElementById('popup-active').checked=false;
   showToast('Popup disabled');
 }
@@ -5894,7 +6297,7 @@ async function disablePopup(){
 let BREVO_KEY = '', BREVO_EMAIL = '', BREVO_NAME = 'BABSPHARM Cloud';
 
 async function loadBrevoSettings(){
-  const doc = await db.collection('settings').doc('brevo').get();
+  const doc = await _settingsTable.doc('brevo').get();
   if(doc.exists){
     const d = doc.data();
     BREVO_KEY = d.apiKey||'';
@@ -5914,7 +6317,7 @@ async function saveBrevoSettings(){
   const email = document.getElementById('brevo-email').value.trim();
   const name = document.getElementById('brevo-name').value.trim();
   if(!key||!email){showToast('Enter API key and sender email');return;}
-  await db.collection('settings').doc('brevo').set({
+  await _settingsTable.doc('brevo').set({
     apiKey:key, senderEmail:email, senderName:name||'BABSPHARM Cloud',
     welcome:document.getElementById('brevo-welcome').checked,
     announcements:document.getElementById('brevo-ann').checked,
@@ -5982,7 +6385,7 @@ async function testBrevoEmail(){
 
 async function sendAnnouncementEmails(title, msg){
   // Load brevo settings
-  const bDoc = await db.collection('settings').doc('brevo').get();
+  const bDoc = await _settingsTable.doc('brevo').get();
   if(!bDoc.exists||!bDoc.data().announcements||!bDoc.data().apiKey) return;
   const b = bDoc.data();
   // Get all student emails
@@ -6016,7 +6419,7 @@ async function sendAnnouncementEmails(title, msg){
 const _origSendAnn = typeof sendAnn !== 'undefined' ? sendAnn : null;
 
 async function loadBulkCourses(){
-  const snap = await db.collection('courses').get();
+  const snap = await _coursesTable.get();
   const sel = document.getElementById('bulk-course');
   if(!sel) return;
   sel.innerHTML = '<option value="">Select course...</option>';
@@ -6027,7 +6430,7 @@ async function loadBulkCourses(){
 }
 
 async function loadRedemptions(){
-  const snap=await db.collection('couponRedemptions').orderBy('redeemedAt','desc').get();
+  const snap=await _couponRedemptionsTable.orderBy('redeemedAt','desc').get();
   const list=document.getElementById('all-redemptions');
   if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px">No redemptions yet</div>';return;}
   list.innerHTML=`<table class="tbl">
@@ -6051,14 +6454,14 @@ async function addTextbook(){
   const url=document.getElementById('tb-url').value.trim();
   const img=document.getElementById('tb-img').value.trim();
   if(!title||!course||!url){showToast('Fill title, course and URL');return;}
-  await db.collection('textbooks').add({title,author,course,edition,url,img,createdAt:new Date().toISOString()});
+  await _textbooksTable.add({title,author,course,edition,url,img,createdAt:new Date().toISOString()});
   ['tb-title','tb-author','tb-edition','tb-url','tb-img'].forEach(id=>document.getElementById(id).value='');
   showToast('Textbook added!');
   loadAdminTextbooks();
 }
 
 async function loadAdminTextbooks(){
-  const snap=await db.collection('textbooks').get();
+  const snap=await _textbooksTable.get();
   const list=document.getElementById('admin-tb-list');
   if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem">No textbooks yet</div>';return;}
   list.innerHTML=snap.docs.map((d,i)=>{
@@ -6079,7 +6482,7 @@ async function loadAdminTextbooks(){
 
 async function deleteTextbook(id){
   if(!confirm('Delete this textbook?'))return;
-  await db.collection('textbooks').doc(id).delete();
+  await _textbooksTable.doc(id).delete();
   showToast('Deleted');
   loadAdminTextbooks();
 }
@@ -6092,11 +6495,11 @@ async function grantAiMessages(uid, name){
   if(n<1){showToast('Enter a valid number');return;}
   const today = new Date().toDateString();
   try{
-    const doc = await db.collection('aiUsage').doc(uid).get();
+    const doc = await _aiUsageTable.doc(uid).get();
     const current = (doc.exists && doc.data().date===today) ? (doc.data().count||0) : 0;
     const currentLimit = (doc.exists && doc.data().date===today) ? (doc.data().limit||3) : 3;
     const newLimit = currentLimit + n;
-    await db.collection('aiUsage').doc(uid).set({
+    await _aiUsageTable.doc(uid).set({
       date:today, count:current, limit:newLimit
     },{merge:true});
     showToast(`✅ Granted ${n} extra AI messages to ${name}! They now have ${newLimit-current} remaining today.`);
@@ -6157,14 +6560,14 @@ async function sendDirectMessage(){
   const body=document.getElementById('msg-body').value.trim();
   if(!subject||!body){showToast('Fill subject and message');return;}
   // Save to Firestore inbox
-  await db.collection('messages').add({
+  await _messagesTable.add({
     toUid:msgTargetId, toName:msgTargetName,
     subject, body, fromAdmin:true,
     sentBy:ADMIN_EMAIL,
     createdAt:new Date().toISOString(), read:false
   });
   // Send email via Brevo
-  const bDoc = await db.collection('settings').doc('brevo').get();
+  const bDoc = await _settingsTable.doc('brevo').get();
   if(bDoc.exists && bDoc.data().messages && bDoc.data().apiKey){
     const b = bDoc.data();
     // Get student email
@@ -6214,7 +6617,7 @@ async function sendBulkDeptMessage(){
     const batches=[];
     for(let i=0;i<snap.docs.length;i+=10)batches.push(snap.docs.slice(i,i+10));
     for(const batch of batches){
-      await Promise.all(batch.map(d=>db.collection('messages').add({toUid:d.id,toName:d.data().name||d.data().email,subject,body,fromAdmin:true,sentBy:ADMIN_EMAIL,createdAt:today,read:false})));
+      await Promise.all(batch.map(d=>_messagesTable.add({toUid:d.id,toName:d.data().name||d.data().email,subject,body,fromAdmin:true,sentBy:ADMIN_EMAIL,createdAt:today,read:false})));
       done+=batch.length;
       prog.textContent=`📨 Sending... ${done}/${total}`;
     }
@@ -6238,7 +6641,7 @@ async function loadDeptStats(){
 }
 
 async function loadSentMessages(){
-  const snap=await db.collection('messages').where('fromAdmin','==',true).orderBy('createdAt','desc').limit(20).get();
+  const snap=await _messagesTable.where('fromAdmin','==',true).orderBy('createdAt','desc').limit(20).get();
   const list=document.getElementById('sent-messages');
   if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.8rem">No messages sent yet</div>';return;}
   list.innerHTML=snap.docs.map(d=>{
@@ -6322,50 +6725,50 @@ async function runCampaign(type, groqKey){
   };
 
   if(type==='campaign_launch'){
-    try{const t=await aiPost('Powerful launch announcement for BABSPHARM Cloud OAU. AI tutors, CBT, PQ bank. 4 sentences. Emojis.');await db.collection('announcements').add({title:'🚀 BABSPHARM Cloud is Here!',msg:t,createdAt:new Date().toISOString()});addLog('Launch announcement posted');}catch(e){}
-    try{const m=await aiJSON('3 motivations OAU students. JSON:[{"emoji":"🔥","text":"quote","sub":"tagline","category":"general"}]',300);for(const q of m)await db.collection('motivations').add({...q,createdAt:new Date().toISOString()});addLog(`${m.length} motivations added`);}catch(e){}
-    try{const t=await aiJSON('3 OAU exam hot topics. JSON:[{"topic":"","course":"CHM 101","urgency":"urgent","note":""}]',300);for(const q of t)await db.collection('hotTopics').add({...q,createdAt:new Date().toISOString()});addLog(`${t.length} hot topics set`);}catch(e){}
-    await db.collection('coupons').add({code:'LAUNCH100',pts:100,limit:200,used:0,active:true,createdAt:new Date().toISOString()});addLog('Coupon LAUNCH100=100pts');
-    let qc=0;for(const s of [{key:'chm101',n:'CHM 101'},{key:'mth101',n:'MTH 101'},{key:'phy101',n:'PHY 101'}]){try{const qs=await aiJSON(`5 MCQ for OAU ${s.n}. JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`,800);for(const q of qs)if(q.q){await db.collection('pqBank').add({subject:s.key,...q,createdAt:new Date().toISOString()});qc++;}}catch(e){}}
+    try{const t=await aiPost('Powerful launch announcement for BABSPHARM Cloud OAU. AI tutors, CBT, PQ bank. 4 sentences. Emojis.');await _announcementsTable.add({title:'🚀 BABSPHARM Cloud is Here!',msg:t,createdAt:new Date().toISOString()});addLog('Launch announcement posted');}catch(e){}
+    try{const m=await aiJSON('3 motivations OAU students. JSON:[{"emoji":"🔥","text":"quote","sub":"tagline","category":"general"}]',300);for(const q of m)await _motivationsTable.add({...q,createdAt:new Date().toISOString()});addLog(`${m.length} motivations added`);}catch(e){}
+    try{const t=await aiJSON('3 OAU exam hot topics. JSON:[{"topic":"","course":"CHM 101","urgency":"urgent","note":""}]',300);for(const q of t)await _hotTopicsTable.add({...q,createdAt:new Date().toISOString()});addLog(`${t.length} hot topics set`);}catch(e){}
+    await _couponsTable.add({code:'LAUNCH100',pts:100,limit:200,used:0,active:true,createdAt:new Date().toISOString()});addLog('Coupon LAUNCH100=100pts');
+    let qc=0;for(const s of [{key:'chm101',n:'CHM 101'},{key:'mth101',n:'MTH 101'},{key:'phy101',n:'PHY 101'}]){try{const qs=await aiJSON(`5 MCQ for OAU ${s.n}. JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`,800);for(const q of qs)if(q.q){await _pqBankTable.add({subject:s.key,...q,createdAt:new Date().toISOString()});qc++;}}catch(e){}}
     addLog(`${qc} questions added to PQ bank`);
     addLog('🎉 LAUNCH CAMPAIGN COMPLETE!');
   }
   else if(type==='campaign_exam_prep'){
-    try{const t=await aiPost('Urgent exam prep announcement OAU 100L. Use AI tutors, PQ bank, CBT. Urgent but encouraging. 4 sentences. Emojis.');await db.collection('announcements').add({title:'⚠️ EXAM IS NEAR!',msg:t,createdAt:new Date().toISOString()});addLog('Exam alert sent');}catch(e){}
-    try{const tp=await aiJSON('6 hot exam topics OAU 100L one per course. JSON:[{"topic":"","course":"CHM 101","urgency":"urgent","note":""}]',500);for(const q of tp)await db.collection('hotTopics').add({...q,createdAt:new Date().toISOString()});addLog(`${tp.length} hot topics set`);}catch(e){}
-    try{const t=await aiPost('5 last-minute exam tips OAU. Time management, MCQ tricks, mental health. WhatsApp format. Emojis.',300);await db.collection('announcements').add({title:'📌 EXAM TIPS',msg:t,createdAt:new Date().toISOString()});addLog('Exam tips posted');}catch(e){}
-    await db.collection('coupons').add({code:'EXAM2024',pts:50,limit:500,used:0,active:true,createdAt:new Date().toISOString()});addLog('EXAM2024=50pts coupon created');
+    try{const t=await aiPost('Urgent exam prep announcement OAU 100L. Use AI tutors, PQ bank, CBT. Urgent but encouraging. 4 sentences. Emojis.');await _announcementsTable.add({title:'⚠️ EXAM IS NEAR!',msg:t,createdAt:new Date().toISOString()});addLog('Exam alert sent');}catch(e){}
+    try{const tp=await aiJSON('6 hot exam topics OAU 100L one per course. JSON:[{"topic":"","course":"CHM 101","urgency":"urgent","note":""}]',500);for(const q of tp)await _hotTopicsTable.add({...q,createdAt:new Date().toISOString()});addLog(`${tp.length} hot topics set`);}catch(e){}
+    try{const t=await aiPost('5 last-minute exam tips OAU. Time management, MCQ tricks, mental health. WhatsApp format. Emojis.',300);await _announcementsTable.add({title:'📌 EXAM TIPS',msg:t,createdAt:new Date().toISOString()});addLog('Exam tips posted');}catch(e){}
+    await _couponsTable.add({code:'EXAM2024',pts:50,limit:500,used:0,active:true,createdAt:new Date().toISOString()});addLog('EXAM2024=50pts coupon created');
     addLog('🎉 Exam prep campaign done!');
   }
   else if(type==='campaign_engagement'){
     const snap=await _usersTable.get();const weekAgo=Date.now()-7*24*60*60*1000;
     const inactive=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>!s.lastSeen||new Date(s.lastSeen).getTime()<weekAgo);
     let bc=0;for(const s of inactive.slice(0,50)){await _usersTable.doc(s.id).set({points:(s.points||0)+30},{merge:true});bc++;}addLog(`+30pts to ${bc} inactive students`);
-    try{const t=await aiPost("Re-engagement msg for OAU students who haven't logged in recently. Bonus points waiting. Warm, Nigerian. 3 sentences. Emojis.");await db.collection('announcements').add({title:'👋 We Miss You! Bonus Inside',msg:t,createdAt:new Date().toISOString()});addLog('Announcement posted');}catch(e){}
-    await db.collection('coupons').add({code:'COMEBACK',pts:75,limit:inactive.length,used:0,active:true,createdAt:new Date().toISOString()});addLog('COMEBACK=75pts coupon');
+    try{const t=await aiPost("Re-engagement msg for OAU students who haven't logged in recently. Bonus points waiting. Warm, Nigerian. 3 sentences. Emojis.");await _announcementsTable.add({title:'👋 We Miss You! Bonus Inside',msg:t,createdAt:new Date().toISOString()});addLog('Announcement posted');}catch(e){}
+    await _couponsTable.add({code:'COMEBACK',pts:75,limit:inactive.length,used:0,active:true,createdAt:new Date().toISOString()});addLog('COMEBACK=75pts coupon');
     addLog(`🎉 ${inactive.length} students targeted!`);
   }
   else if(type==='campaign_growth'){
-    try{const t=await aiPost('WhatsApp msg for OAU students to refer friends to BABSPHARM Cloud. 100pts per referral. FOMO. Nigerian. Max 120 words. Link: https://babspharm1-lgtm.github.io/BABSPHARM/');await db.collection('announcements').add({title:'💰 Earn Points for Every Friend!',msg:t,createdAt:new Date().toISOString()});addLog('Referral announcement posted');}catch(e){}
-    await db.collection('motivations').add({emoji:'💎',text:'Every friend you refer brings you closer to your goals',sub:'Help others, earn rewards',category:'general',createdAt:new Date().toISOString()});addLog('Referral motivation added');
-    await db.collection('coupons').add({code:'BRING2',pts:200,limit:100,used:0,active:true,createdAt:new Date().toISOString()});addLog('BRING2=200pts coupon');
+    try{const t=await aiPost('WhatsApp msg for OAU students to refer friends to BABSPHARM Cloud. 100pts per referral. FOMO. Nigerian. Max 120 words. Link: https://babspharm1-lgtm.github.io/BABSPHARM/');await _announcementsTable.add({title:'💰 Earn Points for Every Friend!',msg:t,createdAt:new Date().toISOString()});addLog('Referral announcement posted');}catch(e){}
+    await _motivationsTable.add({emoji:'💎',text:'Every friend you refer brings you closer to your goals',sub:'Help others, earn rewards',category:'general',createdAt:new Date().toISOString()});addLog('Referral motivation added');
+    await _couponsTable.add({code:'BRING2',pts:200,limit:100,used:0,active:true,createdAt:new Date().toISOString()});addLog('BRING2=200pts coupon');
     addLog('🎉 Growth campaign launched!');
   }
   else if(type==='campaign_reward'){
     const snap=await _usersTable.get();const top3=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.points||0)-(a.points||0)).slice(0,3);
     for(let i=0;i<top3.length;i++){await _usersTable.doc(top3[i].id).set({points:(top3[i].points||0)+[500,300,200][i]},{merge:true});addLog(`+${[500,300,200][i]}pts to ${top3[i].name||'Unknown'} #${i+1}`);}
-    try{const names=top3.map((s,i)=>`${i+1}. ${s.name} (${s.points}pts)`).join(', ');const t=await aiPost(`Winners announcement. Top 3: ${names}. Celebrate. Encourage others. Nigerian energy. 4 sentences. Emojis.`);await db.collection('announcements').add({title:'🏆 LEADERBOARD WINNERS!',msg:t,createdAt:new Date().toISOString()});addLog('Winners posted');}catch(e){}
+    try{const names=top3.map((s,i)=>`${i+1}. ${s.name} (${s.points}pts)`).join(', ');const t=await aiPost(`Winners announcement. Top 3: ${names}. Celebrate. Encourage others. Nigerian energy. 4 sentences. Emojis.`);await _announcementsTable.add({title:'🏆 LEADERBOARD WINNERS!',msg:t,createdAt:new Date().toISOString()});addLog('Winners posted');}catch(e){}
     addLog('🎉 Reward campaign done!');
   }
   else if(type==='campaign_weekly'){
-    try{const m=await aiJSON('7 daily motivational quotes Mon-Sun OAU students. JSON:[{"emoji":"🔥","text":"quote","sub":"Monday energy","category":"general"}]',600);for(const q of m)await db.collection('motivations').add({...q,createdAt:new Date().toISOString()});addLog(`${m.length} daily motivations`);}catch(e){}
-    try{const t=await aiPost('Weekly study timetable OAU 100L Mon-Sun. CHM 101, MTH 101, PHY 101. Day + 2 topics + revision. Emojis.',350);await db.collection('announcements').add({title:"📅 This Week's Study Plan",msg:t,createdAt:new Date().toISOString()});addLog('Study plan posted');}catch(e){}
-    try{const tp=await aiJSON('3 weekly focus topics OAU 100L. JSON:[{"topic":"","course":"CHM 101","urgency":"normal","note":"study this week"}]',300);for(const q of tp)await db.collection('hotTopics').add({...q,createdAt:new Date().toISOString()});addLog(`${tp.length} focus topics set`);}catch(e){}
+    try{const m=await aiJSON('7 daily motivational quotes Mon-Sun OAU students. JSON:[{"emoji":"🔥","text":"quote","sub":"Monday energy","category":"general"}]',600);for(const q of m)await _motivationsTable.add({...q,createdAt:new Date().toISOString()});addLog(`${m.length} daily motivations`);}catch(e){}
+    try{const t=await aiPost('Weekly study timetable OAU 100L Mon-Sun. CHM 101, MTH 101, PHY 101. Day + 2 topics + revision. Emojis.',350);await _announcementsTable.add({title:"📅 This Week's Study Plan",msg:t,createdAt:new Date().toISOString()});addLog('Study plan posted');}catch(e){}
+    try{const tp=await aiJSON('3 weekly focus topics OAU 100L. JSON:[{"topic":"","course":"CHM 101","urgency":"normal","note":"study this week"}]',300);for(const q of tp)await _hotTopicsTable.add({...q,createdAt:new Date().toISOString()});addLog(`${tp.length} focus topics set`);}catch(e){}
     addLog('🎉 Weekly content drop done!');
   }
   else if(type==='campaign_new_feature'){
     const feature=prompt('Feature to announce?')||'exciting new features';
-    try{const t=await aiPost(`Hype announcement for new feature: ${feature} on BABSPHARM Cloud OAU. 3 sentences. Emojis.`);await db.collection('announcements').add({title:`✨ New: ${feature}`,msg:t,createdAt:new Date().toISOString()});addLog('Announcement posted');}catch(e){}
+    try{const t=await aiPost(`Hype announcement for new feature: ${feature} on BABSPHARM Cloud OAU. 3 sentences. Emojis.`);await _announcementsTable.add({title:`✨ New: ${feature}`,msg:t,createdAt:new Date().toISOString()});addLog('Announcement posted');}catch(e){}
     addLog('🎉 Campaign live!');
   }
   else if(type==='campaign_custom'){
@@ -6383,7 +6786,7 @@ async function runAutopilot(type, groqKey){
   const aiJSON=async(p,m=600)=>{return JSON.parse((await aiPost(p,m)).replace(/```json|```/g,'').trim());};
 
   if(type==='autopilot_healthcheck'){
-    const [studSnap,quizSnap,pqSnap,motSnap,cbtSnap,settingsSnap]=await Promise.all([_usersTable.get(),db.collection('quizHistory').get().catch(()=>({size:0})),db.collection('pqBank').get().catch(()=>({size:0})),db.collection('motivations').get().catch(()=>({size:0})),db.collection('cbtExams').get().catch(()=>({size:0})),db.collection('settings').doc('config').get()]);
+    const [studSnap,quizSnap,pqSnap,motSnap,cbtSnap,settingsSnap]=await Promise.all([_usersTable.get(),_quizHistoryTable.get().catch(()=>({size:0})),_pqBankTable.get().catch(()=>({size:0})),_motivationsTable.get().catch(()=>({size:0})),_cbtExamsTable.get().catch(()=>({size:0})),_settingsTable.doc('config').get()]);
     const hasGroq=settingsSnap.exists&&settingsSnap.data().groqKey;
     const students=studSnap.docs.map(d=>d.data());const zeroPoints=students.filter(s=>(s.points||0)===0).length;
     const issues=[];if(pqSnap.size<50)issues.push('Add more PQ questions');if(motSnap.size<5)issues.push('Add motivations');if(!hasGroq)issues.push('Set GROQ key');if(zeroPoints>10)issues.push(`${zeroPoints} students at 0pts`);
@@ -6392,9 +6795,9 @@ async function runAutopilot(type, groqKey){
 
   else if(type==='autopilot_content_fill'){
     const log=[];const addLog=(msg)=>{log.push('✅ '+msg);showActionResult('📝 Auto-Fill',log.map(l=>`<div style="font-size:.78rem;color:var(--green);padding:2px 0">${l}</div>`).join(''));};
-    try{const m=await aiJSON('10 motivational quotes OAU. JSON:[{"emoji":"🔥","text":"","sub":"","category":"general"}]',800);for(const q of m)await db.collection('motivations').add({...q,createdAt:new Date().toISOString()});addLog(`${m.length} motivations`);}catch(e){}
-    try{const t=await aiJSON('6 OAU exam hot topics. JSON:[{"topic":"","course":"CHM 101","urgency":"urgent","note":""}]',500);for(const q of t)await db.collection('hotTopics').add({...q,createdAt:new Date().toISOString()});addLog(`${t.length} hot topics`);}catch(e){}
-    try{const t=await aiPost('Welcome announcement BABSPHARM Cloud. AI tutors, CBT, PQ bank. 3 sentences. Emojis.');await db.collection('announcements').add({title:'👋 Welcome to BABSPHARM Cloud!',msg:t,createdAt:new Date().toISOString()});addLog('Announcement posted');}catch(e){}
+    try{const m=await aiJSON('10 motivational quotes OAU. JSON:[{"emoji":"🔥","text":"","sub":"","category":"general"}]',800);for(const q of m)await _motivationsTable.add({...q,createdAt:new Date().toISOString()});addLog(`${m.length} motivations`);}catch(e){}
+    try{const t=await aiJSON('6 OAU exam hot topics. JSON:[{"topic":"","course":"CHM 101","urgency":"urgent","note":""}]',500);for(const q of t)await _hotTopicsTable.add({...q,createdAt:new Date().toISOString()});addLog(`${t.length} hot topics`);}catch(e){}
+    try{const t=await aiPost('Welcome announcement BABSPHARM Cloud. AI tutors, CBT, PQ bank. 3 sentences. Emojis.');await _announcementsTable.add({title:'👋 Welcome to BABSPHARM Cloud!',msg:t,createdAt:new Date().toISOString()});addLog('Announcement posted');}catch(e){}
     addLog('🎉 Content gaps filled!');showToast('✅ Done!');
   }
 
@@ -6404,7 +6807,7 @@ async function runAutopilot(type, groqKey){
     let total=0;
     for(const s of [{key:'chm101',n:'CHM 101'},{key:'chm102',n:'CHM 102'},{key:'mth101',n:'MTH 101'},{key:'mth102',n:'MTH 102'},{key:'phy101',n:'PHY 101'},{key:'phy102',n:'PHY 102'}]){
       logEl.innerHTML+=`<div>${new Date().toLocaleTimeString()} — ${s.n}...</div>`;logEl.scrollTop=logEl.scrollHeight;
-      for(let b=0;b<2;b++){try{const qs=await aiJSON(`8 university MCQ for OAU ${s.n}. ONLY JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`,1800);for(const q of qs)if(q.q){await db.collection('pqBank').add({subject:s.key,q:q.q,opts:q.opts,ans:q.ans||0,exp:q.exp||'',createdAt:new Date().toISOString()});total++;}}catch(e){}}
+      for(let b=0;b<2;b++){try{const qs=await aiJSON(`8 university MCQ for OAU ${s.n}. ONLY JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`,1800);for(const q of qs)if(q.q){await _pqBankTable.add({subject:s.key,q:q.q,opts:q.opts,ans:q.ans||0,exp:q.exp||'',createdAt:new Date().toISOString()});total++;}}catch(e){}}
       logEl.innerHTML+=`<div style="color:#4ade80">✓ ${s.n}</div>`;logEl.scrollTop=logEl.scrollHeight;
     }
     logEl.innerHTML+=`<div style="color:#fbbf24;font-weight:700">════ ${total} questions saved! ════</div>`;
@@ -6413,16 +6816,16 @@ async function runAutopilot(type, groqKey){
 
   else if(type==='autopilot_motivations_fill'){
     let saved=0;
-    for(let b=0;b<2;b++){try{const m=await aiJSON('10 unique motivational quotes OAU. Mix exam, faith, hustle, Nigerian. Punchy. JSON:[{"emoji":"🔥","text":"max 15 words","sub":"max 8 words","category":"general"}]',800);for(const q of m){await db.collection('motivations').add({...q,createdAt:new Date().toISOString()});saved++;}}catch(e){}}
+    for(let b=0;b<2;b++){try{const m=await aiJSON('10 unique motivational quotes OAU. Mix exam, faith, hustle, Nigerian. Punchy. JSON:[{"emoji":"🔥","text":"max 15 words","sub":"max 8 words","category":"general"}]',800);for(const q of m){await _motivationsTable.add({...q,createdAt:new Date().toISOString()});saved++;}}catch(e){}}
     showActionResult(`✅ ${saved} Motivations!`,`<div style="text-align:center;padding:16px;"><div style="font-size:2rem">💪</div><div style="font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:900;color:var(--green)">${saved} Motivations Saved</div></div>`);showToast(`✅ ${saved} motivations!`);
   }
 
   else if(type==='autopilot_hot_topics_all'){
-    try{const tp=await aiJSON('3 hot topics for each: CHM 101, CHM 102, MTH 101, MTH 102, PHY 101, PHY 102. Total 18. JSON:[{"topic":"","course":"CHM 101","urgency":"urgent","note":"why likely"}]',1500);for(const t of tp)await db.collection('hotTopics').add({...t,createdAt:new Date().toISOString()});showActionResult(`🔥 ${tp.length} Hot Topics!`,tp.map(t=>`<div style="padding:5px 0;border-bottom:1px solid var(--cb);font-size:.76rem;"><b style="color:#fb923c">${t.course}</b> — ${t.topic}</div>`).join(''));showToast(`🔥 ${tp.length} hot topics!`);}catch(e){showToast('Error - try again');}
+    try{const tp=await aiJSON('3 hot topics for each: CHM 101, CHM 102, MTH 101, MTH 102, PHY 101, PHY 102. Total 18. JSON:[{"topic":"","course":"CHM 101","urgency":"urgent","note":"why likely"}]',1500);for(const t of tp)await _hotTopicsTable.add({...t,createdAt:new Date().toISOString()});showActionResult(`🔥 ${tp.length} Hot Topics!`,tp.map(t=>`<div style="padding:5px 0;border-bottom:1px solid var(--cb);font-size:.76rem;"><b style="color:#fb923c">${t.course}</b> — ${t.topic}</div>`).join(''));showToast(`🔥 ${tp.length} hot topics!`);}catch(e){showToast('Error - try again');}
   }
 
   else if(type==='autopilot_weekly_report'){
-    const [studSnap,quizSnap]=await Promise.all([_usersTable.get(),db.collection('quizHistory').get().catch(()=>({docs:[],size:0}))]);
+    const [studSnap,quizSnap]=await Promise.all([_usersTable.get(),_quizHistoryTable.get().catch(()=>({docs:[],size:0}))]);
     const students=studSnap.docs.map(d=>d.data());const today=new Date().toDateString();const weekAgo=Date.now()-7*24*60*60*1000;
     showActionResult('⏳ Generating...','<div style="color:var(--text2)">Analyzing...</div>');
     try{const text=await aiPost(`Weekly platform report BABSPHARM Cloud. Stats: ${studSnap.size} students, ${students.filter(s=>s.lastSeen&&new Date(s.lastSeen).toDateString()===today).length} active today, ${students.filter(s=>s.createdAt&&new Date(s.createdAt).getTime()>weekAgo).length} new this week, ${quizSnap.size} quiz attempts. Summary, wins, issues, 3 action items.`,600);showActionResult('📊 Weekly Report',`<div style="font-size:.8rem;color:var(--text);line-height:1.8;white-space:pre-wrap;">${text}</div>`,[{label:'📋 Copy',action:`navigator.clipboard.writeText(\`${text.replace(/`/g,"'")}\`);showToast('Copied!')`,primary:true}]);}catch(e){}
@@ -6432,7 +6835,7 @@ async function runAutopilot(type, groqKey){
     const snap=await _usersTable.get();const weekAgo=Date.now()-7*24*60*60*1000;
     const inactive=snap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>!s.lastSeen||new Date(s.lastSeen).getTime()<weekAgo);
     let count=0;for(const s of inactive){await _usersTable.doc(s.id).set({points:(s.points||0)+50},{merge:true});count++;}
-    await db.collection('coupons').add({code:'RETURN50',pts:50,limit:count,used:0,active:true,createdAt:new Date().toISOString()});
+    await _couponsTable.add({code:'RETURN50',pts:50,limit:count,used:0,active:true,createdAt:new Date().toISOString()});
     showActionResult(`✅ ${count} Reactivated`,`<div style="text-align:center;padding:16px;"><div style="font-size:2rem">🎁</div><div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:900;color:var(--green)">+50pts to ${count} students</div><div style="color:var(--text2);font-size:.78rem">Coupon RETURN50 created</div></div>`,[{label:'📢 Notify',action:`sendGeneratedAnnouncement('Welcome back! 50 FREE bonus points on BABSPHARM Cloud! Code RETURN50 gives 50 more. Your AI tutors are ready!')`,primary:true}]);
     showToast(`✅ ${count} students reactivated!`);
   }
@@ -6441,8 +6844,8 @@ async function runAutopilot(type, groqKey){
     const log=[];const addLog=(msg)=>{log.push('✅ '+msg);showActionResult('📝 Building Exam Set',log.map(l=>`<div style="font-size:.78rem;color:var(--green);padding:2px 0">${l}</div>`).join(''));};
     showActionResult('📝 Creating 6 exams...','<div style="color:var(--text2)">Starting...</div>');
     for(const c of [{title:'CHM 101 First CA',course:'CHM 101',code:'CHM101CA1'},{title:'CHM 102 First CA',course:'CHM 102',code:'CHM102CA1'},{title:'MTH 101 First CA',course:'MTH 101',code:'MTH101CA1'},{title:'MTH 102 First CA',course:'MTH 102',code:'MTH102CA1'},{title:'PHY 101 First CA',course:'PHY 101',code:'PHY101CA1'},{title:'PHY 102 First CA',course:'PHY 102',code:'PHY102CA1'}]){
-      const ref=await db.collection('cbtExams').add({title:c.title,course:c.course,code:c.code,duration:30,sections:3,qps:8,instructions:'Answer all questions.',active:false,createdAt:new Date().toISOString()});
-      for(const sec of ['A','B','C']){try{const qs=await aiJSON(`8 MCQ for OAU 100L ${c.course} Section ${sec}. JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`,1500);for(const q of qs)if(q.q)await db.collection('cbtExams').doc(ref.id).collection('questions').add({...q,section:sec,createdAt:new Date().toISOString()});}catch(e){}}
+      const ref=await _cbtExamsTable.add({title:c.title,course:c.course,code:c.code,duration:30,sections:3,qps:8,instructions:'Answer all questions.',active:false,createdAt:new Date().toISOString()});
+      for(const sec of ['A','B','C']){try{const qs=await aiJSON(`8 MCQ for OAU 100L ${c.course} Section ${sec}. JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`,1500);for(const q of qs)if(q.q)await _cbtExamsTable.doc(ref.id).collection('questions').add({...q,section:sec,createdAt:new Date().toISOString()});}catch(e){}}
       addLog(`${c.title} — 3 sections done`);
     }
     addLog('🎉 All 6 exams ready! Activate in CBT Manager.');showToast('✅ 6 exams created!');
@@ -6470,7 +6873,7 @@ async function runSiteDoctor(type, groqKey){
 
     addLog('━━ Checking Firebase Collections ━━','#60a5fa');
     // Check settings/config for GROQ key
-    const settingsSnap = await db.collection('settings').doc('config').get();
+    const settingsSnap = await _settingsTable.doc('config').get();
     const hasGroq = settingsSnap.exists && settingsSnap.data().groqKey;
     if(!hasGroq){addLog('❌ GROQ API key missing — AI features broken!','#f87171');issues.push('GROQ key missing');} else addLog('✓ GROQ key configured');
 
@@ -6484,34 +6887,34 @@ async function runSiteDoctor(type, groqKey){
     if(zeroPoints>students.length*0.5){addLog(`⚠️ ${zeroPoints} users (${Math.round(zeroPoints/students.size*100)}%) have 0 points — engagement is low`,'#fbbf24');issues.push('Low engagement — many zero-point students');}
 
     // Check PQ bank
-    const pqSnap = await db.collection('pqBank').get().catch(()=>({size:0,docs:[]}));
+    const pqSnap = await _pqBankTable.get().catch(()=>({size:0,docs:[]}));
     if(pqSnap.size<30){addLog(`❌ PQ Bank has only ${pqSnap.size} custom questions — needs more`,'#f87171');issues.push('PQ bank needs more questions');} else addLog(`✓ PQ Bank has ${pqSnap.size} custom questions`);
 
     // Check motivations
-    const motSnap = await db.collection('motivations').get().catch(()=>({size:0}));
+    const motSnap = await _motivationsTable.get().catch(()=>({size:0}));
     if(motSnap.size<5){addLog(`❌ Only ${motSnap.size} motivations — needs at least 10`,'#f87171');issues.push('Not enough motivations');} else addLog(`✓ ${motSnap.size} motivations`);
 
     // Check CBT exams
-    const cbtSnap = await db.collection('cbtExams').get().catch(()=>({size:0,docs:[]}));
+    const cbtSnap = await _cbtExamsTable.get().catch(()=>({size:0,docs:[]}));
     addLog(`✓ ${cbtSnap.size} CBT exams`);
     let emptyExams=0;
     for(const d of (cbtSnap.docs||[])){
-      const qSnap = await db.collection('cbtExams').doc(d.id).collection('questions').limit(1).get();
+      const qSnap = await _cbtExamsTable.doc(d.id).collection('questions').limit(1).get();
       if(qSnap.empty){emptyExams++;issues.push(`CBT exam "${d.data().title}" has no questions`);}
     }
     if(emptyExams>0) addLog(`❌ ${emptyExams} CBT exams have NO questions!`,'#f87171');
 
     // Check hot topics
-    const hotSnap = await db.collection('hotTopics').get().catch(()=>({size:0}));
+    const hotSnap = await _hotTopicsTable.get().catch(()=>({size:0}));
     if(hotSnap.size===0){addLog('⚠️ No hot topics set — students see nothing on Hot Topics page','#fbbf24');issues.push('No hot topics set');}
     else addLog(`✓ ${hotSnap.size} hot topics`);
 
     // Check announcements
-    const annSnap = await db.collection('announcements').get().catch(()=>({size:0}));
+    const annSnap = await _announcementsTable.get().catch(()=>({size:0}));
     addLog(`✓ ${annSnap.size} announcements sent`);
 
     // Check coupons
-    const couponSnap = await db.collection('coupons').get().catch(()=>({size:0}));
+    const couponSnap = await _couponsTable.get().catch(()=>({size:0}));
     addLog(`✓ ${couponSnap.size} coupons created`);
 
     addLog('━━ Diagnosis Complete ━━','#60a5fa');
@@ -6525,7 +6928,7 @@ async function runSiteDoctor(type, groqKey){
         try{
           const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'10 motivational quotes OAU students. JSON:[{"emoji":"🔥","text":"quote","sub":"tagline","category":"general"}]'}],max_tokens:800})});
           const m=JSON.parse((await r.json()).choices?.[0]?.message?.content.replace(/```json|```/g,'').trim()||'[]');
-          for(const q of m) await db.collection('motivations').add({...q,createdAt:new Date().toISOString()});
+          for(const q of m) await _motivationsTable.add({...q,createdAt:new Date().toISOString()});
           addLog(`✅ Fixed: added ${m.length} motivations`);
           fixes.push(`Added ${m.length} motivations`);
         }catch(e){addLog('Could not auto-fix motivations','#f87171');}
@@ -6535,7 +6938,7 @@ async function runSiteDoctor(type, groqKey){
         try{
           const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:'6 OAU exam hot topics. JSON:[{"topic":"","course":"CHM 101","urgency":"urgent","note":""}]'}],max_tokens:500})});
           const t=JSON.parse((await r.json()).choices?.[0]?.message?.content.replace(/```json|```/g,'').trim()||'[]');
-          for(const q of t) await db.collection('hotTopics').add({...q,createdAt:new Date().toISOString()});
+          for(const q of t) await _hotTopicsTable.add({...q,createdAt:new Date().toISOString()});
           addLog(`✅ Fixed: set ${t.length} hot topics`);
           fixes.push(`Set ${t.length} hot topics`);
         }catch(e){}
@@ -6547,7 +6950,7 @@ async function runSiteDoctor(type, groqKey){
           try{
             const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`5 MCQ for OAU ${s.n}. JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`}],max_tokens:800})});
             const qs=JSON.parse(((await r.json()).choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());
-            for(const q of qs)if(q.q){await db.collection('pqBank').add({subject:s.key,...q,createdAt:new Date().toISOString()});qAdded++;}
+            for(const q of qs)if(q.q){await _pqBankTable.add({subject:s.key,...q,createdAt:new Date().toISOString()});qAdded++;}
           }catch(e){}
         }
         addLog(`✅ Fixed: added ${qAdded} PQ questions`);
@@ -6570,12 +6973,12 @@ async function runSiteDoctor(type, groqKey){
   }
 
   else if(type==='doctor_firebase'){
-    showActionResult('🔥 Firebase Check','<div style="color:var(--text2)">Checking all Firestore collections...</div>');
+    showActionResult('🔥 Supabase Check','<div style="color:var(--text2)">Checking all Supabase tables...</div>');
     const collections=['users','quizHistory','pqBank','motivations','hotTopics','announcements','coupons','cbtExams','settings','tutorProgress'];
     const results=[];
     for(const col of collections){
       try{
-        const snap=await db.collection(col).limit(1).get();
+        const snap=await _getTable(col).limit(1).get();
         results.push({col,ok:true,info:`accessible`});
       }catch(e){
         results.push({col,ok:false,info:e.message||'access error'});
@@ -6610,10 +7013,10 @@ async function runSiteDoctor(type, groqKey){
   }
 
   else if(type==='doctor_quizzes'){
-    const cbtSnap=await db.collection('cbtExams').get().catch(()=>({docs:[]}));
+    const cbtSnap=await _cbtExamsTable.get().catch(()=>({docs:[]}));
     const results=[];
     for(const d of cbtSnap.docs){
-      const qSnap=await db.collection('cbtExams').doc(d.id).collection('questions').get();
+      const qSnap=await _cbtExamsTable.doc(d.id).collection('questions').get();
       results.push({id:d.id,title:d.data().title,code:d.data().code,active:d.data().active,qCount:qSnap.size,sections:['A','B','C','D'].filter(s=>qSnap.docs.some(q=>q.data().section===s))});
     }
     showActionResult(`📝 CBT Exam Status (${results.length} exams)`,
@@ -6633,7 +7036,7 @@ async function runSiteDoctor(type, groqKey){
   else if(type.startsWith('doctor_fill_exam_')){
     const examId=type.replace('doctor_fill_exam_','');
     if(!groqKey){showToast('Set GROQ key first');return;}
-    const examDoc=await db.collection('cbtExams').doc(examId).get();
+    const examDoc=await _cbtExamsTable.doc(examId).get();
     if(!examDoc.exists){showToast('Exam not found');return;}
     const course=examDoc.data().course||'CHM 101';
     showActionResult('⏳ Auto-Filling Exam Questions...','<div style="color:var(--text2)">Generating questions...</div>');
@@ -6642,7 +7045,7 @@ async function runSiteDoctor(type, groqKey){
       try{
         const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`8 MCQ for OAU 100L ${course} Section ${sec}. JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`}],max_tokens:1500,temperature:0.6})});
         const qs=JSON.parse(((await r.json()).choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());
-        for(const q of qs)if(q.q){await db.collection('cbtExams').doc(examId).collection('questions').add({...q,section:sec,createdAt:new Date().toISOString()});saved++;}
+        for(const q of qs)if(q.q){await _cbtExamsTable.doc(examId).collection('questions').add({...q,section:sec,createdAt:new Date().toISOString()});saved++;}
       }catch(e){}
     }
     showActionResult(`✅ Exam Filled: ${saved} questions added`,`<div style="text-align:center;padding:12px;"><div style="font-size:2rem">📝</div><div style="color:var(--green);font-weight:700">${saved} questions added to exam</div></div>`);
@@ -6650,7 +7053,7 @@ async function runSiteDoctor(type, groqKey){
   }
 
   else if(type==='doctor_ai_key'){
-    const snap=await db.collection('settings').doc('config').get();
+    const snap=await _settingsTable.doc('config').get();
     const key=snap.exists?snap.data().groqKey:'';
     if(!key){
       showActionResult('❌ GROQ Key Missing',`<div style="text-align:center;padding:16px;"><div style="font-size:2rem">🔑</div><div style="font-size:.84rem;color:var(--red);font-weight:700">GROQ API Key is not configured!</div><div style="font-size:.76rem;color:var(--text2);margin-top:6px">AI tutors, AI assistant, and all AI features are broken.</div></div>`,
@@ -6668,7 +7071,7 @@ async function runSiteDoctor(type, groqKey){
   }
 
   else if(type==='doctor_content'){
-    const [pqSnap,motSnap,hotSnap,annSnap]=await Promise.all([db.collection('pqBank').get().catch(()=>({size:0})),db.collection('motivations').get().catch(()=>({size:0})),db.collection('hotTopics').get().catch(()=>({size:0})),db.collection('announcements').get().catch(()=>({size:0}))]);
+    const [pqSnap,motSnap,hotSnap,annSnap]=await Promise.all([_pqBankTable.get().catch(()=>({size:0})),_motivationsTable.get().catch(()=>({size:0})),_hotTopicsTable.get().catch(()=>({size:0})),_announcementsTable.get().catch(()=>({size:0}))]);
     const checks=[{name:'PQ Bank (custom)',count:pqSnap.size,min:20,fix:'autopilot_questions_all'},{name:'Motivations',count:motSnap.size,min:10,fix:'autopilot_motivations_fill'},{name:'Hot Topics',count:hotSnap.size,min:3,fix:'autopilot_hot_topics_all'},{name:'Announcements',count:annSnap.size,min:1,fix:'announcement'}];
     showActionResult('📋 Content Health Check',
       checks.map(c=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--cb);">
@@ -6680,7 +7083,7 @@ async function runSiteDoctor(type, groqKey){
   }
 
   else if(type==='doctor_duplicates'){
-    const snap=await db.collection('motivations').get().catch(()=>({docs:[]}));
+    const snap=await _motivationsTable.get().catch(()=>({docs:[]}));
     const seen={};const dupes=[];
     snap.docs.forEach(d=>{const t=d.data().text;if(t){if(seen[t])dupes.push({id:d.id,text:t});else seen[t]=d.id;}});
     if(dupes.length===0){showActionResult('✅ No Duplicates',`<div style="text-align:center;padding:16px;color:var(--green)">No duplicate motivations found!</div>`);}
@@ -6691,12 +7094,12 @@ async function runSiteDoctor(type, groqKey){
   else if(type==='doctor_orphans'){
     let orphans=0;
     // Find quiz history with no matching user
-    const [quizSnap,userSnap]=await Promise.all([db.collection('quizHistory').limit(100).get().catch(()=>({docs:[]})),_usersTable.get()]);
+    const [quizSnap,userSnap]=await Promise.all([_quizHistoryTable.limit(100).get().catch(()=>({docs:[]})),_usersTable.get()]);
     const userIds=new Set(userSnap.docs.map(d=>d.id));
     const orphanQuizzes=quizSnap.docs.filter(d=>d.data().uid&&!userIds.has(d.data().uid));
     orphans+=orphanQuizzes.length;
     // Find tutorProgress with no user
-    const progSnap=await db.collection('tutorProgress').get().catch(()=>({docs:[]}));
+    const progSnap=await _tutorProgressTable.get().catch(()=>({docs:[]}));
     const orphanProgress=progSnap.docs.filter(d=>!userIds.has(d.id));
     orphans+=orphanProgress.length;
     showActionResult(`👻 ${orphans} Orphaned Records`,`<div style="font-size:.8rem;line-height:2;color:var(--text);">
@@ -6709,16 +7112,16 @@ async function runSiteDoctor(type, groqKey){
 
   else if(type==='doctor_cbt_empty'){
     if(!groqKey){showToast('Set GROQ key first');return;}
-    const cbtSnap=await db.collection('cbtExams').get().catch(()=>({docs:[]}));
+    const cbtSnap=await _cbtExamsTable.get().catch(()=>({docs:[]}));
     let filled=0;
     showActionResult('⏳ Filling Empty CBT Exams...','<div style="color:var(--text2)">Checking and filling...</div>');
     const log=[];const addLog=(msg)=>{log.push('✅ '+msg);showActionResult('📝 Filling Empty CBT Exams',log.map(l=>`<div style="font-size:.78rem;color:var(--green);padding:2px 0">${l}</div>`).join(''));};
     for(const d of cbtSnap.docs){
-      const qSnap=await db.collection('cbtExams').doc(d.id).collection('questions').limit(1).get();
+      const qSnap=await _cbtExamsTable.doc(d.id).collection('questions').limit(1).get();
       if(qSnap.empty){
         const course=d.data().course||'CHM 101';
         for(const sec of ['A','B','C']){
-          try{const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`8 MCQ OAU ${course} Section ${sec}. JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`}],max_tokens:1500})});const qs=JSON.parse(((await r.json()).choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());for(const q of qs)if(q.q){await db.collection('cbtExams').doc(d.id).collection('questions').add({...q,section:sec,createdAt:new Date().toISOString()});filled++;}}catch(e){}
+          try{const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+groqKey},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`8 MCQ OAU ${course} Section ${sec}. JSON:[{"q":"","opts":["A","B","C","D"],"ans":0,"exp":""}]`}],max_tokens:1500})});const qs=JSON.parse(((await r.json()).choices?.[0]?.message?.content||'[]').replace(/```json|```/g,'').trim());for(const q of qs)if(q.q){await _cbtExamsTable.doc(d.id).collection('questions').add({...q,section:sec,createdAt:new Date().toISOString()});filled++;}}catch(e){}
         }
         addLog(`Filled: ${d.data().title} (${course})`);
       }
@@ -6729,7 +7132,7 @@ async function runSiteDoctor(type, groqKey){
   }
 
   else if(type==='doctor_report'){
-    const [studSnap,quizSnap,pqSnap,motSnap,hotSnap,cbtSnap,couponSnap]=await Promise.all([_usersTable.get(),db.collection('quizHistory').get().catch(()=>({size:0})),db.collection('pqBank').get().catch(()=>({size:0})),db.collection('motivations').get().catch(()=>({size:0})),db.collection('hotTopics').get().catch(()=>({size:0})),db.collection('cbtExams').get().catch(()=>({size:0})),db.collection('coupons').get().catch(()=>({size:0}))]);
+    const [studSnap,quizSnap,pqSnap,motSnap,hotSnap,cbtSnap,couponSnap]=await Promise.all([_usersTable.get(),_quizHistoryTable.get().catch(()=>({size:0})),_pqBankTable.get().catch(()=>({size:0})),_motivationsTable.get().catch(()=>({size:0})),_hotTopicsTable.get().catch(()=>({size:0})),_cbtExamsTable.get().catch(()=>({size:0})),_couponsTable.get().catch(()=>({size:0}))]);
     const students=studSnap.docs.map(d=>d.data());
     const weekAgo=Date.now()-7*24*60*60*1000;
     const report=`BABSPHARM CLOUD — SITE ISSUES REPORT
@@ -6845,7 +7248,7 @@ async function bulkActionCleanup(action){
   else if(action==='notify'){
     const msg=prompt('Message to send these users (saved as announcement):');
     if(!msg) return;
-    await db.collection('announcements').add({title:'📢 Important Message',msg,createdAt:new Date().toISOString()});
+    await _announcementsTable.add({title:'📢 Important Message',msg,createdAt:new Date().toISOString()});
     showToast('✅ Announcement posted for all students');
   }
 }
@@ -6863,7 +7266,7 @@ async function deleteSingleUser(id, name, email){
 // Cleanup extras
 async function runCleanupExtra(type){
   if(type==='cleanup_zero_activity'){
-    const [usersSnap,quizSnap]=await Promise.all([_usersTable.get(),db.collection('quizHistory').get().catch(()=>({docs:[]}))]);
+    const [usersSnap,quizSnap]=await Promise.all([_usersTable.get(),_quizHistoryTable.get().catch(()=>({docs:[]}))]);
     const activeUIDs=new Set(quizSnap.docs.map(d=>d.data().uid).filter(Boolean));
     const neverQuizzed=usersSnap.docs.map(d=>({id:d.id,...d.data()})).filter(s=>!activeUIDs.has(s.id));
     cleanupUserData=neverQuizzed;cleanupSelectedUsers=new Set();
@@ -6929,12 +7332,16 @@ async function fixNegativePoints(){
 }
 async function deleteDuplicateMotivations(ids){
   if(!confirm(`Delete ${ids.length} duplicate motivations?`)) return;
-  for(const id of ids) await db.collection('motivations').doc(id).delete();
+  for(const id of ids) await _motivationsTable.doc(id).delete();
   showToast(`✅ Deleted ${ids.length} duplicates`);
+}
+function _getTable(col){
+  const map={users:_usersTable,quizHistory:_quizHistoryTable,pqBank:_pqBankTable,motivations:_motivationsTable,hotTopics:_hotTopicsTable,announcements:_announcementsTable,coupons:_couponsTable,cbtExams:_cbtExamsTable,settings:_settingsTable,tutorProgress:_tutorProgressTable};
+  return map[col]||{doc:()=>({delete:async()=>{}}),limit:()=>({get:async()=>({docs:[]})})};
 }
 async function deleteOrphans(orphans){
   if(!confirm(`Delete ${orphans.length} orphaned records?`)) return;
-  for(const o of orphans) await db.collection(o.col).doc(o.id).delete();
+  for(const o of orphans) await _getTable(o.col).doc(o.id).delete();
   showToast(`✅ Deleted ${orphans.length} orphaned records`);
 }
 

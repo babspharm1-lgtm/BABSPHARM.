@@ -13,296 +13,335 @@
 <meta http-equiv="Expires" content="0"/>
 <meta name="version" content="2.5.0"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root{
-  --navy:#0a1628;--navy2:#0f2044;--navy3:#162d5a;
-  --gold:#c9a84c;--gold2:#e8c97a;--gold3:#f5e4a8;
-  --text:#f0ead6;--text2:#9bacc8;
-  --card:rgba(255,255,255,0.04);--cb:rgba(201,168,76,0.2);
+  --navy:#060e1f;--navy2:#0b1a38;--navy3:#122248;
+  --gold:#c9a84c;--gold2:#e8c97a;--gold3:#f5e4a8;--gold4:#b8922e;
+  --text:#f0ead6;--text2:#8a9fc0;
+  --card:rgba(255,255,255,0.035);--cb:rgba(201,168,76,0.18);--cb2:rgba(201,168,76,0.08);
   --green:#4ade80;--red:#f87171;--yellow:#fbbf24;
-  --sh:0 8px 32px rgba(0,0,0,0.5);--r:14px;
+  --sh:0 8px 40px rgba(0,0,0,0.6);--r:16px;--glow:0 0 30px rgba(201,168,76,0.12);
 }
 *{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--navy);}::-webkit-scrollbar-thumb{background:var(--gold4);border-radius:4px;}
 body{font-family:'Outfit',sans-serif;background:var(--navy);color:var(--text);min-height:100vh;overflow-x:hidden;}
 body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:radial-gradient(circle at 15% 15%,rgba(201,168,76,.07) 0%,transparent 45%),
-  radial-gradient(circle at 85% 85%,rgba(201,168,76,.05) 0%,transparent 45%);}
+  background:radial-gradient(ellipse 80% 60% at 10% 0%,rgba(201,168,76,.09) 0%,transparent 55%),
+  radial-gradient(ellipse 60% 40% at 90% 100%,rgba(201,168,76,.07) 0%,transparent 50%);}
 body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:linear-gradient(rgba(201,168,76,.025) 1px,transparent 1px),
-  linear-gradient(90deg,rgba(201,168,76,.025) 1px,transparent 1px);
-  background-size:44px 44px;}
-
-/* TOPBAR */
+  background-image:linear-gradient(rgba(201,168,76,.018) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.018) 1px,transparent 1px);
+  background-size:48px 48px;}
 #topbar{position:fixed;top:0;left:0;right:0;z-index:300;display:flex;align-items:center;
-  justify-content:space-between;padding:12px 16px;
-  background:rgba(10,22,40,.93);backdrop-filter:blur(20px);border-bottom:1px solid var(--cb);}
-.logo-wrap{display:flex;align-items:center;gap:9px;}
-.logo-icon{width:31px;height:31px;background:linear-gradient(135deg,var(--gold),var(--gold2));
-  border-radius:8px;display:flex;align-items:center;justify-content:center;
-  font-size:.88rem;font-weight:900;color:var(--navy);font-family:'Playfair Display',serif;}
-.logo-text{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;
-  background:linear-gradient(90deg,var(--gold),var(--gold2));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.hamburger{background:none;border:none;cursor:pointer;padding:5px;
-  display:flex;flex-direction:column;gap:5px;}
-.hamburger span{display:block;width:21px;height:2px;background:var(--gold);border-radius:2px;transition:all .3s;}
+  justify-content:space-between;padding:11px 16px;
+  background:rgba(6,14,31,.92);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid rgba(201,168,76,.12);box-shadow:0 1px 40px rgba(0,0,0,.5);}
+.logo-wrap{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--gold4),var(--gold2));
+  border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-size:.85rem;font-weight:900;color:var(--navy);font-family:'Playfair Display',serif;
+  box-shadow:0 4px 14px rgba(201,168,76,.3);}
+.logo-text{font-family:'Playfair Display',serif;font-size:.92rem;font-weight:700;
+  background:linear-gradient(90deg,var(--gold),var(--gold2),var(--gold3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.5px;}
+.hamburger{background:none;border:none;cursor:pointer;padding:6px;display:flex;flex-direction:column;
+  gap:5px;border-radius:8px;transition:background .2s;}
+.hamburger:hover{background:var(--cb2);}
+.hamburger span{display:block;width:20px;height:2px;background:var(--gold2);border-radius:2px;transition:all .3s;}
 .hamburger.open span:nth-child(1){transform:translateY(7px) rotate(45deg);}
-.hamburger.open span:nth-child(2){opacity:0;}
+.hamburger.open span:nth-child(2){opacity:0;transform:scaleX(0);}
 .hamburger.open span:nth-child(3){transform:translateY(-7px) rotate(-45deg);}
-#wm{font-size:.74rem;color:var(--text2);}
-
-/* SIDEBAR */
-#sidebar{position:fixed;top:0;left:-270px;bottom:0;width:270px;z-index:400;
-  background:var(--navy2);border-right:1px solid var(--cb);transition:left .3s cubic-bezier(.4,0,.2,1);padding-top:65px;}
+#wm{font-size:.72rem;color:var(--text2);letter-spacing:.3px;}
+#sidebar{position:fixed;top:0;left:-275px;bottom:0;width:275px;z-index:400;
+  background:linear-gradient(180deg,var(--navy2) 0%,var(--navy) 100%);
+  border-right:1px solid rgba(201,168,76,.1);box-shadow:4px 0 40px rgba(0,0,0,.5);
+  transition:left .35s cubic-bezier(.4,0,.2,1);padding-top:66px;}
 #sidebar.open{left:0;}
-#sov{position:fixed;inset:0;z-index:399;background:rgba(0,0,0,.65);display:none;backdrop-filter:blur(2px);}
+#sov{position:fixed;inset:0;z-index:399;background:rgba(0,0,0,.7);display:none;backdrop-filter:blur(3px);}
 #sov.open{display:block;}
-.sb-hdr{padding:18px 18px 10px;border-bottom:1px solid var(--cb);margin-bottom:6px;}
-.sb-avatar{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));
+.sb-hdr{padding:20px 18px 14px;border-bottom:1px solid rgba(201,168,76,.1);margin-bottom:8px;}
+.sb-avatar{width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold4),var(--gold2));
   display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;
-  color:var(--navy);font-family:'Playfair Display',serif;margin-bottom:8px;overflow:hidden;}
+  color:var(--navy);font-family:'Playfair Display',serif;margin-bottom:10px;overflow:hidden;
+  border:2px solid rgba(201,168,76,.3);box-shadow:0 4px 16px rgba(201,168,76,.2);}
 .sb-avatar img{width:100%;height:100%;object-fit:cover;}
-.sb-uname{font-size:.88rem;font-weight:600;color:var(--gold2);}
-.sb-udept{font-size:.72rem;color:var(--text2);margin-top:2px;}
-.sb-item{display:flex;align-items:center;gap:11px;padding:12px 18px;
-  cursor:pointer;transition:all .2s;color:var(--text2);font-size:.86rem;font-weight:500;}
-.sb-item:hover,.sb-item.on{background:rgba(201,168,76,.08);color:var(--gold2);border-right:3px solid var(--gold);}
-.sb-item .si{font-size:1rem;width:18px;text-align:center;}
-.sb-div{height:1px;background:var(--cb);margin:6px 16px;}
+.sb-uname{font-size:.87rem;font-weight:600;color:var(--gold2);letter-spacing:.3px;}
+.sb-udept{font-size:.7rem;color:var(--text2);margin-top:3px;}
+.sb-item{display:flex;align-items:center;gap:12px;padding:11px 18px;cursor:pointer;
+  transition:all .2s;color:var(--text2);font-size:.84rem;font-weight:500;
+  border-left:3px solid transparent;margin:1px 0;}
+.sb-item:hover{background:rgba(201,168,76,.07);color:var(--gold2);border-left-color:rgba(201,168,76,.4);}
+.sb-item.on{background:linear-gradient(90deg,rgba(201,168,76,.1),transparent);color:var(--gold2);border-left-color:var(--gold);}
+.sb-item .si{font-size:.95rem;width:18px;text-align:center;}
+.sb-div{height:1px;background:rgba(201,168,76,.08);margin:6px 16px;}
 .sb-out{color:var(--text2)!important;}
-.sb-out:hover{color:#f87171!important;background:rgba(248,113,113,.08)!important;border-right-color:#f87171!important;}
-
-/* PAGES */
+.sb-out:hover{color:#f87171!important;background:rgba(248,113,113,.07)!important;border-left-color:#f87171!important;}
 .page{display:none;min-height:100vh;position:relative;z-index:1;}
-.page.on{display:block;animation:fadeUp .3s ease;}
-@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
-
-/* AUTH */
+.page.on{display:block;animation:fadeUp .35s cubic-bezier(.4,0,.2,1);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
 #pg-auth{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
-.auth-card{background:rgba(12,26,55,.85);border:1px solid var(--cb);border-radius:20px;
-  padding:34px 26px;width:100%;max-width:400px;box-shadow:0 24px 64px rgba(0,0,0,.65);backdrop-filter:blur(20px);}
-.auth-logo{text-align:center;margin-bottom:22px;}
-.auth-logo-ico{width:60px;height:60px;background:linear-gradient(135deg,var(--gold),var(--gold2));
-  border-radius:14px;display:inline-flex;align-items:center;justify-content:center;
-  font-size:1.6rem;margin-bottom:8px;box-shadow:0 8px 24px rgba(201,168,76,.25);}
-.auth-logo-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:900;
-  background:linear-gradient(90deg,var(--gold),var(--gold2));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.auth-logo-sub{font-size:.7rem;color:var(--text2);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
-.auth-tabs{display:flex;border-radius:10px;overflow:hidden;border:1px solid var(--cb);margin-bottom:20px;}
-.atab{flex:1;padding:11px;border:none;cursor:pointer;font-family:'Outfit',sans-serif;
-  font-size:.8rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
-  transition:all .2s;background:transparent;color:var(--text2);}
-.atab.on{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);}
-.fg{margin-bottom:13px;}
-.fg label{display:block;font-size:.7rem;font-weight:600;color:var(--text2);
-  margin-bottom:4px;letter-spacing:.6px;text-transform:uppercase;}
-.fg input,.fg select{width:100%;padding:10px 13px;border-radius:9px;border:1px solid var(--cb);
-  background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;
-  font-size:.86rem;outline:none;transition:all .3s;}
-.fg input:focus,.fg select:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.12);}
-.fg input::placeholder{color:rgba(155,172,200,.45);}
+.auth-card{background:linear-gradient(145deg,rgba(11,26,56,.95),rgba(6,14,31,.98));
+  border:1px solid rgba(201,168,76,.15);border-radius:24px;padding:38px 28px;width:100%;max-width:410px;
+  box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 0 1px rgba(201,168,76,.05),inset 0 1px 0 rgba(201,168,76,.08);
+  backdrop-filter:blur(24px);}
+.auth-logo{text-align:center;margin-bottom:26px;}
+.auth-logo-ico{width:66px;height:66px;background:linear-gradient(135deg,var(--gold4),var(--gold),var(--gold2));
+  border-radius:18px;display:inline-flex;align-items:center;justify-content:center;font-size:1.7rem;
+  margin-bottom:10px;box-shadow:0 12px 32px rgba(201,168,76,.35),0 0 0 1px rgba(201,168,76,.2);}
+.auth-logo-title{font-family:'Playfair Display',serif;font-size:1.55rem;font-weight:900;
+  background:linear-gradient(90deg,var(--gold),var(--gold2),var(--gold3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.5px;}
+.auth-logo-sub{font-size:.67rem;color:var(--text2);letter-spacing:2.5px;text-transform:uppercase;margin-top:4px;}
+.auth-tabs{display:flex;border-radius:12px;overflow:hidden;border:1px solid rgba(201,168,76,.15);
+  margin-bottom:22px;background:rgba(255,255,255,.02);}
+.atab{flex:1;padding:12px;border:none;cursor:pointer;font-family:'Outfit',sans-serif;
+  font-size:.78rem;font-weight:700;letter-spacing:.8px;text-transform:uppercase;
+  transition:all .25s;background:transparent;color:var(--text2);}
+.atab.on{background:linear-gradient(135deg,var(--gold4),var(--gold),var(--gold2));color:var(--navy);}
+.fg{margin-bottom:14px;}
+.fg label{display:block;font-size:.68rem;font-weight:700;color:var(--text2);
+  margin-bottom:6px;letter-spacing:.8px;text-transform:uppercase;}
+.fg input,.fg select{width:100%;padding:11px 14px;border-radius:11px;
+  border:1px solid rgba(201,168,76,.15);background:rgba(255,255,255,.04);color:var(--text);
+  font-family:'Outfit',sans-serif;font-size:.86rem;outline:none;transition:all .3s;}
+.fg input:focus,.fg select:focus{border-color:rgba(201,168,76,.5);background:rgba(255,255,255,.06);
+  box-shadow:0 0 0 3px rgba(201,168,76,.1);}
+.fg input::placeholder{color:rgba(138,159,192,.4);}
+.fg select option{background:var(--navy2);color:var(--text);}
 .pw-wrap{position:relative;}
 .pw-wrap input{padding-right:52px;}
-.pw-tog{position:absolute;right:11px;top:50%;transform:translateY(-50%);
-  background:none;border:none;color:var(--text2);cursor:pointer;font-size:.75rem;font-family:'Outfit',sans-serif;font-weight:600;}
-.btn{font-family:'Outfit',sans-serif;font-size:.83rem;font-weight:700;padding:11px 18px;
-  border-radius:9px;border:none;cursor:pointer;transition:all .2s;width:100%;
-  letter-spacing:.4px;text-transform:uppercase;}
-.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);
-  box-shadow:0 4px 14px rgba(201,168,76,.25);}
-.btn-gold:hover{transform:translateY(-2px);box-shadow:0 7px 20px rgba(201,168,76,.35);}
-.btn-out{background:transparent;color:var(--text2);border:1px solid var(--cb);margin-top:7px;}
-.btn-out:hover{border-color:var(--gold);color:var(--gold2);}
-.amsg{text-align:center;font-size:.76rem;margin-top:10px;padding:8px;border-radius:8px;display:none;}
-.amsg.err{background:rgba(248,113,113,.1);color:#f87171;border:1px solid rgba(248,113,113,.2);display:block;}
-.amsg.ok{background:rgba(74,222,128,.1);color:#4ade80;border:1px solid rgba(74,222,128,.2);display:block;}
-.auth-footer{text-align:center;font-size:.68rem;color:var(--text2);margin-top:14px;letter-spacing:.5px;}
-
-/* DASH */
-#pg-dash{padding:72px 14px 80px;}
-.dash-hdr{margin-bottom:18px;}
-.dash-hdr h1{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;
-  background:linear-gradient(90deg,var(--gold),var(--gold2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.dash-hdr p{color:var(--text2);font-size:.78rem;margin-top:2px;}
-.sec-title{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;
-  color:var(--gold2);margin-bottom:11px;display:flex;align-items:center;gap:7px;}
-.sec-title::before{content:'';width:3px;height:15px;background:linear-gradient(180deg,var(--gold),var(--gold2));border-radius:2px;}
-.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:18px;}
-.sc{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);
-  padding:13px;display:flex;align-items:center;gap:9px;}
-.si2{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,var(--gold),var(--gold2));
-  display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
-.sv{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--gold2);line-height:1;}
-.sl{font-size:.66rem;color:var(--text2);margin-top:2px;}
-.quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:20px;}
-.qc{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);
-  padding:15px;text-align:center;cursor:pointer;transition:all .2s;}
-.qc:hover{border-color:var(--gold);transform:translateY(-2px);background:rgba(201,168,76,.05);}
-.qc-icon{font-size:1.7rem;margin-bottom:7px;}
-.qc-lbl{font-size:.76rem;font-weight:600;color:var(--text2);}
+.pw-tog{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;
+  color:var(--text2);cursor:pointer;font-size:.73rem;font-family:'Outfit',sans-serif;font-weight:600;
+  letter-spacing:.4px;transition:color .2s;}
+.pw-tog:hover{color:var(--gold2);}
+.btn{font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:700;padding:12px 18px;
+  border-radius:11px;border:none;cursor:pointer;transition:all .25s;width:100%;
+  letter-spacing:.6px;text-transform:uppercase;position:relative;overflow:hidden;}
+.btn::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);
+  transform:translateX(-100%);transition:transform .5s;}
+.btn:hover::after{transform:translateX(100%);}
+.btn-gold{background:linear-gradient(135deg,var(--gold4),var(--gold),var(--gold2));color:var(--navy);
+  box-shadow:0 4px 20px rgba(201,168,76,.3),inset 0 1px 0 rgba(255,255,255,.15);}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(201,168,76,.45);}
+.btn-gold:active{transform:translateY(0);}
+.btn-out{background:transparent;color:var(--text2);border:1px solid rgba(201,168,76,.2);margin-top:8px;}
+.btn-out:hover{border-color:rgba(201,168,76,.5);color:var(--gold2);background:rgba(201,168,76,.05);}
+.amsg{text-align:center;font-size:.76rem;margin-top:11px;padding:9px 12px;border-radius:10px;display:none;}
+.amsg.err{background:rgba(248,113,113,.08);color:#f87171;border:1px solid rgba(248,113,113,.2);display:block;}
+.amsg.ok{background:rgba(74,222,128,.08);color:#4ade80;border:1px solid rgba(74,222,128,.2);display:block;}
+.auth-footer{text-align:center;font-size:.67rem;color:rgba(138,159,192,.6);margin-top:16px;letter-spacing:.6px;}
+#pg-dash{padding:72px 14px 82px;}
+.dash-hdr{margin-bottom:20px;}
+.dash-hdr h1{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:900;
+  background:linear-gradient(90deg,var(--gold),var(--gold2),var(--gold3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.dash-hdr p{color:var(--text2);font-size:.77rem;margin-top:3px;}
+.sec-title{font-family:'Playfair Display',serif;font-size:.94rem;font-weight:700;
+  color:var(--gold2);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.sec-title::before{content:'';width:3px;height:14px;background:linear-gradient(180deg,var(--gold),var(--gold2));
+  border-radius:2px;flex-shrink:0;}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;}
+.sc{background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+  border:1px solid rgba(201,168,76,.15);border-radius:var(--r);padding:14px;
+  display:flex;align-items:center;gap:10px;
+  box-shadow:0 4px 20px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.04);transition:all .2s;}
+.sc:hover{border-color:rgba(201,168,76,.3);transform:translateY(-1px);}
+.si2{width:40px;height:40px;border-radius:10px;
+  background:linear-gradient(135deg,var(--gold4),var(--gold2));
+  display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;
+  box-shadow:0 4px 12px rgba(201,168,76,.25);}
+.sv{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:900;color:var(--gold2);line-height:1;}
+.sl{font-size:.64rem;color:var(--text2);margin-top:3px;text-transform:uppercase;letter-spacing:.4px;}
+.quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:22px;}
+.qc{background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+  border:1px solid rgba(201,168,76,.15);border-radius:var(--r);padding:16px;text-align:center;
+  cursor:pointer;transition:all .25s;box-shadow:0 4px 20px rgba(0,0,0,.2);}
+.qc:hover{border-color:rgba(201,168,76,.4);transform:translateY(-3px);
+  background:rgba(201,168,76,.06);box-shadow:0 8px 28px rgba(0,0,0,.3),var(--glow);}
+.qc-icon{font-size:1.8rem;margin-bottom:8px;}
+.qc-lbl{font-size:.74rem;font-weight:600;color:var(--text2);letter-spacing:.3px;}
 .qc:hover .qc-lbl{color:var(--gold2);}
-
-/* QUIZ */
-#pg-quiz{padding:72px 14px 80px;}
-.sem-tabs{display:flex;gap:7px;margin-bottom:14px;}
-.sem-tab{flex:1;padding:10px;border-radius:10px;border:1px solid var(--cb);
-  background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;
-  font-size:.78rem;font-weight:600;cursor:pointer;transition:all .2s;text-align:center;}
-.sem-tab.on{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border-color:transparent;font-weight:700;}
-.course-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;}
-.cc{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);
-  padding:15px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
-.cc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:linear-gradient(90deg,var(--gold),var(--gold2));}
-.cc:hover{border-color:var(--gold);transform:translateY(-2px);}
+.card{background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+  border:1px solid rgba(201,168,76,.12);border-radius:var(--r);
+  box-shadow:0 4px 24px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.04);overflow:hidden;}
+.st{font-size:.78rem;font-weight:700;color:var(--gold2);display:flex;align-items:center;gap:7px;
+  padding-bottom:11px;border-bottom:1px solid rgba(201,168,76,.1);margin-bottom:13px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 6px var(--gold);flex-shrink:0;}
+.sp::after{content:'';display:inline-block;width:4px;height:4px;border-top:2px solid currentColor;
+  border-right:2px solid currentColor;transform:rotate(45deg);animation:ld .8s infinite alternate;}
+@keyframes ld{from{opacity:.3;}to{opacity:1;}}
+.ld{color:var(--text2);font-size:.78rem;display:flex;align-items:center;gap:7px;}
+#pg-quiz{padding:72px 14px 82px;}
+.sem-tabs{display:flex;gap:7px;margin-bottom:16px;}
+.sem-tab{flex:1;padding:10px;border-radius:11px;border:1px solid rgba(201,168,76,.15);
+  background:rgba(255,255,255,.02);color:var(--text2);font-family:'Outfit',sans-serif;
+  font-size:.77rem;font-weight:600;cursor:pointer;transition:all .25s;text-align:center;}
+.sem-tab.on{background:linear-gradient(135deg,var(--gold4),var(--gold2));color:var(--navy);
+  border-color:transparent;font-weight:700;box-shadow:0 4px 16px rgba(201,168,76,.3);}
+.course-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.cc{background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+  border:1px solid rgba(201,168,76,.15);border-radius:var(--r);padding:16px;cursor:pointer;
+  transition:all .25s;position:relative;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.2);}
+.cc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--gold4),var(--gold),var(--gold2));}
+.cc:hover{border-color:rgba(201,168,76,.35);transform:translateY(-3px);
+  box-shadow:0 10px 30px rgba(0,0,0,.3),var(--glow);}
 .cc-code{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:var(--gold2);}
-.cc-name{font-size:.7rem;color:var(--text2);margin-top:3px;}
-.cc-count{font-size:.66rem;color:var(--text2);margin-top:7px;
-  padding:3px 8px;background:rgba(201,168,76,.1);border-radius:20px;display:inline-block;}
-
-/* QUIZ ACTIVE */
-#pg-quiz-active{padding:72px 14px 80px;display:none;}
-.qhdr{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:13px;margin-bottom:14px;}
-.qpbar{height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin-top:9px;}
-.qpfill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:2px;transition:width .4s;}
+.cc-name{font-size:.69rem;color:var(--text2);margin-top:4px;line-height:1.4;}
+.cc-count{font-size:.63rem;color:var(--gold);margin-top:8px;padding:3px 9px;
+  background:rgba(201,168,76,.1);border-radius:20px;display:inline-block;border:1px solid rgba(201,168,76,.15);}
+#pg-quiz-active{padding:72px 14px 82px;display:none;}
+.qhdr{background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+  border:1px solid rgba(201,168,76,.15);border-radius:var(--r);padding:14px;margin-bottom:15px;}
+.qpbar{height:4px;background:rgba(255,255,255,.06);border-radius:2px;margin-top:10px;overflow:hidden;}
+.qpfill{height:100%;background:linear-gradient(90deg,var(--gold4),var(--gold),var(--gold2));
+  border-radius:2px;transition:width .4s cubic-bezier(.4,0,.2,1);box-shadow:0 0 8px rgba(201,168,76,.4);}
 .qtimer{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:var(--gold2);}
-.qnum{font-size:.7rem;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;}
-.qtext{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);
-  padding:15px;margin-bottom:13px;font-size:.88rem;line-height:1.65;}
-.opts{display:flex;flex-direction:column;gap:7px;}
-.opt{background:rgba(255,255,255,.03);border:1px solid var(--cb);border-radius:10px;
-  padding:12px 15px;cursor:pointer;transition:all .2s;font-size:.84rem;
-  display:flex;align-items:center;gap:9px;}
-.opt:hover{border-color:var(--gold);background:rgba(201,168,76,.06);}
-.opt.sel{border-color:var(--gold);background:rgba(201,168,76,.12);color:var(--gold2);}
-.opt.right{border-color:#4ade80;background:rgba(74,222,128,.1);color:#4ade80;}
-.opt.wrong{border-color:#f87171;background:rgba(248,113,113,.1);color:#f87171;}
-.oletter{width:24px;height:24px;border-radius:6px;background:var(--cb);
-  display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0;color:var(--gold);}
-.qnav{display:flex;gap:7px;margin-top:14px;}
-.btn-nv{background:var(--navy3);color:var(--text);border:1px solid var(--cb);
-  font-family:'Outfit',sans-serif;font-size:.8rem;font-weight:600;padding:10px 14px;
-  border-radius:9px;cursor:pointer;transition:all .2s;flex:1;}
-.btn-nv:hover{border-color:var(--gold);color:var(--gold2);}
-.btn-gs{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);
-  font-family:'Outfit',sans-serif;font-size:.8rem;font-weight:700;padding:10px 14px;
-  border-radius:9px;cursor:pointer;border:none;flex:1;}
-
-/* FILES */
-#pg-files{padding:72px 14px 80px;}
-.fcats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:13px;}
-.fcat{padding:6px 13px;border-radius:20px;border:1px solid var(--cb);background:transparent;
-  color:var(--text2);font-family:'Outfit',sans-serif;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;}
-.fcat.on{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border-color:transparent;}
-.fi{background:var(--card);border:1px solid var(--cb);border-radius:var(--r);
-  padding:13px;margin-bottom:9px;display:flex;align-items:center;justify-content:space-between;transition:all .2s;}
-.fi:hover{border-color:var(--gold);}
-.fi-info{display:flex;align-items:center;gap:9px;flex:1;overflow:hidden;}
-.fi-ico{font-size:1.3rem;flex-shrink:0;}
+.qnum{font-size:.68rem;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;}
+.qtext{background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+  border:1px solid rgba(201,168,76,.15);border-radius:var(--r);
+  padding:16px;margin-bottom:14px;font-size:.87rem;line-height:1.7;}
+.opts{display:flex;flex-direction:column;gap:8px;}
+.opt{background:rgba(255,255,255,.02);border:1px solid rgba(201,168,76,.14);border-radius:12px;
+  padding:12px 15px;cursor:pointer;transition:all .2s;font-size:.84rem;display:flex;align-items:center;gap:10px;}
+.opt:hover{border-color:rgba(201,168,76,.4);background:rgba(201,168,76,.06);}
+.opt.sel{border-color:rgba(201,168,76,.5);background:rgba(201,168,76,.1);color:var(--gold2);}
+.opt.right{border-color:rgba(74,222,128,.5);background:rgba(74,222,128,.08);color:#4ade80;}
+.opt.wrong{border-color:rgba(248,113,113,.5);background:rgba(248,113,113,.08);color:#f87171;}
+.oletter{width:26px;height:26px;border-radius:7px;background:rgba(201,168,76,.12);
+  border:1px solid rgba(201,168,76,.2);display:flex;align-items:center;justify-content:center;
+  font-size:.68rem;font-weight:700;flex-shrink:0;color:var(--gold);}
+.qnav{display:flex;gap:8px;margin-top:15px;}
+.btn-nv{background:rgba(255,255,255,.04);color:var(--text);border:1px solid rgba(201,168,76,.15);
+  font-family:'Outfit',sans-serif;font-size:.79rem;font-weight:600;padding:11px 14px;
+  border-radius:11px;cursor:pointer;transition:all .2s;flex:1;}
+.btn-nv:hover{border-color:rgba(201,168,76,.4);color:var(--gold2);}
+.btn-gs{background:linear-gradient(135deg,var(--gold4),var(--gold),var(--gold2));color:var(--navy);
+  font-family:'Outfit',sans-serif;font-size:.79rem;font-weight:700;padding:11px 14px;
+  border-radius:11px;cursor:pointer;border:none;flex:1;
+  box-shadow:0 4px 16px rgba(201,168,76,.3);transition:all .2s;}
+.btn-gs:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(201,168,76,.4);}
+#pg-files{padding:72px 14px 82px;}
+.fcats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.fcat{padding:6px 14px;border-radius:20px;border:1px solid rgba(201,168,76,.18);background:transparent;
+  color:var(--text2);font-family:'Outfit',sans-serif;font-size:.71rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.fcat.on{background:linear-gradient(135deg,var(--gold4),var(--gold2));color:var(--navy);
+  border-color:transparent;box-shadow:0 4px 14px rgba(201,168,76,.25);}
+.fi{background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+  border:1px solid rgba(201,168,76,.12);border-radius:var(--r);padding:13px;margin-bottom:9px;
+  display:flex;align-items:center;justify-content:space-between;transition:all .2s;
+  box-shadow:0 2px 12px rgba(0,0,0,.2);}
+.fi:hover{border-color:rgba(201,168,76,.3);transform:translateX(2px);}
+.fi-info{display:flex;align-items:center;gap:10px;flex:1;overflow:hidden;}
+.fi-ico{font-size:1.35rem;flex-shrink:0;}
 .fi-name{font-size:.8rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.fi-meta{font-size:.67rem;color:var(--text2);margin-top:2px;}
-.dl-btn{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);
-  border:none;border-radius:8px;padding:7px 13px;font-family:'Outfit',sans-serif;
-  font-size:.72rem;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .2s;}
+.fi-meta{font-size:.66rem;color:var(--text2);margin-top:2px;}
+.dl-btn{background:linear-gradient(135deg,var(--gold4),var(--gold2));color:var(--navy);
+  border:none;border-radius:9px;padding:7px 13px;font-family:'Outfit',sans-serif;
+  font-size:.71rem;font-weight:700;cursor:pointer;flex-shrink:0;transition:all .2s;
+  box-shadow:0 3px 10px rgba(201,168,76,.2);}
 .dl-btn:hover{transform:scale(1.05);}
-
-/* AI TUTOR */
-#pg-ai{padding:72px 14px 80px;}
-.ai-chat{display:flex;flex-direction:column;gap:9px;margin-bottom:12px;
-  min-height:280px;max-height:50vh;overflow-y:auto;padding:3px;}
-.ai-msg{padding:11px 13px;border-radius:12px;font-size:.84rem;line-height:1.65;max-width:88%;}
-.ai-msg.user{background:linear-gradient(135deg,var(--navy3),var(--navy2));
-  border:1px solid var(--cb);align-self:flex-end;}
-.ai-msg.bot{background:linear-gradient(135deg,rgba(201,168,76,.1),rgba(201,168,76,.05));
-  border:1px solid var(--cb);align-self:flex-start;}
-.ai-nm{font-size:.66rem;color:var(--gold);font-weight:700;letter-spacing:.5px;margin-bottom:4px;text-transform:uppercase;}
-.ai-iw{display:flex;gap:7px;align-items:flex-end;}
-.ai-iw textarea{flex:1;padding:10px 13px;border-radius:9px;border:1px solid var(--cb);
-  background:rgba(255,255,255,.05);color:var(--text);font-family:'Outfit',sans-serif;
-  font-size:.84rem;outline:none;resize:none;min-height:43px;max-height:90px;transition:all .3s;}
-.ai-iw textarea:focus{border-color:var(--gold);}
-.ai-send{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);
-  border:none;border-radius:9px;padding:10px 14px;font-size:.95rem;cursor:pointer;flex-shrink:0;}
-.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);display:inline-block;
+#pg-ai{padding:72px 14px 82px;}
+.ai-chat{display:flex;flex-direction:column;gap:10px;margin-bottom:13px;
+  min-height:280px;max-height:50vh;overflow-y:auto;padding:4px;}
+.ai-msg{padding:12px 14px;border-radius:14px;font-size:.84rem;line-height:1.7;max-width:88%;}
+.ai-msg.user{background:linear-gradient(135deg,rgba(18,34,72,.9),rgba(11,26,56,.9));
+  border:1px solid rgba(201,168,76,.2);align-self:flex-end;}
+.ai-msg.bot{background:linear-gradient(135deg,rgba(201,168,76,.08),rgba(201,168,76,.04));
+  border:1px solid rgba(201,168,76,.15);align-self:flex-start;}
+.ai-nm{font-size:.64rem;color:var(--gold);font-weight:700;letter-spacing:.6px;margin-bottom:5px;text-transform:uppercase;}
+.ai-iw{display:flex;gap:8px;align-items:flex-end;}
+.ai-iw textarea{flex:1;padding:11px 14px;border-radius:11px;border:1px solid rgba(201,168,76,.15);
+  background:rgba(255,255,255,.04);color:var(--text);font-family:'Outfit',sans-serif;
+  font-size:.84rem;outline:none;resize:none;min-height:44px;max-height:90px;transition:all .3s;}
+.ai-iw textarea:focus{border-color:rgba(201,168,76,.45);box-shadow:0 0 0 3px rgba(201,168,76,.08);}
+.ai-send{background:linear-gradient(135deg,var(--gold4),var(--gold2));color:var(--navy);
+  border:none;border-radius:11px;padding:11px 15px;font-size:.95rem;cursor:pointer;flex-shrink:0;
+  box-shadow:0 4px 14px rgba(201,168,76,.3);transition:all .2s;}
+.ai-send:hover{transform:scale(1.05);}
+.ai-dot{width:7px;height:7px;border-radius:50%;background:var(--gold);display:inline-block;
   animation:bnc .8s infinite;margin:0 2px;}
 .ai-dot:nth-child(2){animation-delay:.15s;}
 .ai-dot:nth-child(3){animation-delay:.3s;}
-@keyframes bnc{0%,80%,100%{transform:scale(.8);opacity:.5;}40%{transform:scale(1.2);opacity:1;}}
-.ai-sug{padding:6px 11px;border-radius:18px;border:1px solid var(--cb);
-  background:rgba(201,168,76,.05);color:var(--text2);font-size:.7rem;
+@keyframes bnc{0%,80%,100%{transform:scale(.7);opacity:.4;}40%{transform:scale(1.3);opacity:1;}}
+.ai-sug{padding:6px 12px;border-radius:20px;border:1px solid rgba(201,168,76,.18);
+  background:rgba(201,168,76,.04);color:var(--text2);font-size:.69rem;
   cursor:pointer;transition:all .2s;font-family:'Outfit',sans-serif;margin:3px;display:inline-block;}
-.ai-sug:hover{border-color:var(--gold);color:var(--gold2);}
-
-/* PROFILE */
-#pg-profile{padding:72px 14px 80px;}
-.profile-card{background:var(--card);border:1px solid var(--cb);border-radius:20px;
-  padding:24px;margin-bottom:14px;text-align:center;}
-.profile-avatar-wrap{position:relative;display:inline-block;margin-bottom:14px;}
-.profile-avatar{width:80px;height:80px;border-radius:50%;
-  background:linear-gradient(135deg,var(--gold),var(--gold2));
+.ai-sug:hover{border-color:rgba(201,168,76,.4);color:var(--gold2);}
+.ai-mode-tab{padding:7px 14px;border-radius:20px;border:1px solid rgba(201,168,76,.18);
+  background:transparent;color:var(--text2);font-family:'Outfit',sans-serif;
+  font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.ai-mode-tab.on{background:linear-gradient(135deg,var(--gold4),var(--gold2));color:var(--navy);
+  border-color:transparent;box-shadow:0 4px 14px rgba(201,168,76,.25);}
+.ai-mode-tab:hover{border-color:rgba(201,168,76,.4);color:var(--gold2);}
+#pg-profile{padding:72px 14px 82px;}
+.profile-card{background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(255,255,255,.02));
+  border:1px solid rgba(201,168,76,.15);border-radius:20px;padding:26px;margin-bottom:14px;
+  text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.3);}
+.profile-avatar-wrap{position:relative;display:inline-block;margin-bottom:15px;}
+.profile-avatar{width:84px;height:84px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold4),var(--gold),var(--gold2));
   display:flex;align-items:center;justify-content:center;
-  font-size:2rem;font-weight:900;color:var(--navy);font-family:'Playfair Display',serif;
-  overflow:hidden;border:3px solid var(--gold);}
+  font-size:2.1rem;font-weight:900;color:var(--navy);font-family:'Playfair Display',serif;
+  overflow:hidden;border:3px solid rgba(201,168,76,.4);
+  box-shadow:0 8px 24px rgba(201,168,76,.25),0 0 0 6px rgba(201,168,76,.06);}
 .profile-avatar img{width:100%;height:100%;object-fit:cover;}
-.profile-cam{position:absolute;bottom:0;right:0;width:26px;height:26px;
-  background:linear-gradient(135deg,var(--gold),var(--gold2));border-radius:50%;
-  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;border:2px solid var(--navy);}
-.profile-name{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--gold2);}
-.profile-email{font-size:.76rem;color:var(--text2);margin-top:3px;}
-.profile-dept{font-size:.72rem;color:var(--text2);margin-top:4px;
-  padding:3px 10px;background:rgba(201,168,76,.1);border-radius:20px;display:inline-block;}
-
-/* RESULT MODAL */
+.profile-cam{position:absolute;bottom:0;right:0;width:28px;height:28px;
+  background:linear-gradient(135deg,var(--gold4),var(--gold2));border-radius:50%;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem;
+  border:2px solid var(--navy);}
+.profile-name{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--gold2);}
+.profile-email{font-size:.75rem;color:var(--text2);margin-top:4px;}
+.profile-dept{font-size:.71rem;color:var(--gold);margin-top:6px;padding:4px 12px;
+  background:rgba(201,168,76,.1);border-radius:20px;display:inline-block;border:1px solid rgba(201,168,76,.2);}
 #result-modal{position:fixed;inset:0;z-index:500;display:none;
-  align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);}
+  align-items:center;justify-content:center;padding:20px;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(10px);}
 #result-modal.open{display:flex;}
-.result-card{background:var(--navy2);border:1px solid var(--cb);border-radius:20px;
-  padding:30px 22px;width:100%;max-width:340px;text-align:center;}
-.res-score{font-family:'Playfair Display',serif;font-size:2.8rem;font-weight:900;
-  background:linear-gradient(90deg,var(--gold),var(--gold2));
+.result-card{background:linear-gradient(145deg,rgba(11,26,56,.98),rgba(6,14,31,.98));
+  border:1px solid rgba(201,168,76,.2);border-radius:24px;padding:32px 24px;width:100%;max-width:350px;
+  text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.7),var(--glow);}
+.res-score{font-family:'Playfair Display',serif;font-size:3rem;font-weight:900;
+  background:linear-gradient(90deg,var(--gold),var(--gold2),var(--gold3));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;}
-.res-lbl{font-size:.72rem;color:var(--text2);letter-spacing:1px;text-transform:uppercase;margin-top:3px;}
-.res-msg{font-size:.86rem;color:var(--text2);margin:14px 0;}
-
-/* PRIVATE QUIZ MODAL */
+.res-lbl{font-size:.7rem;color:var(--text2);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px;}
+.res-msg{font-size:.85rem;color:var(--text2);margin:15px 0;line-height:1.6;}
 #pq-modal{position:fixed;inset:0;z-index:500;display:none;
-  align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);}
+  align-items:center;justify-content:center;padding:20px;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(10px);}
 #pq-modal.open{display:flex;}
-.pq-card{background:var(--navy2);border:1px solid var(--cb);border-radius:20px;
-  padding:28px 22px;width:100%;max-width:340px;}
+.pq-card{background:linear-gradient(145deg,rgba(11,26,56,.98),rgba(6,14,31,.98));
+  border:1px solid rgba(201,168,76,.2);border-radius:24px;padding:30px 24px;width:100%;max-width:350px;
+  box-shadow:0 32px 80px rgba(0,0,0,.7);}
 .pq-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;
-  color:var(--gold2);margin-bottom:14px;text-align:center;}
-
-/* BOTTOM NAV */
+  color:var(--gold2);margin-bottom:15px;text-align:center;}
 #bnav{position:fixed;bottom:0;left:0;right:0;z-index:200;
-  background:rgba(10,22,40,.96);backdrop-filter:blur(20px);
-  border-top:1px solid var(--cb);display:none;
-  justify-content:space-around;padding:7px 0 11px;}
+  background:rgba(6,14,31,.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-top:1px solid rgba(201,168,76,.1);display:none;
+  justify-content:space-around;padding:8px 0 13px;box-shadow:0 -4px 30px rgba(0,0,0,.4);}
 .bni{display:flex;flex-direction:column;align-items:center;gap:3px;
-  cursor:pointer;padding:3px 14px;transition:all .2s;color:var(--text2);}
+  cursor:pointer;padding:4px 16px;transition:all .2s;color:var(--text2);position:relative;}
 .bni.on{color:var(--gold);}
-.bni-ico{font-size:1.15rem;}
-.bni-lbl{font-size:.58rem;font-weight:600;letter-spacing:.4px;text-transform:uppercase;}
-
-/* TOAST */
-#toast{position:fixed;bottom:75px;left:50%;transform:translateX(-50%) translateY(16px);
-  background:var(--navy2);border:1px solid var(--cb);border-radius:9px;
-  padding:9px 18px;font-size:.8rem;z-index:600;opacity:0;transition:all .3s;
-  white-space:nowrap;pointer-events:none;}
+.bni.on::before{content:'';position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+  width:24px;height:2px;background:linear-gradient(90deg,var(--gold4),var(--gold2));border-radius:0 0 2px 2px;}
+.bni-ico{font-size:1.1rem;transition:transform .2s;}
+.bni.on .bni-ico{transform:scale(1.15);}
+.bni-lbl{font-size:.56rem;font-weight:600;letter-spacing:.5px;text-transform:uppercase;}
+#toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%) translateY(16px);
+  background:linear-gradient(135deg,rgba(11,26,56,.98),rgba(6,14,31,.98));
+  border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:10px 20px;font-size:.79rem;
+  z-index:600;opacity:0;transition:all .3s cubic-bezier(.4,0,.2,1);
+  white-space:nowrap;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5);}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-/* LOADING */
-#loading{position:fixed;inset:0;z-index:999;background:var(--navy);
-  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;}
-.loader{width:44px;height:44px;border:3px solid var(--cb);
-  border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+#loading{position:fixed;inset:0;z-index:999;background:linear-gradient(145deg,var(--navy),var(--navy2));
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.loader{width:46px;height:46px;border:3px solid rgba(201,168,76,.15);
+  border-top-color:var(--gold);border-radius:50%;animation:spin .85s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
-.ai-mode-tab{padding:7px 13px;border-radius:20px;border:1px solid var(--cb);background:transparent;color:var(--text2);font-family:"Outfit",sans-serif;font-size:.74rem;font-weight:600;cursor:pointer;transition:all .2s;}.ai-mode-tab.on{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--navy);border-color:transparent;}.ai-mode-tab:hover{border-color:var(--gold);color:var(--gold2);}
 .hidden{display:none!important;}
 </style>
 </head>
@@ -1933,18 +1972,419 @@ window.addEventListener('online', ()=>{
   showToast('✅ Back online!');
 });
 
-// Firebase — Firestore data only (auth handled by Supabase)
-const FC = {
-  apiKey:"AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8",
-  authDomain:"babspharmcloud.firebaseapp.com",
-  projectId:"babspharmcloud",
-  storageBucket:"babspharmcloud.firebasestorage.app",
-  messagingSenderId:"385674572482",
-  appId:"1:385674572482:web:a427125e649fef011b815b"
-};
-firebase.initializeApp(FC);
-const db = firebase.firestore();
+// Firebase removed — fully migrated to Supabase
 
+// Generic Supabase table factory
+const _COL_MAP={uid:'uid',subject:'subject',sem:'sem',code:'code',active:'active',courseId:'courseid',claimed:'claimed',createdAt:'createdat',redeemedAt:'redeemedat',toUid:'touid',fromAdmin:'fromadmin',type:'type',date:'date',read:'read',courseid:'courseid',redeemedat:'redeemedat',createdat:'createdat'};
+function _mapCol(f){return _COL_MAP[f]||f.toLowerCase();}
+function _makeTable(tname,opts={}){
+  const qcols=opts.queryableCols||[];
+  const idField=opts.idField||null;
+  function makeRow(fields,id=null){
+    const row={data:fields};
+    if(id!=null) row.id=id;
+    else if(idField) row.id=fields[idField]||('AUTO_'+Date.now());
+    for(const col of qcols){
+      const jsKey=Object.keys(_COL_MAP).find(k=>_COL_MAP[k]===col)||col;
+      const val=fields[jsKey]??fields[col];
+      if(val!==undefined) row[col]=val;
+    }
+    return row;
+  }
+  function buildQ(conds=[],ord=null,dir='asc',lim=null){
+    return{
+      where:(f,op,v)=>buildQ([...conds,{f,op,v}],ord,dir,lim),
+      orderBy:(f,d)=>buildQ(conds,f,d||'asc',lim),
+      limit:(n)=>buildQ(conds,ord,dir,n),
+      get:async()=>{
+        let q=_supa.from(tname).select('*');
+        for(const c of conds){
+          const col=_mapCol(c.f);
+          if(c.op==='==') q=q.eq(col,c.v);
+          else if(c.op==='<') q=q.lt(col,c.v);
+          else if(c.op==='>') q=q.gt(col,c.v);
+        }
+        if(ord) q=q.order(_mapCol(ord),{ascending:dir!=='desc'});
+        if(lim) q=q.limit(lim);
+        const {data,error}=await q;
+        if(error) throw error;
+        return{docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true,ref:{delete:async()=>{await _supa.from(tname).delete().eq('id',d.id);}}})),size:data.length,empty:data.length===0};
+      }
+    };
+  }
+  const subCfg={htmlquizgroups:{table:'htmlquiz_quizzes',parentCol:'groupid',qcols:['active']},privatequizzes:{table:'private_questions',parentCol:'quizid',qcols:[]}};
+  return{
+    get:async()=>buildQ().get(),
+    add:async(fields)=>{const{error}=await _supa.from(tname).insert(makeRow(fields));if(error) throw error;},
+    where:(f,op,v)=>buildQ([{f,op,v}]),
+    orderBy:(f,d)=>buildQ([],f,d||'asc',null),
+    limit:(n)=>buildQ([],null,'asc',n),
+    doc:(id)=>({
+      get:async()=>{const{data,error}=await _supa.from(tname).select('*').eq('id',id).maybeSingle();if(error) throw error;return{exists:!!data,data:()=>data?.data||{},id};},
+      set:async(fields,o)=>{
+        if(o?.merge){const{data:ex}=await _supa.from(tname).select('data').eq('id',id).maybeSingle();const merged={...(ex?.data||{}),...fields};const{error}=await _supa.from(tname).upsert(makeRow(merged,id),{onConflict:'id'});if(error) throw error;}
+        else{const{error}=await _supa.from(tname).upsert(makeRow(fields,id),{onConflict:'id'});if(error) throw error;}
+      },
+      update:async(fields)=>{const{data:ex}=await _supa.from(tname).select('data').eq('id',id).maybeSingle();const merged={...(ex?.data||{}),...fields};const row=makeRow(merged,id);const{error}=await _supa.from(tname).update(row).eq('id',id);if(error) throw error;},
+      delete:async()=>{const{error}=await _supa.from(tname).delete().eq('id',id);if(error) throw error;},
+      collection:(subCol)=>{
+        const cfg=subCfg[tname];if(!cfg) return{};
+        const{table:stbl,parentCol:pcol,qcols:sqcols}=cfg;
+        return{
+          get:async()=>{const{data,error}=await _supa.from(stbl).select('*').eq(pcol,id);if(error) throw error;return{docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length,empty:data.length===0};},
+          where:(f,op,v)=>({get:async()=>{let q=_supa.from(stbl).select('*').eq(pcol,id);if(op==='==') q=q.eq(f,v);const{data,error}=await q;if(error) throw error;return{docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length,empty:data.length===0};}}),
+          add:async(fields)=>{const row={[pcol]:id,data:fields};for(const c of sqcols) if(fields[c]!==undefined) row[c]=fields[c];const{error}=await _supa.from(stbl).insert(row);if(error) throw error;},
+          doc:(qid)=>({
+            get:async()=>{const{data,error}=await _supa.from(stbl).select('*').eq('id',qid).maybeSingle();if(error) throw error;return{exists:!!data,data:()=>data?.data||{},id:qid};},
+            update:async(fields)=>{const{data:ex}=await _supa.from(stbl).select('data').eq('id',qid).maybeSingle();const merged={...(ex?.data||{}),...fields};const row={data:merged};for(const c of sqcols) if(merged[c]!==undefined) row[c]=merged[c];const{error}=await _supa.from(stbl).update(row).eq('id',qid);if(error) throw error;},
+            delete:async()=>{const{error}=await _supa.from(stbl).delete().eq('id',qid);if(error) throw error;}
+          })
+        };
+      }
+    })
+  };
+}
+// All remaining table instances
+const _goalsTable=_makeTable('goals',{queryableCols:['uid','createdat']});
+const _aiUsageTable=_makeTable('aiusage');
+const _announcementsTable=_makeTable('announcements',{queryableCols:['createdat']});
+const _pqBankTable=_makeTable('pqbank',{queryableCols:['subject']});
+const _motivationsTable=_makeTable('motivations',{queryableCols:['createdat']});
+const _hotTopicsTable=_makeTable('hottopics',{queryableCols:['createdat']});
+const _couponsTable=_makeTable('coupons',{idField:'code',queryableCols:['createdat']});
+const _htmlQuizGroupsTable=_makeTable('htmlquizgroups');
+const _privateQuizzesTable=_makeTable('privatequizzes',{queryableCols:['code','active','createdat']});
+const _filesTable=_makeTable('files',{queryableCols:['sem']});
+const _couponRedemptionsTable=_makeTable('couponredemptions',{queryableCols:['redeemedat']});
+const _gpaHistoryTable=_makeTable('gpahistory',{queryableCols:['uid','createdat']});
+const _tutorProgressTable=_makeTable('tutorprogress');
+const _videosTable=_makeTable('videos');
+const _vaultContentTable=_makeTable('vaultcontent',{queryableCols:['createdat']});
+const _testimonialsTable=_makeTable('testimonials',{queryableCols:['createdat']});
+const _pushTokensTable=_makeTable('pushtokens');
+const _pointsHistoryTable=_makeTable('pointshistory',{queryableCols:['uid','createdat']});
+const _forumTable=_makeTable('forum',{queryableCols:['courseid','createdat']});
+const _notificationsTable=_makeTable('notifications');
+const _htmlQuizzesTable=_makeTable('htmlquizzes');
+const _badgesTable=_makeTable('badges');
+const _surpriseRewardsTable=_makeTable('surpriserewards',{queryableCols:['uid','claimed']});
+const _textbooksTable=_makeTable('textbooks');
+// Supabase messages wrapper
+function _messagesQuery(conditions=[],orderField=null,orderDir='asc',limitN=null){
+  return {
+    where:(f,op,v)=>_messagesQuery([...conditions,{f,op,v}],orderField,orderDir,limitN),
+    orderBy:(f,dir)=>_messagesQuery(conditions,f,dir||'asc',limitN),
+    limit:(n)=>_messagesQuery(conditions,orderField,orderDir,n),
+    get:async()=>{
+      let q=_supa.from('messages').select('*');
+      for(const c of conditions){
+        if(c.op==='==') q=q.eq(c.f==='toUid'?'touid':c.f==='fromAdmin'?'fromadmin':c.f==='read'?'read':c.f,c.v);
+      }
+      if(orderField) q=q.order(orderField==='createdAt'?'createdat':orderField,{ascending:orderDir!=='desc'});
+      if(limitN) q=q.limit(limitN);
+      const {data,error}=await q;
+      if(error) throw error;
+      return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length,empty:data.length===0};
+    }
+  };
+}
+const _messagesTable={
+  add:async(fields)=>{
+    const {error}=await _supa.from('messages').insert({touid:fields.toUid||'',read:fields.read||false,fromadmin:fields.fromAdmin||false,createdat:fields.createdAt||'',data:fields});
+    if(error) throw error;
+  },
+  doc:(id)=>({
+    update:async(fields)=>{
+      const {data:existing}=await _supa.from('messages').select('data').eq('id',id).maybeSingle();
+      const merged={...(existing?.data||{}),...fields};
+      const {error}=await _supa.from('messages').update({read:merged.read??false,data:merged}).eq('id',id);
+      if(error) throw error;
+    }
+  }),
+  where:(f,op,v)=>_messagesQuery([{f,op,v}])
+};
+// Supabase userStats wrapper
+const _userStatsTable={
+  doc:(id)=>({
+    get:async()=>{
+      const {data,error}=await _supa.from('userstats').select('*').eq('id',id).maybeSingle();
+      if(error) throw error;
+      return {exists:!!data,data:()=>data?.data||{},id};
+    },
+    set:async(fields,opts)=>{
+      if(opts?.merge){
+        const {data:existing}=await _supa.from('userstats').select('*').eq('id',id).maybeSingle();
+        const merged={...(existing?.data||{}),...fields};
+        const {error}=await _supa.from('userstats').upsert({id,bestscore:merged.bestScore||0,data:merged},{onConflict:'id'});
+        if(error) throw error;
+      } else {
+        const {error}=await _supa.from('userstats').upsert({id,bestscore:fields.bestScore||0,data:fields},{onConflict:'id'});
+        if(error) throw error;
+      }
+    }
+  }),
+  orderBy:(field,dir)=>({
+    limit:(n)=>({
+      get:async()=>{
+        const col=field==='bestScore'?'bestscore':field;
+        const {data,error}=await _supa.from('userstats').select('*').order(col,{ascending:dir!=='desc'}).limit(n);
+        if(error) throw error;
+        return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+      }
+    })
+  })
+};
+// Supabase quizHistory wrapper
+function _quizHistQuery(conditions=[],orderField=null,orderDir='asc',limitN=null){
+  return {
+    where:(f,op,v)=>_quizHistQuery([...conditions,{f,op,v}],orderField,orderDir,limitN),
+    orderBy:(f,dir)=>_quizHistQuery(conditions,f,dir||'asc',limitN),
+    limit:(n)=>_quizHistQuery(conditions,orderField,orderDir,n),
+    get:async()=>{
+      let q=_supa.from('quizhistory').select('*');
+      for(const c of conditions) if(c.op==='==') q=q.eq(c.f,c.v);
+      if(orderField) q=q.order(orderField,{ascending:orderDir!=='desc'});
+      if(limitN) q=q.limit(limitN);
+      const {data,error}=await q;
+      if(error) throw error;
+      return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true,ref:{delete:async()=>{await _supa.from('quizhistory').delete().eq('id',d.id);}}})),size:data.length,empty:data.length===0};
+    }
+  };
+}
+const _quizHistoryTable={
+  add:async(fields)=>{
+    const {error}=await _supa.from('quizhistory').insert({uid:fields.uid||'',type:fields.type||'',date:fields.date||'',data:fields});
+    if(error) throw error;
+  },
+  get:async()=>_quizHistQuery().get(),
+  limit:(n)=>_quizHistQuery([],null,'asc',n),
+  orderBy:(f,dir)=>_quizHistQuery([],f,dir||'asc',null),
+  where:(f,op,v)=>_quizHistQuery([{f,op,v}])
+};
+// Supabase cbtExams table wrapper
+function _cbtExamQuery(conditions=[]){
+  return {
+    where:(f,op,v)=>_cbtExamQuery([...conditions,{f,op,v}]),
+    limit:(n)=>({
+      get:async()=>{
+        let q=_supa.from('cbtexams').select('*');
+        for(const c of conditions) q=q.eq(c.f,c.v);
+        const {data,error}=await q.limit(n);
+        if(error) throw error;
+        return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),empty:data.length===0,size:data.length};
+      }
+    }),
+    get:async()=>{
+      let q=_supa.from('cbtexams').select('*');
+      for(const c of conditions) q=q.eq(c.f,c.v);
+      const {data,error}=await q;
+      if(error) throw error;
+      return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),empty:data.length===0,size:data.length};
+    }
+  };
+}
+const _cbtExamsTable = {
+  get:async()=>{
+    const {data,error}=await _supa.from('cbtexams').select('*');
+    if(error) throw error;
+    return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+  },
+  add:async(fields)=>{
+    const {data,error}=await _supa.from('cbtexams').insert({code:fields.code||'',active:fields.active||false,data:fields}).select('id').single();
+    if(error) throw error;
+    return {id:data.id};
+  },
+  where:(f,op,v)=>_cbtExamQuery([{f,op,v}]),
+  orderBy:(field,dir)=>({
+    get:async()=>{
+      const {data,error}=await _supa.from('cbtexams').select('*').order(field,{ascending:dir!=='desc'});
+      if(error) throw error;
+      return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+    }
+  }),
+  doc:(id)=>({
+    get:async()=>{
+      const {data,error}=await _supa.from('cbtexams').select('*').eq('id',id).maybeSingle();
+      if(error) throw error;
+      return {exists:!!data,data:()=>data?{...data.data}:{},id};
+    },
+    update:async(fields)=>{
+      const {error}=await _supa.from('cbtexams').update({active:fields.active,data:fields}).eq('id',id);
+      if(error) throw error;
+    },
+    delete:async()=>{
+      await _supa.from('cbt_questions').delete().eq('examid',id);
+      const {error}=await _supa.from('cbtexams').delete().eq('id',id);
+      if(error) throw error;
+    },
+    collection:()=>({
+      get:async()=>{
+        const {data,error}=await _supa.from('cbt_questions').select('*').eq('examid',id);
+        if(error) throw error;
+        return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+      },
+      add:async(fields)=>{
+        const {error}=await _supa.from('cbt_questions').insert({examid:id,data:fields});
+        if(error) throw error;
+      },
+      limit:(n)=>({
+        get:async()=>{
+          const {data,error}=await _supa.from('cbt_questions').select('*').eq('examid',id).limit(n);
+          if(error) throw error;
+          return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+        }
+      }),
+      orderBy:()=>({
+        get:async()=>{
+          const {data,error}=await _supa.from('cbt_questions').select('*').eq('examid',id);
+          if(error) throw error;
+          return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+        }
+      }),
+      doc:(qid)=>({
+        delete:async()=>{
+          const {error}=await _supa.from('cbt_questions').delete().eq('id',qid);
+          if(error) throw error;
+        }
+      })
+    })
+  })
+};
+// Supabase cbtSessions wrapper
+const _cbtSessionsTable = {
+  doc:(id)=>({
+    get:async()=>{
+      const {data,error}=await _supa.from('cbtsessions').select('data').eq('id',id).maybeSingle();
+      if(error) throw error;
+      return {exists:!!data,data:()=>data?.data||{},id};
+    },
+    set:async(fields)=>{
+      const {error}=await _supa.from('cbtsessions').upsert({id,data:fields},{onConflict:'id'});
+      if(error) throw error;
+    }
+  })
+};
+// Supabase cbtHistory wrapper
+const _cbtHistoryTable = {
+  add:async(fields)=>{
+    const {error}=await _supa.from('cbthistory').insert({uid:fields.uid||'',data:fields});
+    if(error) throw error;
+  },
+  get:async()=>{
+    const {data,error}=await _supa.from('cbthistory').select('*');
+    if(error) throw error;
+    return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+  },
+  where:(field,op,value)=>({
+    limit:(n)=>({
+      get:async()=>{
+        let q=_supa.from('cbthistory').select('*');
+        if(op==='==') q=q.eq(field,value);
+        const {data,error}=await q.limit(n);
+        if(error) throw error;
+        return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+      }
+    }),
+    get:async()=>{
+      let q=_supa.from('cbthistory').select('*');
+      if(op==='==') q=q.eq(field,value);
+      const {data,error}=await q;
+      if(error) throw error;
+      return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+    }
+  })
+};
+// Supabase courses table wrapper
+const _coursesTable = {
+  get: async () => {
+    const {data,error} = await _supa.from('courses').select('*');
+    if(error) throw error;
+    return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true,ref:{delete:async()=>{await _supa.from('courses').delete().eq('id',d.id);}}})),size:data.length};
+  },
+  where: (field,op,value) => ({
+    get: async () => {
+      let q = _supa.from('courses').select('*');
+      if(op==='==') q = q.eq(field,value);
+      const {data,error} = await q;
+      if(error) throw error;
+      return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+    }
+  }),
+  add: async (fields) => {
+    const {error} = await _supa.from('courses').insert({sem:fields.sem||'',data:fields});
+    if(error) throw error;
+  },
+  doc: (id) => ({
+    delete: async () => {
+      const {error} = await _supa.from('courses').delete().eq('id',id);
+      if(error) throw error;
+    },
+    collection: (subCol) => ({
+      get: async () => {
+        const {data,error} = await _supa.from('course_questions').select('*').eq('courseid',id);
+        if(error) throw error;
+        return {docs:data.map(d=>({id:d.id,data:()=>({...d.data}),exists:true})),size:data.length};
+      },
+      add: async (fields) => {
+        const {error} = await _supa.from('course_questions').insert({courseid:id,data:fields});
+        if(error) throw error;
+      },
+      doc: (qid) => ({
+        delete: async () => {
+          const {error} = await _supa.from('course_questions').delete().eq('id',qid);
+          if(error) throw error;
+        }
+      })
+    })
+  })
+};
+// Supabase pointsLog table wrapper
+const _pointsLogTable = {
+  add: async (fields) => {
+    const {error} = await _supa.from('pointslog').insert(fields);
+    if(error) throw error;
+  },
+  where: (field, op, value) => ({
+    limit: (n) => ({
+      get: async () => {
+        let q = _supa.from('pointslog').select('*');
+        if(op==='==') q = q.eq(field, value);
+        q = q.limit(n);
+        const {data, error} = await q;
+        if(error) throw error;
+        return {docs: data.map(d=>({id:d.id,data:()=>d,exists:true})), size:data.length};
+      }
+    }),
+    get: async () => {
+      let q = _supa.from('pointslog').select('*');
+      if(op==='==') q = q.eq(field, value);
+      const {data, error} = await q;
+      if(error) throw error;
+      return {docs: data.map(d=>({id:d.id,data:()=>d,exists:true})), size:data.length};
+    }
+  })
+};
+// Supabase settings table wrapper
+const _settingsTable = {
+  doc: (id) => ({
+    get: async () => {
+      const {data} = await _supa.from('settings').select('data').eq('id', id).maybeSingle();
+      const fields = data?.data || null;
+      return {exists: !!fields, data: ()=>fields||{}, id};
+    },
+    set: async (fields, opts) => {
+      if(opts?.merge){
+        const {data: existing} = await _supa.from('settings').select('data').eq('id', id).maybeSingle();
+        const merged = {...(existing?.data||{}), ...fields};
+        const {error} = await _supa.from('settings').upsert({id, data: merged}, {onConflict:'id'});
+        if(error) throw error;
+      } else {
+        const {error} = await _supa.from('settings').upsert({id, data: fields}, {onConflict:'id'});
+        if(error) throw error;
+      }
+    }
+  })
+};
 // Supabase users table wrapper — mimics Firestore API
 const _usersTable = {
   doc: (id) => ({
@@ -1983,6 +2423,7 @@ const _usersTable = {
     }
   })
 };
+const _supa = window.supabase.createClient(
   'https://wwummihoiklnnqjncgmd.supabase.co',
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3dW1taWhvaWtsbm5xam5jZ21kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODI0OTAsImV4cCI6MjA5NDE1ODQ5MH0.ZY7M1lngXz2MaTDaLGXn8uQgNvKJiKvHcygPsy7o1Ks'
 );
@@ -2042,7 +2483,7 @@ _supa.auth.onAuthStateChange(async function(event, session){
   document.getElementById('loading').classList.add('hidden');
   // Load contact info for auth page
   try{
-    const cfg = await db.collection('settings').doc('contact').get();
+    const cfg = await _settingsTable.doc('contact').get();
     if(cfg.exists){
       const d = cfg.data();
       if(d.whatsapp) document.getElementById('contact-wa').href='https://wa.me/'+d.whatsapp.replace(/\D/g,'');
@@ -2051,7 +2492,7 @@ _supa.auth.onAuthStateChange(async function(event, session){
   }catch(e){}
   // Check maintenance mode first
   try{
-    const mDoc = await db.collection('settings').doc('maintenance').get();
+    const mDoc = await _settingsTable.doc('maintenance').get();
     if(mDoc.exists && mDoc.data().active){
       document.getElementById('loading').innerHTML = `
         <div style="text-align:center;padding:30px;max-width:320px">
@@ -2178,7 +2619,7 @@ async function doRegister(){
       referredBy: ref||'', points:50
     });
     // Log welcome bonus
-    await db.collection('pointsLog').add({
+    await _pointsLogTable.add({
       uid:uid, reason:'Welcome bonus 🎉', points:'+50', date:new Date().toISOString()
     });
     // Award referrer if code is valid
@@ -2188,13 +2629,13 @@ async function doRegister(){
         const referrerId = refSnap.docs[0].id;
         const referrerData = refSnap.docs[0].data();
         await _usersTable.doc(referrerId).update({points:(referrerData.points||0)+15});
-        await db.collection('pointsLog').add({uid:referrerId,reason:'Referral bonus — '+nm+' joined',points:'+15',date:new Date().toISOString()});
+        await _pointsLogTable.add({uid:referrerId,reason:'Referral bonus — '+nm+' joined',points:'+15',date:new Date().toISOString()});
       }
     }
     showMsg('rg-msg','Account created! Check your email to confirm, then sign in.','ok');
     // Send welcome email via Brevo
     try{
-      const bDoc = await db.collection('settings').doc('brevo').get();
+      const bDoc = await _settingsTable.doc('brevo').get();
       if(bDoc.exists && bDoc.data().welcome && bDoc.data().apiKey){
         const b = bDoc.data();
         const html = `<div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:30px;background:#0a1628;color:#f0ead6;border-radius:12px;">
@@ -2348,7 +2789,7 @@ function closeSB(){
 async function loadStats(){
   try{
     const [statDoc, userDoc] = await Promise.all([
-      db.collection('userStats').doc(CU.uid).get(),
+      _userStatsTable.doc(CU.uid).get(),
       _usersTable.doc(CU.uid).get()
     ]);
     const d = statDoc.exists ? statDoc.data() : {};
@@ -2366,7 +2807,7 @@ async function loadStats(){
 // ══ ANNOUNCEMENT ══
 async function loadAnnouncement(){
   try{
-    const snap = await db.collection('announcements').orderBy('createdAt','desc').limit(1).get();
+    const snap = await _announcementsTable.orderBy('createdAt','desc').limit(1).get();
     if(!snap.empty){
       const d = snap.docs[0].data();
       document.getElementById('ann-title').textContent = d.title;
@@ -2388,7 +2829,7 @@ async function loadCourses(sem){
   const grid = document.getElementById('course-grid');
   grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:28px;color:var(--text2)">Loading...</div>';
   try{
-    const snap = await db.collection('courses').where('sem','==',sem).get();
+    const snap = await _coursesTable.where('sem','==',sem).get();
     if(snap.empty){
       grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:36px 16px;color:var(--text2);font-size:.84rem">📚 No courses yet for this semester.</div>';
       return;
@@ -2409,7 +2850,7 @@ async function loadCourses(sem){
 async function startQuiz(courseId, code, name){
   const ok = await checkPointsBeforeQuiz();
   if(!ok) return;
-  const snap = await db.collection('courses').doc(courseId).collection('questions').get();
+  const snap = await _coursesTable.doc(courseId).collection('questions').get();
   if(snap.empty){showToast('No questions yet for this course');return;}
   quizData = snap.docs.map(d=>d.data());
   currentCourse = name||code;
@@ -2472,7 +2913,7 @@ async function endQuiz(){
     // Deduct 5 points per quiz
     await deductPoints('Quiz attempt — '+course, 5);
     window._isMockExam = false;
-    const ref = db.collection('userStats').doc(CU.uid);
+    const ref = _userStatsTable.doc(CU.uid);
     const doc = await ref.get();
     const prev = doc.exists ? doc.data() : {quizCount:0,bestScore:0};
     await ref.set({quizCount:(prev.quizCount||0)+1, bestScore:Math.max(prev.bestScore||0,pct), lastQuiz:new Date().toISOString()},{merge:true});
@@ -2501,9 +2942,9 @@ async function joinPrivateQuiz(){
   showMsg('pq-msg','Loading...','');
   try{
     // Check new htmlQuizGroups first (multiple quizzes per code)
-    const groupDoc = await db.collection('htmlQuizGroups').doc(code).get();
+    const groupDoc = await _htmlQuizGroupsTable.doc(code).get();
     if(groupDoc.exists){
-      const qSnap = await db.collection('htmlQuizGroups').doc(code).collection('quizzes').where('active','==',true).get();
+      const qSnap = await _htmlQuizGroupsTable.doc(code).collection('quizzes').where('active','==',true).get();
       if(!qSnap.empty){
         closePQModal();
         showQuizGroupList(code, qSnap.docs.map(d=>({id:d.id,...d.data()})));
@@ -2511,7 +2952,7 @@ async function joinPrivateQuiz(){
       }
     }
     // Check old htmlQuizzes (single quiz per code - backwards compat)
-    const hqDoc = await db.collection('htmlQuizzes').doc(code).get();
+    const hqDoc = await _htmlQuizzesTable.doc(code).get();
     if(hqDoc.exists && hqDoc.data().active){
       const hq = hqDoc.data();
       closePQModal();
@@ -2520,7 +2961,7 @@ async function joinPrivateQuiz(){
       return;
     }
     // Check regular private quiz
-    const snap = await db.collection('privateQuizzes').where('code','==',code).where('active','==',true).get();
+    const snap = await _privateQuizzesTable.where('code','==',code).where('active','==',true).get();
     if(snap.empty){showMsg('pq-msg','❌ Invalid or expired code','err');return;}
     const pq = snap.docs[0].data();
     const qSnap2 = await snap.docs[0].ref.collection('questions').get();
@@ -2577,7 +3018,7 @@ async function startGroupQuiz(quizId, code, title){
   const ok = await checkPointsBeforeQuiz();
   if(!ok) return;
   try{
-    const qDoc = await db.collection('htmlQuizGroups').doc(code).collection('quizzes').doc(quizId).get();
+    const qDoc = await _htmlQuizGroupsTable.doc(code).collection('quizzes').doc(quizId).get();
     if(!qDoc.exists){showToast('Quiz not found');return;}
     await deductPoints('HTML Quiz — '+title, 5);
     openHtmlQuiz(title, qDoc.data().html);
@@ -2623,7 +3064,7 @@ async function loadFiles(filter){
     const cacheKey = 'files_'+currentFileSem;
     let items = cacheGet(cacheKey);
     if(!items){
-      const snap = await db.collection('files').where('sem','==',currentFileSem).get();
+      const snap = await _filesTable.where('sem','==',currentFileSem).get();
       items = snap.docs.map(d=>({id:d.id,...d.data()}));
       cacheSet(cacheKey, items, 60);
     }
@@ -2749,7 +3190,7 @@ async function loadGroqKey(){
   const cached = cacheGet('groqKey');
   if(cached){ GROQ_KEY = cached; return; }
   try{
-    const doc = await db.collection('settings').doc('config').get();
+    const doc = await _settingsTable.doc('config').get();
     if(doc.exists && doc.data().groqKey){
       GROQ_KEY = doc.data().groqKey;
       cacheSet('groqKey', GROQ_KEY, 120); // cache 2 hours
@@ -2948,7 +3389,7 @@ async function getAiCount(){
   }catch(e){}
   // Fetch from Firestore
   try{
-    const doc = await db.collection('aiUsage').doc(CU.uid).get();
+    const doc = await _aiUsageTable.doc(CU.uid).get();
     if(doc.exists){
       const d = doc.data();
       if(d.date === new Date().toDateString()){
@@ -2964,7 +3405,7 @@ async function getAiCount(){
 async function getAiLimit(){
   // Check if admin granted extra messages
   try{
-    const doc = await db.collection('aiUsage').doc(CU.uid).get();
+    const doc = await _aiUsageTable.doc(CU.uid).get();
     if(doc.exists && doc.data().date === new Date().toDateString()){
       return doc.data().limit || AI_DAILY_LIMIT;
     }
@@ -2979,9 +3420,9 @@ async function incAiCount(){
   localStorage.setItem('aiUsage_'+CU.uid, JSON.stringify({date:today, count}));
   // Update Firestore
   try{
-    const doc = await db.collection('aiUsage').doc(CU.uid).get();
+    const doc = await _aiUsageTable.doc(CU.uid).get();
     const limit = (doc.exists && doc.data().date===today) ? (doc.data().limit||AI_DAILY_LIMIT) : AI_DAILY_LIMIT;
-    await db.collection('aiUsage').doc(CU.uid).set({date:today, count, limit}, {merge:true});
+    await _aiUsageTable.doc(CU.uid).set({date:today, count, limit}, {merge:true});
   }catch(e){}
 }
 async function updateAiUI(){
@@ -2996,7 +3437,7 @@ async function updateAiUI(){
     if(limited){
       banner.style.display='block';
       // Load WhatsApp contact and show it
-      db.collection('settings').doc('contact').get().then(doc=>{
+      _settingsTable.doc('contact').get().then(doc=>{
         const wa = doc.exists ? doc.data().whatsapp : '';
         banner.innerHTML = `🚫 You have used all 3 AI messages for today. Come back tomorrow!
           ${wa ? '<br><br><a href="https://wa.me/'+wa+'" target="_blank" style="display:inline-flex;align-items:center;gap:7px;margin-top:8px;padding:8px 16px;background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);border-radius:20px;color:#25d366;font-size:.8rem;font-weight:700;text-decoration:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="#25d366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> Chat Admin on WhatsApp</a>' : ''}`;
@@ -3088,7 +3529,7 @@ async function loadInbox(){
   const list=document.getElementById('inbox-list');
   list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)">Loading...</div>';
   try{
-    const snap=await db.collection('messages').where('toUid','==',CU.uid).orderBy('createdAt','desc').get();
+    const snap=await _messagesTable.where('toUid','==',CU.uid).orderBy('createdAt','desc').get();
     if(snap.empty){list.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2);font-size:.84rem">📭 No messages yet</div>';return;}
     let unread=0;
     list.innerHTML=snap.docs.map(d=>{
@@ -3097,13 +3538,13 @@ async function loadInbox(){
       return '<div onclick="markRead(\''+d.id+'\',this)" style="background:'+(m.read?'var(--card)':'rgba(201,168,76,.07)')+';border:1px solid '+(m.read?'var(--cb)':'var(--gold)')+';border-radius:var(--r);padding:14px;margin-bottom:9px;cursor:pointer;transition:all .2s"><div style="display:flex;justify-content:space-between;margin-bottom:5px"><span style="font-size:.86rem;font-weight:700;color:var(--gold2)">'+(m.subject||'Message')+'</span><span style="font-size:.68rem;color:var(--text2)">'+(m.createdAt?new Date(m.createdAt).toLocaleDateString():'')+'</span></div><div style="font-size:.8rem;color:var(--text2);line-height:1.5">'+(m.body||'')+'</div>'+(!m.read?'<div style="font-size:.68rem;color:var(--gold);margin-top:5px;font-weight:600">● Unread</div>':'')+'</div>';
     }).join('');
     updateInboxBadge(unread);
-    snap.docs.forEach(d=>{if(!d.data().read)db.collection('messages').doc(d.id).update({read:true});});
+    snap.docs.forEach(d=>{if(!d.data().read)_messagesTable.doc(d.id).update({read:true});});
   }catch(e){list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)">Error loading</div>';}
 }
 
 async function markRead(id,el){
   el.style.borderColor='var(--cb)';el.style.background='var(--card)';
-  await db.collection('messages').doc(id).update({read:true});
+  await _messagesTable.doc(id).update({read:true});
 }
 
 function updateInboxBadge(count){
@@ -3113,7 +3554,7 @@ function updateInboxBadge(count){
 
 async function checkInboxBadge(){
   try{
-    const snap=await db.collection('messages').where('toUid','==',CU.uid).where('read','==',false).get();
+    const snap=await _messagesTable.where('toUid','==',CU.uid).where('read','==',false).get();
     updateInboxBadge(snap.size);
   }catch(e){}
 }
@@ -3301,7 +3742,7 @@ async function initMotivSlider(){
     if(cached && cached.length){
       DAILY_MOTIVATIONS = getDailyMotivations(cached);
     } else {
-      const snap = await db.collection('motivations').get();
+      const snap = await _motivationsTable.get();
       if(!snap.empty){
         const firestoreMotivs = snap.docs.map(d=>d.data());
         // Merge with hardcoded ones
@@ -3425,7 +3866,7 @@ function shareResultWA(){
 // ══ LOGIN POPUP ANNOUNCEMENT ══
 async function checkLoginPopup(){
   try{
-    const doc = await db.collection('settings').doc('popup').get();
+    const doc = await _settingsTable.doc('popup').get();
     if(!doc.exists||!doc.data().active) return;
     const p = doc.data();
     // Only show once per day per student
@@ -3475,7 +3916,7 @@ async function showIDCard(){
   let quizCount=0, bestScore=0, joinDate='';
   try{
     const [statDoc, userDoc] = await Promise.all([
-      db.collection('userStats').doc(CU.uid).get(),
+      _userStatsTable.doc(CU.uid).get(),
       _usersTable.doc(CU.uid).get()
     ]);
     if(statDoc.exists){quizCount=statDoc.data().quizCount||0;bestScore=statDoc.data().bestScore||0;}
@@ -3843,7 +4284,7 @@ function showSurvivalTab(tab, btn){
 
 async function checkEmergencyAlert(){
   try{
-    const doc = await db.collection('settings').doc('emergency').get();
+    const doc = await _settingsTable.doc('emergency').get();
     if(doc.exists && doc.data().active){
       const d = doc.data();
       document.getElementById('emergency-title').textContent = d.title||'Emergency Alert';
@@ -3857,7 +4298,7 @@ async function checkEmergencyAlert(){
 let countdownTimer = null;
 async function checkExamCountdown(){
   try{
-    const doc = await db.collection('settings').doc('examCountdown').get();
+    const doc = await _settingsTable.doc('examCountdown').get();
     if(!doc.exists||!doc.data().active) return;
     const d = doc.data();
     document.getElementById('countdown-label').textContent = (d.label||'EXAM COUNTDOWN').toUpperCase();
@@ -3884,7 +4325,7 @@ async function checkExamCountdown(){
 // ══ STUDENT OF THE WEEK ══
 async function checkSOTW(){
   try{
-    const doc = await db.collection('settings').doc('sotw').get();
+    const doc = await _settingsTable.doc('sotw').get();
     if(!doc.exists||!doc.data().active) return;
     const d = doc.data();
     const banner = document.getElementById('sotw-banner');
@@ -3899,7 +4340,7 @@ async function loadLeaderboard(){
   const list = document.getElementById('leaderboard-list');
   list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)">Loading...</div>';
   try{
-    const snap = await db.collection('userStats').orderBy('bestScore','desc').limit(10).get();
+    const snap = await _userStatsTable.orderBy('bestScore','desc').limit(10).get();
     if(snap.empty){list.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)">No scores yet</div>';return;}
     const medals=['🥇','🥈','🥉'];
     list.innerHTML = snap.docs.map((d,i)=>{
@@ -3933,7 +4374,7 @@ async function loadDailyChallenge(){
     return;
   }
   try{
-    const doc = await db.collection('settings').doc('dailyChallenge').get();
+    const doc = await _settingsTable.doc('dailyChallenge').get();
     if(!doc.exists||!doc.data().active){
       document.getElementById('challenge-q').textContent='No challenge set for today. Check back later!';
       return;
@@ -3978,7 +4419,7 @@ async function answerChallenge(idx){
 let fcCards=[], fcIndex=0, fcFlipped=false;
 
 async function loadFlashcardCourses(){
-  const snap = await db.collection('courses').get();
+  const snap = await _coursesTable.get();
   const sel = document.getElementById('fc-course');
   snap.docs.forEach(d=>{
     const o = document.createElement('option');
@@ -3992,7 +4433,7 @@ async function loadFlashcards(courseId){
   document.getElementById('fc-empty').style.display='none';
   document.getElementById('flashcard-container').style.display='none';
   try{
-    const snap = await db.collection('courses').doc(courseId).collection('questions').get();
+    const snap = await _coursesTable.doc(courseId).collection('questions').get();
     if(snap.empty){document.getElementById('fc-empty').textContent='No questions for this course yet';document.getElementById('fc-empty').style.display='block';return;}
     fcCards = snap.docs.map(d=>d.data());
     fcIndex=0; fcFlipped=false;
@@ -4025,7 +4466,7 @@ async function loadVideos(){
   const grid=document.getElementById('videos-grid');
   grid.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px">Loading...</div>';
   try{
-    const snap=await db.collection('videos').get();
+    const snap=await _videosTable.get();
     allVideos=snap.docs.map(d=>({id:d.id,...d.data()}));
     renderVideos('all');
     // Build course filter tabs
@@ -4066,7 +4507,7 @@ function getYTId(url){
 // ══ COURSE FORUM ══
 let forumCourseId='';
 async function loadForumCourses(){
-  const snap=await db.collection('courses').get();
+  const snap=await _coursesTable.get();
   const sel=document.getElementById('forum-course');
   snap.docs.forEach(d=>{
     const o=document.createElement('option');
@@ -4081,7 +4522,7 @@ async function loadForumPosts(courseId){
   if(!courseId){el.innerHTML='';return;}
   el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)">Loading...</div>';
   try{
-    const snap=await db.collection('forum').where('courseId','==',courseId).orderBy('createdAt','desc').limit(30).get();
+    const snap=await _forumTable.where('courseId','==',courseId).orderBy('createdAt','desc').limit(30).get();
     if(snap.empty){el.innerHTML='<div style="text-align:center;padding:30px;color:var(--text2);font-size:.84rem">No posts yet. Be the first to ask a question!</div>';return;}
     el.innerHTML=snap.docs.map(d=>{
       const p=d.data();
@@ -4116,7 +4557,7 @@ async function submitForumPost(btn){
   const q=document.getElementById('post-q').value.trim();
   if(!q){showToast('Type your question first');return;}
   btn.textContent='Posting...';btn.disabled=true;
-  await db.collection('forum').add({
+  await _forumTable.add({
     courseId:forumCourseId, question:q,
     authorName:CU.name, authorUid:CU.uid,
     createdAt:new Date().toISOString(), answer:null
@@ -4146,7 +4587,7 @@ async function loadBadges(){
   const grid=document.getElementById('badges-grid');
   try{
     const [statDoc,userDoc]=await Promise.all([
-      db.collection('userStats').doc(CU.uid).get(),
+      _userStatsTable.doc(CU.uid).get(),
       _usersTable.doc(CU.uid).get()
     ]);
     const stats=statDoc.exists?statDoc.data():{};
@@ -4319,7 +4760,7 @@ async function generateTutorSummary(tutor){
 async function saveTutorProgress(tutor, topic, msgCount){
   if(!CU||!topic) return;
   try{
-    await db.collection('tutorProgress').doc(CU.uid).set({
+    await _tutorProgressTable.doc(CU.uid).set({
       [tutor+'Topic']: topic,
       [tutor+'MsgCount']: msgCount,
       [tutor+'SavedAt']: new Date().toISOString()
@@ -4330,7 +4771,7 @@ async function saveTutorProgress(tutor, topic, msgCount){
 async function loadTutorProgress(tutor){
   if(!CU) return null;
   try{
-    const doc = await db.collection('tutorProgress').doc(CU.uid).get();
+    const doc = await _tutorProgressTable.doc(CU.uid).get();
     if(doc.exists){
       return {
         topic: doc.data()[tutor+'Topic']||'',
@@ -5848,7 +6289,7 @@ let spinAngle = 0;
 async function initSpinWheel(){
   // Load segments from admin settings
   try{
-    const doc = await db.collection('settings').doc('spinWheel').get();
+    const doc = await _settingsTable.doc('spinWheel').get();
     if(doc.exists && doc.data().segments){
       spinSegments = doc.data().segments;
     } else {
@@ -5988,7 +6429,7 @@ async function checkPointsBeforeQuiz(){
       // Load admin WhatsApp
       let wa = '';
       try{
-        const cDoc = await db.collection('settings').doc('contact').get();
+        const cDoc = await _settingsTable.doc('contact').get();
         if(cDoc.exists) wa = cDoc.data().whatsapp||'';
       }catch(e){}
       // Remove any existing modal
@@ -6035,17 +6476,17 @@ async function joinCBTExam(){
     // Try compound query first, fall back to code-only if index missing
     let snap;
     try{
-      snap = await db.collection('cbtExams').where('code','==',code).where('active','==',true).limit(1).get();
+      snap = await _cbtExamsTable.where('code','==',code).where('active','==',true).limit(1).get();
     }catch(indexErr){
       // Compound index not built — search by code only then filter
-      const allSnap = await db.collection('cbtExams').where('code','==',code).limit(5).get();
+      const allSnap = await _cbtExamsTable.where('code','==',code).limit(5).get();
       const activeDocs = allSnap.docs.filter(d=>d.data().active===true);
       snap = {empty: activeDocs.length===0, docs: activeDocs};
     }
 
     if(snap.empty){
       // Check if exam exists but is inactive
-      const anySnap = await db.collection('cbtExams').where('code','==',code).limit(1).get().catch(()=>({empty:true}));
+      const anySnap = await _cbtExamsTable.where('code','==',code).limit(1).get().catch(()=>({empty:true}));
       if(!anySnap.empty){
         msgEl.innerHTML='<div style="background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.3);border-radius:10px;padding:14px;text-align:center;color:#f87171;font-size:.82rem">⏸ This exam is not active yet. Ask your admin to activate it.</div>';
       } else {
@@ -6066,7 +6507,7 @@ async function joinCBTExam(){
 
     if(cbtExamData.deviceLock){
       try{
-        const sessionDoc = await db.collection('cbtSessions').doc(CU.uid+'_'+examDoc.id).get();
+        const sessionDoc = await _cbtSessionsTable.doc(CU.uid+'_'+examDoc.id).get();
         if(sessionDoc.exists){
           const existing = sessionDoc.data();
           if(existing.token !== mySessionToken){
@@ -6076,7 +6517,7 @@ async function joinCBTExam(){
           }
         } else {
           // Register this session
-          await db.collection('cbtSessions').doc(CU.uid+'_'+examDoc.id).set({
+          await _cbtSessionsTable.doc(CU.uid+'_'+examDoc.id).set({
             uid: CU.uid, examId: examDoc.id, token: mySessionToken,
             device: navigator.userAgent.substring(0,100),
             startedAt: new Date().toISOString()
@@ -6120,7 +6561,7 @@ async function joinCBTExam(){
 
     if(!allQuestions){
       // Not cached — fetch from Firestore (400 reads)
-      const qSnap = await db.collection('cbtExams').doc(examDoc.id).collection('questions').get();
+      const qSnap = await _cbtExamsTable.doc(examDoc.id).collection('questions').get();
       allQuestions = qSnap.docs.map(d=>({id:d.id,...d.data()}));
       // Save to cache
       try{
@@ -6447,7 +6888,7 @@ async function submitCBTExam(autoSubmit=false){
         });
       });
     });
-    await db.collection('cbtHistory').add({
+    await _cbtHistoryTable.add({
       uid:CU.uid,
       examId: cbtExamData.id,
       examTitle: cbtExamData.title,
@@ -6461,7 +6902,7 @@ async function submitCBTExam(autoSubmit=false){
       date: new Date().toISOString()
     });
     // Also save to generic quizHistory for analytics
-    await db.collection('quizHistory').add({
+    await _quizHistoryTable.add({
       uid:CU.uid, course:cbtExamData.course,
       score, total, type:'cbt', examTitle:cbtExamData.title,
       date:new Date().toISOString()
@@ -6578,7 +7019,7 @@ function listenForPushNotifications(){
   if(_notifListener) _notifListener();
   const lastSeen = localStorage.getItem('notif_last_seen') || new Date(Date.now() - 60000).toISOString();
   try{
-    _notifListener = db.collection('notifications')
+    _notifListener = _notificationsTable
       .orderBy('sentAt','desc')
       .limit(1)
       .onSnapshot(snap=>{
@@ -6666,7 +7107,7 @@ async function savePushToken(uid, subscription){
   // Save push subscription to Firestore
   // Admin tools read these to send notifications
   const token = JSON.stringify(subscription);
-  await db.collection('pushTokens').doc(uid).set({
+  await _pushTokensTable.doc(uid).set({
     uid, token,
     name: CU.name||'',
     email: CU.email||'',
@@ -6681,7 +7122,7 @@ async function unsubscribeFromPush(){
     const reg = window._swReg || await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.getSubscription();
     if(sub) await sub.unsubscribe();
-    if(CU?.uid) await db.collection('pushTokens').doc(CU.uid).delete();
+    if(CU?.uid) await _pushTokensTable.doc(CU.uid).delete();
     localStorage.removeItem('push_subscribed_'+CU?.uid);
     showToast('🔕 Push notifications disabled');
   }catch(e){ showToast('Could not disable notifications'); }
@@ -6790,7 +7231,7 @@ async function verifyPQCode(){
 
   try{
     // Check code in Firestore settings/pqCode
-    const doc = await db.collection('settings').doc('pqAccess').get();
+    const doc = await _settingsTable.doc('pqAccess').get();
     const validCodes = doc.exists ? (doc.data().codes||[]) : [];
     const masterCode = doc.exists ? (doc.data().masterCode||'BABSPQ2024') : 'BABSPQ2024';
 
@@ -7104,7 +7545,7 @@ async function verifyCourseCode(){
   msgEl.style.color='var(--text2)';
   msgEl.textContent='🔍 Verifying...';
   try{
-    const doc = await db.collection('settings').doc('pqAccess').get();
+    const doc = await _settingsTable.doc('pqAccess').get();
     const courseCodes = doc.exists ? (doc.data().courseCodes||{}) : {};
     const masterCode = doc.exists ? (doc.data().masterCode||'BABSPQ2024') : 'BABSPQ2024';
     const courseCode = courseCodes[pqGatingSubject]||'';
@@ -7197,7 +7638,7 @@ async function renderPQ(subject, topic){
   const builtIn = (PQ_BANK[subject]||[]).map(q=>({...q}));
   let custom = [];
   try{
-    const snap = await db.collection('pqBank').where('subject','==',subject).get();
+    const snap = await _pqBankTable.where('subject','==',subject).get();
     custom = snap.docs.map(d=>({id:d.id,...d.data()}));
   }catch(e){}
 
@@ -7351,7 +7792,7 @@ async function loadVault(){
     document.getElementById('vault-locked').style.display='none';
     const contentEl = document.getElementById('vault-content');
     contentEl.style.display='block';
-    const snap = await db.collection('vaultContent').orderBy('createdAt','desc').get();
+    const snap = await _vaultContentTable.orderBy('createdAt','desc').get();
     if(snap.empty){contentEl.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px">No vault content yet. Check back soon!</div>';return;}
     contentEl.innerHTML = snap.docs.map(d=>{
       const v=d.data();
@@ -7519,7 +7960,7 @@ async function loadHotTopics(){
   const list=document.getElementById('hot-topics-list');
   list.innerHTML='<div style="color:var(--text2);font-size:.8rem;text-align:center;padding:20px">Loading...</div>';
   try{
-    const snap=await db.collection('hotTopics').orderBy('createdAt','desc').get();
+    const snap=await _hotTopicsTable.orderBy('createdAt','desc').get();
     if(snap.empty){list.innerHTML='<div style="background:var(--card);border:1px solid var(--cb);border-radius:var(--r);padding:20px;text-align:center;color:var(--text2);font-size:.84rem">No hot topics yet. Admin will update this before exams! 🔥</div>';return;}
     list.innerHTML=snap.docs.map(d=>{
       const h=d.data();
@@ -7545,7 +7986,7 @@ async function loadTestimonials(){
   const list=document.getElementById('testimonials-list');
   list.innerHTML='<div style="color:var(--text2);font-size:.8rem;text-align:center;padding:20px">Loading...</div>';
   try{
-    const snap=await db.collection('testimonials').orderBy('createdAt','desc').limit(20).get();
+    const snap=await _testimonialsTable.orderBy('createdAt','desc').limit(20).get();
     if(snap.empty){list.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px;font-size:.84rem">No stories yet. Be the first to share! 🌟</div>';return;}
     list.innerHTML=snap.docs.map(d=>{
       const t=d.data();
@@ -7567,7 +8008,7 @@ async function loadTestimonials(){
 async function submitTestimonial(){
   const text=document.getElementById('testim-text').value.trim();
   if(!text){showToast('Write your story first!');return;}
-  await db.collection('testimonials').add({
+  await _testimonialsTable.add({
     text, name:CU.name, dept:CU.dept||'',
     uid:CU.uid, createdAt:new Date().toISOString()
   });
@@ -7583,7 +8024,7 @@ async function loadWeeklyStats(){
   const el=document.getElementById('weekly-stats');
   try{
     const weekAgo=new Date(Date.now()-7*24*60*60*1000).toISOString();
-    const snap=await db.collection('quizHistory').where('uid','==',CU.uid).get();
+    const snap=await _quizHistoryTable.where('uid','==',CU.uid).get();
     const all=snap.docs.map(d=>d.data());
     const week=all.filter(h=>h.date&&h.date>weekAgo);
     const avg=week.length?Math.round(week.reduce((s,h)=>s+(h.score/h.total*100),0)/week.length):0;
@@ -7604,7 +8045,7 @@ async function generateWeeklyReport(){
   reportEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)">🤖 Generating your weekly report card...</div>';
   try{
     const weekAgo=new Date(Date.now()-7*24*60*60*1000).toISOString();
-    const snap=await db.collection('quizHistory').where('uid','==',CU.uid).get();
+    const snap=await _quizHistoryTable.where('uid','==',CU.uid).get();
     const week=snap.docs.map(d=>d.data()).filter(h=>h.date&&h.date>weekAgo);
     const summary=week.length?week.map(h=>`${h.course}: ${h.score}/${h.total} (${Math.round(h.score/h.total*100)}%)`).join(', '):'No quizzes this week';
     const res=await fetch('https://api.groq.com/openai/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+GROQ_KEY},body:JSON.stringify({model:'llama-3.3-70b-versatile',messages:[{role:'user',content:`Write a warm, encouraging weekly report card for OAU student ${CU.name}. This week's quiz performance: ${summary}. Include: 1) Performance summary 2) What they did well 3) Areas to improve 4) Goal for next week 5) Encouraging closing. Be warm like a caring teacher. Use emojis.`}],temperature:0.7,max_tokens:600})});
@@ -7616,7 +8057,7 @@ async function generateWeeklyReport(){
 // ══ SURPRISE REWARD ══
 async function checkSurpriseReward(){
   try{
-    const snap=await db.collection('surpriseRewards')
+    const snap=await _surpriseRewardsTable
       .where('uid','==',CU.uid)
       .where('claimed','==',false)
       .limit(1).get();
@@ -7627,7 +8068,7 @@ async function checkSurpriseReward(){
     document.getElementById('surprise-msg').textContent=reward.message||'Admin just sent you a surprise reward!';
     document.getElementById('surprise-reward-modal').style.display='flex';
     // Mark as claimed
-    await db.collection('surpriseRewards').doc(rewardId).update({claimed:true,claimedAt:new Date().toISOString()});
+    await _surpriseRewardsTable.doc(rewardId).update({claimed:true,claimedAt:new Date().toISOString()});
     await awardPoints('Surprise reward from admin 🎁', reward.points);
     loadStats();
   }catch(e){}
@@ -7644,7 +8085,7 @@ async function loadGoals(){
   const list=document.getElementById('goals-list');
   list.innerHTML='<div style="color:var(--text2);font-size:.8rem;text-align:center;padding:20px">Loading...</div>';
   try{
-    const snap=await db.collection('goals').where('uid','==',CU.uid).orderBy('createdAt','desc').get();
+    const snap=await _goalsTable.where('uid','==',CU.uid).orderBy('createdAt','desc').get();
     if(snap.empty){list.innerHTML='<div style="color:var(--text2);font-size:.84rem;text-align:center;padding:30px">No goals yet! Add your first goal above 🎯</div>';return;}
     const goals=snap.docs.map(d=>({id:d.id,...d.data()}));
     const done=goals.filter(g=>g.done).length;
@@ -7674,7 +8115,7 @@ async function addGoal(){
   const category=document.getElementById('goal-cat').value;
   const deadline=document.getElementById('goal-date').value;
   if(!title){showToast('Enter a goal title');return;}
-  await db.collection('goals').add({uid:CU.uid,title,category,deadline,done:false,createdAt:new Date().toISOString()});
+  await _goalsTable.add({uid:CU.uid,title,category,deadline,done:false,createdAt:new Date().toISOString()});
   document.getElementById('goal-title').value='';
   document.getElementById('goal-date').value='';
   showToast('Goal added! 🎯');
@@ -7682,14 +8123,14 @@ async function addGoal(){
 }
 
 async function toggleGoal(id,isDone){
-  await db.collection('goals').doc(id).update({done:!isDone,completedAt:!isDone?new Date().toISOString():null});
+  await _goalsTable.doc(id).update({done:!isDone,completedAt:!isDone?new Date().toISOString():null});
   if(!isDone){showToast('Goal completed! 🎉');launchConfetti();}
   loadGoals();
 }
 
 async function deleteGoal(id){
   if(!confirm('Delete this goal?')) return;
-  await db.collection('goals').doc(id).delete();
+  await _goalsTable.doc(id).delete();
   loadGoals();
 }
 
@@ -7698,7 +8139,7 @@ let gpaHistoryChart=null;
 
 async function loadGPAHistory(){
   try{
-    const snap=await db.collection('gpaHistory').where('uid','==',CU.uid).orderBy('createdAt','asc').get();
+    const snap=await _gpaHistoryTable.where('uid','==',CU.uid).orderBy('createdAt','asc').get();
     const records=snap.docs.map(d=>({id:d.id,...d.data()}));
     renderGPAHistoryChart(records);
     renderGPAHistoryList(records);
@@ -7742,7 +8183,7 @@ async function saveSemesterGPA(){
   const gpa=parseFloat(document.getElementById('gpa-sem-value').value);
   const units=document.getElementById('gpa-sem-units').value;
   if(!gpa||gpa<0||gpa>5){showToast('Enter a valid GPA between 0 and 5');return;}
-  await db.collection('gpaHistory').add({uid:CU.uid,semester,gpa:gpa.toFixed(2),units:units||'',createdAt:new Date().toISOString()});
+  await _gpaHistoryTable.add({uid:CU.uid,semester,gpa:gpa.toFixed(2),units:units||'',createdAt:new Date().toISOString()});
   document.getElementById('gpa-sem-value').value='';
   document.getElementById('gpa-sem-units').value='';
   showToast('GPA saved! 📈');
@@ -7751,7 +8192,7 @@ async function saveSemesterGPA(){
 
 async function deleteSemGPA(id){
   if(!confirm('Delete this record?')) return;
-  await db.collection('gpaHistory').doc(id).delete();
+  await _gpaHistoryTable.doc(id).delete();
   loadGPAHistory();
 }
 
@@ -8113,7 +8554,7 @@ async function loadProgressPage(){
   const reportEl=document.getElementById('progress-report');
   if(reportEl) reportEl.innerHTML='<div style="color:var(--text2);font-size:.84rem;text-align:center;padding:20px">Tap the button below to generate your AI progress report!</div>';
   try{
-    const snap=await db.collection('quizHistory').where('uid','==',CU.uid).limit(20).get();
+    const snap=await _quizHistoryTable.where('uid','==',CU.uid).limit(20).get();
     const history=snap.docs.map(d=>d.data());
     const total=history.length;
     const avg=total?Math.round(history.reduce((s,h)=>s+(h.score/h.total*100),0)/total):0;
@@ -8130,7 +8571,7 @@ async function generateProgressReport(){
   if(!GROQ_KEY){reportEl.innerHTML='<div style="color:var(--red);font-size:.84rem">AI not configured yet</div>';return;}
   reportEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)"><div style="font-size:1.5rem;margin-bottom:8px">🤖</div>Generating your report...</div>';
   try{
-    const snap=await db.collection('quizHistory').where('uid','==',CU.uid).limit(20).get();
+    const snap=await _quizHistoryTable.where('uid','==',CU.uid).limit(20).get();
     const history=snap.docs.map(d=>d.data());
     if(!history.length){reportEl.innerHTML='<div style="color:var(--text2);font-size:.84rem;text-align:center;padding:20px">Take some quizzes first!</div>';return;}
     const summary=history.map(h=>`${h.course}: ${h.score}/${h.total} (${Math.round(h.score/h.total*100)}%)`).join(', ');
@@ -8233,7 +8674,7 @@ async function loadTextbooks(){
   try{
     const cached=cacheGet('textbooks');
     if(cached){allTextbooks=cached;renderTextbooks();loadDashTextbooks();return;}
-    const snap=await db.collection('textbooks').get();
+    const snap=await _textbooksTable.get();
     allTextbooks=snap.docs.map(d=>({id:d.id,...d.data()}));
     cacheSet('textbooks',allTextbooks,60);
     renderTextbooks();loadDashTextbooks();
@@ -8299,7 +8740,7 @@ async function loadHistory(){
   const list = document.getElementById('history-list');
   list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--text2)">Loading...</div>';
   try{
-    const snap = await db.collection('quizHistory').where('uid','==',CU.uid).orderBy('date','desc').limit(30).get();
+    const snap = await _quizHistoryTable.where('uid','==',CU.uid).orderBy('date','desc').limit(30).get();
     if(snap.empty){list.innerHTML='<div style="text-align:center;padding:30px;color:var(--text2);font-size:.84rem">No quiz history yet. Take a quiz to see your scores here!</div>';return;}
     list.innerHTML = snap.docs.map(d=>{
       const h=d.data();
@@ -8329,14 +8770,14 @@ async function loadCBTHistory(){
   summaryEl.innerHTML = '';
 
   try{
-    const snap = await db.collection('cbtHistory')
+    const snap = await _cbtHistoryTable
       .where('uid','==',CU.uid)
       .orderBy('createdAt','desc')
       .limit(50)
       .get()
       .catch(async ()=>{
         // Fallback if index not built yet
-        return await db.collection('cbtHistory').where('uid','==',CU.uid).limit(50).get();
+        return await _cbtHistoryTable.where('uid','==',CU.uid).limit(50).get();
       });
 
     if(snap.empty){
@@ -8559,7 +9000,7 @@ function studyWrongNav(id, idx){
 async function saveQuizHistory(course, score, total, type='Practice'){
   if(!CU) return;
   try{
-    await db.collection('quizHistory').add({
+    await _quizHistoryTable.add({
       uid:CU.uid, course, score, total, type,
       date: new Date().toISOString()
     });
@@ -8571,7 +9012,7 @@ async function loadMockCourses(){
   const container = document.getElementById('mock-courses');
   container.innerHTML = '<div style="color:var(--text2);font-size:.8rem">Loading courses...</div>';
   try{
-    const snap = await db.collection('courses').get();
+    const snap = await _coursesTable.get();
     if(snap.empty){container.innerHTML='<div style="color:var(--text2);font-size:.8rem">No courses available</div>';return;}
     container.innerHTML = snap.docs.map(d=>{
       const c=d.data();
@@ -8592,7 +9033,7 @@ async function startMockExam(){
   let allQ = [];
   for(const cb of checked){
     try{
-      const snap = await db.collection('courses').doc(cb.value).collection('questions').get();
+      const snap = await _coursesTable.doc(cb.value).collection('questions').get();
       snap.docs.forEach(d=>allQ.push({...d.data(), courseName:cb.dataset.name}));
     }catch(e){}
   }
@@ -8631,7 +9072,7 @@ async function loadReferral(){
         lowBanner.style.display='block';
         // Load WhatsApp number
         try{
-          const cDoc = await db.collection('settings').doc('contact').get();
+          const cDoc = await _settingsTable.doc('contact').get();
           const wa = cDoc.exists ? cDoc.data().whatsapp : '';
           const waLink = document.getElementById('low-pts-wa');
           if(waLink && wa) waLink.href='https://wa.me/'+wa+'?text='+encodeURIComponent('Hi, I need help with my BABSPHARM Cloud points. My name is '+CU.name+' and my email is '+CU.email);
@@ -8642,13 +9083,13 @@ async function loadReferral(){
       }
     }
     // Load points history
-    const hSnap = await db.collection('pointsLog').where('uid','==',CU.uid).limit(50).get();
+    const hSnap = await _pointsLogTable.where('uid','==',CU.uid).limit(50).get();
     const ph = document.getElementById('points-history');
     if(hSnap.empty){
       const currentPts = data.points||0;
       if(currentPts > 0){
         // Old student — has points but no log. Show current balance and create initial log entry
-        await db.collection('pointsLog').add({
+        await _pointsLogTable.add({
           uid: CU.uid,
           reason: 'Account balance (existing student)',
           points: '+'+currentPts,
@@ -8704,7 +9145,7 @@ async function awardPoints(reason, points){
     const newTotal = current + points;
     // Use set with merge:true so it works even for old users with no points field
     await ref.set({points: newTotal}, {merge:true});
-    await db.collection('pointsLog').add({
+    await _pointsLogTable.add({
       uid:CU.uid, reason, points:'+'+points,
       date:new Date().toISOString()
     });
@@ -8725,7 +9166,7 @@ async function deductPoints(reason, points){
     const newBalance = Math.max(0, current-points);
     // Use set with merge:true so it works for old users too
     await ref.set({points: newBalance}, {merge:true});
-    await db.collection('pointsLog').add({
+    await _pointsLogTable.add({
       uid:CU.uid, reason, points:'-'+points,
       date:new Date().toISOString()
     });
@@ -8742,14 +9183,14 @@ async function redeemCoupon(){
   if(!code){showCouponMsg('Enter a coupon code','var(--red)');return;}
   showCouponMsg('⏳ Checking coupon...','var(--text2)');
   try{
-    const cpDoc = await db.collection('coupons').doc(code).get();
+    const cpDoc = await _couponsTable.doc(code).get();
     if(!cpDoc.exists){showCouponMsg('❌ Invalid coupon code','var(--red)');return;}
     const cp = cpDoc.data();
     if(!cp.active){showCouponMsg('❌ This coupon is no longer active','var(--red)');return;}
     if(cp.expiry && new Date(cp.expiry) < new Date()){showCouponMsg('❌ This coupon has expired','var(--red)');return;}
     if(cp.limit>0 && (cp.usedCount||0)>=(cp.limit)){showCouponMsg('❌ This coupon has been fully used','var(--red)');return;}
     // Check if this student already used it
-    const usedSnap = await db.collection('couponRedemptions')
+    const usedSnap = await _couponRedemptionsTable
       .where('code','==',code)
       .where('uid','==',CU.uid)
       .get();
@@ -8757,14 +9198,14 @@ async function redeemCoupon(){
     // Award points — works for old and new users
     await awardPoints('Coupon redeemed: '+code, cp.points);
     // Log redemption
-    await db.collection('couponRedemptions').add({
+    await _couponRedemptionsTable.add({
       code, uid:CU.uid,
       studentName: CU.name||CU.email,
       points: cp.points,
       redeemedAt: new Date().toISOString()
     });
     // Update coupon used count
-    await db.collection('coupons').doc(code).update({
+    await _couponsTable.doc(code).update({
       usedCount: (cp.usedCount||0)+1
     });
     document.getElementById('coupon-inp').value='';
