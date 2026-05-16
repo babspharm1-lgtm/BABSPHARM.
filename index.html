@@ -432,7 +432,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
           <button class="pw-tog" onclick="togglePw('li-pw',this)">Show</button>
         </div>
       </div>
-      <button class="btn btn-gold" onclick="doLogin()">Sign In</button>
+      <button id="li-btn" class="btn btn-gold" onclick="doLogin()">SIGN IN</button>
       <button class="btn btn-out" onclick="doForgot()">Forgot Password?</button>
       <div id="li-msg" class="amsg"></div>
     </div>
@@ -466,7 +466,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
       <div class="fg"><label>Referral Code (optional)</label>
         <input type="text" id="rg-ref" placeholder="Enter friend's referral code" style="letter-spacing:2px;text-transform:uppercase"/>
       </div>
-      <button class="btn btn-gold" onclick="doRegister()">Create Account</button>
+      <button id="rg-btn" class="btn btn-gold" onclick="doRegister()">CREATE ACCOUNT</button>
       <div id="rg-msg" class="amsg"></div>
     </div>
     <div class="auth-footer" style="margin-top:14px;">OAU STUDENT LEARNING PLATFORM</div>
@@ -2589,14 +2589,23 @@ function showMsg(id, msg, type){
   el.textContent = msg; el.className = 'amsg ' + type;
 }
 
+function withTimeout(promise, ms=15000){
+  return Promise.race([promise, new Promise((_,rej)=>setTimeout(()=>rej(new Error('Request timed out. Check your internet connection and try again.')),ms))]);
+}
+
 async function doLogin(){
   const em = document.getElementById('li-em').value.trim();
   const pw = document.getElementById('li-pw').value;
   if(!em||!pw){showMsg('li-msg','Fill all fields','err');return;}
+  const btn = document.getElementById('li-btn');
+  if(btn){btn.disabled=true;btn.textContent='Signing in...';}
   try{
-    const {error} = await _supa.auth.signInWithPassword({email:em, password:pw});
+    const {error} = await withTimeout(_supa.auth.signInWithPassword({email:em, password:pw}));
     if(error) throw error;
-  }catch(e){ showMsg('li-msg', e.message, 'err'); }
+  }catch(e){
+    showMsg('li-msg', e.message, 'err');
+    if(btn){btn.disabled=false;btn.textContent='SIGN IN';}
+  }
 }
 
 async function doRegister(){
@@ -2607,22 +2616,22 @@ async function doRegister(){
   const ref = document.getElementById('rg-ref').value.trim().toUpperCase();
   if(!nm||!em||!dp||!pw){showMsg('rg-msg','Fill all fields','err');return;}
   if(pw.length<6){showMsg('rg-msg','Password must be at least 6 characters','err');return;}
+  const btn = document.getElementById('rg-btn');
+  if(btn){btn.disabled=true;btn.textContent='Creating account...';}
   try{
-    const {data, error} = await _supa.auth.signUp({
+    const {data, error} = await withTimeout(_supa.auth.signUp({
       email: em, password: pw,
       options: { data: { full_name: nm } }
-    });
+    }));
     if(error) throw error;
     const uid = data.user.id;
     await _usersTable.doc(uid).set({
       name:nm, email:em, dept:dp, role:'user', createdAt:new Date().toISOString(),
       referredBy: ref||'', points:50
     });
-    // Log welcome bonus
     await _pointsLogTable.add({
       uid:uid, reason:'Welcome bonus 🎉', points:'+50', date:new Date().toISOString()
     });
-    // Award referrer if code is valid
     if(ref){
       const refSnap = await _usersTable.where('referralCode','==',ref).get();
       if(!refSnap.empty){
@@ -2632,35 +2641,28 @@ async function doRegister(){
         await _pointsLogTable.add({uid:referrerId,reason:'Referral bonus — '+nm+' joined',points:'+15',date:new Date().toISOString()});
       }
     }
-    showMsg('rg-msg','Account created! Check your email to confirm, then sign in.','ok');
-    // Send welcome email via Brevo
+    showMsg('rg-msg','✅ Account created! You can now sign in.','ok');
     try{
       const bDoc = await _settingsTable.doc('brevo').get();
       if(bDoc.exists && bDoc.data().welcome && bDoc.data().apiKey){
         const b = bDoc.data();
-        const html = `<div style="font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:30px;background:#0a1628;color:#f0ead6;border-radius:12px;">
-          <h2 style="color:#c9a84c;">🎓 Welcome to BABSPHARM Cloud!</h2>
-          <p>Hi <b>${nm}</b>,</p>
-          <p style="line-height:1.7;">Your account has been created successfully. You now have access to all study materials, AI tutor, quizzes and more!</p>
-          <div style="background:rgba(201,168,76,.1);border-radius:8px;padding:15px;margin:20px 0;">
-            <p style="margin:0;color:#e8c97a;font-weight:bold;">🎁 Welcome Bonus: 50 Points added to your account!</p>
-          </div>
-          <p style="color:#9bacc8;font-size:13px;">BABSPHARM Cloud</p>
-        </div>`;
         fetch('https://api.brevo.com/v3/smtp/email',{
           method:'POST',
           headers:{'Content-Type':'application/json','api-key':b.apiKey},
           body:JSON.stringify({
             sender:{name:b.senderName||'BABSPHARM Cloud',email:b.senderEmail},
             to:[{email:em,name:nm}],
-            subject:'🎓 Welcome to BABSPHARM Cloud!',
-            htmlContent:html
+            subject:'Welcome to BABSPHARM Cloud!',
+            htmlContent:`<p>Hi ${nm}, your account is ready. Welcome bonus: 50 points!</p>`
           })
         }).catch(()=>{});
       }
     }catch(e){}
     setTimeout(()=>switchTab('li'), 1500);
-  }catch(e){ showMsg('rg-msg', e.message, 'err'); }
+  }catch(e){
+    showMsg('rg-msg', e.message, 'err');
+    if(btn){btn.disabled=false;btn.textContent='CREATE ACCOUNT';}
+  }
 }
 
 async function doForgot(){
@@ -2715,11 +2717,14 @@ function showPage(pg){
     document.getElementById('bnav').style.display = 'flex';
   }
 
-  // When showing auth — force hide dash, hide nav
+  // When showing auth — force hide dash, hide nav, hide topbar
   if(pg==='auth'){
     const dashPage = document.getElementById('pg-dash');
     if(dashPage){ dashPage.classList.remove('on'); dashPage.classList.add('hidden'); dashPage.style.display='none'; }
     document.getElementById('bnav').style.display = 'none';
+    document.getElementById('topbar').style.display = 'none';
+  } else {
+    document.getElementById('topbar').style.display = 'flex';
   }
 
   document.querySelectorAll('.bni').forEach(b=>b.classList.remove('on'));

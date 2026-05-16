@@ -122,7 +122,7 @@ html, body {
     <div class="auth-sub">BABSPHARM CLOUD · ADMIN ONLY</div>
     <div class="fg"><label>Email</label><input type="email" id="a-em" placeholder="Admin email"/></div>
     <div class="fg"><label>Password</label><input type="password" id="a-pw" placeholder="Password"/></div>
-    <button class="btn btn-gold" style="width:100%" onclick="adminLogin()">Sign In</button>
+    <button id="admin-btn" class="btn btn-gold" style="width:100%" onclick="adminLogin()">Sign In</button>
     <div id="a-msg" class="amsg"></div>
   </div>
 </div>
@@ -2220,13 +2220,19 @@ function closeSidebar(){
   document.getElementById('mob-overlay').style.display='none';
 }
 async function doLogout(){await _supa.auth.signOut();}
+function withTimeout(promise,ms=15000){return Promise.race([promise,new Promise((_,rej)=>setTimeout(()=>rej(new Error('Request timed out. Check your internet and try again.')),ms))]);}
 async function adminLogin(){
   const em=document.getElementById('a-em').value.trim(),pw=document.getElementById('a-pw').value;
   if(!em||!pw){showErr('a-msg','Fill all fields');return;}
+  const btn=document.getElementById('admin-btn');
+  if(btn){btn.disabled=true;btn.textContent='Signing in...';}
   try{
-    const {error}=await _supa.auth.signInWithPassword({email:em,password:pw});
+    const {error}=await withTimeout(_supa.auth.signInWithPassword({email:em,password:pw}));
     if(error) throw error;
-  }catch(e){showErr('a-msg',e.message);}
+  }catch(e){
+    showErr('a-msg',e.message);
+    if(btn){btn.disabled=false;btn.textContent='Sign In';}
+  }
 }
 function showErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.className='amsg err';}
 function showPanel(name,el){
