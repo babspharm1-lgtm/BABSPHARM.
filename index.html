@@ -13,6 +13,8 @@
 <meta http-equiv="Expires" content="0"/>
 <meta name="version" content="2.5.0"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -1972,6 +1974,10 @@ window.addEventListener('online', ()=>{
   showToast('✅ Back online!');
 });
 
+// Firebase — Auth only (data is on Supabase)
+const FC={apiKey:"AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8",authDomain:"babspharmcloud.firebaseapp.com",projectId:"babspharmcloud",storageBucket:"babspharmcloud.firebasestorage.app",messagingSenderId:"385674572482",appId:"1:385674572482:web:a427125e649fef011b815b"};
+firebase.initializeApp(FC);
+const auth=firebase.auth();
 // Firebase removed — fully migrated to Supabase
 
 // Generic Supabase table factory
@@ -2471,15 +2477,13 @@ setTimeout(async ()=>{
   const l=document.getElementById('loading');
   if(l&&!l.classList.contains('hidden')){
     l.classList.add('hidden');
-    const {data:{session}} = await _supa.auth.getSession();
-    if(!session){
+    if(!auth.currentUser){
       showPage('auth');
     }
   }
 },15000);
 
-_supa.auth.onAuthStateChange(async function(event, session){
-  const user = session ? session.user : null;
+auth.onAuthStateChanged(async function(user){
   document.getElementById('loading').classList.add('hidden');
   // Load contact info for auth page
   try{
@@ -2505,19 +2509,19 @@ _supa.auth.onAuthStateChange(async function(event, session){
     }
   }catch(e){}
   if(user){
-    const uid = user.id;
+    const uid = user.uid;
     const doc = await _usersTable.doc(uid).get();
     const userData = doc.exists ? doc.data() : {};
     CU = {
       uid: uid,
       email: user.email,
-      name: userData.name || user.user_metadata?.full_name || user.email.split('@')[0],
+      name: userData.name || user.displayName || user.email.split('@')[0],
       dept: userData.dept || '',
       photoURL: userData.photoURL || '',
       banned: userData.banned || false,
       points: userData.points || 0
     };
-    if(CU.banned){ await _supa.auth.signOut(); showToast('Your account has been suspended'); return; }
+    if(CU.banned){ await auth.signOut(); showToast('Your account has been suspended'); return; }
 
     // ── Show dashboard IMMEDIATELY — before any async calls ──
     showPage('dash');
@@ -2589,10 +2593,6 @@ function showMsg(id, msg, type){
   el.textContent = msg; el.className = 'amsg ' + type;
 }
 
-function withTimeout(promise, ms=15000){
-  return Promise.race([promise, new Promise((_,rej)=>setTimeout(()=>rej(new Error('Request timed out. Check your internet connection and try again.')),ms))]);
-}
-
 async function doLogin(){
   const em = document.getElementById('li-em').value.trim();
   const pw = document.getElementById('li-pw').value;
@@ -2600,10 +2600,9 @@ async function doLogin(){
   const btn = document.getElementById('li-btn');
   if(btn){btn.disabled=true;btn.textContent='Signing in...';}
   try{
-    const {error} = await withTimeout(_supa.auth.signInWithPassword({email:em, password:pw}));
-    if(error) throw error;
+    await auth.signInWithEmailAndPassword(em, pw);
   }catch(e){
-    showMsg('li-msg', e.message, 'err');
+    showMsg('li-msg', e.message.replace('Firebase:','').trim(), 'err');
     if(btn){btn.disabled=false;btn.textContent='SIGN IN';}
   }
 }
@@ -2619,19 +2618,14 @@ async function doRegister(){
   const btn = document.getElementById('rg-btn');
   if(btn){btn.disabled=true;btn.textContent='Creating account...';}
   try{
-    const {data, error} = await withTimeout(_supa.auth.signUp({
-      email: em, password: pw,
-      options: { data: { full_name: nm } }
-    }));
-    if(error) throw error;
-    const uid = data.user.id;
+    const cred = await auth.createUserWithEmailAndPassword(em, pw);
+    await cred.user.updateProfile({displayName: nm});
+    const uid = cred.user.uid;
     await _usersTable.doc(uid).set({
       name:nm, email:em, dept:dp, role:'user', createdAt:new Date().toISOString(),
       referredBy: ref||'', points:50
     });
-    await _pointsLogTable.add({
-      uid:uid, reason:'Welcome bonus 🎉', points:'+50', date:new Date().toISOString()
-    });
+    await _pointsLogTable.add({uid:uid, reason:'Welcome bonus 🎉', points:'+50', date:new Date().toISOString()});
     if(ref){
       const refSnap = await _usersTable.where('referralCode','==',ref).get();
       if(!refSnap.empty){
@@ -2642,25 +2636,9 @@ async function doRegister(){
       }
     }
     showMsg('rg-msg','✅ Account created! You can now sign in.','ok');
-    try{
-      const bDoc = await _settingsTable.doc('brevo').get();
-      if(bDoc.exists && bDoc.data().welcome && bDoc.data().apiKey){
-        const b = bDoc.data();
-        fetch('https://api.brevo.com/v3/smtp/email',{
-          method:'POST',
-          headers:{'Content-Type':'application/json','api-key':b.apiKey},
-          body:JSON.stringify({
-            sender:{name:b.senderName||'BABSPHARM Cloud',email:b.senderEmail},
-            to:[{email:em,name:nm}],
-            subject:'Welcome to BABSPHARM Cloud!',
-            htmlContent:`<p>Hi ${nm}, your account is ready. Welcome bonus: 50 points!</p>`
-          })
-        }).catch(()=>{});
-      }
-    }catch(e){}
     setTimeout(()=>switchTab('li'), 1500);
   }catch(e){
-    showMsg('rg-msg', e.message, 'err');
+    showMsg('rg-msg', e.message.replace('Firebase:','').trim(), 'err');
     if(btn){btn.disabled=false;btn.textContent='CREATE ACCOUNT';}
   }
 }
@@ -2669,15 +2647,14 @@ async function doForgot(){
   const em = document.getElementById('li-em').value.trim();
   if(!em){showMsg('li-msg','Enter your email above first','err');return;}
   try{
-    const {error} = await _supa.auth.resetPasswordForEmail(em);
-    if(error) throw error;
-    showMsg('li-msg','✅ Reset link sent to '+em+'! Open your email, click the link to set a new password, then come back here to Sign In with your new password.','ok');
-  }catch(e){ showMsg('li-msg', e.message, 'err'); }
+    await auth.sendPasswordResetEmail(em);
+    showMsg('li-msg','✅ Reset link sent to '+em+'! Check your email.','ok');
+  }catch(e){ showMsg('li-msg', e.message.replace('Firebase:','').trim(), 'err'); }
 }
 
 async function doLogout(){
   closeSB();
-  await _supa.auth.signOut();
+  await auth.signOut();
 }
 
 // ══ PAGES ══
@@ -3582,7 +3559,7 @@ async function saveProfile(){
   const dept = document.getElementById('ed-dept').value;
   if(!name){showMsg('prof-msg','Enter your name','err');return;}
   try{
-    await _supa.auth.updateUser({data:{full_name:name}});
+    await auth.currentUser.updateProfile({displayName:name});
     await _usersTable.doc(CU.uid).update({name,dept});
     CU.name=name; CU.dept=dept;
     updateSidebarProfile();
@@ -3596,7 +3573,7 @@ async function changePassword(){
   const pw = document.getElementById('new-pw').value;
   if(!pw||pw.length<6){showMsg('prof-msg','Password must be at least 6 characters','err');return;}
   try{
-    const {error} = await _supa.auth.updateUser({password:pw});
+    const {error} = await auth.currentUser.updatePassword(pw).then(()=>({error:null})).catch(e=>({error:e}));
     if(error) throw error;
     showMsg('prof-msg','Password updated! You can now login with your new password.','ok');
     document.getElementById('new-pw').value='';
@@ -3612,7 +3589,7 @@ async function uploadPhoto(input){
   reader.onload = async function(e){
     const dataUrl = e.target.result;
     try{
-      await _supa.auth.updateUser({data:{avatar_url: dataUrl}});
+      await auth.currentUser.updateProfile({photoURL: dataUrl});
       await _usersTable.doc(CU.uid).update({photoURL: dataUrl});
       CU.photoURL = dataUrl;
       updateSidebarProfile();

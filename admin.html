@@ -11,6 +11,8 @@
 <meta http-equiv="Expires" content="0"/>
 <meta name="version" content="2.5.0"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
@@ -1699,6 +1701,10 @@ Answer: A</code>
 
 </div>
 <script>
+// Firebase — Auth only
+const FC={apiKey:"AIzaSyCtwgwMJ9f5Oo7iTBHUkgPNJ4U-BAxlrW8",authDomain:"babspharmcloud.firebaseapp.com",projectId:"babspharmcloud",storageBucket:"babspharmcloud.firebasestorage.app",messagingSenderId:"385674572482",appId:"1:385674572482:web:a427125e649fef011b815b"};
+firebase.initializeApp(FC);
+const auth=firebase.auth();
 // Firebase removed — fully migrated to Supabase
 const _supa=window.supabase.createClient('https://wwummihoiklnnqjncgmd.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3dW1taWhvaWtsbm5xam5jZ21kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODI0OTAsImV4cCI6MjA5NDE1ODQ5MH0.ZY7M1lngXz2MaTDaLGXn8uQgNvKJiKvHcygPsy7o1Ks');
 let ADMIN_EMAIL='';
@@ -2152,19 +2158,18 @@ const _usersTable = {
 };
 let allStudents=[],selectedPQId='';
 // Force hide loading after 8 seconds no matter what
-_supa.auth.onAuthStateChange(async function(event, session){
-  const user = session ? session.user : null;
+auth.onAuthStateChanged(async function(user){
   if(!user){ showAuthUI(); return; }
   ADMIN_EMAIL = user.email;
   try{
-    let doc = await _usersTable.doc(user.id).get();
+    let doc = await _usersTable.doc(user.uid).get();
     if(!doc.exists){
       const snap = await _usersTable.where('email','==',user.email).get();
       if(!snap.empty) doc = snap.docs[0];
     }
     const data = doc.exists ? doc.data() : null;
     if(!data || (data.role!=='admin' && data.role!=='subadmin')){
-      await _supa.auth.signOut();
+      await auth.signOut();
       showAuthUI();
       showToast('Access denied — Admins only');
       return;
@@ -2173,7 +2178,7 @@ _supa.auth.onAuthStateChange(async function(event, session){
     showAdminUI();
     loadDashboard();
   }catch(e){
-    await _supa.auth.signOut();
+    await auth.signOut();
     showAuthUI();
     showToast('Error loading. Try again.');
   }
@@ -2219,7 +2224,7 @@ function closeSidebar(){
   document.getElementById('mob-drawer').style.display='none';
   document.getElementById('mob-overlay').style.display='none';
 }
-async function doLogout(){await _supa.auth.signOut();}
+async function doLogout(){await auth.signOut();}
 function withTimeout(promise,ms=15000){return Promise.race([promise,new Promise((_,rej)=>setTimeout(()=>rej(new Error('Request timed out. Check your internet and try again.')),ms))]);}
 async function adminLogin(){
   const em=document.getElementById('a-em').value.trim(),pw=document.getElementById('a-pw').value;
@@ -2227,10 +2232,9 @@ async function adminLogin(){
   const btn=document.getElementById('admin-btn');
   if(btn){btn.disabled=true;btn.textContent='Signing in...';}
   try{
-    const {error}=await withTimeout(_supa.auth.signInWithPassword({email:em,password:pw}));
-    if(error) throw error;
+    await auth.signInWithEmailAndPassword(em,pw);
   }catch(e){
-    showErr('a-msg',e.message);
+    showErr('a-msg',e.message.replace('Firebase:','').trim());
     if(btn){btn.disabled=false;btn.textContent='Sign In';}
   }
 }
