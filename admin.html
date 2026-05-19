@@ -3143,7 +3143,7 @@ async function loadMotivations(){
   const list = document.getElementById('motivations-list');
   list.innerHTML='<div style="color:var(--text2);font-size:.8rem;padding:10px">Loading...</div>';
   try{
-    const snap = await _motivationsTable.orderBy('createdAt','desc').get();
+    const snap = await _motivationsTable.get();
     allMotivations = snap.docs.map(d=>({id:d.id,...d.data()}));
     renderMotivations('all');
     document.getElementById('motiv-count').textContent='('+allMotivations.length+' total)';
@@ -5876,7 +5876,9 @@ async function bulkGivePoints(pts){
   const snap = await _usersTable.get();
   let count = 0;
   for(const doc of snap.docs){
-    await doc.ref.set({points:(doc.data().points||0)+pts},{merge:true});
+    const current = doc.data().points||0;
+    await _usersTable.doc(doc.id).update({points: current+pts});
+    await _pointsLogTable.add({uid:doc.id, reason:`Bulk bonus 🎁`, points:'+'+pts, date:new Date().toISOString()});
     count++;
   }
   showToast(`✅ Gave ${pts} points to ${count} students!`);
@@ -5894,8 +5896,8 @@ async function saveAllHotTopics(topics){
 async function givePointsToStudent(uid, name, currentPoints){
   const pts = parseInt(prompt(`Give points to ${name} (currently ${currentPoints} pts)\nHow many points to add?`));
   if(!pts||isNaN(pts)) return;
-  await _usersTable.doc(uid).set({points: currentPoints+pts},{merge:true});
-  await _pointsHistoryTable.add({uid, pts, reason:'Admin gift', date:new Date().toISOString()});
+  await _usersTable.doc(uid).update({points: currentPoints+pts});
+  await _pointsLogTable.add({uid, reason:'Admin gift 🎁', points:'+'+pts, date:new Date().toISOString()});
   showToast(`✅ +${pts} points given to ${name}!`);
   document.getElementById('ai-action-result').style.display='none';
 }
@@ -7331,12 +7333,24 @@ async function runCleanupExtra(type){
 async function fixMissingPoints(){
   const snap=await _usersTable.get();
   let fixed=0;
-  for(const d of snap.docs){if(d.data().points===undefined||d.data().points===null){await d.ref.set({points:0},{merge:true});fixed++;}}
-  showToast(`✅ Fixed ${fixed} users with missing points field`);
+  for(const d of snap.docs){
+    if(d.data().points===undefined||d.data().points===null){
+      await _usersTable.doc(d.id).update({points:50});
+      await _pointsLogTable.add({uid:d.id,reason:'Welcome bonus 🎉',points:'+50',date:new Date().toISOString()});
+      fixed++;
+    }
+  }
+  showToast(`✅ Fixed ${fixed} users — gave 50 welcome points`);
 }
 async function fixNegativePoints(){
-  const snap=await _usersTable.get();let fixed=0;
-  for(const d of snap.docs){if((d.data().points||0)<0){await d.ref.set({points:0},{merge:true});fixed++;}}
+  const snap=await _usersTable.get();
+  let fixed=0;
+  for(const d of snap.docs){
+    if((d.data().points||0)<0){
+      await _usersTable.doc(d.id).update({points:0});
+      fixed++;
+    }
+  }
   showToast(`✅ Fixed ${fixed} users with negative points`);
 }
 async function deleteDuplicateMotivations(ids){

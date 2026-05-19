@@ -512,7 +512,7 @@ body::after{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   </div>
 
   <!-- Student of the Week -->
-  <div id="sotw-banner" style="display:none;background:linear-gradient(135deg,#b45309,#92400e);border-radius:12px;padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;">
+  <div id="sotw-banner" style="display:none;background:linear-gradient(135deg,#b45309,#92400e);border-radius:12px;padding:12px 16px;margin-bottom:14px;align-items:center;gap:12px;">
     <div style="font-size:2rem">👑</div>
     <div>
       <div style="font-size:.68rem;color:rgba(255,255,255,.7);letter-spacing:1px;font-weight:600">STUDENT OF THE WEEK</div>
@@ -3718,23 +3718,23 @@ let motivTimer = null;
 let DAILY_MOTIVATIONS = getDailyMotivations();
 
 async function initMotivSlider(){
-  // Try to load from Firestore first
   try{
     const cached = cacheGet('motivations');
     if(cached && cached.length){
-      DAILY_MOTIVATIONS = getDailyMotivations(cached);
+      DAILY_MOTIVATIONS = getDailyMotivations([...MOTIVATIONS, ...cached]);
     } else {
       const snap = await _motivationsTable.get();
       if(!snap.empty){
-        const firestoreMotivs = snap.docs.map(d=>d.data());
-        // Merge with hardcoded ones
-        const merged = [...MOTIVATIONS, ...firestoreMotivs];
-        cacheSet('motivations', firestoreMotivs, 60);
-        DAILY_MOTIVATIONS = getDailyMotivations(merged);
+        const supaMotivs = snap.docs.map(d=>d.data());
+        cacheSet('motivations', supaMotivs, 60);
+        DAILY_MOTIVATIONS = getDailyMotivations([...MOTIVATIONS, ...supaMotivs]);
+      } else {
+        // Table empty — use hardcoded motivations
+        DAILY_MOTIVATIONS = getDailyMotivations(MOTIVATIONS);
       }
     }
   }catch(e){
-    // Fall back to hardcoded
+    // Network error — fall back to hardcoded
     DAILY_MOTIVATIONS = getDailyMotivations(MOTIVATIONS);
   }
   renderMotivSlider();
