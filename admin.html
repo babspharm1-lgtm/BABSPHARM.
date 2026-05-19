@@ -3784,7 +3784,7 @@ let cbtHTMLContent = '';
 
 async function loadCBTExams(){
   try{
-    const snap = await _cbtExamsTable.orderBy('createdAt','desc').get();
+    const snap = await _cbtExamsTable.get();
     const exams = snap.docs.map(d=>({id:d.id,...d.data()}));
 
     // Populate dropdowns
@@ -3804,7 +3804,7 @@ async function loadCBTExams(){
     // Render exam list
     const list = document.getElementById('cbt-exam-list');
     if(!list) return;
-    if(!exams.length){list.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px;font-size:.8rem">No CBT exams yet</div>';return;}
+    if(!exams.length){list.innerHTML='<div style="color:var(--text2);text-align:center;padding:20px;font-size:.8rem">No CBT exams yet. Create one above.</div>';return;}
     list.innerHTML = exams.map(e=>`
       <div style="background:rgba(255,255,255,.03);border:1px solid var(--cb);border-radius:12px;padding:14px;margin-bottom:10px;">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
@@ -3825,16 +3825,15 @@ async function loadCBTExams(){
         </div>
       </div>`).join('');
 
-    // Load question counts
+    // Load question counts — fetch all then filter by section in JS
     for(const e of exams){
-      for(const s of ['A','B','C','D','E'].slice(0, e.sections||4)){
-        _cbtExamsTable.doc(e.id).collection('questions')
-          .where('section','==',s).get()
-          .then(snap=>{
-            const el = document.getElementById(`cbt-count-${e.id}-${s}`);
-            if(el) el.textContent = snap.size;
-          });
-      }
+      _cbtExamsTable.doc(e.id).collection('questions').get().then(qSnap=>{
+        const allQ = qSnap.docs.map(d=>d.data());
+        ['A','B','C','D','E'].slice(0, e.sections||4).forEach(s=>{
+          const el = document.getElementById(`cbt-count-${e.id}-${s}`);
+          if(el) el.textContent = allQ.filter(q=>q.section===s).length;
+        });
+      }).catch(()=>{});
     }
   }catch(e){console.log('loadCBTExams error:',e);}
 }

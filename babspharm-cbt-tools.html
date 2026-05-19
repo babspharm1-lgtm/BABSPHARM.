@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>BABSPHARM CBT — Tools Suite</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',sans-serif;background:#060e1f;color:#f0ead6;padding:16px;min-height:100vh;}
+h1{color:#e8c97a;font-size:1.1rem;margin-bottom:4px;}
+h2{color:#e8c97a;font-size:.88rem;margin-bottom:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+p,li{font-size:.76rem;color:#8a9fc0;line-height:1.6;}
+a{color:#e8c97a;}
+
+input,select,textarea{
+  width:100%;padding:10px 12px;border-radius:8px;
+  border:1px solid rgba(201,168,76,.2);background:rgba(255,255,255,.04);
+  color:#f0ead6;font-size:.82rem;outline:none;
+  margin-bottom:10px;font-family:inherit;transition:border-color .2s;
+}
+input:focus,select:focus,textarea:focus{border-color:rgba(201,168,76,.5);}
+textarea{resize:vertical;}
+label{font-size:.71rem;color:#8a9fc0;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+select option{background:#0b1a38;color:#f0ead6;}
+
+.btn{width:100%;padding:11px;border:none;border-radius:9px;font-size:.84rem;font-weight:700;cursor:pointer;margin-bottom:8px;transition:all .2s;font-family:inherit;letter-spacing:.02em;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.btn:active:not(:disabled){transform:scale(.98);}
+.gold{background:linear-gradient(135deg,#b8922e,#c9a84c,#e8c97a);color:#060e1f;}
+.green{background:linear-gradient(135deg,#16a34a,#059669);color:#fff;}
+.blue{background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.25);color:#e8c97a;}
+.red{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);color:#f87171;}
+.gray{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#f0ead6;}
+.btn-sm{padding:7px 14px;width:auto;font-size:.75rem;display:inline-block;margin-bottom:0;}
+.btn-row{display:flex;gap:8px;margin-bottom:8px;}
+.btn-row .btn{margin-bottom:0;}
+
+.card{background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid rgba(201,168,76,.15);border-radius:14px;padding:14px;margin-bottom:12px;}
+.card-title{font-size:.8rem;font-weight:700;color:#e8c97a;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+
+.tab-bar{display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap;padding:4px;background:rgba(255,255,255,.03);border-radius:12px;border:1px solid rgba(201,168,76,.15);}
+.tab{padding:8px 12px;border:none;border-radius:8px;background:transparent;color:#8a9fc0;font-size:.73rem;cursor:pointer;white-space:nowrap;font-family:inherit;font-weight:600;transition:all .2s;}
+.tab:hover{color:#f0ead6;}
+.tab.on{background:linear-gradient(135deg,rgba(201,168,76,.15),rgba(201,168,76,.08));color:#e8c97a;border:1px solid rgba(201,168,76,.25);}
+
+.panel{display:none;}.panel.on{display:block;}
+
+.progress{background:rgba(255,255,255,.08);border-radius:20px;height:7px;margin:8px 0;}
+.fill{height:100%;border-radius:20px;background:linear-gradient(90deg,#b8922e,#e8c97a);width:0%;transition:width .4s;}
+
+.log-box{background:rgba(0,0,0,.2);border-radius:8px;padding:10px;font-family:'Courier New',monospace;font-size:.68rem;max-height:160px;overflow-y:auto;margin-top:8px;border:1px solid rgba(201,168,76,.15);}
+.ok{color:#4ade80;}.warn{color:#fbbf24;}.err{color:#f87171;}.info{color:#e8c97a;}
+
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+@media(max-width:600px){.row,.row3{grid-template-columns:1fr;}.btn-row{flex-wrap:wrap;}}
+
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.stat-box{background:rgba(255,255,255,.04);border-radius:10px;padding:12px;text-align:center;border:1px solid rgba(201,168,76,.15);}
+.stat-val{font-size:1.4rem;font-weight:900;display:block;margin-bottom:3px;color:#e8c97a;}
+.stat-lbl{font-size:.64rem;color:#8a9fc0;text-transform:uppercase;letter-spacing:.06em;}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.67rem;font-weight:700;}
+.b-green{background:rgba(74,222,128,.15);color:#4ade80;}
+.b-red{background:rgba(248,113,113,.15);color:#f87171;}
+.b-gold{background:rgba(201,168,76,.15);color:#e8c97a;}
+
+table{width:100%;border-collapse:collapse;font-size:.74rem;}
+th{padding:8px 10px;background:rgba(201,168,76,.08);color:#e8c97a;text-align:left;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid rgba(201,168,76,.2);}
+td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.05);color:#f0ead6;vertical-align:top;}
+tr:hover td{background:rgba(255,255,255,.02);}
+.tbl-wrap{overflow-x:auto;max-height:280px;overflow-y:auto;border-radius:8px;border:1px solid rgba(201,168,76,.15);}
+
+.dz{border:2px dashed rgba(201,168,76,.3);border-radius:10px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:10px;}
+.dz:hover,.dz.dragover{border-color:rgba(201,168,76,.7);background:rgba(201,168,76,.05);}
+.dz .di{font-size:1.8rem;margin-bottom:6px;}
+.dz p{color:#8a9fc0;font-size:.74rem;}
+
+.status-line{padding:10px 12px;border-radius:8px;font-size:.78rem;display:flex;align-items:center;gap:8px;margin:8px 0;}
+.status-ok{background:rgba(74,222,128,.08);color:#4ade80;border:1px solid rgba(74,222,128,.2);}
+.status-err{background:rgba(248,113,113,.08);color:#f87171;border:1px solid rgba(248,113,113,.2);}
+.status-info{background:rgba(201,168,76,.08);color:#e8c97a;border:1px solid rgba(201,168,76,.2);}
+
+.q-card{background:rgba(255,255,255,.03);border:1px solid rgba(201,168,76,.15);border-radius:12px;padding:13px;margin-bottom:8px;}
+.q-card-head{display:flex;align-items:flex-start;gap:8px;}
+.q-num{font-family:monospace;font-size:.7rem;color:#8a9fc0;flex-shrink:0;margin-top:2px;}
+.q-text{flex:1;font-size:.82rem;line-height:1.5;}
+.q-actions{display:flex;gap:4px;flex-shrink:0;}
+.ans-c{color:#4ade80;font-weight:700;}
+.sec-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.67rem;font-weight:700;background:rgba(201,168,76,.15);color:#e8c97a;margin-left:6px;}
+
+.exp-match{background:rgba(255,255,255,.02);border:1px solid rgba(201,168,76,.1);border-radius:8px;padding:10px;margin-bottom:6px;}
+.exp-match.matched{border-color:rgba(74,222,128,.3);}
+.exp-match.unmatched{border-color:rgba(248,113,113,.2);}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:999;display:none;align-items:center;justify-content:center;padding:16px;}
+.modal.open{display:flex;}
+.modal-box{background:linear-gradient(145deg,#0b1a38,#060e1f);border:1px solid rgba(201,168,76,.2);border-radius:16px;padding:22px;width:100%;max-width:440px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:.9rem;font-weight:700;color:#e8c97a;margin-bottom:14px;}
+
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(30px);background:rgba(11,26,56,.98);border:1px solid rgba(201,168,76,.3);border-radius:10px;padding:10px 20px;font-size:.79rem;z-index:1000;opacity:0;transition:all .3s;pointer-events:none;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.loading-overlay{position:fixed;inset:0;background:rgba(6,14,31,.9);z-index:998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.spinner{width:40px;height:40px;border:3px solid rgba(201,168,76,.2);border-top-color:#e8c97a;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+  <div style="width:36px;height:36px;background:linear-gradient(135deg,#b8922e,#e8c97a);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#060e1f;font-size:.9rem;">B</div>
+  <div>
+    <h1>BABSPHARM CBT Tools Suite</h1>
+    <p id="conn-status" style="font-size:.67rem;color:#8a9fc0;">Connecting to Supabase...</p>
+  </div>
+  <button class="btn blue btn-sm" style="margin-left:auto;margin-bottom:0;" onclick="refreshAll()">🔄 Refresh</button>
+</div>
+
+<!-- Exam Selector -->
+<div class="card" style="margin-top:12px;">
+  <div class="card-title">📋 Select CBT Exam</div>
+  <label>Active Exam (created in Admin Panel)</label>
+  <select id="global-exam" onchange="onExamChange()">
+    <option value="">Loading exams from Supabase...</option>
+  </select>
+  <div id="exam-info" style="display:none;font-size:.74rem;color:#8a9fc0;padding:8px;background:rgba(201,168,76,.06);border-radius:8px;border:1px solid rgba(201,168,76,.15);"></div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab on" onclick="sw('import',this)">📥 Import Questions</div>
+  <div class="tab" onclick="sw('explainer',this)">💡 Explanations</div>
+  <div class="tab" onclick="sw('qbank',this)">📚 Question Bank</div>
+  <div class="tab" onclick="sw('answerkey',this)">🔑 Answer Key</div>
+  <div class="tab" onclick="sw('paper',this)">🖨️ Exam Paper</div>
+</div>
+
+<!-- ═══ TAB 1: IMPORT QUESTIONS ═══ -->
+<div id="p-import" class="panel on">
+  <div class="card">
+    <div class="card-title">📥 Import Questions</div>
+    <p style="margin-bottom:12px;">Upload questions for the selected exam. They will be automatically assigned to sections based on the exam's <b style="color:#e8c97a;">Questions Per Section</b> setting.</p>
+
+    <div id="imp-section-preview" style="display:none;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:10px;margin-bottom:12px;font-size:.75rem;">
+      <b style="color:#e8c97a;">Section Assignment Preview</b>
+      <div id="imp-section-list" style="margin-top:6px;color:#8a9fc0;"></div>
+    </div>
+
+    <!-- Format tabs -->
+    <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="tab on" id="imp-tab-excel" onclick="impTab('excel')" style="font-size:.76rem;">📊 Excel / CSV</button>
+      <button class="tab" id="imp-tab-paste" onclick="impTab('paste')" style="font-size:.76rem;">📋 Paste Text</button>
+      <button class="tab" id="imp-tab-json" onclick="impTab('json')" style="font-size:.76rem;">{ } JSON</button>
+    </div>
+
+    <!-- EXCEL panel -->
+    <div id="imp-panel-excel">
+      <div class="dz" id="dz-excel" onclick="document.getElementById('fi-excel').click()">
+        <div class="di">📊</div>
+        <p>Tap to upload Excel (.xlsx) or CSV file</p>
+        <p style="margin-top:4px;font-size:.67rem;opacity:.7;">Columns: Question | Option A | B | C | D | Correct (A-D) | Explanation</p>
+      </div>
+      <input type="file" id="fi-excel" style="display:none;" accept=".xlsx,.xls,.csv" onchange="handleExcelImport(this.files[0])">
+      <div class="btn-row">
+        <button class="btn blue btn-sm" onclick="dlExcelTemplate()">⬇️ Excel Template</button>
+        <button class="btn blue btn-sm" onclick="dlCsvTemplate()">⬇️ CSV Template</button>
+      </div>
+    </div>
+
+    <!-- PASTE panel -->
+    <div id="imp-panel-paste" style="display:none;">
+      <label>Paste Questions (numbered format)</label>
+      <textarea id="imp-paste-text" rows="12" placeholder="1. Which drug route bypasses first-pass metabolism?&#10;A. Oral  B. Intravenous  C. Rectal  D. Subcutaneous&#10;Answer: B&#10;Explanation: IV administration delivers drug directly into systemic circulation.&#10;&#10;2. Next question here..."></textarea>
+      <button class="btn gold" onclick="parsePasteText()">🔍 Parse Questions</button>
+    </div>
+
+    <!-- JSON panel -->
+    <div id="imp-panel-json" style="display:none;">
+      <div class="dz" id="dz-json" onclick="document.getElementById('fi-json').click()">
+        <div class="di">{ }</div>
+        <p>Tap to upload JSON file</p>
+      </div>
+      <input type="file" id="fi-json" style="display:none;" accept=".json" onchange="handleJsonImport(this.files[0])">
+      <label style="margin-top:8px;">Or paste JSON</label>
+      <textarea id="imp-json-paste" rows="6" placeholder='[{"q":"Question...","opts":["A","B","C","D"],"ans":1,"exp":"Explanation..."}]'></textarea>
+      <button class="btn gold" onclick="parseJsonPaste()">🔍 Parse JSON</button>
+      <button class="btn blue" onclick="dlJsonTemplate()">⬇️ JSON Template</button>
+    </div>
+
+    <!-- Status and preview -->
+    <div id="imp-status" style="display:none;"></div>
+    <div id="imp-preview" style="display:none;margin-top:12px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <b style="color:#e8c97a;font-size:.84rem;">Preview <span id="imp-preview-count"></span></b>
+        <button class="btn red btn-sm" onclick="clearImpPreview()">✕ Clear</button>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Section</th><th>Question</th><th>A</th><th>B</th><th>C</th><th>D</th><th>Ans</th><th>Explanation</th></tr></thead>
+          <tbody id="imp-preview-tbody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:12px;">
+        <label>Import Mode</label>
+        <select id="imp-mode">
+          <option value="replace">🔄 Replace all existing questions</option>
+          <option value="append">➕ Add to existing questions</option>
+        </select>
+        <button class="btn gold" onclick="confirmImport()" id="imp-confirm-btn">✅ Upload to Supabase</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 2: EXPLANATIONS ═══ -->
+<div id="p-explainer" class="panel">
+  <div class="card">
+    <div class="card-title">💡 Bulk Explanations Upload</div>
+    <p style="margin-bottom:12px;">Upload solutions/explanations separately. They will be matched to existing questions by number and saved to Supabase.</p>
+
+    <div style="display:flex;gap:6px;margin-bottom:12px;">
+      <button class="tab on" id="exp-tab-paste" onclick="expTab('paste')" style="font-size:.76rem;">📋 Paste Text</button>
+      <button class="tab" id="exp-tab-file" onclick="expTab('file')" style="font-size:.76rem;">📁 Upload File</button>
+    </div>
+
+    <!-- Paste panel -->
+    <div id="exp-panel-paste">
+      <label>Paste explanations (numbered format)</label>
+      <textarea id="exp-text" rows="12" placeholder="1. The liver contains CYP450 enzymes responsible for Phase I and II drug metabolism.&#10;&#10;2. Pharmacodynamics studies what a drug does to the body, including mechanism of action.&#10;&#10;3. Next explanation..."></textarea>
+    </div>
+
+    <!-- File panel -->
+    <div id="exp-panel-file" style="display:none;">
+      <div class="dz" id="dz-exp" onclick="document.getElementById('fi-exp').click()">
+        <div class="di">📄</div>
+        <p>Tap to upload text or HTML file with explanations</p>
+      </div>
+      <input type="file" id="fi-exp" style="display:none;" accept=".txt,.html,.htm,.pdf" onchange="expFileSelected(this)">
+      <div id="exp-file-content" style="display:none;">
+        <label>File content preview</label>
+        <textarea id="exp-file-text" rows="5" readonly></textarea>
+      </div>
+    </div>
+
+    <button class="btn blue" onclick="previewExplanations()">🔍 Preview Matches</button>
+
+    <!-- Preview -->
+    <div id="exp-preview" style="display:none;margin-top:12px;">
+      <div style="padding:10px;background:rgba(201,168,76,.06);border-radius:8px;border:1px solid rgba(201,168,76,.2);margin-bottom:10px;font-size:.78rem;">
+        <b style="color:#e8c97a;">Match Results:</b> <span id="exp-match-count"></span>
+      </div>
+      <div id="exp-match-list" style="max-height:300px;overflow-y:auto;"></div>
+      <div class="progress" style="margin-top:12px;"><div class="fill" id="exp-fill"></div></div>
+      <div id="exp-status" style="font-size:.78rem;color:#8a9fc0;text-align:center;margin-top:6px;"></div>
+      <button class="btn gold" style="margin-top:10px;" onclick="applyExplanations()">✅ Save Explanations to Supabase</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TAB 3: QUESTION BANK ═══ -->
+<div id="p-qbank" class="panel">
+  <div class="card">
+    <div class="card-title">📚 Question Bank</div>
+    <div class="row" style="margin-bottom:10px;">
+      <div>
+        <label>Filter by Section</label>
+        <select id="qb-section" onchange="renderQBank()">
+          <option value="">All Sections</option>
+          <option value="A">Section A</option>
+          <option value="B">Section B</option>
+          <option value="C">Section C</option>
+          <option value="D">Section D</option>
+          <option value="E">Section E</option>
+        </select>
+      </div>
+      <div>
+        <label>Search</label>
+        <input id="qb-search" placeholder="Search questions..." oninput="renderQBank()" style="margin-bottom:0;">
+      </div>
+    </div>
+    <div id="qb-stats" style="font-size:.74rem;color:#8a9fc0;margin-bottom:10px;"></div>
+    <div id="qb-list"></div>
+  </div>
+</div>
+
+<!-- ═══ TAB 4: ANSWER KEY ═══ -->
+<div id="p-answerkey" class="panel">
+  <div class="card">
+    <div class="card-title">🔑 Answer Key Generator</div>
+    <div class="row" style="margin-bottom:12px;">
+      <div>
+        <label>Section</label>
+        <select id="ak-section">
+          <option value="all">All Sections</option>
+          <option value="A">Section A</option>
+          <option value="B">Section B</option>
+          <option value="C">Section C</option>
+          <option value="D">Section D</option>
+          <option value="E">Section E</option>
+        </select>
+      </div>
+      <div>
+        <label>Format</label>
+        <select id="ak-format">
+          <option value="inline">Inline (1.B 2.A 3.C...)</option>
+          <option value="table">Full Table</option>
+          <option value="withexp">With Explanations</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn gold" onclick="generateAnswerKey()">🔑 Generate Answer Key</button>
+    <div id="ak-output" style="display:none;margin-top:12px;"></div>
+  </div>
+</div>
+
+<!-- ═══ TAB 5: EXAM PAPER ═══ -->
+<div id="p-paper" class="panel">
+  <div class="card">
+    <div class="card-title">🖨️ Printable Exam Paper</div>
+    <div class="row" style="margin-bottom:12px;">
+      <div>
+        <label>Section</label>
+        <select id="pr-section">
+          <option value="all">All Sections</option>
+          <option value="A">Section A</option>
+          <option value="B">Section B</option>
+          <option value="C">Section C</option>
+          <option value="D">Section D</option>
+          <option value="E">Section E</option>
+        </select>
+      </div>
+      <div>
+        <label>Show Answers?</label>
+        <select id="pr-show-ans">
+          <option value="no">No (exam paper)</option>
+          <option value="yes">Yes (with answers)</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn gold" onclick="generatePaper()">📄 Generate Printable Paper</button>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal" id="edit-modal">
+  <div class="modal-box">
+    <div class="modal-title">✏️ Edit Question</div>
+    <label>Question</label>
+    <textarea id="em-q" rows="3"></textarea>
+    <div class="row">
+      <div><label>Option A</label><input id="em-a"></div>
+      <div><label>Option B</label><input id="em-b"></div>
+    </div>
+    <div class="row">
+      <div><label>Option C</label><input id="em-c"></div>
+      <div><label>Option D</label><input id="em-d"></div>
+    </div>
+    <label>Correct Answer</label>
+    <select id="em-ans"><option value="0">A</option><option value="1">B</option><option value="2">C</option><option value="3">D</option></select>
+    <label>Explanation</label>
+    <textarea id="em-exp" rows="3"></textarea>
+    <div class="btn-row">
+      <button class="btn gold" onclick="saveEditQ()">✅ Save</button>
+      <button class="btn gray" onclick="closeEditModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════
+// SUPABASE SETUP
+// ══════════════════════════
+const _supa = window.supabase.createClient(
+  'https://wwummihoiklnnqjncgmd.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind3dW1taWhvaWtsbm5xam5jZ21kIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODI0OTAsImV4cCI6MjA5NDE1ODQ5MH0.ZY7M1lngXz2MaTDaLGXn8uQgNvKJiKvHcygPsy7o1Ks'
+);
+
+const LABELS = ['A','B','C','D'];
+const SEC_LABELS = ['A','B','C','D','E','F','G','H'];
+
+let _allExams = [];
+let _currentExam = null;
+let _allQuestions = []; // all questions for current exam from Supabase
+let _impData = null;
+let _expData = null;
+let _expFileText = '';
+let _editQId = null;
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function toast(msg, type=''){
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'show' + (type ? ' '+type : '');
+  setTimeout(() => el.className = '', 3200);
+}
+
+function showLoading(msg='Loading...'){
+  let ov = document.getElementById('loading-ov');
+  if(!ov){ ov=document.createElement('div'); ov.id='loading-ov'; ov.className='loading-overlay'; ov.innerHTML=`<div class="spinner"></div><div style="color:#e8c97a;font-size:.84rem;">${msg}</div>`; document.body.appendChild(ov); }
+  else ov.querySelector('div:last-child').textContent=msg;
+}
+function hideLoading(){ const ov=document.getElementById('loading-ov'); if(ov) ov.remove(); }
+
+function sw(id, el){
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.tab-bar .tab').forEach(t => t.classList.remove('on'));
+  document.getElementById('p-'+id).classList.add('on');
+  el.classList.add('on');
+  if(id==='qbank') renderQBank();
+}
+
+// ══════════════════════════
+// LOAD EXAMS FROM SUPABASE
+// ══════════════════════════
+async function loadExams(){
+  try{
+    const {data, error} = await _supa.from('cbtexams').select('*');
+    if(error) throw error;
+    _allExams = data.map(d => ({id:d.id, active:d.active, ...d.data}));
+    const sel = document.getElementById('global-exam');
+    sel.innerHTML = '<option value="">-- Select an exam --</option>' +
+      _allExams.map(e => `<option value="${e.id}">${e.title||e.code} (${e.code}) ${e.active?'✅':'⏸️'}</option>`).join('');
+    document.getElementById('conn-status').textContent = `Connected — ${_allExams.length} exam${_allExams.length!==1?'s':''} found`;
+    document.getElementById('conn-status').style.color = '#4ade80';
+  }catch(e){
+    document.getElementById('conn-status').textContent = 'Connection error: ' + e.message;
+    document.getElementById('conn-status').style.color = '#f87171';
+  }
+}
+
+async function onExamChange(){
+  const examId = document.getElementById('global-exam').value;
+  if(!examId){ _currentExam=null; _allQuestions=[]; document.getElementById('exam-info').style.display='none'; return; }
+  _currentExam = _allExams.find(e => e.id === examId);
+  if(!_currentExam) return;
+  // Show exam info
+  const info = document.getElementById('exam-info');
+  info.style.display = '';
+  info.innerHTML = `<b style="color:#e8c97a;">${_currentExam.title||_currentExam.code}</b> &nbsp;·&nbsp; ${_currentExam.sections||4} sections &nbsp;·&nbsp; ${_currentExam.qps||10} Q/section &nbsp;·&nbsp; ${_currentExam.duration||60} min &nbsp;·&nbsp; Status: <b style="color:${_currentExam.active?'#4ade80':'#fbbf24'};">${_currentExam.active?'Active':'Inactive'}</b>`;
+  // Show section preview in import tab
+  const secs = parseInt(_currentExam.sections)||4;
+  const qps = parseInt(_currentExam.qps)||10;
+  const total = secs * qps;
+  let secHtml = '';
+  for(let i=0;i<secs;i++){
+    const from = i*qps+1, to = (i+1)*qps;
+    secHtml += `<span style="margin-right:12px;">Section <b style="color:#e8c97a;">${SEC_LABELS[i]}</b>: Q${from}–Q${to}</span>`;
+  }
+  document.getElementById('imp-section-list').innerHTML = secHtml + `<br><span style="color:#8a9fc0;font-size:.7rem;">Total: ${total} questions across ${secs} sections</span>`;
+  document.getElementById('imp-section-preview').style.display = '';
+  // Load all questions for this exam
+  await loadQuestionsForExam(examId);
+}
+
+async function loadQuestionsForExam(examId){
+  try{
+    const {data, error} = await _supa.from('cbt_questions').select('*').eq('examid', examId);
+    if(error) throw error;
+    _allQuestions = data.map(d => ({id:d.id, examid:d.examid, ...d.data}));
+  }catch(e){
+    console.error('loadQuestionsForExam error:', e);
+    _allQuestions = [];
+  }
+}
+
+async function refreshAll(){
+  await loadExams();
+  if(_currentExam) await loadQuestionsForExam(_currentExam.id);
+  renderQBank();
+  toast('Refreshed ✓');
+}
+
+// ══════════════════════════
+// SECTION ASSIGNMENT
+// ══════════════════════════
+function assignSections(qs){
+  if(!_currentExam) return qs.map((q,i) => ({...q, section:'A', order:i+1}));
+  const qps = parseInt(_currentExam.qps)||10;
+  return qs.map((q,i) => ({
+    ...q,
+    section: SEC_LABELS[Math.floor(i/qps)] || SEC_LABELS[SEC_LABELS.length-1],
+    order: i+1
+  }));
+}
+
+// ══════════════════════════
+// IMPORT TAB
+// ══════════════════════════
+function impTab(t){
+  ['excel','paste','json'].forEach(x => {
+    document.getElementById('imp-panel-'+x).style.display = x===t ? '' : 'none';
+    document.getElementById('imp-tab-'+x).classList.toggle('on', x===t);
+  });
+  clearImpPreview();
+}
+
+function clearImpPreview(){
+  _impData = null;
+  document.getElementById('imp-preview').style.display = 'none';
+  document.getElementById('imp-status').style.display = 'none';
+}
+
+function showImpStatus(type, msg){
+  const el = document.getElementById('imp-status');
+  el.className = 'status-line status-'+type;
+  el.innerHTML = msg;
+  el.style.display = 'flex';
+}
+
+function handleExcelImport(file){
+  if(!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if(!['xlsx','xls','csv'].includes(ext)){ showImpStatus('err','❌ Please upload .xlsx, .xls, or .csv'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const wb = XLSX.read(e.target.result, {type:'binary'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+      parseExcelRows(rows);
+    }catch(err){ showImpStatus('err','❌ Could not read file: ' + err.message); }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function parseExcelRows(rows){
+  let hRow = -1;
+  for(let i=0;i<Math.min(rows.length,6);i++){
+    if(String(rows[i][0]||'').toLowerCase().includes('question')){ hRow=i; break; }
+  }
+  const dataStart = hRow>=0 ? hRow+1 : 1;
+  const qs = [];
+  for(let i=dataStart;i<rows.length;i++){
+    const r = rows[i];
+    const q = String(r[0]||'').trim();
+    const a = String(r[1]||'').trim();
+    const b = String(r[2]||'').trim();
+    const c = String(r[3]||'').trim();
+    const d = String(r[4]||'').trim();
+    const ans = String(r[5]||'').trim().toUpperCase();
+    const exp = String(r[6]||'').trim();
+    if(!q || !a) continue;
+    const ansMap = {A:0,B:1,C:2,D:3};
+    qs.push({q, opts:[a,b,c,d], ans:ansMap[ans]??0, exp});
+  }
+  if(!qs.length){ showImpStatus('err','❌ No questions found. Check your file format.'); return; }
+  _impData = assignSections(qs);
+  renderImpPreview(_impData);
+}
+
+function handleJsonImport(file){
+  const reader = new FileReader();
+  reader.onload = e => parseJsonData(e.target.result);
+  reader.readAsText(file);
+}
+
+function parseJsonPaste(){
+  parseJsonData(document.getElementById('imp-json-paste').value);
+}
+
+function parseJsonData(text){
+  try{
+    let data = JSON.parse(text.trim());
+    if(!Array.isArray(data)){
+      if(data.questions_data) data = data.questions_data;
+      else{ showImpStatus('err','❌ JSON must be an array of questions'); return; }
+    }
+    const qs = data.map((q,i) => {
+      if(!q.q || !Array.isArray(q.opts) || q.opts.length < 2)
+        throw new Error(`Question ${i+1} missing required fields`);
+      return {q:q.q, opts:q.opts.slice(0,4), ans:parseInt(q.ans)||0, exp:q.exp||''};
+    });
+    _impData = assignSections(qs);
+    renderImpPreview(_impData);
+  }catch(err){ showImpStatus('err','❌ Invalid JSON: ' + err.message); }
+}
+
+function parsePasteText(){
+  const raw = document.getElementById('imp-paste-text').value.trim();
+  if(!raw){ showImpStatus('err','❌ No text to parse'); return; }
+  const blocks = raw.split(/\n\s*\n/).filter(b => b.trim());
+  const qs = [];
+  for(const block of blocks){
+    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+    if(!lines.length) continue;
+    let qLine = lines[0].replace(/^\d+[\.\)]\s*/, '').trim();
+    const opts = [];
+    for(const line of lines.slice(1)){
+      const lm = line.match(/^[A-D][\.\)]\s*(.+)/i);
+      if(lm) opts.push(lm[1].trim());
+    }
+    const ansLine = lines.find(l => /^(answer|correct)[:\s]/i.test(l)) || '';
+    const ansLetter = (ansLine.match(/[A-D]/i)||[])[0]?.toUpperCase() || 'A';
+    const ansMap = {A:0,B:1,C:2,D:3};
+    const expLine = lines.find(l => /^explanation[:\s]/i.test(l)) || '';
+    const exp = expLine.replace(/^explanation[:\s]*/i,'').trim();
+    if(qLine && opts.length >= 2){
+      while(opts.length < 4) opts.push('—');
+      qs.push({q:qLine, opts:opts.slice(0,4), ans:ansMap[ansLetter]??0, exp});
+    }
+  }
+  if(!qs.length){ showImpStatus('err','❌ Could not parse any questions. Check format and try again.'); return; }
+  _impData = assignSections(qs);
+  renderImpPreview(_impData);
+}
+
+function renderImpPreview(qs){
+  const tbody = document.getElementById('imp-preview-tbody');
+  document.getElementById('imp-preview-count').textContent = `— ${qs.length} question${qs.length!==1?'s':''}`;
+  tbody.innerHTML = qs.slice(0,100).map((q,i) => `
+    <tr>
+      <td style="color:#8a9fc0;font-family:monospace;">${i+1}</td>
+      <td><span class="sec-badge">${q.section||'A'}</span></td>
+      <td>${esc(q.q.slice(0,60))}${q.q.length>60?'...':''}</td>
+      <td style="font-size:.7rem;">${esc(q.opts[0])}</td>
+      <td style="font-size:.7rem;">${esc(q.opts[1])}</td>
+      <td style="font-size:.7rem;">${esc(q.opts[2])}</td>
+      <td style="font-size:.7rem;">${esc(q.opts[3])}</td>
+      <td class="ans-c">${LABELS[q.ans]||'?'}</td>
+      <td style="font-size:.68rem;color:#8a9fc0;">${esc((q.exp||'').slice(0,40))}${(q.exp||'').length>40?'...':''}</td>
+    </tr>`).join('');
+  if(qs.length > 100)
+    tbody.innerHTML += `<tr><td colspan="9" style="text-align:center;color:#8a9fc0;padding:10px;">...and ${qs.length-100} more</td></tr>`;
+  showImpStatus('ok', `✅ ${qs.length} questions parsed and ready to upload.`);
+  document.getElementById('imp-preview').style.display = 'block';
+}
+
+async function confirmImport(){
+  if(!_impData || !_impData.length){ toast('No questions to import','err'); return; }
+  if(!_currentExam){ toast('Select an exam first','err'); return; }
+  const mode = document.getElementById('imp-mode').value;
+  const btn = document.getElementById('imp-confirm-btn');
+  btn.disabled = true; btn.textContent = 'Uploading...';
+  showLoading('Uploading questions to Supabase...');
+  try{
+    // If replace mode, delete all existing questions first
+    if(mode === 'replace'){
+      const {error:delErr} = await _supa.from('cbt_questions').delete().eq('examid', _currentExam.id);
+      if(delErr) throw delErr;
+    }
+    // Insert all questions in batches of 50
+    const rows = _impData.map(q => ({examid: _currentExam.id, data: q}));
+    const batchSize = 50;
+    for(let i=0; i<rows.length; i+=batchSize){
+      const batch = rows.slice(i, i+batchSize);
+      const {error} = await _supa.from('cbt_questions').insert(batch);
+      if(error) throw error;
+    }
+    // Reload questions
+    await loadQuestionsForExam(_currentExam.id);
+    hideLoading();
+    showImpStatus('ok', `✅ ${_impData.length} questions uploaded to Supabase successfully! Students can now access this exam once activated.`);
+    toast(`✅ ${_impData.length} questions uploaded!`, 'ok');
+    _impData = null;
+    document.getElementById('imp-preview').style.display = 'none';
+  }catch(e){
+    hideLoading();
+    showImpStatus('err', '❌ Upload failed: ' + e.message);
+    toast('Upload failed: ' + e.message, 'err');
+  }finally{
+    btn.disabled = false; btn.textContent = '✅ Upload to Supabase';
+  }
+}
+
+// Templates
+function dlExcelTemplate(){
+  const wb = XLSX.utils.book_new();
+  const data = [
+    ['Question','Option A','Option B','Option C','Option D','Correct (A-D)','Explanation'],
+    ['Which organ is primarily responsible for drug metabolism?','Kidney','Liver','Lungs','Heart','B','The liver contains CYP450 enzymes responsible for Phase I and II drug metabolism.'],
+    ['The study of drug effects on the body is called:','Pharmacokinetics','Toxicology','Pharmacodynamics','Pharmacognosy','C','Pharmacodynamics studies what a drug does to the body, including mechanism of action.'],
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = [{wch:55},{wch:20},{wch:20},{wch:20},{wch:20},{wch:14},{wch:50}];
+  XLSX.utils.book_append_sheet(wb, ws, 'Questions');
+  XLSX.writeFile(wb, 'BABSPHARM_Questions_Template.xlsx');
+  toast('⬇️ Template downloaded!', 'ok');
+}
+
+function dlCsvTemplate(){
+  const csv = `Question,Option A,Option B,Option C,Option D,Correct (A-D),Explanation\nWhich organ is primarily responsible for drug metabolism?,Kidney,Liver,Lungs,Heart,B,The liver contains CYP450 enzymes responsible for Phase I and II drug metabolism.\nThe study of drug effects on the body is called:,Pharmacokinetics,Toxicology,Pharmacodynamics,Pharmacognosy,C,Pharmacodynamics studies what a drug does to the body.`;
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'BABSPHARM_Questions_Template.csv'; a.click();
+  toast('⬇️ CSV template downloaded!', 'ok');
+}
+
+function dlJsonTemplate(){
+  const tpl = [
+    {q:"Which organ is primarily responsible for drug metabolism?", opts:["Kidney","Liver","Lungs","Heart"], ans:1, exp:"The liver contains CYP450 enzymes responsible for Phase I and II drug metabolism."},
+    {q:"The study of drug effects on the body is called:", opts:["Pharmacokinetics","Toxicology","Pharmacodynamics","Pharmacognosy"], ans:2, exp:"Pharmacodynamics studies what a drug does to the body."}
+  ];
+  const blob = new Blob([JSON.stringify(tpl, null, 2)], {type:'application/json'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'BABSPHARM_Questions_Template.json'; a.click();
+  toast('⬇️ JSON template downloaded!', 'ok');
+}
+
+// Drag and drop
+['dz-excel','dz-json','dz-exp'].forEach(id => {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('dragover', e => { e.preventDefault(); el.classList.add('dragover'); });
+  el.addEventListener('dragleave', () => el.classList.remove('dragover'));
+  el.addEventListener('drop', e => {
+    e.preventDefault(); el.classList.remove('dragover');
+    const file = e.dataTransfer.files[0]; if(!file) return;
+    if(id==='dz-excel') handleExcelImport(file);
+    else if(id==='dz-json') handleJsonImport(file);
+    else if(id==='dz-exp'){ const r=new FileReader(); r.onload=ev=>expLoadText(ev.target.result); r.readAsText(file); }
+  });
+});
+
+// ══════════════════════════
+// EXPLANATIONS TAB
+// ══════════════════════════
+function expTab(t){
+  ['paste','file'].forEach(x => {
+    document.getElementById('exp-panel-'+x).style.display = x===t ? '' : 'none';
+    document.getElementById('exp-tab-'+x).classList.toggle('on', x===t);
+  });
+  document.getElementById('exp-preview').style.display = 'none';
+}
+
+function expFileSelected(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => expLoadText(e.target.result);
+  reader.readAsText(file);
+}
+
+function expLoadText(text){
+  const clean = text.replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/\s+/g,' ');
+  _expFileText = clean;
+  document.getElementById('exp-file-content').style.display = '';
+  document.getElementById('exp-file-text').value = clean.slice(0,600) + (clean.length>600?'...':'');
+}
+
+function getExpText(){
+  if(document.getElementById('exp-panel-file').style.display !== 'none') return _expFileText;
+  return document.getElementById('exp-text').value;
+}
+
+function parseExplanations(text){
+  const result = {};
+  const lines = text.split('\n');
+  let currentNum = null;
+  let buffer = [];
+  const flush = () => {
+    if(currentNum !== null && buffer.length)
+      result[currentNum] = buffer.join(' ').replace(/explanation[:\s]*/i,'').trim();
+    buffer = [];
+  };
+  for(const line of lines){
+    const trimmed = line.trim(); if(!trimmed) continue;
+    const numMatch = trimmed.match(/^(?:q\s*)?(\d+)\s*[\.\):]\s*(.*)/i);
+    const expMatch = trimmed.match(/^explanation[:\s]+(.*)/i);
+    if(numMatch){ flush(); currentNum=parseInt(numMatch[1]); if(numMatch[2].trim()) buffer.push(numMatch[2].trim()); }
+    else if(expMatch && currentNum !== null){ buffer.push(expMatch[1].trim()); }
+    else if(currentNum !== null && !trimmed.match(/^[A-D][\.\)]/i)){ buffer.push(trimmed); }
+  }
+  flush();
+  return result;
+}
+
+async function previewExplanations(){
+  if(!_currentExam){ toast('Select an exam first','err'); return; }
+  if(!_allQuestions.length){ toast('No questions loaded for this exam yet','err'); return; }
+  const text = getExpText();
+  if(!text.trim()){ toast('No text to parse','err'); return; }
+  _expData = parseExplanations(text);
+  const matched = Object.keys(_expData).filter(n => parseInt(n) <= _allQuestions.length).length;
+  document.getElementById('exp-match-count').innerHTML =
+    `<span style="color:#4ade80;">${matched} matched</span> / ${Object.keys(_expData).length} parsed / ${_allQuestions.length} total questions`;
+  const listEl = document.getElementById('exp-match-list');
+  listEl.innerHTML = _allQuestions.slice(0,60).map((q,i) => {
+    const num = i+1;
+    const exp = _expData[num];
+    return `<div class="exp-match ${exp?'matched':'unmatched'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+        <div><span style="color:#8a9fc0;font-family:monospace;font-size:.7rem;">Q${num}</span>
+        <span class="sec-badge">${q.section||'A'}</span>
+        <span style="font-size:.78rem;margin-left:6px;">${esc((q.q||'').slice(0,60))}${(q.q||'').length>60?'...':''}</span></div>
+        <span class="badge ${exp?'b-green':'b-red'}">${exp?'✓ Matched':'✗ None'}</span>
+      </div>
+      ${exp?`<div style="font-size:.72rem;color:#8a9fc0;margin-top:5px;padding-left:10px;">→ ${esc(exp.slice(0,120))}${exp.length>120?'...':''}</div>`:''}
+    </div>`;
+  }).join('');
+  if(_allQuestions.length > 60) listEl.innerHTML += `<div style="color:#8a9fc0;font-size:.72rem;text-align:center;padding:8px;">...and ${_allQuestions.length-60} more</div>`;
+  document.getElementById('exp-preview').style.display = '';
+}
+
+async function applyExplanations(){
+  if(!_currentExam){ toast('Select an exam first','err'); return; }
+  if(!_expData){ await previewExplanations(); if(!_expData) return; }
+  showLoading('Saving explanations to Supabase...');
+  try{
+    let count = 0;
+    // Update each question that has a matched explanation
+    const updates = _allQuestions.map((q, i) => {
+      const exp = _expData[i+1];
+      if(!exp) return null;
+      count++;
+      const newData = {...q, exp};
+      delete newData.id; delete newData.examid;
+      return _supa.from('cbt_questions').update({data: newData}).eq('id', q.id);
+    }).filter(Boolean);
+    await Promise.all(updates);
+    await loadQuestionsForExam(_currentExam.id);
+    hideLoading();
+    document.getElementById('exp-fill').style.width = '100%';
+    document.getElementById('exp-status').textContent = `✅ Applied explanations to ${count} questions.`;
+    document.getElementById('exp-status').style.color = '#4ade80';
+    toast(`✅ ${count} explanations saved!`, 'ok');
+  }catch(e){
+    hideLoading();
+    toast('Failed: ' + e.message, 'err');
+  }
+}
+
+// ══════════════════════════
+// QUESTION BANK
+// ══════════════════════════
+function renderQBank(){
+  const search = (document.getElementById('qb-search').value||'').toLowerCase();
+  const secFilter = document.getElementById('qb-section').value;
+  let qs = _allQuestions;
+  if(secFilter) qs = qs.filter(q => (q.section||'A') === secFilter);
+  if(search) qs = qs.filter((q,i) => (q.q||'').toLowerCase().includes(search) || (q.exp||'').toLowerCase().includes(search));
+  document.getElementById('qb-stats').innerHTML =
+    `<b style="color:#e8c97a;">${_allQuestions.length}</b> total questions${secFilter?` · Section ${secFilter}: ${qs.length}`:''}${search?` · ${qs.length} matching`:''}`;
+  if(!qs.length){
+    document.getElementById('qb-list').innerHTML = `<div style="text-align:center;padding:30px;color:#8a9fc0;">No questions found${_currentExam?'. Import questions in the Import tab.':'. Select an exam first.'}</div>`;
+    return;
+  }
+  document.getElementById('qb-list').innerHTML = qs.slice(0,80).map((q,i) => `
+    <div class="q-card">
+      <div class="q-card-head">
+        <span class="q-num">Q${q.order||i+1}</span>
+        <span class="sec-badge">${q.section||'A'}</span>
+        <span class="q-text" style="margin-left:6px;">${esc(q.q||'')}</span>
+        <div class="q-actions">
+          <button class="btn gray btn-sm" style="padding:5px 9px;" onclick="openEditQ('${q.id}')">✏️</button>
+          <button class="btn red btn-sm" style="padding:5px 9px;" onclick="deleteQ('${q.id}', ${q.order||i+1})">🗑</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px;">
+        ${(q.opts||[]).map((o,j) => `<div style="font-size:.72rem;padding:5px 8px;border-radius:6px;background:${j===q.ans?'rgba(74,222,128,.1)':'rgba(255,255,255,.03)'};border:1px solid ${j===q.ans?'rgba(74,222,128,.3)':'rgba(201,168,76,.1)'};color:${j===q.ans?'#4ade80':'#8a9fc0'};"><b>${LABELS[j]}.</b> ${esc(o)}</div>`).join('')}
+      </div>
+      ${q.exp?`<div style="font-size:.72rem;color:#8a9fc0;margin-top:7px;padding:6px 10px;background:rgba(201,168,76,.06);border-radius:6px;border-left:2px solid #e8c97a;"><b style="color:#e8c97a;">Explanation:</b> ${esc(q.exp)}</div>`:'<div style="font-size:.68rem;color:rgba(248,113,113,.6);margin-top:6px;">⚠️ No explanation</div>'}
+    </div>`).join('');
+  if(qs.length > 80) document.getElementById('qb-list').innerHTML += `<div style="text-align:center;color:#8a9fc0;font-size:.74rem;padding:10px;">Showing 80 of ${qs.length}. Refine search to see more.</div>`;
+}
+
+function openEditQ(qId){
+  _editQId = qId;
+  const q = _allQuestions.find(x => x.id === qId);
+  if(!q) return;
+  document.getElementById('em-q').value = q.q||'';
+  document.getElementById('em-a').value = (q.opts||[])[0]||'';
+  document.getElementById('em-b').value = (q.opts||[])[1]||'';
+  document.getElementById('em-c').value = (q.opts||[])[2]||'';
+  document.getElementById('em-d').value = (q.opts||[])[3]||'';
+  document.getElementById('em-ans').value = q.ans||0;
+  document.getElementById('em-exp').value = q.exp||'';
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeEditModal(){ document.getElementById('edit-modal').classList.remove('open'); }
+
+async function saveEditQ(){
+  const q = _allQuestions.find(x => x.id === _editQId);
+  if(!q) return;
+  const updated = {
+    q: document.getElementById('em-q').value.trim(),
+    opts: ['em-a','em-b','em-c','em-d'].map(id => document.getElementById(id).value.trim()),
+    ans: parseInt(document.getElementById('em-ans').value),
+    exp: document.getElementById('em-exp').value.trim(),
+    section: q.section||'A',
+    order: q.order
+  };
+  try{
+    const {error} = await _supa.from('cbt_questions').update({data: updated}).eq('id', _editQId);
+    if(error) throw error;
+    await loadQuestionsForExam(_currentExam.id);
+    closeEditModal();
+    renderQBank();
+    toast('✅ Question saved!', 'ok');
+  }catch(e){ toast('Save failed: ' + e.message, 'err'); }
+}
+
+async function deleteQ(qId, num){
+  if(!confirm(`Delete question ${num}? This cannot be undone.`)) return;
+  try{
+    const {error} = await _supa.from('cbt_questions').delete().eq('id', qId);
+    if(error) throw error;
+    await loadQuestionsForExam(_currentExam.id);
+    renderQBank();
+    toast('🗑 Question deleted');
+  }catch(e){ toast('Delete failed: ' + e.message, 'err'); }
+}
+
+// ══════════════════════════
+// ANSWER KEY
+// ══════════════════════════
+function generateAnswerKey(){
+  if(!_allQuestions.length){ toast('No questions loaded','err'); return; }
+  const secFilter = document.getElementById('ak-section').value;
+  const format = document.getElementById('ak-format').value;
+  let qs = secFilter==='all' ? _allQuestions : _allQuestions.filter(q => (q.section||'A')===secFilter);
+  if(!qs.length){ toast('No questions in selected section','err'); return; }
+  let html = '';
+  if(format==='inline'){
+    html = `<div style="font-family:monospace;font-size:.8rem;line-height:2;padding:10px;background:rgba(0,0,0,.2);border-radius:8px;">`;
+    html += qs.map((q,i) => `<span style="margin-right:12px;"><b style="color:#8a9fc0;">Q${q.order||i+1}.</b><span style="color:#4ade80;font-weight:700;">${LABELS[q.ans]||'?'}</span></span>`).join('');
+    html += '</div>';
+  } else if(format==='table'){
+    html = `<div class="tbl-wrap"><table><thead><tr><th>#</th><th>Sec</th><th>Question</th><th>Answer</th></tr></thead><tbody>`;
+    html += qs.map((q,i) => `<tr><td style="font-family:monospace;color:#8a9fc0;">${q.order||i+1}</td><td><span class="sec-badge">${q.section||'A'}</span></td><td style="max-width:200px;">${esc((q.q||'').slice(0,80))}...</td><td class="ans-c">${LABELS[q.ans]||'?'}. ${esc((q.opts||[])[q.ans]||'')}</td></tr>`).join('');
+    html += '</tbody></table></div>';
+  } else {
+    html = qs.map((q,i) => `<div style="margin-bottom:14px;padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(201,168,76,.15);border-radius:10px;">
+      <div style="font-size:.78rem;margin-bottom:6px;"><b style="color:#8a9fc0;">Q${q.order||i+1}</b> <span class="sec-badge">${q.section||'A'}</span> <b style="color:#4ade80;margin-left:8px;">${LABELS[q.ans]||'?'}. ${esc((q.opts||[])[q.ans]||'')}</b></div>
+      ${q.exp?`<div style="font-size:.72rem;color:#8a9fc0;padding-left:10px;border-left:2px solid #e8c97a;">${esc(q.exp)}</div>`:'<div style="font-size:.68rem;color:rgba(248,113,113,.5);">No explanation added yet</div>'}
+    </div>`).join('');
+  }
+  const out = document.getElementById('ak-output');
+  out.innerHTML = html;
+  out.style.display = '';
+}
+
+// ══════════════════════════
+// EXAM PAPER
+// ══════════════════════════
+function generatePaper(){
+  if(!_allQuestions.length){ toast('No questions loaded','err'); return; }
+  const secFilter = document.getElementById('pr-section').value;
+  const showAns = document.getElementById('pr-show-ans').value === 'yes';
+  let qs = secFilter==='all' ? _allQuestions : _allQuestions.filter(q => (q.section||'A')===secFilter);
+  if(!qs.length){ toast('No questions in selected section','err'); return; }
+  const exam = _currentExam;
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+  <title>${exam?exam.title||exam.code:''} — Exam Paper</title>
+  <style>body{font-family:Arial,sans-serif;max-width:800px;margin:40px auto;padding:20px;color:#000;}
+  h1{font-size:1.1rem;text-align:center;}.meta{text-align:center;color:#666;font-size:.8rem;margin-bottom:20px;border-bottom:2px solid #000;padding-bottom:10px;}
+  .q{margin-bottom:16px;page-break-inside:avoid;}.qn{font-weight:700;}.opt{margin:3px 0 3px 20px;font-size:.85rem;}
+  .ans{color:green;font-weight:700;font-size:.8rem;margin-left:20px;}
+  @media print{button{display:none;}}</style></head>
+  <body>
+  <h1>${exam?exam.title||exam.code:'CBT Exam'}</h1>
+  <div class="meta">${exam?`${exam.course} &nbsp;·&nbsp; ${exam.duration} minutes &nbsp;·&nbsp; `:''}${qs.length} Questions${secFilter!=='all'?` &nbsp;·&nbsp; Section ${secFilter}`:''}</div>
+  <button onclick="window.print()" style="padding:8px 16px;background:#000;color:#fff;border:none;border-radius:6px;cursor:pointer;margin-bottom:20px;">🖨️ Print</button>
+  ${qs.map((q,i) => `<div class="q"><div class="qn">${q.order||i+1}. ${q.q||''}</div>
+  ${(q.opts||[]).map((o,j) => `<div class="opt">${LABELS[j]}. ${o}</div>`).join('')}
+  ${showAns?`<div class="ans">Answer: ${LABELS[q.ans]||'?'}</div>`:''}
+  </div>`).join('')}
+  </body></html>`;
+  const blob = new Blob([html], {type:'text/html'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${exam?exam.code:'exam'}-paper${secFilter!=='all'?'-sec'+secFilter:''}.html`;
+  a.click();
+  toast('📄 Paper downloaded!', 'ok');
+}
+
+// ══════════════════════════
+// INIT
+// ══════════════════════════
+loadExams();
+</script>
+</body>
+</html>
