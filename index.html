@@ -2391,10 +2391,6 @@ const _settingsTable = {
     }
   })
 };
-// Users field name mapper (camelCase JS ↔ lowercase PostgreSQL)
-const _uFM={createdAt:'createdat',lastSeen:'lastseen',referralCode:'referralcode',referredBy:'referredby',photoURL:'photourl',createdat:'createdAt',lastseen:'lastSeen',referralcode:'referralCode',referredby:'referredBy',photourl:'photoURL'};
-function _uNorm(fields){const r={};for(const[k,v]of Object.entries(fields||{}))r[_uFM[k]||k]=v;return r;}
-function _uNormOut(row){if(!row)return {};const r={};for(const[k,v]of Object.entries(row))r[_uFM[k]||k]=v;return r;}
 // Supabase users table wrapper — mimics Firestore API
 // Field normalizer for users table (camelCase <-> lowercase PostgreSQL columns)
 const _uFM={createdAt:'createdat',lastSeen:'lastseen',referralCode:'referralcode',referredBy:'referredby',photoURL:'photourl',createdat:'createdAt',lastseen:'lastSeen',referralcode:'referralCode',referredby:'referredBy',photourl:'photoURL'};
