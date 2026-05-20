@@ -2547,16 +2547,27 @@ auth.onAuthStateChanged(async function(user){
     document.getElementById('wm').textContent = CU.name;
     updateSidebarProfile();
 
-    // If old user — create/update their document with missing fields
-    if(!doc.exists || userData.points === undefined){
-      await _usersTable.doc(uid).set({
-        name: CU.name,
-        email: CU.email,
-        points: userData.points || 0,
-        role: userData.role || 'user',
-        createdAt: userData.createdAt || new Date().toISOString(),
-        lastSeen: new Date().toISOString()
-      }, {merge:true});
+    // Always ensure user has a Supabase profile
+    if(!doc.exists){
+      // New user or returning Firebase user with no Supabase profile
+      try{
+        await _usersTable.doc(uid).set({
+          name: CU.name,
+          email: CU.email,
+          dept: CU.dept || '',
+          points: 50,
+          role: 'user',
+          createdAt: new Date().toISOString(),
+          lastSeen: new Date().toISOString(),
+          referredBy: '',
+          referralCode: ''
+        });
+      }catch(e){ console.log('Profile create error:', e); }
+    } else {
+      // Existing user — just update lastSeen
+      try{
+        await _usersTable.doc(uid).update({lastSeen: new Date().toISOString()});
+      }catch(e){}
     }
 
     // Load everything else in background — won't affect page display
@@ -2572,7 +2583,6 @@ auth.onAuthStateChanged(async function(user){
     checkExamCountdown();
     checkSOTW();
     checkSurpriseReward();
-    _usersTable.doc(uid).set({lastSeen: new Date().toISOString()},{merge:true}).catch(()=>{});
     subscribeToPushNotifications(uid).catch(()=>{});
     if(!CU.dept || CU.dept.trim()===''){
       setTimeout(()=>showDeptPrompt(), 1500);
