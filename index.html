@@ -13,6 +13,9 @@
 <meta http-equiv="Expires" content="0"/>
 <meta name="version" content="2.5.0"/>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2393,7 +2396,7 @@ const _settingsTable = {
 };
 // Supabase users table wrapper — mimics Firestore API
 // Field normalizer for users table (camelCase <-> lowercase PostgreSQL columns)
-const _uFM={createdAt:'createdat',lastSeen:'lastseen',referralCode:'referralcode',referredBy:'referredby',photoURL:'photourl',createdat:'createdAt',lastseen:'lastSeen',referralcode:'referralCode',referredby:'referredBy',photourl:'photoURL'};
+const _uFM={createdAt:'createdat',lastSeen:'lastseen',referralCode:'referralcode',referredBy:'referredby',photoURL:'photourl',permStudents:'perm_students',permCourses:'perm_courses',permFiles:'perm_files',permQuiz:'perm_quiz',permMessages:'perm_messages',createdat:'createdAt',lastseen:'lastSeen',referralcode:'referralCode',referredby:'referredBy',photourl:'photoURL',perm_students:'perm_students',perm_courses:'perm_courses',perm_files:'perm_files',perm_quiz:'perm_quiz',perm_messages:'perm_messages'};
 function _uNorm(f){const r={};for(const[k,v]of Object.entries(f||{}))r[_uFM[k]||k]=v;return r;}
 function _uNormOut(row){if(!row)return{};const r={};for(const[k,v]of Object.entries(row))r[_uFM[k]||k]=v;return r;}
 const _usersTable = {
@@ -6752,15 +6755,26 @@ function renderCBTSection(sectionIndex){
   window.scrollTo(0,0);
 }
 
+function renderCBTText(text){
+  if(!text) return '';
+  let html = String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Image support: [img:URL]
+  html = html.replace(/\[img:(https?:\/\/[^\]]+)\]/gi,
+    '<img src="$1" style="max-width:100%;border-radius:8px;margin:8px 0;display:block;" onerror="this.style.display=\'none\'">');
+  // Direct image URLs
+  html = html.replace(/(https?:\/\/\S+\.(jpg|jpeg|png|gif|webp|svg)(\?\S*)?)/gi,
+    '<img src="$1" style="max-width:100%;border-radius:8px;margin:8px 0;display:block;" onerror="this.style.display=\'none\'">');
+  return html;
+}
 function renderCBTQuestion(q, i, section){
   const key = section+'_'+i;
   const answered = cbtAnswers[key];
   return `<div id="cbt-q-${section}-${i}" style="background:var(--card);border:1px solid ${answered!==undefined?'rgba(201,168,76,.3)':'var(--cb)'};border-radius:14px;padding:16px;margin-bottom:12px;">
     <div style="font-size:.82rem;font-weight:700;color:var(--text);margin-bottom:12px;line-height:1.6">
-      <span style="color:var(--gold2);font-weight:800">${i+1}.</span> ${q.q}
+      <span style="color:var(--gold2);font-weight:800">${i+1}.</span> ${renderCBTText(q.q)}
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;">
-      ${q.opts.map((opt,j)=>`
+      ${(q.opts||[]).map((opt,j)=>`
         <button onclick="selectCBTAnswer('${section}',${i},'${q.id}',${j})"
           style="padding:10px 14px;border-radius:10px;border:2px solid ${answered===j?'var(--gold)':'var(--cb)'};
           background:${answered===j?'rgba(201,168,76,.12)':'rgba(255,255,255,.03)'};
@@ -6771,7 +6785,7 @@ function renderCBTQuestion(q, i, section){
             font-size:.7rem;font-weight:700;color:${answered===j?'var(--navy)':'var(--text2)'};flex-shrink:0;">
             ${['A','B','C','D'][j]}
           </span>
-          ${opt}
+          <span>${renderCBTText(opt)}</span>
         </button>`).join('')}
     </div>
     ${answered!==undefined?'<div style="margin-top:8px;font-size:.7rem;color:var(--green)">✅ Answered</div>':'<div style="margin-top:8px;font-size:.7rem;color:#fbbf24">⚠️ Not answered yet</div>'}

@@ -2120,7 +2120,7 @@ const _settingsTable = {
 };
 // Supabase users table wrapper — mimics Firestore API
 // Field normalizer for users table
-const _uFM={createdAt:'createdat',lastSeen:'lastseen',referralCode:'referralcode',referredBy:'referredby',photoURL:'photourl',createdat:'createdAt',lastseen:'lastSeen',referralcode:'referralCode',referredby:'referredBy',photourl:'photoURL'};
+const _uFM={createdAt:'createdat',lastSeen:'lastseen',referralCode:'referralcode',referredBy:'referredby',photoURL:'photourl',permStudents:'perm_students',permCourses:'perm_courses',permFiles:'perm_files',permQuiz:'perm_quiz',permMessages:'perm_messages',createdat:'createdAt',lastseen:'lastSeen',referralcode:'referralCode',referredby:'referredBy',photourl:'photoURL',perm_students:'perm_students',perm_courses:'perm_courses',perm_files:'perm_files',perm_quiz:'perm_quiz',perm_messages:'perm_messages'};
 function _uNorm(f){const r={};for(const[k,v]of Object.entries(f||{}))r[_uFM[k]||k]=v;return r;}
 function _uNormOut(row){if(!row)return{};const r={};for(const[k,v]of Object.entries(row))r[_uFM[k]||k]=v;return r;}
 const _usersTable = {
