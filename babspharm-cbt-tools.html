@@ -6,6 +6,9 @@
 <title>BABSPHARM CBT — Tools Suite</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',sans-serif;background:#060e1f;color:#f0ead6;padding:16px;min-height:100vh;}
@@ -382,6 +385,24 @@ const _supa = window.supabase.createClient(
 const LABELS = ['A','B','C','D'];
 const SEC_LABELS = ['A','B','C','D','E','F','G','H'];
 
+// Render question/option text with image and LaTeX support
+function renderQ(text){
+  if(!text) return '';
+  let html = esc(text);
+  // Image support: [img:URL] or direct image URLs ending in jpg/png/gif/webp/svg
+  html = html.replace(/\[img:(https?:\/\/[^\]]+)\]/gi,
+    '<img src="$1" style="max-width:100%;border-radius:6px;margin:6px 0;display:block;" onerror="this.style.display=\'none\'">');
+  html = html.replace(/(https?:\/\/\S+\.(jpg|jpeg|png|gif|webp|svg))/gi,
+    '<img src="$1" style="max-width:100%;border-radius:6px;margin:6px 0;display:block;" onerror="this.style.display=\'none\'">');
+  return html;
+}
+// Render after inserting HTML (for KaTeX auto-render)
+function renderMath(el){
+  if(window.renderMathInElement && el){
+    try{ renderMathInElement(el, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}], throwOnError:false}); }catch(e){}
+  }
+}
+
 let _allExams = [];
 let _currentExam = null;
 let _allQuestions = []; // all questions for current exam from Supabase
@@ -530,22 +551,41 @@ function handleExcelImport(file){
 function parseExcelRows(rows){
   let hRow = -1;
   for(let i=0;i<Math.min(rows.length,6);i++){
-    if(String(rows[i][0]||'').toLowerCase().includes('question')){ hRow=i; break; }
+    const first = String(rows[i][0]||'').toLowerCase();
+    if(first.includes('question')||first.includes('no')||first.includes('s/n')){ hRow=i; break; }
   }
   const dataStart = hRow>=0 ? hRow+1 : 1;
   const qs = [];
   for(let i=dataStart;i<rows.length;i++){
     const r = rows[i];
-    const q = String(r[0]||'').trim();
-    const a = String(r[1]||'').trim();
-    const b = String(r[2]||'').trim();
-    const c = String(r[3]||'').trim();
-    const d = String(r[4]||'').trim();
-    const ans = String(r[5]||'').trim().toUpperCase();
-    const exp = String(r[6]||'').trim();
+    // Detect if col 0 is just a number (question number column)
+    const col0 = String(r[0]||'').trim();
+    const col0isNum = /^\d+$/.test(col0);
+    let q,a,b,c,d,ans,exp;
+    if(col0isNum){
+      // Format: [Num] [Question] [A] [B] [C] [D] [Answer] [Explanation]
+      q   = String(r[1]||'').trim();
+      a   = String(r[2]||'').trim();
+      b   = String(r[3]||'').trim();
+      c   = String(r[4]||'').trim();
+      d   = String(r[5]||'').trim();
+      ans = String(r[6]||'').trim().toUpperCase();
+      exp = String(r[7]||'').trim();
+    } else {
+      // Format: [Question] [A] [B] [C] [D] [Answer] [Explanation]
+      q   = col0.replace(/^\d+[\.\)]\s*/,''); // strip leading number if any
+      a   = String(r[1]||'').trim();
+      b   = String(r[2]||'').trim();
+      c   = String(r[3]||'').trim();
+      d   = String(r[4]||'').trim();
+      ans = String(r[5]||'').trim().toUpperCase();
+      exp = String(r[6]||'').trim();
+    }
     if(!q || !a) continue;
+    // Strip option labels from options if present (e.g. "A. text" → "text")
+    const stripLabel = s => s.replace(/^[A-D][\.\)]\s*/i,'').trim();
     const ansMap = {A:0,B:1,C:2,D:3};
-    qs.push({q, opts:[a,b,c,d], ans:ansMap[ans]??0, exp});
+    qs.push({q, opts:[stripLabel(a),stripLabel(b),stripLabel(c),stripLabel(d)], ans:ansMap[ans]??0, exp});
   }
   if(!qs.length){ showImpStatus('err','❌ No questions found. Check your file format.'); return; }
   _impData = assignSections(qs);
@@ -842,16 +882,16 @@ function renderQBank(){
       <div class="q-card-head">
         <span class="q-num">Q${q.order||i+1}</span>
         <span class="sec-badge">${q.section||'A'}</span>
-        <span class="q-text" style="margin-left:6px;">${esc(q.q||'')}</span>
+        <span class="q-text" style="margin-left:6px;">${renderQ(q.q||'')}</span>
         <div class="q-actions">
           <button class="btn gray btn-sm" style="padding:5px 9px;" onclick="openEditQ('${q.id}')">✏️</button>
           <button class="btn red btn-sm" style="padding:5px 9px;" onclick="deleteQ('${q.id}', ${q.order||i+1})">🗑</button>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:8px;">
-        ${(q.opts||[]).map((o,j) => `<div style="font-size:.72rem;padding:5px 8px;border-radius:6px;background:${j===q.ans?'rgba(74,222,128,.1)':'rgba(255,255,255,.03)'};border:1px solid ${j===q.ans?'rgba(74,222,128,.3)':'rgba(201,168,76,.1)'};color:${j===q.ans?'#4ade80':'#8a9fc0'};"><b>${LABELS[j]}.</b> ${esc(o)}</div>`).join('')}
+        ${(q.opts||[]).map((o,j) => `<div style="font-size:.72rem;padding:5px 8px;border-radius:6px;background:${j===q.ans?'rgba(74,222,128,.1)':'rgba(255,255,255,.03)'};border:1px solid ${j===q.ans?'rgba(74,222,128,.3)':'rgba(201,168,76,.1)'};color:${j===q.ans?'#4ade80':'#8a9fc0'};"><b>${LABELS[j]}.</b> ${renderQ(o)}</div>`).join('')}
       </div>
-      ${q.exp?`<div style="font-size:.72rem;color:#8a9fc0;margin-top:7px;padding:6px 10px;background:rgba(201,168,76,.06);border-radius:6px;border-left:2px solid #e8c97a;"><b style="color:#e8c97a;">Explanation:</b> ${esc(q.exp)}</div>`:'<div style="font-size:.68rem;color:rgba(248,113,113,.6);margin-top:6px;">⚠️ No explanation</div>'}
+      ${q.exp?`<div style="font-size:.72rem;color:#8a9fc0;margin-top:7px;padding:6px 10px;background:rgba(201,168,76,.06);border-radius:6px;border-left:2px solid #e8c97a;"><b style="color:#e8c97a;">Explanation:</b> ${renderQ(q.exp)}</div>`:'<div style="font-size:.68rem;color:rgba(248,113,113,.6);margin-top:6px;">⚠️ No explanation</div>'}
     </div>`).join('');
   if(qs.length > 80) document.getElementById('qb-list').innerHTML += `<div style="text-align:center;color:#8a9fc0;font-size:.74rem;padding:10px;">Showing 80 of ${qs.length}. Refine search to see more.</div>`;
 }
@@ -925,7 +965,7 @@ function generateAnswerKey(){
   } else {
     html = qs.map((q,i) => `<div style="margin-bottom:14px;padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(201,168,76,.15);border-radius:10px;">
       <div style="font-size:.78rem;margin-bottom:6px;"><b style="color:#8a9fc0;">Q${q.order||i+1}</b> <span class="sec-badge">${q.section||'A'}</span> <b style="color:#4ade80;margin-left:8px;">${LABELS[q.ans]||'?'}. ${esc((q.opts||[])[q.ans]||'')}</b></div>
-      ${q.exp?`<div style="font-size:.72rem;color:#8a9fc0;padding-left:10px;border-left:2px solid #e8c97a;">${esc(q.exp)}</div>`:'<div style="font-size:.68rem;color:rgba(248,113,113,.5);">No explanation added yet</div>'}
+      ${q.exp?`<div style="font-size:.72rem;color:#8a9fc0;padding-left:10px;border-left:2px solid #e8c97a;">${renderQ(q.exp)}</div>`:'<div style="font-size:.68rem;color:rgba(248,113,113,.5);">No explanation added yet</div>'}
     </div>`).join('');
   }
   const out = document.getElementById('ak-output');
