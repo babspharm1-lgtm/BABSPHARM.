@@ -6,6 +6,8 @@
 <title>BABSPHARM CBT — Tools Suite</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
@@ -238,9 +240,10 @@ tr:hover td{background:rgba(255,255,255,.02);}
     <div id="exp-panel-file" style="display:none;">
       <div class="dz" id="dz-exp" onclick="document.getElementById('fi-exp').click()">
         <div class="di">📄</div>
-        <p>Tap to upload text or HTML file with explanations</p>
+        <p>Tap to upload explanations file</p>
+        <p style="margin-top:4px;font-size:.67rem;opacity:.7;">Supports: .txt · .html · .docx · .pdf</p>
       </div>
-      <input type="file" id="fi-exp" style="display:none;" accept=".txt,.html,.htm,.pdf" onchange="expFileSelected(this)">
+      <input type="file" id="fi-exp" style="display:none;" accept=".txt,.html,.htm,.docx,.doc,.pdf" onchange="expFileSelected(this)">
       <div id="exp-file-content" style="display:none;">
         <label>File content preview</label>
         <textarea id="exp-file-text" rows="5" readonly></textarea>
@@ -751,7 +754,10 @@ function dlJsonTemplate(){
     const file = e.dataTransfer.files[0]; if(!file) return;
     if(id==='dz-excel') handleExcelImport(file);
     else if(id==='dz-json') handleJsonImport(file);
-    else if(id==='dz-exp'){ const r=new FileReader(); r.onload=ev=>expLoadText(ev.target.result); r.readAsText(file); }
+    else if(id==='dz-exp'){
+      const fakeInput = {files:[file]};
+      expFileSelected(fakeInput);
+    }
   });
 });
 
@@ -768,9 +774,65 @@ function expTab(t){
 
 function expFileSelected(input){
   const file = input.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = e => expLoadText(e.target.result);
-  reader.readAsText(file);
+  const ext = file.name.split('.').pop().toLowerCase();
+  const status = document.getElementById('exp-file-content');
+  const preview = document.getElementById('exp-file-text');
+  status.style.display = '';
+  preview.value = 'Reading file...';
+
+  if(ext === 'docx' || ext === 'doc'){
+    // Use mammoth.js to extract text from Word doc
+    const reader = new FileReader();
+    reader.onload = async e => {
+      try{
+        const result = await mammoth.extractRawText({arrayBuffer: e.target.result});
+        expLoadText(result.value);
+        preview.value = result.value.slice(0,600) + (result.value.length>600?'...':'');
+        toast('✅ Word document read successfully!', 'ok');
+      }catch(err){
+        preview.value = 'Error reading Word file: ' + err.message;
+        toast('❌ Could not read Word file', 'err');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+
+  } else if(ext === 'pdf'){
+    // Use PDF.js to extract text
+    if(typeof pdfjsLib === 'undefined'){
+      preview.value = 'PDF.js not loaded yet. Please wait a moment and try again.';
+      return;
+    }
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const reader = new FileReader();
+    reader.onload = async e => {
+      try{
+        const pdf = await pdfjsLib.getDocument({data: e.target.result}).promise;
+        let fullText = '';
+        for(let p=1; p<=pdf.numPages; p++){
+          const page = await pdf.getPage(p);
+          const content = await page.getTextContent();
+          fullText += content.items.map(i=>i.str).join(' ') + '\n';
+        }
+        expLoadText(fullText);
+        preview.value = fullText.slice(0,600) + (fullText.length>600?'...':'');
+        toast(`✅ PDF read — ${pdf.numPages} pages extracted!`, 'ok');
+      }catch(err){
+        preview.value = 'Error reading PDF: ' + err.message;
+        toast('❌ Could not read PDF', 'err');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+
+  } else {
+    // Plain text or HTML
+    const reader = new FileReader();
+    reader.onload = e => {
+      expLoadText(e.target.result);
+      preview.value = e.target.result.slice(0,600) + (e.target.result.length>600?'...':'');
+      toast('✅ File loaded!', 'ok');
+    };
+    reader.readAsText(file);
+  }
 }
 
 function expLoadText(text){
