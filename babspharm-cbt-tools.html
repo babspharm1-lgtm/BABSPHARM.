@@ -463,18 +463,23 @@ function sw(id, el){
 // LOAD EXAMS FROM SUPABASE
 // ══════════════════════════
 async function loadExams(){
+  document.getElementById('conn-status').textContent = 'Connecting to Supabase...';
+  document.getElementById('conn-status').style.color = '#8a9fc0';
   try{
-    const {data, error} = await _supa.from('cbtexams').select('*');
+    const timeout = new Promise((_,rej)=>setTimeout(()=>rej(new Error('Connection timed out. Check your internet and tap Refresh.')),12000));
+    const fetchExams = _supa.from('cbtexams').select('*');
+    const {data, error} = await Promise.race([fetchExams, timeout]);
     if(error) throw error;
     _allExams = data.map(d => ({id:d.id, active:d.active, ...d.data}));
     const sel = document.getElementById('global-exam');
     sel.innerHTML = '<option value="">-- Select an exam --</option>' +
       _allExams.map(e => `<option value="${e.id}">${e.title||e.code} (${e.code}) ${e.active?'✅':'⏸️'}</option>`).join('');
-    document.getElementById('conn-status').textContent = `Connected — ${_allExams.length} exam${_allExams.length!==1?'s':''} found`;
+    document.getElementById('conn-status').textContent = `✅ Connected — ${_allExams.length} exam${_allExams.length!==1?'s':''} found`;
     document.getElementById('conn-status').style.color = '#4ade80';
   }catch(e){
-    document.getElementById('conn-status').textContent = 'Connection error: ' + e.message;
+    document.getElementById('conn-status').textContent = '❌ ' + e.message;
     document.getElementById('conn-status').style.color = '#f87171';
+    document.getElementById('global-exam').innerHTML = '<option value="">Connection failed — tap Refresh</option>';
   }
 }
 
