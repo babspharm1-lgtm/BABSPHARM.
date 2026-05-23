@@ -389,7 +389,29 @@ const LABELS = ['A','B','C','D'];
 const SEC_LABELS = ['A','B','C','D','E','F','G','H'];
 
 // Render question/option text with image and LaTeX support
-function renderQ(text){
+function parseAnswer(ansRaw, opts){
+  const s = String(ansRaw||'').trim();
+  if(!s) return 0;
+  // Letter format: A, B, C, D (case insensitive)
+  const letterMap = {A:0,B:1,C:2,D:3,a:0,b:1,c:2,d:3};
+  if(letterMap[s] !== undefined) return letterMap[s];
+  // Number format: 1,2,3,4 or 0,1,2,3
+  const n = parseInt(s);
+  if(!isNaN(n)){
+    if(n>=1 && n<=4) return n-1; // 1-indexed
+    if(n>=0 && n<=3) return n;   // 0-indexed
+  }
+  // Match against option text (find which option matches)
+  const clean = s.toLowerCase().replace(/^[a-d][\.\)]\s*/,'');
+  for(let i=0;i<(opts||[]).length;i++){
+    const opt = String(opts[i]||'').toLowerCase().replace(/^[a-d][\.\)]\s*/,'');
+    if(opt && (opt===clean || opt.includes(clean) || clean.includes(opt))) return i;
+  }
+  // First letter check (e.g. "A." or "B)")
+  const firstLetter = s.charAt(0).toUpperCase();
+  if(letterMap[firstLetter] !== undefined) return letterMap[firstLetter];
+  return 0;
+}
   if(!text) return '';
   let html = esc(text);
   // Image support: [img:URL] or direct image URLs ending in jpg/png/gif/webp/svg
@@ -587,8 +609,8 @@ function parseExcelRows(rows){
     if(!q || !a) continue;
     // Strip option labels from options if present (e.g. "A. text" → "text")
     const stripLabel = s => s.replace(/^[A-D][\.\)]\s*/i,'').trim();
-    const ansMap = {A:0,B:1,C:2,D:3};
-    qs.push({q, opts:[stripLabel(a),stripLabel(b),stripLabel(c),stripLabel(d)], ans:ansMap[ans]??0, exp});
+    const optsArr = [stripLabel(a),stripLabel(b),stripLabel(c),stripLabel(d)];
+    qs.push({q, opts:optsArr, ans:parseAnswer(ans, optsArr), exp});
   }
   if(!qs.length){ showImpStatus('err','❌ No questions found. Check your file format.'); return; }
   _impData = assignSections(qs);
@@ -637,13 +659,12 @@ function parsePasteText(){
       if(lm) opts.push(lm[1].trim());
     }
     const ansLine = lines.find(l => /^(answer|correct)[:\s]/i.test(l)) || '';
-    const ansLetter = (ansLine.match(/[A-D]/i)||[])[0]?.toUpperCase() || 'A';
-    const ansMap = {A:0,B:1,C:2,D:3};
+    const ansLetter = (ansLine.match(/[A-D]/i)||[])[0]?.toUpperCase() || '';
     const expLine = lines.find(l => /^explanation[:\s]/i.test(l)) || '';
     const exp = expLine.replace(/^explanation[:\s]*/i,'').trim();
     if(qLine && opts.length >= 2){
       while(opts.length < 4) opts.push('—');
-      qs.push({q:qLine, opts:opts.slice(0,4), ans:ansMap[ansLetter]??0, exp});
+      qs.push({q:qLine, opts:opts.slice(0,4), ans:parseAnswer(ansLetter, opts.slice(0,4)), exp});
     }
   }
   if(!qs.length){ showImpStatus('err','❌ Could not parse any questions. Check format and try again.'); return; }
@@ -663,7 +684,7 @@ function renderImpPreview(qs){
       <td style="font-size:.7rem;">${esc(q.opts[1])}</td>
       <td style="font-size:.7rem;">${esc(q.opts[2])}</td>
       <td style="font-size:.7rem;">${esc(q.opts[3])}</td>
-      <td class="ans-c">${LABELS[q.ans]||'?'}</td>
+      <td class="ans-c">${['A','B','C','D'][q.ans]||'?'} <span style="font-size:.6rem;color:#8a9fc0;">(${q.ans+1})</span></td>
       <td style="font-size:.68rem;color:#8a9fc0;">${esc((q.exp||'').slice(0,40))}${(q.exp||'').length>40?'...':''}</td>
     </tr>`).join('');
   if(qs.length > 100)
